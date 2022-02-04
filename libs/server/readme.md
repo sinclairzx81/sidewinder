@@ -1,8 +1,8 @@
 <div align='center'>
 
-<h1>SideWinder Server</h1>
+<h1>Sidewinder/Server</h1>
 
-<p>Service and Host libraries for SideWinder Services</p>
+<p>Sidewinder Server Library</p>
 
 </div>
 

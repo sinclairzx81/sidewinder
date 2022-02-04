@@ -1,6 +1,6 @@
 <div align='center'>
 
-<h1>SideWinder</h1>
+<h1>Sidewinder</h1>
 
 <p>Web Service Framework for Node and Browsers</p>
 
