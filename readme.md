@@ -11,9 +11,9 @@
 
 ## Overview
 
-SideWinder is a web service framework built for micro service architectures. It allows one to create validated rpc methods that can be trivially called over the network. It offers functionality for unidirectional (http) and bidirectional (web socket) method calls, and provides this under a unified service programming model.
+SideWinder is a web service framework built for micro service architectures. It allows one to create validated RPC methods that can be trivially called over the network. It offers functionality for unidirectional (http) and bidirectional (web socket) method calls, and provides this under a unified service programming model.
 
-This project was written to help ensure client and server applications remain in sync. It achieves this through a shared contract which is used to validate remote method calls as well as enabling static type inference for rpc methods in TypeScript. The contract can also be used for automated doc, code and ui generation.
+This project was written to help ensure client and server applications remain in sync. It achieves this through a shared contract which is used to validate remote method calls as well as enabling static type inference for RPC methods in TypeScript. The contract can also be used for automated doc, code and ui generation.
 
 License MIT
 
