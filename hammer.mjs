@@ -24,7 +24,7 @@ export async function start() {
 // Build
 // -------------------------------------------------------------
 
-const VERSION = '0.8.0'
+const VERSION = '0.8.1'
 
 export async function build(target = 'target/build') {
     await Promise.all([
