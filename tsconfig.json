@@ -1,0 +1,16 @@
+{
+    "compilerOptions": {
+        "strict": true,
+        "moduleResolution": "node",
+        "allowSyntheticDefaultImports": true,
+        "target": "ESNext",
+        "module": "ESNext",
+        "baseUrl": ".",
+        "paths": {
+            "@sidewinder/client":   ["libs/client/index.ts"],
+            "@sidewinder/shared":   ["libs/shared/index.ts"],
+            "@sidewinder/contract": ["libs/contract/index.ts"],
+            "@sidewinder/server":   ["libs/server/index.ts"]
+        }
+    }
+}
