@@ -31,8 +31,8 @@ import { Methods, Exception, Responder, Encoder, Barrier, RpcErrorCode, RpcProto
 import { RetryWebSocket, UnifiedWebSocket } from './sockets'
 
 export type WebSocketClientConnectCallback = () => void
-export type WebSocketClientErrorCallback = (error: any) => void
-export type WebSocketClientCloseCallback = () => void
+export type WebSocketClientErrorCallback   = (error: any) => void
+export type WebSocketClientCloseCallback   = () => void
 
 function defaultClientOptions(partial: Partial<WebSocketClientOptions>): WebSocketClientOptions {
     const options: WebSocketClientOptions = { autoReconnectEnabled: false, autoReconnectBuffer: false, autoReconnectTimeout: 2000 }
@@ -103,9 +103,9 @@ export class WebSocketClient<Contract extends TContract> {
         Parameters extends ResolveContractMethodParameters<Contract['$static']['client'][Method]>,
         ReturnType extends ResolveContractMethodReturnType<Contract['$static']['client'][Method]>
     >(method: Method, callback: (...params: Parameters) => Promise<ReturnType> | ReturnType) {
-        this.methods.register(method, (this.contract.client as any)[method], callback)
+        this.methods.register(method as string, (this.contract.client as any)[method], (clientId: string) => clientId, callback)
         return async (...params: Parameters): Promise<ReturnType> => {
-            return this.methods.executeClientMethod(method, params)
+            return this.methods.executeClientMethod(method as string, params)
         }
     }
 
@@ -118,7 +118,7 @@ export class WebSocketClient<Contract extends TContract> {
         await this.barrier.wait()
         this.assertCanSend()
         return new Promise((resolve, reject) => {
-            const handle = this.responder.register('client', resolve, reject)
+            const handle  = this.responder.register('client', resolve, reject)
             const request = RpcProtocol.encodeRequest(handle, method as string, params)
             const message = Encoder.encode(request)
             this.socket.send(message)
@@ -181,9 +181,10 @@ export class WebSocketClient<Contract extends TContract> {
     private assertCanSend() {
         if (this.closed) throw new Error('WebSocket has closed')
     }
+
     private setupNotImplemented() {
         for (const [name, schema] of Object.entries(this.contract.client)) {
-            this.methods.register(name, schema as TFunction, () => {
+            this.methods.register(name, schema as TFunction, (clientId: string) => clientId, () => {
                 throw new Exception(`Method '${name}' not implemented`, RpcErrorCode.InternalServerError, {})
             })
         }

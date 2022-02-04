@@ -1,6 +1,6 @@
-import { TContract, ResolveContractMethodParameters, ResolveContractMethodReturnType, TFunction } from '@sidewinder/contract'
-import { Methods, Exception, Responder, Encoder, Barrier, RpcErrorCode, RpcProtocol } from '@sidewinder/shared'
-import { post } from './post/index'
+import { TContract, ResolveContractMethodParameters, ResolveContractMethodReturnType } from '@sidewinder/contract'
+import { Exception, Encoder, RpcProtocol } from '@sidewinder/shared'
+import { Request} from './request/index'
 
 export class WebClient<Contract extends TContract> {
 
@@ -13,7 +13,7 @@ export class WebClient<Contract extends TContract> {
     >(method: Method, ...params: Parameters): Promise<ReturnType> {
         const request = RpcProtocol.encodeRequest('unknown', method as string, params)
         const encoded = Encoder.encode(request)
-        const decoded = Encoder.decode(await post(this.endpoint, {}, encoded))
+        const decoded = Encoder.decode(await Request.call(this.endpoint, {}, encoded))
         const message = RpcProtocol.decodeAny(decoded)
         if (message === undefined) throw Error('Unable to decode response')
         if(message.type !== 'response') throw Error('Server responded with an invalid protocol response')
@@ -33,6 +33,6 @@ export class WebClient<Contract extends TContract> {
         >(method: Method, ...params: Parameters) {
         const request = RpcProtocol.encodeRequest('unknown', method as string, params)
         const encoded = Encoder.encode(request)
-        post(this.endpoint, {}, encoded).catch(() => { /* ignore */ })
+        request(this.endpoint, {}, encoded).catch(() => { /* ignore */ })
     }
 }

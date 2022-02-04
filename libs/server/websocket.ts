@@ -26,7 +26,7 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-import { TContract, ResolveContractMethodParameters, ResolveContractMethodReturnType, TFunction } from '@sidewinder/contract'
+import { TContract, ContextMapping, ResolveContextMapping, ResolveContractMethodParameters, ResolveContractMethodReturnType, TFunction } from '@sidewinder/contract'
 import { Methods, Exception, Responder, Encoder, RpcErrorCode, RpcProtocol } from '@sidewinder/shared'
 import { WebSocket, MessageEvent, CloseEvent, ErrorEvent } from 'ws'
 import { IncomingMessage } from 'http'
@@ -78,16 +78,33 @@ export class WebSocketService<Contract extends TContract> {
         return this.sockets.keys()
     }
 
-    /** Implements a server method. The method name must match the contract. */
+    /** Defines an implementation with context mapping */
+    public method<
+        Method extends keyof Contract['$static']['server'],
+        Parameters extends ResolveContractMethodParameters<Contract['$static']['server'][Method]>,
+        ReturnType extends ResolveContractMethodReturnType<Contract['$static']['server'][Method]>,
+        Mapping extends ContextMapping<any>
+    >(
+        method: Method,
+        mapping: Mapping,
+        callback: (context: ResolveContextMapping<Mapping>, ...params: Parameters) => Promise<ReturnType> | ReturnType
+    ): (clientId: string, ...params: Parameters) => Promise<ReturnType>
+
+    /** Defines an implementation */
     public method<
         Method extends keyof Contract['$static']['server'],
         Parameters extends ResolveContractMethodParameters<Contract['$static']['server'][Method]>,
         ReturnType extends ResolveContractMethodReturnType<Contract['$static']['server'][Method]>
-    >(method: Method, callback: (clientId: string, ...params: Parameters) => Promise<ReturnType> | ReturnType) {
-        this.methods.register(method, (this.contract.server as any)[method], callback)
-        return async (clientId: string, ...params: Parameters): Promise<ReturnType> => {
-            return this.methods.executeServerMethod(clientId, method, params)
-        }
+    >(
+        method: Method,
+        callback: (clientId: string, ...params: Parameters) => Promise<ReturnType> | ReturnType
+    ): (clientId: string, ...params: Parameters) => Promise<ReturnType>
+
+    /** Defines an implementation */
+    public method(...args: any[]): any {
+        const [method, mapping, callback] = (args.length === 3) ? [args[0], args[1], args[2]] : [args[0], (x: any) => x, args[1]]
+        this.methods.register(method, (this.contract.server as any)[method], mapping, callback)
+        return async (clientId: string, ...params: any[]) => await this.methods.executeServerMethod(clientId, method, params)
     }
 
     /** Calls a remote function with the given name and parameters */
@@ -105,7 +122,7 @@ export class WebSocketService<Contract extends TContract> {
             socket.send(message)
         })
     }
-    
+
     /** Sends a message to a remote function and ignores the result */
     public send<
         Method extends keyof Contract['$static']['client'],
@@ -174,7 +191,7 @@ export class WebSocketService<Contract extends TContract> {
 
     private setupNotImplemented() {
         for (const [name, schema] of Object.entries(this.contract.server)) {
-            this.methods.register(name, schema as TFunction, () => {
+            this.methods.register(name, schema as TFunction, (clientId: string) => clientId, () => {
                 throw new Exception(`Method '${name}' not implemented`, RpcErrorCode.InternalServerError, {})
             })
         }

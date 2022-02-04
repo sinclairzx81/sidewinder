@@ -113,6 +113,10 @@ export interface TConstructor<T extends TSchema[] = TSchema[], U extends TSchema
 // TContract
 // --------------------------------------------------------------------------
 
+export type ContextMapping<T> = (clientId: string) => T
+
+export type ResolveContextMapping<T> = T extends ContextMapping<infer Context> ? Context : never
+
 export type ResolveContractInterface<T, R> = keyof T extends never ? R : T
 
 export type ResolveContractMethodParameters<T> = T extends (...args: any) => any ? Parameters<T> extends infer P ? P extends any[] ? P : [] : [] : []

@@ -36,15 +36,18 @@ export interface ExecuteResultWithResponse {
     result: unknown
     response: RpcResponse
 }
+
 export interface ExecuteErrorWithResponse {
     type: 'error-with-response'
     error: Error
     response: RpcResponse
 }
+
 export interface ExecuteResult {
     type: 'result'
     result: unknown
 }
+
 export interface ExecuteError {
     type: 'error'
     error: Error
@@ -57,12 +60,17 @@ export type ExecuteResponse =
     | ExecuteError
 
 export interface RegistryEntry {
+    /** The parameter validator */
     paramsValidator: ValidateFunction
+    /** The return type validator */
     returnValidator: ValidateFunction
+    /** The context mapping function */
+    mapping: (clientId: string) => any
+    /** The callback function */
     callback: Function
 }
 
-type MethodName = string | number | symbol
+type MethodName = string 
 
 /** 
  * A method container that houses methods registered by services and clients. Provides
@@ -75,27 +83,27 @@ export class Methods {
         this.methods = new Map<MethodName, RegistryEntry>()
     }
 
-    public register(method: MethodName, schema: TFunction<any[], any>, callback: Function) {
+    public register(method: MethodName, schema: TFunction<any[], any>, mapping: (clientId: string) => any, callback: Function) {
         const paramsValidator = Schema.compile(Type.Tuple(schema.parameters))
         const returnValidator = Schema.compile(schema.returns)
-        this.methods.set(method, { paramsValidator, returnValidator, callback })
+        this.methods.set(method, { paramsValidator, returnValidator, mapping, callback })
     }
     
     public async executeServerMethod(clientId: string, method: MethodName, params: unknown[]) {
         this.validateMethodExists(method)
         const entry = this.methods.get(method)!
         this.validateMethodParameters(entry, method as string, params)
-        const result = await entry.callback(clientId, ...params)
+        const result = await entry.callback(entry.mapping(clientId), ...params)
         this.validateMethodReturnType(entry, method as string, result)
         return result
     }
-
+    
     public async executeClientMethod(method: MethodName, params: unknown[]) {
         this.validateMethodExists(method)
         const entry = this.methods.get(method)!
-        this.validateMethodParameters(entry, method as string, params)
+        this.validateMethodParameters(entry, method, params)
         const result = await entry.callback(...params)
-        this.validateMethodReturnType(entry, method as string, result)
+        this.validateMethodReturnType(entry, method, result)
         return result
     }
 

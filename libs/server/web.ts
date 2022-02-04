@@ -26,8 +26,8 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-import { TContract, ResolveContractMethodParameters, ResolveContractMethodReturnType, TFunction } from '@sidewinder/contract'
-import { Methods, Exception, Responder, Encoder, RpcErrorCode, RpcProtocol } from '@sidewinder/shared'
+import { TContract, ContextMapping, ResolveContextMapping, ResolveContractMethodParameters, ResolveContractMethodReturnType, TFunction } from '@sidewinder/contract'
+import { Methods, Exception, Encoder, RpcErrorCode, RpcProtocol } from '@sidewinder/shared'
 import { Request, Response } from 'express'
 import { IncomingMessage } from 'http'
 
@@ -66,16 +66,33 @@ export class WebService<Contract extends TContract> {
         return callback
     }
 
-    /** Implements a server method. The method name must match the contract. */
+    /** Defines an implementation with context mapping */
+    public method<
+        Method extends keyof Contract['$static']['server'],
+        Parameters extends ResolveContractMethodParameters<Contract['$static']['server'][Method]>,
+        ReturnType extends ResolveContractMethodReturnType<Contract['$static']['server'][Method]>,
+        Mapping extends ContextMapping<any>
+    >(
+        method: Method,
+        mapping: Mapping,
+        callback: (context: ResolveContextMapping<Mapping>, ...params: Parameters) => Promise<ReturnType> | ReturnType
+    ): (clientId: string, ...params: Parameters) => Promise<ReturnType>
+
+    /** Defines an implementation */
     public method<
         Method extends keyof Contract['$static']['server'],
         Parameters extends ResolveContractMethodParameters<Contract['$static']['server'][Method]>,
         ReturnType extends ResolveContractMethodReturnType<Contract['$static']['server'][Method]>
-    >(method: Method, callback: (clientId: string, ...params: Parameters) => Promise<ReturnType> | ReturnType) {
-        this.methods.register(method, (this.contract.server as any)[method], callback)
-        return async (clientId: string, ...params: Parameters): Promise<ReturnType> => {
-            return this.methods.executeServerMethod(clientId, method, params)
-        }
+    >(
+        method: Method,
+        callback: (clientId: string, ...params: Parameters) => Promise<ReturnType> | ReturnType
+    ): (clientId: string, ...params: Parameters) => Promise<ReturnType>
+
+    /** Defines an implementation */
+    public method(...args: any[]): any {
+        const [method, mapping, callback] = (args.length === 3) ? [args[0], args[1], args[2]] : [args[0], (x: any) => x, args[1]]
+        this.methods.register(method, (this.contract.server as any)[method], mapping, callback)
+        return async (clientId: string, ...params: any[]) => await this.methods.executeServerMethod(clientId, method, params)
     }
 
     private readRequest(request: Request): Promise<Uint8Array> {
@@ -105,7 +122,7 @@ export class WebService<Contract extends TContract> {
 
             const authorized = await this.onAuthorizeCallback(clientId, request)
             if (!authorized) {
-                const [ code, data, message ] = [RpcErrorCode.InvalidRequest, {}, 'Unauthorized']
+                const [code, data, message] = [RpcErrorCode.InvalidRequest, {}, 'Unauthorized']
                 return await this.writeResponse(response, 200, Encoder.encode(RpcProtocol.encodeError('unknown', {
                     data, code, message
                 })))
@@ -132,21 +149,21 @@ export class WebService<Contract extends TContract> {
                 } else {
                     this.writeResponse(response, 200, Buffer.alloc(0))
                 }
-            } else { 
-                const [ code, data, message ] = [RpcErrorCode.InvalidRequest, {}, 'Invalid Request']
+            } else {
+                const [code, data, message] = [RpcErrorCode.InvalidRequest, {}, 'Invalid Request']
                 return await this.writeResponse(response, 200, Encoder.encode(RpcProtocol.encodeError('unknown', {
                     data, code, message
                 })))
             }
         } catch (error) {
             this.onErrorCallback(clientId, error)
-            if(error instanceof Exception) {
-                const [ code, data, message ] = [error.code, error.data, error.message]
+            if (error instanceof Exception) {
+                const [code, data, message] = [error.code, error.data, error.message]
                 return await this.writeResponse(response, 200, Encoder.encode(RpcProtocol.encodeError('unknown', {
                     data, code, message
                 })))
             } else {
-                const [ code, data, message ] = [RpcErrorCode.InternalServerError,  {}, 'Internal Server Error']
+                const [code, data, message] = [RpcErrorCode.InternalServerError, {}, 'Internal Server Error']
                 return await this.writeResponse(response, 200, Encoder.encode(RpcProtocol.encodeError('unknown', {
                     data, code, message
                 })))
