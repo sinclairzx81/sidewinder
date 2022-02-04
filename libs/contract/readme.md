@@ -14,7 +14,15 @@ Sidewinder Contracts are JSON schema interface schematics that describe callable
 
 Licence MIT
 
-## Usage
+## Contents
+
+- [Contracts](#Contracts)
+- [Functions](#Functions)
+- [Types](#Types)
+- [Modifiers](#Modifiers)
+- [Options](#Options)
+
+## Contracts
 
 The following creates a contract where the `server` exposes a `foo` function, and the `client` exposes a `bar` function. Servers and Clients are responsible for implementing these functions, with the `client` functions only implementable on `WebSocketClient` instances.
 
