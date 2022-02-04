@@ -22,6 +22,9 @@ License MIT
 - [Overview](#Overview)
 - [Install](#Install)
 - [Example](#Example)
+- [Contracts](libs/contract/readme.md)
+- [Servers](libs/server/readme.md)
+- [Clients](libs/client/readme.md)
 
 ## Install
 
