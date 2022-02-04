@@ -31,27 +31,23 @@ import { RpcProtocol, RpcErrorCode, RpcRequest, RpcResponse } from './protocol'
 import { Schema, ValidateFunction } from './schema'
 import { Exception } from './exception'
 
-// -------------------------------------------------
-// Execution Result Types
-// -------------------------------------------------
-
-export interface ExecuteResult {
-    type: 'result'
-    result: unknown
-}
 export interface ExecuteResultWithResponse {
     type: 'result-with-response'
     result: unknown
     response: RpcResponse
 }
-export interface ExecuteError {
-    type: 'error'
-    error: Error
-}
 export interface ExecuteErrorWithResponse {
     type: 'error-with-response'
     error: Error
     response: RpcResponse
+}
+export interface ExecuteResult {
+    type: 'result'
+    result: unknown
+}
+export interface ExecuteError {
+    type: 'error'
+    error: Error
 }
 
 export type ExecuteResponse =
@@ -68,6 +64,10 @@ export interface RegistryEntry {
 
 type MethodName = string | number | symbol
 
+/** 
+ * A method container that houses methods registered by services and clients. Provides
+ * direct and protocol invocation on the methods, as well as schema validation.
+ */
 export class Methods {
     private readonly methods: Map<MethodName, RegistryEntry>
     
@@ -81,10 +81,6 @@ export class Methods {
         this.methods.set(method, { paramsValidator, returnValidator, callback })
     }
     
-    // -------------------------------------------------------------------
-    // Direct Invocation
-    // -------------------------------------------------------------------
-
     public async executeServerMethod(clientId: string, method: MethodName, params: unknown[]) {
         this.validateMethodExists(method)
         const entry = this.methods.get(method)!
@@ -103,10 +99,6 @@ export class Methods {
         return result
     }
 
-    // -------------------------------------------------------------------
-    // Protocol Invocation
-    // -------------------------------------------------------------------
-
     public async executeServerProtocol(clientId: string, request: RpcRequest): Promise<ExecuteResponse> {
         try {
             const result = await this.executeServerMethod(clientId, request.method, request.params)
@@ -124,9 +116,6 @@ export class Methods {
             return this.encodeErrorExecuteResponse(request, error)
         }
     }
-    // -------------------------------------------------------------------
-    // Result and Error Encoding
-    // -------------------------------------------------------------------
 
     private encodeResultExecuteResponse(request: RpcRequest, result: unknown): ExecuteResponse {
         if (request.id) {
@@ -166,10 +155,6 @@ export class Methods {
             }
         }
     }
-
-    // -------------------------------------------------------------------
-    // Validation Errors
-    // -------------------------------------------------------------------
 
     private validateMethodExists(method: MethodName) {
         if (!this.methods.has(method)) {

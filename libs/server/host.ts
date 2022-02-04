@@ -27,7 +27,7 @@ THE SOFTWARE.
 ---------------------------------------------------------------------------*/
 
 import { createServer, IncomingMessage } from 'http'
-import { Application, Router, RequestHandler } from 'express'
+import { Application, RequestHandler } from 'express'
 import { Socket } from 'net'
 import { WebSocketServer } from 'ws'
 import { WebSocketService } from './websocket'
@@ -64,20 +64,7 @@ export interface HostOptions {
       * 
       * (Default is 16384)
       */
-     maxSocketCount: number
- 
-}
-
-export interface UseOptions {
-    /** 
-     * If true, will publish the services contract on GET requests to the
-     * services basePath. This option can be enabled to allow remote systems
-     * to introspect the contract implemented by the service. Useful for
-     * auto documentation and code generation on remote systems.
-     * 
-     * (Default is false) 
-     */
-    publish: boolean
+     maxSocketCount: number 
 }
 
 export class Host {
@@ -99,22 +86,40 @@ export class Host {
         this.socketCount = 0
         this.keepAlive()
     }
-
-    /** Binds the given WebSocketService to the specified path  */
-    public use(basePath: string, service: WebSocketService<any>, options?: UseOptions): void
-    /** Binds the given WebService to the specified path  */
-    public use(basePath: string, service: WebService<any>, options?: UseOptions): void
-    /** Binds the given RequestHandler to the specified path  */
-    public use(basePath: string, service: RequestHandler): void
-    public use(basePath: string, service: RequestHandler | WebSocketService<any> | WebService<any>, options: UseOptions = { publish: false }): void {
-        if (service instanceof WebSocketService) {
-            if(options.publish) this.application.get(basePath, (req, res) => res.json(service.contract))
-            this.services.set(basePath, service)
-        } else if(service instanceof WebService) {
-            if(options.publish) this.application.get(basePath, (req, res) => res.json(service.contract))
-            this.application.post(basePath, (req, res) => service.accept(v4(), req, res))
+    
+    /** Uses a WebSocketService to the specified path  */
+    public use(path: string, service: WebSocketService<any>): void
+    /** Uses a WebService to the specified path  */
+    public use(path: string, service: WebService<any>): void
+    /** Uses express middleware on the specified path  */
+    public use(path: string, service: RequestHandler): void
+    /** Uses a WebSocketService  */
+    public use(service: WebSocketService<any>): void
+    /** Uses a WebService */
+    public use(service: WebService<any>): void
+    /** Uses express middleware */
+    public use(middleware: RequestHandler): void
+    public use(...args: any[]): void {
+        if(args.length === 2) {
+            const [path, service] = [args[0], args[1]]
+            if (service instanceof WebSocketService) {
+                this.services.set(path, service)
+            } else if(service instanceof WebService) {
+                this.application.post(path, (req, res) => service.accept(v4(), req, res))
+            } else {
+                this.application.use(path, service)
+            }
+        } else if(args.length === 1) {
+            const service = args[0]
+            if (service instanceof WebSocketService) {
+                this.services.set('/', service)
+            } else if(service instanceof WebService) {
+                this.application.post('/', (req, res) => service.accept(v4(), req, res))
+            } else {
+                this.application.use(service)
+            }
         } else {
-            this.application.use(basePath, service)
+            throw Error('Invalid parameters on use()')
         }
     }
 
