@@ -21,12 +21,21 @@ export async function start() {
 }
 
 // -------------------------------------------------------------
+// Test
+// -------------------------------------------------------------
+
+export async function test() {
+    await shell(`hammer build ./tests/index.ts --dist target/tests --platform node`)
+    await shell(`mocha target/tests/index.js`)
+}
+// -------------------------------------------------------------
 // Build
 // -------------------------------------------------------------
 
 const VERSION = '0.8.1'
 
 export async function build(target = 'target/build') {
+    await clean()
     await Promise.all([
         compilePackage(target, 'client',   VERSION, 'SideWinder Client'),
         compilePackage(target, 'contract', VERSION, 'SideWinder Contract'),
