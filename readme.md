@@ -48,7 +48,7 @@ import { WebClient }        from '@sidewinder/client'
 import { Type }             from '@sidewinder/contract'
 
 // ---------------------------------------------------------------------------
-// First we create a contract that describes the callable service methods
+// Contract
 // ---------------------------------------------------------------------------
 
 const Contract = Type.Contract({
@@ -61,7 +61,7 @@ const Contract = Type.Contract({
 })
 
 // ---------------------------------------------------------------------------
-// Next we create a Service to implement the Contract
+// Service
 // ---------------------------------------------------------------------------
 
 const service = new WebService(Contract)
@@ -71,7 +71,7 @@ service.method('mul', (clientId, a, b) => a * b)
 service.method('div', (clientId, a, b) => a / b)
 
 // ---------------------------------------------------------------------------
-// Then mount the service on a host running on port 5000
+// Host
 // ---------------------------------------------------------------------------
 
 const host = new Host()
@@ -79,7 +79,7 @@ host.use('/math', service)
 host.listen(5000)
 
 // ---------------------------------------------------------------------------
-// Finally, we can call the service.
+// Client
 // ---------------------------------------------------------------------------
 
 const client = new WebClient(Contract, 'http://localhost:5000/math')
