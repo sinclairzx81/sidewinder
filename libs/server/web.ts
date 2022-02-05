@@ -136,7 +136,7 @@ export class WebService<Contract extends TContract> {
         })
     }
 
-    /** PRIVATE: This is called by the host. Do not use.  */
+    /** HOST FUNCTION: This function is called by the host up accept a RPC request  */
     public async accept(clientId: string, request: Request, response: Response) {
         try {
             // -----------------------------------------------------------------------

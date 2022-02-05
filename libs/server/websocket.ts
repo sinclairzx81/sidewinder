@@ -163,6 +163,21 @@ export class WebSocketService<Contract extends TContract> {
         socket.close()
     }
 
+    /** HOST FUNCTION: This function is called from the Host to authorize connections on the service.  */
+    public async authorize(clientId: string, request: IncomingMessage): Promise<boolean> {
+        return await this.onAuthorizeCallback(clientId, request)
+    }
+
+    /** HOST FUNCTION: This function is called from the Host to accept upgraded sockets.  */
+    public async accept(clientId: string, socket: WebSocket) {
+        this.sockets.set(clientId, socket)
+        socket.binaryType = 'arraybuffer'
+        socket.addEventListener('message', event => this.onMessage(clientId, socket, event))
+        socket.addEventListener('error', event => this.onError(clientId, event))
+        socket.addEventListener('close', event => this.onClose(clientId, event))
+        await this.onConnectCallback(clientId)
+    }
+
     private async onMessage(clientId: string, socket: WebSocket, event: MessageEvent) {
         try {
             const message = RpcProtocol.decodeAny(Encoder.decode(event.data as Uint8Array))
@@ -195,19 +210,6 @@ export class WebSocketService<Contract extends TContract> {
         this.responder.rejectFor(clientId, new Error('Client disconnected'))
         this.sockets.delete(clientId)
         this.onCloseCallback(clientId)
-    }
-
-    public async authorize(clientId: string, request: IncomingMessage): Promise<boolean> {
-        return await this.onAuthorizeCallback(clientId, request)
-    }
-
-    public async accept(clientId: string, socket: WebSocket) {
-        this.sockets.set(clientId, socket)
-        socket.binaryType = 'arraybuffer'
-        socket.addEventListener('message', event => this.onMessage(clientId, socket, event))
-        socket.addEventListener('error', event => this.onError(clientId, event))
-        socket.addEventListener('close', event => this.onClose(clientId, event))
-        await this.onConnectCallback(clientId)
     }
 
     private setupNotImplemented() {
