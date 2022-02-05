@@ -130,8 +130,11 @@ export interface TInterface {
 }
 
 export interface ContractOptions {
+    /** The encoding format for this contract. The default is 'json' */
     format?: 'json' | 'msgpack'
+    /** The server interface methods */
     server?: TInterface
+    /** The client interface methods */
     client?: TInterface
 }
 
