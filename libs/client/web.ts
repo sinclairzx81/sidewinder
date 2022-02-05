@@ -6,6 +6,7 @@ export class WebClient<Contract extends TContract> {
 
     constructor(public readonly contract: Contract, public readonly endpoint: string) { }
 
+    /** Calls a remote method */
     public async call<
         Method extends keyof Contract['$static']['server'],
         Parameters extends ResolveContractMethodParameters<Contract['$static']['server'][Method]>,
@@ -27,6 +28,7 @@ export class WebClient<Contract extends TContract> {
         throw Error('Unreachable')
     }
 
+    /** Sends a message to a remote method and ignores the result */
     public send<
         Method extends keyof Contract['$static']['server'],
         Parameters extends ResolveContractMethodParameters<Contract['$static']['server'][Method]>,

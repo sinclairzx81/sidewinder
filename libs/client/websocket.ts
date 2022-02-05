@@ -53,11 +53,11 @@ export class WebSocketClient<Contract extends TContract> {
     private onErrorCallback: WebSocketClientErrorCallback = () => { }
     private onCloseCallback: WebSocketClientCloseCallback = () => { }
 
-    private readonly socket: RetryWebSocket | UnifiedWebSocket
-    private readonly options: WebSocketClientOptions
+    private readonly socket:    RetryWebSocket | UnifiedWebSocket
+    private readonly options:   WebSocketClientOptions
     private readonly responder: Responder
-    private readonly methods: Methods
-    private readonly barrier: Barrier
+    private readonly methods:   Methods
+    private readonly barrier:   Barrier
     private closed: boolean
 
     constructor(private readonly contract: Contract, private readonly endpoint: string, options: Partial<WebSocketClientOptions> = {}) {
@@ -85,8 +85,13 @@ export class WebSocketClient<Contract extends TContract> {
         this.setupNotImplemented()
     }
 
-    public event(event: 'connect', callback: (clientId: string) => void): (clientId: string) => void
-    public event(event: 'close', callback: (clientId: string) => void): (clientId: string) => void
+    /** Subscribes to socket connect events */
+    public event(event: 'connect', callback: WebSocketClientConnectCallback): WebSocketClientConnectCallback
+    /** Subscribes to socket error events */
+    public event(event: 'error', callback: WebSocketClientErrorCallback): WebSocketClientErrorCallback
+    /** Subscribes to socket close events */
+    public event(event: 'close', callback: WebSocketClientCloseCallback): WebSocketClientCloseCallback
+    /** Subscribes to events */
     public event(event: string, callback: Function): any {
         switch (event) {
             case 'connect': { this.onConnectCallback = callback as WebSocketClientConnectCallback; break }
@@ -97,7 +102,7 @@ export class WebSocketClient<Contract extends TContract> {
         return callback
     }
 
-    /** Defines a server function */
+    /** Defines a method implementation */
     public method<
         Method extends keyof Contract['$static']['client'],
         Parameters extends ResolveContractMethodParameters<Contract['$static']['client'][Method]>,
@@ -109,7 +114,7 @@ export class WebSocketClient<Contract extends TContract> {
         }
     }
 
-    /** Calls a client function */
+    /** Calls a remote method */
     public async call<
         Method extends keyof Contract['$static']['server'],
         Parameters extends ResolveContractMethodParameters<Contract['$static']['server'][Method]>,
@@ -125,15 +130,22 @@ export class WebSocketClient<Contract extends TContract> {
         })
     }
 
-    public async send<
+    /** Sends a message to a remote method and ignores the result */
+    public send<
         Method extends keyof Contract['$static']['server'],
         Parameters extends ResolveContractMethodParameters<Contract['$static']['server'][Method]>,
-        >(method: Method, ...params: Parameters): Promise<void> {
-        await this.barrier.wait()
-        this.assertCanSend()
-        const request = RpcProtocol.encodeRequest(undefined, method as string, params)
-        const message = Encoder.encode(request)
-        this.socket.send(message)
+        >(method: Method, ...params: Parameters): void {
+        (async () => {
+            try {
+                await this.barrier.wait()
+                this.assertCanSend()
+                const request = RpcProtocol.encodeRequest(undefined, method as string, params)
+                const message = Encoder.encode(request)
+                this.socket.send(message)
+            } catch(error) {
+                this.onErrorCallback(error)
+            }
+        })()
     }
 
     private onOpen() {
@@ -173,6 +185,7 @@ export class WebSocketClient<Contract extends TContract> {
         if (!this.options.autoReconnectEnabled) this.closed = true
         this.responder.rejectFor('client', new Error('Unable to communicate with server'))
         this.onCloseCallback()
+        this.barrier.resume()
     }
 
     public close() {

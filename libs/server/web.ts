@@ -51,10 +51,32 @@ export class WebService<Contract extends TContract> {
         this.methods = new Methods()
     }
 
+    /**
+     * Subscribes to authorize events. This event is raised each time a http rpc request is made. Callers
+     * can use this event to setup any associated state for the request
+     */
     public event(event: 'authorize', callback: WebServiceAuthorizeCallback): WebServiceAuthorizeCallback
+    
+    /**
+     * Subscribes to connect events. This event is raised immediately following a successful authorization.
+     * Callers can use this event to initialize any additional associated state for the clientId.
+     */
     public event(event: 'connect', callback: WebServiceConnectCallback): WebServiceConnectCallback
+    
+    /**
+     * Subscribes to error events. This event is raised if there are any http transport errors. This event
+     * is usually immediately followed by a close event.
+     */
     public event(event: 'error', callback: WebServiceErrorCallback): WebServiceErrorCallback
+    
+    /**
+     * Subscribes to close events. This event is raised once the http rpc method has executed and the
+     * http / tcp transport is about to terminate. Callers can use this event to clean up any associated
+     * state for the clientId.
+     */
     public event(event: 'close', callback: WebServiceCloseCallback): WebServiceCloseCallback
+
+    /** Sucribes to events */
     public event(event: string, callback: (...args: any[]) => any): any {
         switch (event) {
             case 'authorize': { this.onAuthorizeCallback = callback; break }
@@ -66,7 +88,7 @@ export class WebService<Contract extends TContract> {
         return callback
     }
 
-    /** Defines an implementation with context mapping */
+    /** Defines an method implementation */
     public method<
         Method extends keyof Contract['$static']['server'],
         Parameters extends ResolveContractMethodParameters<Contract['$static']['server'][Method]>,
@@ -78,7 +100,7 @@ export class WebService<Contract extends TContract> {
         callback: (context: ResolveContextMapping<Mapping>, ...params: Parameters) => Promise<ReturnType> | ReturnType
     ): (clientId: string, ...params: Parameters) => Promise<ReturnType>
 
-    /** Defines an implementation */
+    /** Defines an method implementation */
     public method<
         Method extends keyof Contract['$static']['server'],
         Parameters extends ResolveContractMethodParameters<Contract['$static']['server'][Method]>,
@@ -88,7 +110,7 @@ export class WebService<Contract extends TContract> {
         callback: (clientId: string, ...params: Parameters) => Promise<ReturnType> | ReturnType
     ): (clientId: string, ...params: Parameters) => Promise<ReturnType>
 
-    /** Defines an implementation */
+    /** Defines an method implementation */
     public method(...args: any[]): any {
         const [method, mapping, callback] = (args.length === 3) ? [args[0], args[1], args[2]] : [args[0], (x: any) => x, args[1]]
         this.methods.register(method, (this.contract.server as any)[method], mapping, callback)
@@ -114,6 +136,7 @@ export class WebService<Contract extends TContract> {
         })
     }
 
+    /** PRIVATE: This is called by the host. Do not use.  */
     public async accept(clientId: string, request: Request, response: Response) {
         try {
             // -----------------------------------------------------------------------

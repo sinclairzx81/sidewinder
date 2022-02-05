@@ -51,9 +51,9 @@ export class RetryWebSocket {
     private closed:           boolean
 
     constructor(private readonly endpoint: string, private readonly options: RetryWebSocketOptions = {
-        binaryType:        'blob',
+        binaryType:       'blob',
         reconnectTimeout: 2000,
-        reconnectBuffer:   false
+        reconnectBuffer:  false
     }) {
         this.barrier          = new Barrier()
         this.events           = new Events()
@@ -118,6 +118,7 @@ export class RetryWebSocket {
                 })
                 this.barrier.resume()
             } catch (error) {
+                this.events.send('error', error)
                 await Delay.run(this.options.reconnectTimeout)
             }
         }

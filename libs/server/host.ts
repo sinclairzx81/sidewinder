@@ -75,6 +75,7 @@ export class Host {
     private readonly sockets:     Map<number, ws.WebSocket>
     private socketOrdinal: number
     private socketCount:   number
+    private disposed: boolean
 
     constructor(private readonly options: HostOptions = {
         keepAliveTimeout: 8000,
@@ -89,22 +90,31 @@ export class Host {
         this.wsserver      = new WebSocketServer({ noServer: true, ...this.options.disableFrameCompression ? ({ perMessageDeflate: false }) : ({}) })
         this.socketOrdinal = 0
         this.socketCount   = 0
+        this.disposed = false
         this.keepAlive()
     }
     
     /** Uses a WebSocketService to the specified path  */
     public use(path: string, service: WebSocketService<any>): void
+    
     /** Uses a WebService to the specified path  */
     public use(path: string, service: WebService<any>): void
+    
     /** Uses express middleware on the specified path  */
     public use(path: string, service: RequestHandler): void
+    
     /** Uses a WebSocketService  */
     public use(service: WebSocketService<any>): void
+    
     /** Uses a WebService */
     public use(service: WebService<any>): void
+    
     /** Uses express middleware */
     public use(middleware: RequestHandler): void
+    
+    /** Uses a service */
     public use(...args: any[]): void {
+        this.assertDisposed()
         if(args.length === 2) {
             const [path, service] = [args[0], args[1]]
             if (service instanceof WebSocketService) {
@@ -126,6 +136,20 @@ export class Host {
         } else {
             throw Error('Invalid parameters on use()')
         }
+    }
+
+    /** Listens on the given port and optional hostname */
+    public listen(port: number, hostname: string = '0.0.0.0'): Promise<void> {
+        this.assertDisposed()
+        return new Promise(resolve => {
+            this.server.listen(port, hostname, () => resolve())
+        })
+    }
+
+    /** Disposes of this host and terminates all connections */
+    public dispose() {
+        this.disposed = true
+        this.wsserver.close(() => this.server.close())
     }
 
     private nextSocketOrdinal() {
@@ -175,7 +199,7 @@ export class Host {
             socket.destroy()
         }
     }
-
+    
     private keepAlive() {
         setTimeout(() => this.keepAlive(), this.options.keepAliveTimeout)
         for (const [ordinal, socket] of this.sockets) {
@@ -187,15 +211,8 @@ export class Host {
         }
     }
 
-    /** Listens on the given port and optional hostname */
-    public listen(port: number, hostname: string = '0.0.0.0'): Promise<void> {
-        return new Promise(resolve => {
-            this.server.listen(port, hostname, () => resolve())
-        })
+    private assertDisposed() {
+        if(this.disposed) throw Error('Host is disposed')
     }
 
-    /** Disposes of this host and terminates all connections */
-    public dispose() {
-        this.wsserver.close(() => this.server.close())
-    }
 }

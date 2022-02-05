@@ -31,7 +31,6 @@ import { Methods, Exception, Responder, Encoder, RpcErrorCode, RpcProtocol } fro
 import { WebSocket, MessageEvent, CloseEvent, ErrorEvent } from 'ws'
 import { IncomingMessage } from 'http'
 
-
 export type WebSocketServiceAuthorizeCallback = (clientId: string, request: IncomingMessage) => Promise<boolean> | boolean
 export type WebSocketServiceConnectCallback = (clientId: string) => Promise<void> | void
 export type WebSocketServiceErrorCallback = (clientId: string, error: unknown) => void
@@ -58,9 +57,31 @@ export class WebSocketService<Contract extends TContract> {
         this.setupNotImplemented()
     }
 
+    /** 
+     * Subscribes to authorize events. This event is raised for each connection and is used to
+     * reject connections before socket upgrade. Callers should use this event to initialize any
+     * associated state for the clientId.
+     */
     public event(event: 'authorize', callback: WebSocketServiceAuthorizeCallback): WebSocketServiceAuthorizeCallback
+    
+    /**
+     * Subscribes to connect events. This event is called immediately after a successful 'authorize' event.
+     * Callers can use this event to transmit any provisional messages to clients, or initialize additional
+     * state for the clientId.
+     */
     public event(event: 'connect', callback: WebSocketServiceConnectCallback): WebSocketServiceConnectCallback
+    
+    /**
+     * Subcribes to error events. This event is typically raised for any socket transport errors. This
+     * event is usually triggered immediately before a close event.
+     */
     public event(event: 'error', callback: WebSocketServiceErrorCallback): WebSocketServiceErrorCallback
+    
+    /**
+     * Subscribes to close events. This event is raises whenever a socket disconencts from
+     * the service. Callers should use this event to delete any state associated with the
+     * clientId.
+     */
     public event(event: 'close', callback: WebSocketServiceCloseCallback): WebSocketServiceCloseCallback
     public event(event: string, callback: (...args: any[]) => any): any {
         switch (event) {
@@ -78,7 +99,7 @@ export class WebSocketService<Contract extends TContract> {
         return this.sockets.keys()
     }
 
-    /** Defines an implementation with context mapping */
+    /** Defines an method implementation */
     public method<
         Method extends keyof Contract['$static']['server'],
         Parameters extends ResolveContractMethodParameters<Contract['$static']['server'][Method]>,
@@ -90,7 +111,7 @@ export class WebSocketService<Contract extends TContract> {
         callback: (context: ResolveContextMapping<Mapping>, ...params: Parameters) => Promise<ReturnType> | ReturnType
     ): (clientId: string, ...params: Parameters) => Promise<ReturnType>
 
-    /** Defines an implementation */
+    /** Defines a method implementation */
     public method<
         Method extends keyof Contract['$static']['server'],
         Parameters extends ResolveContractMethodParameters<Contract['$static']['server'][Method]>,
@@ -100,14 +121,14 @@ export class WebSocketService<Contract extends TContract> {
         callback: (clientId: string, ...params: Parameters) => Promise<ReturnType> | ReturnType
     ): (clientId: string, ...params: Parameters) => Promise<ReturnType>
 
-    /** Defines an implementation */
+    /** Defines an method implementation */
     public method(...args: any[]): any {
         const [method, mapping, callback] = (args.length === 3) ? [args[0], args[1], args[2]] : [args[0], (x: any) => x, args[1]]
         this.methods.register(method, (this.contract.server as any)[method], mapping, callback)
         return async (clientId: string, ...params: any[]) => await this.methods.executeServerMethod(clientId, method, params)
     }
 
-    /** Calls a remote function with the given name and parameters */
+    /** Calls a remote method */
     public call<
         Method extends keyof Contract['$static']['client'],
         Parameters extends ResolveContractMethodParameters<Contract['$static']['client'][Method]>,
@@ -122,8 +143,8 @@ export class WebSocketService<Contract extends TContract> {
             socket.send(message)
         })
     }
-
-    /** Sends a message to a remote function and ignores the result */
+    
+    /** Sends a message to a remote method and ignores the result */
     public send<
         Method extends keyof Contract['$static']['client'],
         Parameters extends ResolveContractMethodParameters<Contract['$static']['client'][Method]>,
@@ -135,7 +156,7 @@ export class WebSocketService<Contract extends TContract> {
         socket.send(message)
     }
 
-    /** Closes the connection for the given clientId */
+    /** Closes a client */
     public close(clientId: string): void {
         if (!this.sockets.has(clientId)) return
         const socket = this.sockets.get(clientId)!
