@@ -1,10 +1,17 @@
-import { Encoder } from '@sidewinder/shared'
+import { JsonEncoder, MsgPackEncoder } from '@sidewinder/shared'
 import { expect } from 'chai'
 
-describe('Shared/Encoder', () => {
-    it('Should encode and decode', () => {
+describe('shared/encoder', () => {
+    it('should encode and decode json', () => {
+        const encoder = new JsonEncoder()
         const input = 'hello world'
-        const output = Encoder.decode(Encoder.encode(input))
+        const output = encoder.decode(encoder.encode(input))
+        expect(input).to.eq(output)
+    })
+    it('should encode and decode msgpack', () => {
+        const encoder = new MsgPackEncoder()
+        const input = 'hello world'
+        const output = encoder.decode(encoder.encode(input))
         expect(input).to.eq(output)
     })
 })
