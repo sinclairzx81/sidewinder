@@ -43,9 +43,9 @@ Sidewinder services consist of three main components; A contract which acts as a
 > Type inference can be previewed on the [TypeScript Playground](https://www.typescriptlang.org/play?#code/JYWwDg9gTgLgBAbzgCQgZxgGjgdQKYBGAynlAG7ADGecAvnAGZQQhwDkAAmsACZ4DuwAHZ8oAejSkypNgChQkWIlyEAwgBtgeIfHpx9Bxs1adufQSNJjKm7TDkLo8JABUAnmBp7DP-UxbsXLwCwqLWEDpQAIaU9rKyYmJwALSpaekZmVnZObl5OQlJAGLAUBhw-DSUUHhRMDRRcJQRMNGxcDAAFnVwfGjVwAR4aB2dVVHq6lEE6jSS5FQ0IHhdEDxohSn52zu7e+nxzULlqi1t8AC8cO6eAHSnkTEwABQIsobz0lAAXIjvvnAojweL8bnhbkUAK5CWLACLPADaYNuADlISAhlBngBKbDItEY0g4gC6eI84IJmJxuP+vjQkIIoPJEOhsPhSOZlKJuOunPRVOxpN5dy5WOxNIBcBAkPUTLuUJhMDhQkR+P53LJIvVYqFasJYolAJ4wDIcvBCrZKo5Wv1OM1FO1JPtqMd4swtLoslo2PiiS2+wDgcDmxReAAHvBKk0anUGnASAtqB0IHAFLNljpRjQHq0npsgwXC-lDhFyp9FnArkIBCpiFJFs8c+cfeXqLdlqseM82ECeGxsM8bFodABJHjYKLYAjYysAPkBcAA1HBp7JW+CO501t36QR+3BB7ZR+PAVOZxd541kiuW-W25vt2xpep94fhzAxxOz3OFwAqG9rneG4rFuXZsMaZCvkOdifqeN4-o0SSrvmRaoWhqSbC4YxCFKEDQvAXRzEBcARAuW7lFA0JCMIADmJE4Yo8AAKwAAxsSh6GcUGJbHPA5GXHA1b8Cg6AvD6-G3JCkjdmIIB1J0+7ruJom3JoGDaM8rFsT6HFcXpuybCUQgTOobjYFGlBRDhlmTFmcDrrcun6c5uQ8eU0GZlWNb4AQGjvo2ZxPNgbCdDAMBgN8iTqBANn8d8WksbJ8lsD6RwUcMMoCVE-BRMA8AeTAtw2eo3a9vuACM2AAEypaWECzKpEA0c8NT0uoMAzn6ADMQA)
 
 ```typescript
+import { Type }             from '@sidewinder/contract'
 import { Host, WebService } from '@sidewinder/server'
 import { WebClient }        from '@sidewinder/client'
-import { Type }             from '@sidewinder/contract'
 
 // ---------------------------------------------------------------------------
 // Contract

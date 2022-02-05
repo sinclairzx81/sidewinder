@@ -27,7 +27,7 @@ THE SOFTWARE.
 ---------------------------------------------------------------------------*/
 
 import { TContract, ContextMapping, ResolveContextMapping, ResolveContractMethodParameters, ResolveContractMethodReturnType, TFunction } from '@sidewinder/contract'
-import { Methods, Exception, Encoder, RpcErrorCode, RpcProtocol } from '@sidewinder/shared'
+import { Methods, Exception, Encoder, JsonEncoder, MsgPackEncoder, RpcErrorCode, RpcProtocol } from '@sidewinder/shared'
 import { Request, Response } from 'express'
 import { IncomingMessage } from 'http'
 
@@ -41,6 +41,7 @@ export class WebService<Contract extends TContract> {
     private onConnectCallback: WebServiceConnectCallback
     private onErrorCallback: WebServiceErrorCallback
     private onCloseCallback: WebServiceCloseCallback
+    private readonly encoder: Encoder
     private readonly methods: Methods
 
     constructor(public readonly contract: Contract) {
@@ -48,6 +49,7 @@ export class WebService<Contract extends TContract> {
         this.onConnectCallback = () => { }
         this.onErrorCallback = () => { }
         this.onCloseCallback = () => { }
+        this.encoder = this.contract.format === 'json' ? new JsonEncoder() : new MsgPackEncoder()
         this.methods = new Methods()
     }
 
@@ -146,7 +148,7 @@ export class WebService<Contract extends TContract> {
             const authorized = await this.onAuthorizeCallback(clientId, request)
             if (!authorized) {
                 const [code, data, message] = [RpcErrorCode.InvalidRequest, {}, 'Unauthorized']
-                return await this.writeResponse(response, 200, Encoder.encode(RpcProtocol.encodeError('unknown', {
+                return await this.writeResponse(response, 200, this.encoder.encode(RpcProtocol.encodeError('unknown', {
                     data, code, message
                 })))
             }
@@ -162,19 +164,19 @@ export class WebService<Contract extends TContract> {
             // -----------------------------------------------------------------------
 
             const data = await this.readRequest(request)
-            const message = RpcProtocol.decodeAny(Encoder.decode(data))
+            const message = RpcProtocol.decodeAny(this.encoder.decode(data))
             if (message === undefined) return
             if (message.type === 'request') {
                 const request = message.data
                 const result = await this.methods.executeServerProtocol(clientId, request)
                 if (result.type === 'result-with-response' || result.type === 'error-with-response') {
-                    this.writeResponse(response, 200, Encoder.encode(result.response))
+                    this.writeResponse(response, 200, this.encoder.encode(result.response))
                 } else {
                     this.writeResponse(response, 200, Buffer.alloc(0))
                 }
             } else {
                 const [code, data, message] = [RpcErrorCode.InvalidRequest, {}, 'Invalid Request']
-                return await this.writeResponse(response, 200, Encoder.encode(RpcProtocol.encodeError('unknown', {
+                return await this.writeResponse(response, 200, this.encoder.encode(RpcProtocol.encodeError('unknown', {
                     data, code, message
                 })))
             }
@@ -182,12 +184,12 @@ export class WebService<Contract extends TContract> {
             this.onErrorCallback(clientId, error)
             if (error instanceof Exception) {
                 const [code, data, message] = [error.code, error.data, error.message]
-                return await this.writeResponse(response, 200, Encoder.encode(RpcProtocol.encodeError('unknown', {
+                return await this.writeResponse(response, 200, this.encoder.encode(RpcProtocol.encodeError('unknown', {
                     data, code, message
                 })))
             } else {
                 const [code, data, message] = [RpcErrorCode.InternalServerError, {}, 'Internal Server Error']
-                return await this.writeResponse(response, 200, Encoder.encode(RpcProtocol.encodeError('unknown', {
+                return await this.writeResponse(response, 200, this.encoder.encode(RpcProtocol.encodeError('unknown', {
                     data, code, message
                 })))
             }

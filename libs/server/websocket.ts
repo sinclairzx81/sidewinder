@@ -27,7 +27,7 @@ THE SOFTWARE.
 ---------------------------------------------------------------------------*/
 
 import { TContract, ContextMapping, ResolveContextMapping, ResolveContractMethodParameters, ResolveContractMethodReturnType, TFunction } from '@sidewinder/contract'
-import { Methods, Exception, Responder, Encoder, RpcErrorCode, RpcProtocol } from '@sidewinder/shared'
+import { Methods, Exception, Responder, Encoder, JsonEncoder, MsgPackEncoder, RpcErrorCode, RpcProtocol } from '@sidewinder/shared'
 import { WebSocket, MessageEvent, CloseEvent, ErrorEvent } from 'ws'
 import { IncomingMessage } from 'http'
 
@@ -43,6 +43,7 @@ export class WebSocketService<Contract extends TContract> {
     private onCloseCallback: WebSocketServiceCloseCallback
 
     private readonly sockets: Map<string, WebSocket>
+    private readonly encoder: Encoder
     private readonly responder: Responder
     private readonly methods: Methods
 
@@ -52,6 +53,7 @@ export class WebSocketService<Contract extends TContract> {
         this.onErrorCallback = () => { }
         this.onCloseCallback = () => { }
         this.sockets = new Map<string, WebSocket>()
+        this.encoder = this.contract.format === 'json' ? new JsonEncoder() : new MsgPackEncoder()
         this.responder = new Responder()
         this.methods = new Methods()
         this.setupNotImplemented()
@@ -139,7 +141,7 @@ export class WebSocketService<Contract extends TContract> {
             const handle = this.responder.register(clientId, resolve, reject)
             const socket = this.sockets.get(clientId)!
             const request = RpcProtocol.encodeRequest(handle, method as string, params)
-            const message = Encoder.encode(request)
+            const message = this.encoder.encode(request)
             socket.send(message)
         })
     }
@@ -152,7 +154,7 @@ export class WebSocketService<Contract extends TContract> {
         if (!this.sockets.has(clientId)) return
         const socket = this.sockets.get(clientId)!
         const request = RpcProtocol.encodeRequest(undefined, method as string, params)
-        const message = Encoder.encode(request)
+        const message = this.encoder.encode(request)
         socket.send(message)
     }
 
@@ -180,13 +182,13 @@ export class WebSocketService<Contract extends TContract> {
 
     private async onMessage(clientId: string, socket: WebSocket, event: MessageEvent) {
         try {
-            const message = RpcProtocol.decodeAny(Encoder.decode(event.data as Uint8Array))
+            const message = RpcProtocol.decodeAny(this.encoder.decode(event.data as Uint8Array))
             if (message === undefined) return
             if (message.type === 'request') {
                 const request = message.data
                 const result = await this.methods.executeServerProtocol(clientId, request)
                 if (result.type === 'result-with-response' || result.type === 'error-with-response') {
-                    socket.send(Encoder.encode(result.response))
+                    socket.send(this.encoder.encode(result.response))
                 }
             } else if (message.type === 'response') {
                 const response = message.data

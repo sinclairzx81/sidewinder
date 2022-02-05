@@ -117,6 +117,8 @@ export type ContextMapping<T> = (clientId: string) => T
 
 export type ResolveContextMapping<T> = T extends ContextMapping<infer Context> ? Context : never
 
+export type ResolveContractFormat<T> = T extends 'json' | 'msgpack' ? T : 'json'
+
 export type ResolveContractInterface<T, R> = keyof T extends never ? R : T
 
 export type ResolveContractMethodParameters<T> = T extends (...args: any) => any ? Parameters<T> extends infer P ? P extends any[] ? P : [] : [] : []
@@ -128,12 +130,14 @@ export interface TInterface {
 }
 
 export interface ContractOptions {
+    format?: 'json' | 'msgpack'
     server?: TInterface
     client?: TInterface
 }
 
 export interface TContract<Options extends ContractOptions = ContractOptions> extends TSchema {
     $static: {
+        format: ResolveContractFormat<Options['format']>
         server: ResolveContractInterface<Options['server'], {}> extends infer Interface ? {
             [K in keyof Interface]: Interface[K] extends TFunction<any[], any> ? Interface[K]['$static'] : never
         } : {},
@@ -143,6 +147,7 @@ export interface TContract<Options extends ContractOptions = ContractOptions> ex
     },
     type: 'contract',
     kind: 'Contract',
+    format: ResolveContractFormat<Options['format']>
     server: ResolveContractInterface<Options['server'], {}>,
     client: ResolveContractInterface<Options['client'], {}>,
 }
@@ -569,9 +574,10 @@ export class TypeBuilder {
 
     /** Creates a contract type */
     public Contract<Options extends ContractOptions>(options: Options): TContract<Options> {
+        const format = options.format || 'json'
         const server = options.server || {}
         const client = options.client || {}
-        return this.Create({ type: 'contract', kind: 'Contract', server, client })
+        return this.Create({ type: 'contract', kind: 'Contract', format, server, client })
     }
 
     /** Creates an enum type from a TypeScript enum */
@@ -779,7 +785,7 @@ export class TypeBuilder {
         return this.Create({ ...options, kind: 'Union', anyOf: items })
     }
 
-    /** Creates a Uint8Array type */
+    /** Creates a Uint8Array type. This type is only supported for binary message formats. */
     public Uint8Array(options: TypedArrayOptions = {}): TUint8Array {
         return this.Create({ ...options, kind: 'Uint8Array', type: 'object', specialized: 'Uint8Array' })
     }

@@ -1,10 +1,13 @@
 import { TContract, ResolveContractMethodParameters, ResolveContractMethodReturnType } from '@sidewinder/contract'
-import { Exception, Encoder, RpcProtocol } from '@sidewinder/shared'
+import { Exception, Encoder, MsgPackEncoder, JsonEncoder, RpcProtocol } from '@sidewinder/shared'
 import { Request} from './request/index'
 
 export class WebClient<Contract extends TContract> {
+    private readonly encoder: Encoder
 
-    constructor(public readonly contract: Contract, public readonly endpoint: string) { }
+    constructor(public readonly contract: Contract, public readonly endpoint: string) { 
+        this.encoder = contract.format === 'json' ? new JsonEncoder() : new MsgPackEncoder()
+    }
 
     /** Calls a remote method */
     public async call<
@@ -13,8 +16,8 @@ export class WebClient<Contract extends TContract> {
         ReturnType extends ResolveContractMethodReturnType<Contract['$static']['server'][Method]>
     >(method: Method, ...params: Parameters): Promise<ReturnType> {
         const request = RpcProtocol.encodeRequest('unknown', method as string, params)
-        const encoded = Encoder.encode(request)
-        const decoded = Encoder.decode(await Request.call(this.endpoint, {}, encoded))
+        const encoded = this.encoder.encode(request)
+        const decoded = this.encoder.decode(await Request.call(this.endpoint, {}, encoded))
         const message = RpcProtocol.decodeAny(decoded)
         if (message === undefined) throw Error('Unable to decode response')
         if(message.type !== 'response') throw Error('Server responded with an invalid protocol response')
@@ -34,7 +37,7 @@ export class WebClient<Contract extends TContract> {
         Parameters extends ResolveContractMethodParameters<Contract['$static']['server'][Method]>,
         >(method: Method, ...params: Parameters) {
         const request = RpcProtocol.encodeRequest('unknown', method as string, params)
-        const encoded = Encoder.encode(request)
+        const encoded = this.encoder.encode(request)
         request(this.endpoint, {}, encoded).catch(() => { /* ignore */ })
     }
 }

@@ -28,13 +28,42 @@ THE SOFTWARE.
 
 import * as msgpack from '@msgpack/msgpack'
 
-export namespace Encoder {
+export interface Encoder {
+    encode<T = any>(data: T): Uint8Array
+    decode<T = any>(data: Uint8Array): T
+}
 
-    export function encode<T = any>(data: T): Uint8Array {
-        return msgpack.encode(data)
+export class JsonEncoder implements Encoder {
+    private readonly encoder: TextEncoder
+    private readonly decoder: TextDecoder
+    constructor() {
+        this.encoder = new TextEncoder()
+        this.decoder = new TextDecoder()
     }
-
-    export function decode<T = any>(data: Uint8Array): T {
-        return msgpack.decode(data) as T
+    public encode<T = any>(data: T): Uint8Array {
+        return this.encoder.encode(JSON.stringify(data))
+    }
+    public decode<T = any>(data: Uint8Array): T {
+        return JSON.parse(this.decoder.decode(data))
     }
 }
+
+export class MsgPackEncoder implements Encoder {
+    public encode<T = any>(data: T): Uint8Array {
+        return msgpack.encode(data)
+    }
+    public decode<T = any>(data: Uint8Array): T {
+        return msgpack.decode(data as Uint8Array) as T
+    }
+}
+
+// export namespace Encoder {
+
+//     export function encode<T = any>(data: T): Uint8Array {
+//         return msgpack.encode(data)
+//     }
+
+//     export function decode<T = any>(data: Uint8Array): T {
+//         return msgpack.decode(data) as T
+//     }
+// }
