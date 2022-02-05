@@ -34,6 +34,12 @@ export namespace Request {
         return { 'Content-Type': 'application/x-sidewinder', 'Content-Length': body.length.toString() }
     }
 
+    function assertResponseOk(endpoint: string, ok: boolean) {
+        if (!ok) {
+            throw Error(`Endpoint '${endpoint}' unreachable`)
+        }
+    }
+
     function assertResponseType(endpoint: string, contentType: any) {
         if (contentType !== 'application/x-sidewinder') {
             throw Error(`Endpoint '${endpoint}' did not respond with application/x-sidewinder content type`)
@@ -43,6 +49,7 @@ export namespace Request {
     async function browser(endpoint: string, headers: Record<string, string>, body: Uint8Array) {
         const required = createRequiredHeader(body)
         const response = await fetch(endpoint, { method: 'POST', body, headers: { ...headers, ...required } })
+        assertResponseOk(endpoint, response.ok)
         assertResponseType(endpoint, response.headers.get('Content-Type'))
         const arraybuffer = await response.arrayBuffer()
         return new Uint8Array(arraybuffer)
@@ -72,6 +79,7 @@ export namespace Request {
                 res.on('error', (error: Error) => reject(error))
                 res.on('end', () => resolve(Buffer.concat(buffers)))
             })
+            request.on('error', (error: Error) => reject(error))
             request.end(body)
         })
     }

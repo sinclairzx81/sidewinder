@@ -26,7 +26,7 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-import { createServer, IncomingMessage } from 'http'
+import { createServer, Server, IncomingMessage } from 'http'
 import { Application, RequestHandler } from 'express'
 import { Socket } from 'net'
 import { WebSocketServer } from 'ws'
@@ -68,22 +68,27 @@ export interface HostOptions {
 }
 
 export class Host {
+    private readonly server:      Server
+    private readonly wsserver:    WebSocketServer
     private readonly application: Application
-    private readonly services: Map<string, WebSocketService<any>>
-    private readonly sockets: Map<number, ws.WebSocket>
+    private readonly services:    Map<string, WebSocketService<any>>
+    private readonly sockets:     Map<number, ws.WebSocket>
     private socketOrdinal: number
-    private socketCount: number
+    private socketCount:   number
 
     constructor(private readonly options: HostOptions = {
         keepAliveTimeout: 8000,
         disableFrameCompression: false,
         maxSocketCount: 16384
     }) {
-        this.services = new Map<string, WebSocketService<any>>()
-        this.sockets = new Map<number, ws.WebSocket>()
-        this.application = express()
+        this.services      = new Map<string, WebSocketService<any>>()
+        this.sockets       = new Map<number, ws.WebSocket>()
+        this.application   = express()
+        this.server        = createServer(this.application)
+        this.server.on('upgrade', (request, socket, head) => this.upgrade( request, socket as Socket, head))
+        this.wsserver      = new WebSocketServer({ noServer: true, ...this.options.disableFrameCompression ? ({ perMessageDeflate: false }) : ({}) })
         this.socketOrdinal = 0
-        this.socketCount = 0
+        this.socketCount   = 0
         this.keepAlive()
     }
     
@@ -139,7 +144,7 @@ export class Host {
         return this.socketCount >= this.options.maxSocketCount
     }
 
-    private async upgrade(wsserver: ws.WebSocketServer, request: IncomingMessage, socket: Socket, head: any) {
+    private async upgrade(request: IncomingMessage, socket: Socket, head: any) {
         if (this.exceedSocketCount()) {
             socket.destroy()
             return
@@ -158,7 +163,7 @@ export class Host {
                 socket.destroy()
                 return
             }
-            wsserver.handleUpgrade(request, socket, head, (socket: ws.WebSocket) => {
+            this.wsserver.handleUpgrade(request, socket, head, (socket: ws.WebSocket) => {
                 socket.on('close', () => this.decrementSocketCount())
                 this.incrementSocketCount()
                 service.accept(clientId, socket)
@@ -185,11 +190,12 @@ export class Host {
     /** Listens on the given port and optional hostname */
     public listen(port: number, hostname: string = '0.0.0.0'): Promise<void> {
         return new Promise(resolve => {
-            const server = createServer(this.application)
-            const options = this.options.disableFrameCompression ? ({ perMessageDeflate: false }) : ({})
-            const wsserver = new WebSocketServer({ noServer: true, ...options })
-            server.on('upgrade', (request, socket, head) => this.upgrade(wsserver, request, socket as Socket, head))
-            server.listen(port, hostname, () => resolve())
+            this.server.listen(port, hostname, () => resolve())
         })
+    }
+
+    /** Disposes of this host and terminates all connections */
+    public dispose() {
+        this.wsserver.close(() => this.server.close())
     }
 }
