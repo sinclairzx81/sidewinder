@@ -3,7 +3,7 @@ import { Contract }         from '../shared/index'
 import cors                 from 'cors'
 
 const service = new WebService(Contract)
-service.method('add', (clientId, a, b) => a + b)
+service.method('add', (clientId) => 1, (clientId, a, b) => a + b)
 service.method('sub', (clientId, a, b) => a - b)
 service.method('mul', (clientId, a, b) => a * b)
 service.method('div', (clientId, a, b) => a / b)
