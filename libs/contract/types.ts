@@ -362,11 +362,11 @@ export interface TPromise<T extends TSchema> extends TSchema {
 // TQuery
 // --------------------------------------------------------------------------
 
-export interface TQuery extends TSchema {
-    $static:     Filter<any>
+export interface TQuery<Schema> extends TSchema {
+    $static:     Filter<Schema>
     specialized: 'Query'
     kind:        'Query',
-    type:        'query'
+    type:        'object'
 }
 
 // --------------------------------------------------------------------------
@@ -707,8 +707,8 @@ export class TypeBuilder {
     }
 
     /** `Experimental` Creates a query expression type. This type validates against any mongodb object expression. */
-    public Query(options: SchemaOptions = {}): TQuery {
-        return this.Create({ ...options, specialized: 'Query', kind: 'Query', type: 'query' })
+    public Query<T = any>(options: SchemaOptions = {}): TQuery<T> {
+        return this.Create({ ...options, specialized: 'Query', kind: 'Query', type: 'object' })
     }
 
     /** Creates a record type */

@@ -26,14 +26,16 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
+
 import { TSchema, Static, TUint8Array } from '@sidewinder/contract'
+// @ts-ignore
+import { accepts }                      from 'mongodb-language-model'
 import addFormats                       from 'ajv-formats'
 import Ajv, { ValidateFunction }        from 'ajv'
 export { ValidateFunction }             from 'ajv'
 
 export namespace Schema {
-
-    function validateUint8Array(extendedType: string, data: any, parentSchema: any) {
+    function validateUint8Array(data: any, parentSchema: any) {
         const schema = parentSchema       as TUint8Array
         const facade = validateUint8Array as any
         if(!(data instanceof Uint8Array)) {
@@ -53,13 +55,31 @@ export namespace Schema {
         }
         return true
     }
-    
+
+    function validateQuery(data: any, parentSchema: any) {
+        const facade = validateUint8Array as any
+        if(!accepts(JSON.stringify(data))) {
+            const message = `Query is invalid`
+            facade.errors = [{keyword: 'object', class: 'Uint8Array', message, params: {}}];
+            return false
+        }
+        return true
+    }
+
+    function validateSpecialized(specializedType: string, data: any, parentSchema: any) {
+        switch(specializedType) {
+            case 'Uint8Array': return validateUint8Array(data, parentSchema)
+            case 'Query': return validateQuery(data, parentSchema)
+            default: return false
+        }
+    }
+
     const validator = addFormats(new Ajv({}), [ 
         'date-time', 'time', 'date', 'email', 'hostname', 'ipv4', 
         'ipv6', 'uri', 'uri-reference', 'uuid', 'uri-template', 
         'json-pointer', 'relative-json-pointer', 'regex'
     ])
-    .addKeyword({ keyword: 'specialized', type: 'object', validate: validateUint8Array })
+    .addKeyword({ keyword: 'specialized', type: 'object', validate: validateSpecialized })
     .addKeyword('maxByteLength')
     .addKeyword('minByteLength')
     .addKeyword('modifier')
