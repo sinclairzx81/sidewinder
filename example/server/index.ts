@@ -4,11 +4,15 @@ import { Contract }               from '../shared/index'
 import cors                       from 'cors'
 
 const service = new WebSocketService(Contract)
-service.method('buf', (clientId, buffer) => buffer)
-service.method('add', (clientId, a, b) => a + b)
-service.method('sub', (clientId, a, b) => a - b)
-service.method('mul', (clientId, a, b) => a * b)
-service.method('div', (clientId, a, b) => a / b)
+
+const x = service.method('users', (clientId, expr) => 1)
+
+x('1', {
+    $and: [
+        { $or: '' },
+        { $or:  { name: { $eq: 1 } } }
+    ]
+})
 
 const host = new Host()
 host.use(cors())

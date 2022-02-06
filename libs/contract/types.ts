@@ -26,6 +26,7 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
+import { Filter } from './query'
 
 // --------------------------------------------------------------------------
 // Modifiers
@@ -355,6 +356,17 @@ export interface TPromise<T extends TSchema> extends TSchema {
     kind: 'Promise',
     type: 'promise',
     item: TSchema
+}
+
+// --------------------------------------------------------------------------
+// TQuery
+// --------------------------------------------------------------------------
+
+export interface TQuery extends TSchema {
+    $static:     Filter<any>
+    specialized: 'Query'
+    kind:        'Query',
+    type:        'query'
 }
 
 // --------------------------------------------------------------------------
@@ -692,6 +704,11 @@ export class TypeBuilder {
     /** Creates a promise type */
     public Promise<T extends TSchema>(item: T, options: SchemaOptions = {}): TPromise<T> {
         return this.Create({ ...options, kind: 'Promise', type: 'promise', item })
+    }
+
+    /** `Experimental` Creates a query expression type. This type validates against any mongodb object expression. */
+    public Query(options: SchemaOptions = {}): TQuery {
+        return this.Create({ ...options, specialized: 'Query', kind: 'Query', type: 'query' })
     }
 
     /** Creates a record type */
