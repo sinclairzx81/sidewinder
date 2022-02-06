@@ -13,10 +13,10 @@ export async function clean() {
 // -------------------------------------------------------------
 
 export async function start() {
-    const external = "node:http node:https node:buffer node:util node:path node:net node:url node:stream node:fs node:zlib zlib https http events net crypto stream url tls"
+    const external = "zlib https http events net crypto stream url tls"
     await Promise.all([
         shell('hammer run example/server/index.ts --dist target/example/server'),
-        shell(`hammer serve example/client/index.html --dist target/example/client --external "${external}"`)
+        shell(`hammer serve example/client/index.html --dist target/example/client --minify --external "${external}"`)
     ])
 }
 
@@ -32,7 +32,7 @@ export async function test() {
 // Build
 // -------------------------------------------------------------
 
-const VERSION = '0.8.4'
+const VERSION = '0.8.5'
 
 export async function build(target = 'target/build') {
     await clean()

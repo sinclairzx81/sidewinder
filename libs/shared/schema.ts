@@ -28,8 +28,6 @@ THE SOFTWARE.
 
 
 import { TSchema, Static, TUint8Array } from '@sidewinder/contract'
-// @ts-ignore
-import { accepts }                      from 'mongodb-language-model'
 import addFormats                       from 'ajv-formats'
 import Ajv, { ValidateFunction }        from 'ajv'
 export { ValidateFunction }             from 'ajv'
@@ -56,20 +54,9 @@ export namespace Schema {
         return true
     }
 
-    function validateQuery(data: any, parentSchema: any) {
-        const facade = validateUint8Array as any
-        if(!accepts(JSON.stringify(data))) {
-            const message = `Query is invalid`
-            facade.errors = [{keyword: 'object', class: 'Uint8Array', message, params: {}}];
-            return false
-        }
-        return true
-    }
-
     function validateSpecialized(specializedType: string, data: any, parentSchema: any) {
         switch(specializedType) {
             case 'Uint8Array': return validateUint8Array(data, parentSchema)
-            case 'Query': return validateQuery(data, parentSchema)
             default: return false
         }
     }

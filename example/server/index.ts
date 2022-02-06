@@ -4,10 +4,6 @@ import { Contract } from '../shared/index'
 import cors from 'cors'
 
 const service = new WebSocketService(Contract)
-service.method('query', (clientId, query) => {
-   console.log('hello', query)
-   return []
-})
 service.method('buf',   (clientId, buf) => buf)
 service.method('add',   (clientId, a, b) => a + b)
 service.method('sub',   (clientId, a, b) => a - b)
@@ -23,9 +19,7 @@ async function clientTest() {
     const client = new WebSocketClient(Contract, 'ws://localhost:5001/math')
     const result = await client.call('add', 1, 2)
     const buffer = await client.call('buf', new Uint8Array(10))
-    const query  = await client.call('query', { name: { $eq: 'dave' } })
     console.log(result)
     console.log(buffer)
-    console.log(query)
 }
 clientTest()

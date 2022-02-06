@@ -115,6 +115,7 @@ export class WebService<Contract extends TContract> {
     /** Defines an method implementation */
     public method(...args: any[]): any {
         const [method, mapping, callback] = (args.length === 3) ? [args[0], args[1], args[2]] : [args[0], (x: any) => x, args[1]]
+        if((this.contract.server as any)[method] === undefined) throw Error(`Cannot define method '${method}' as it does not exist in contract`)
         this.methods.register(method, (this.contract.server as any)[method], mapping, callback)
         return async (clientId: string, ...params: any[]) => await this.methods.executeServerMethod(clientId, method, params)
     }

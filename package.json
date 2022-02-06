@@ -25,7 +25,6 @@
     "ajv": "^8.9.0",
     "ajv-formats": "^2.1.1",
     "express": "^4.17.2",
-    "mongodb-language-model": "^2.3.0",
     "uuid": "^8.3.2",
     "ws": "^8.4.2"
   }
