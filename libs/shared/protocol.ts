@@ -52,7 +52,7 @@ export const RpcRequest = Type.Object({
     method:  Type.String(),
     params:  Type.Array(Type.Unknown()),
     id:      Type.Optional(Nullable(Type.String()))
-})
+}) 
 
 export type RpcError  = Static<typeof RpcError>
 export const RpcError = Type.Object({

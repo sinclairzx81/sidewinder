@@ -31,6 +31,7 @@ License MIT
 - [Contracts](libs/contract/readme.md)
 - [Servers](libs/server/readme.md)
 - [Clients](libs/client/readme.md)
+- [Protocol](#Protocol)
 
 ## Install
 
@@ -92,4 +93,32 @@ const sub = await client.call('sub', 1, 2)
 const mul = await client.call('mul', 1, 2)
 const div = await client.call('div', 1, 2)
 console.log([add, sub, mul, div]) // [3, -1, 2, 0.5]
+```
+
+## Protocol
+
+Sidewinder implements the JSON RPC 2.0 protocol over Http and Web Sockets to enable simpler interoperability with other languages and platforms.
+
+The following calls the above `add` method using `fetch` over Http.
+
+```typescript
+const result = await fetch('http://localhost:5001/', {
+    method: 'post',
+    headers: {
+        'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+        jsonrpc: "2.0",
+        id:      "1",
+        method:  "add",
+        params:  [1, 2],
+        
+    })
+}).then(res => res.json())
+
+// const result = {
+//   jsonrpc: '2.0', 
+//   id: '1', 
+//   result: 3
+// }
 ```
