@@ -10,7 +10,7 @@
 
 ## Overview
 
-This package contains the `WebService` (Http), `WebSocketService` (Ws) `Host` libraries used to build Sidewinder services in Node.
+This package contains the WebService (Http), WebSocketService (Ws) and Host types used to build type safe RPC services in Node.
 
 ## Contents
 
@@ -59,7 +59,7 @@ host.listen(5000)
 
 ## Host
 
-A Sidewinder `Host` is a specialized Http server that supports mounting Sidewinder and Express services and middleware. The host can be thought of as combination of the [express](https://expressjs.com/) and [ws](https://github.com/websockets/ws) which provides some additional configuration options for running Web Sockets in load balanced environments.
+A Sidewinder Host is a specialized Http server that supports mounting Sidewinder and Express services and middleware. The host can be thought of as combination of the [express](https://expressjs.com/) and [ws](https://github.com/websockets/ws) which provides some additional configuration options for running Web Sockets in load balanced environments.
 
 ```typescript
 import { Host }   from '@sidewinder/service'
@@ -107,7 +107,7 @@ host.dispose()
 
 ## WebService
 
-A `WebService` is JSON RPC 2.0 based HTTP service that accepts requests on singular route. The `WebService` accepts a Contract on its constructor and is responsible for implementing the methods of the Contract. Method implementations can be either `sync` or `async` and accept a `clientId` which is unique for each request along with the parameters defined in the Contract. The following implements a `echo` method on a `WebService` and hosts it on the `/v1/service` route.
+A WebService is JSON RPC 2.0 based HTTP service that accepts requests on singular route. The WebService type accepts a Contract on its constructor and is responsible for implementing the methods of that Contract. Method implementations can be either `sync` or `async` and accept a `clientId` for the first parameter followed by additional parameters defined in the Contract. The following implements a `echo` method on a `WebService` and hosts it on the `/v1/service` route.
 
 <details>
   <summary>Contract</summary>
