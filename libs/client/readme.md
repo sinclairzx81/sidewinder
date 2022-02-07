@@ -15,8 +15,8 @@ This package contains the Http and Web Socket libraries used to connect to Sidew
 - [Overview](#Overview)
 - [Example](#Example)
 - [WebClient](#WebClient)
-- [WebSocketClient](@WebSocketClient)
-- [WebProxy](@WebProxy)
+- [WebSocketClient](#WebSocketClient)
+- [WebProxy](#WebProxy)
 
 ## Example
 
