@@ -120,7 +120,7 @@ const client = new WebSocketClient(Contract, 'ws://localhost:5000/')
 
 // ---------------------------------------------------------------------------
 // As there is a `progress` method defined on the client section of the
-// contract, a WebSocket client can register a method implementation to
+// contract, the WebSocketClient can register a method implementation to
 // receive progress events emitted from the service.
 // ---------------------------------------------------------------------------
 
@@ -132,7 +132,7 @@ client.method('progress', progress => {
 // ---------------------------------------------------------------------------
 // Here we call the render service method here and await for the result. 
 // While this operation is being run on the service, the client can expect 
-// to  receive a series of progress updates before the result is returned.
+// to receive a series of progress updates before the result is returned.
 // ---------------------------------------------------------------------------
 
 const result = await client.call('render', {
