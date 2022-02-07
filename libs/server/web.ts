@@ -173,7 +173,7 @@ export class WebService<Contract extends TContract> {
                 if (result.type === 'result-with-response' || result.type === 'error-with-response') {
                     this.writeResponse(response, 200, this.encoder.encode(result.response))
                 } else {
-                    this.writeResponse(response, 200, Buffer.alloc(0))
+                    this.writeResponse(response, 200, Buffer.from('{}'))
                 }
             } else {
                 const [code, data, message] = [RpcErrorCode.InvalidRequest, {}, 'Invalid Request']

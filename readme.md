@@ -98,26 +98,47 @@ console.log([add, sub, mul, div]) // [3, -1, 2, 0.5]
 
 ## Protocol
 
-Sidewinder implements the [JSON RPC 2.0](https://www.jsonrpc.org/specification) protocol specification over both Http and Web Sockets. The following calls the above `add` method using fetch.
+Sidewinder implements the [JSON RPC 2.0](https://www.jsonrpc.org/specification) protocol specification over both Http and Web Sockets service types.
+
+### Http
+
+The following calls a `WebService` function using the JavaScript `fetch()` API.
 
 ```typescript
 const result = await fetch('http://localhost:5001/', {
-    method: 'post',
-    headers: {
-        'Content-Type': 'application/json'
-    },
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-        jsonrpc: "2.0",
-        id:      "1",
-        method:  "add",
-        params:  [1, 2],
-        
+        jsonrpc: '2.0',  // required
+        id:      '1',    // optional if send()
+        method:  'add',  // required
+        params:  [1, 2], // required
     })
 }).then(res => res.json())
 
-// const result = {
-//   jsonrpc: '2.0', 
-//   id: '1', 
-//   result: 3
-// }
+// result = { jsonrpc: '2.0', id: '1', result: 3 }
+```
+
+### Web Sockets
+
+The following calls a `WebSocketService` function using the JavaScript `WebSocket` API. Sidewinder sends message using binary sockets only. You can use the JavaScript `TextEncoder` and `TextDecoder` to JSON to and from `Uint8Array`
+
+```typescript
+const encoder = new TextEncoder()
+const decoder = new TextDecoder()
+const socket  = new WebSocket('ws://localhost:5001/math')
+socket.binaryType = 'arraybuffer'
+
+socket.onmessage = (event) => {
+    const result = JSON.parse(decoder.decode(event.data))
+    // result = { jsonrpc: '2.0', id: '1', result: 3 }
+}
+socket.onopen = () => {
+    socket.send(encoder.encode(JSON.stringify({
+        jsonrpc: '2.0',
+        id:      '1',
+        method:  'add',
+        params:  [1, 2]
+    })))
+}
 ```
