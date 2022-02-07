@@ -97,9 +97,9 @@ console.log([add, sub, mul, div]) // [3, -1, 2, 0.5]
 
 ## Protocol
 
-Sidewinder implements the JSON RPC 2.0 protocol over Http and Web Sockets to enable simpler interoperability with other languages and platforms.
+Sidewinder implements the [JSON RPC 2.0](https://www.jsonrpc.org/specification) protocol specification over both Http and Web Sockets. It uses either the `application/json` or `application/x-msgpack` content type depending on the format specified on a Contract. 
 
-The following calls the above `add` method using `fetch` over Http.
+The following calls the above `add` method using `fetch` over Http with `json` message encoding.
 
 ```typescript
 const result = await fetch('http://localhost:5001/', {
