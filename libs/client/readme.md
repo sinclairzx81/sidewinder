@@ -20,7 +20,7 @@ This package contains the `WebClient` (Http) and `WebSocketClient` (Ws) client l
 
 ## Example
 
-The following shows demonstrates creating a Sidewinder `WebClient`. The Contract is inlined for reference, but would usually be imported as a seperate shared module.
+The following shows demonstrates creating a Sidewinder `WebClient`.
 
 <details>
 <summary>Contract</summary>
