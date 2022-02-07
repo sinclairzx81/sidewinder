@@ -37,10 +37,9 @@ import { v4 } from 'uuid'
 import ws from 'ws'
 
 export interface HostOptions {
-
 	/** 
 	 * Load balancer keep alive. Transmits a `ping` signal to each connected 
-     * web sockets to prevent inactive sockets being terminated by load balancers.
+     * web socket to prevent inactive sockets being terminated by the balancer.
 	 * 
 	 * (default is 8000) 
 	 */
@@ -57,8 +56,8 @@ export interface HostOptions {
      disableFrameCompression: boolean
  
      /**
-      * Sets an upper limit for the number of concurrent web sockets allowed on this 
-      * service. This can be useful for autoscaling scenarios where the AWS ALB will 
+      * Sets an upper limit for the number of concurrent web sockets allowed on the 
+      * host. This can be useful for autoscaling scenarios where the AWS ALB will 
       * limited connections to around 4075, but where autoscaling may be dependent on
       * service latency.
       * 

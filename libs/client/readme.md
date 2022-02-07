@@ -8,7 +8,7 @@
 
 ## Overview
 
-This package contains the Http and Web Socket libraries used to connect to Sidewinder services. 
+This package contains the `WebClient` (Http) and `WebSocketClient` (Ws) client libraries used to connect to Sidewinder services. This package is designed to operate in both Node and Browser environments.
 
 ## Contents
 
@@ -20,7 +20,7 @@ This package contains the Http and Web Socket libraries used to connect to Sidew
 
 ## Example
 
-The following shows creating a Sidewinder WebClient. The Contract is inlined for reference, but would usually be imported as a seperate shared module.
+The following shows demonstrates creating a Sidewinder `WebClient`. The Contract is inlined for reference, but would usually be imported as a seperate shared module.
 
 ```typescript
 import { Type }      from '@sidewinder/contract'
