@@ -57,6 +57,7 @@ import { WebClient }        from '@sidewinder/client'
 // ---------------------------------------------------------------------------
 
 const Contract = Type.Contract({
+    format: 'json',
     server: {
         add: Type.Function([Type.Number(), Type.Number()], Type.Number()),
         sub: Type.Function([Type.Number(), Type.Number()], Type.Number()),
@@ -97,9 +98,7 @@ console.log([add, sub, mul, div]) // [3, -1, 2, 0.5]
 
 ## Protocol
 
-Sidewinder implements the [JSON RPC 2.0](https://www.jsonrpc.org/specification) protocol specification over both Http and Web Sockets. It uses either the `application/json` or `application/x-msgpack` content type depending on the format specified on a Contract. 
-
-The following calls the above `add` method using `fetch` over Http with `json` message encoding.
+Sidewinder implements the [JSON RPC 2.0](https://www.jsonrpc.org/specification) protocol specification over both Http and Web Sockets. The following calls the above `add` method using fetch.
 
 ```typescript
 const result = await fetch('http://localhost:5001/', {
