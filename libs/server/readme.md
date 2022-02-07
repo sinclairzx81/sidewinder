@@ -70,7 +70,7 @@ const host = new Host({
      * Load balancer keep alive. Transmits a `ping` signal to each connected 
      * web socket to prevent inactive sockets being terminated by the balancer.
      * 
-     * (default is 8000) 
+     * (Default is 8000) 
      */
      keepAliveTimeout: number
 
@@ -176,21 +176,22 @@ import { Contract }         from '../shared/contract'
 
 const service = new WebSocketService(Contract)
 
-// ---------------------------------------------------------------------------
-// As there is a `progress` method defined on the client section of the
-// Contract, the WebSocketService can send messages to the clients 'progress'
-// implementation to notify of progress updates.
-// ---------------------------------------------------------------------------
-
+/**
+ * As there is a `progress` method defined on the client section of the
+ * Contract, the WebSocketService can send messages to the clients 'progress'
+ * implementation to notify of progress updates.
+ */
 service.method('render', async (clientId, request) => {
-    // Simulate progress events
+    /** Simulate Progress Events */
     for(let i = 0; i <= 100; i++) {
         service.send(clientId, 'progress', {
             method:  'render',
             percent: i
         })
     }
-    return { imageUrl: 'https://domain.com/model/model.png' }
+    return { 
+        imageUrl: 'https://domain.com/model/model.png' 
+    }
 })
 ```
 ## Lifecycle
