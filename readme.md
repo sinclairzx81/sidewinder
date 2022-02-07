@@ -33,16 +33,17 @@ License MIT
 ## Install
 
 ```bash
-$ npm install @sidewinder/contract   # Service Description Contract and Runtime Types
+$ npm install @sidewinder/contract   # Service Description Types
 $ npm install @sidewinder/server     # Http and Web Socket Services
 $ npm install @sidewinder/client     # Http and Web Socket Clients
 ```
 
 ## Example
 
-Sidewinder services consist of three main components; A contract which acts as a service description, a service which implements the contract and a client that calls methods on the service. The following shows setting up an simple math service. View the `example` project provided with this repository for a typical client server application setup. Use `npm start` to run.
+Sidewinder services are built from three main components, a [Contract](libs/contract/readme.md), [Service](libs/server/readme.md) and [Client](libs/client/readme.md). A Contract defines a set of callable network methods and is shared between both Client and Server. A Service provides an implementation for a Contract; and a Client calls methods implemented on the Service. Sidewinder uses Contracts to infer type safe functions on both Services and Clients, as well as using the metadata inside the Contract to validate method calls made over the network.
 
-Experiment on the [TypeScript Playground](https://www.typescriptlang.org/play?#code/JYWwDg9gTgLgBAbzgFQJ5gKZwL5z-g-AMyghDgHIABAZ2ABMMB3YAO0agHoBjCVmKAENuMCgChQkWIjgAJCDRgAaOAHUMAIwDKGKADdg3LLhJlKtBszYdONXXt3jJ0eEnUaAwgBtgGfjkJiUnJqOkYWdl0eHz9RMTFOTjgAWlS09IzMrOyc3LychKSPPgFhGEKU-Krqmtr0+N5WRThi-iEROABeFHQMADpW0pEACgQxAjt9XQAuRHHAuEF6elm0TD6AMQBXVhFgPmGAbTX+gDktkA1dYYBKFRO+88vrm4Bde97Hi6uoW7v5wI0LYaVafba7GD7VhHB5PH63D7rOEvd49JHfF7-BZwEBbLyg9bgvYHY6fZG-O5os4Yimo2E0v5KAGEejAPQE-pEyEk+nPCmI6l8250skMm5Y-DYMTYG7xRKVOqKpVKio6fSGDAVZXanX5Bp8ZqTAxGLpwVjMNSaNXGjDDQbtGCyo0avogDAwAAWEHowwoS3oFBUw24MX4AEl6CpBCoNDcugA+RZwADUcFjYmdRld7q9PooQI0gbgwdDMAjUZjcc6icEKTTTvsLrdnu9vtxXiLJd84cji0rCaTACp6xnG1nm7nfay9J2Q92y73o-WB7WkumtbrN1vUhV5IoN9vD8r9U14F7mt1zUw5AoYLcxOeYH0tnZfZwQIJPUXMxhZY++j4ih+MMACsAAMEGygeR4wTUFTePO0GwchuQns0c6xKaV6Wp4pZ2iUDoqBQHowDAYDTIkXgQNwgheI+0zgRB76fh6FCyo0zRQBgQJePA3SCEwgjAPAGH8H0NFeF4vr+kWACMKgAEzsQaEBeP0VEAObDFxPGOnA8oAMxAA)
+The following example creates a Contract, Service and Client. The Contract type inference can be previewed on the [TypeScript Playground](https://www.typescriptlang.org/play?#code/JYWwDg9gTgLgBAbzgFQJ5gKZwL5z-g-AMyghDgHIABAZ2ABMMB3YAO0agHoBjCVmKAENuMCgChQkWIjgAJCDRgAaOAHUMAIwDKGKADdg3LLhJlKtBszYdONXXt3jJ0eEnUaAwgBtgGfjkJiUnJqOkYWdl0eHz9RMTFOTjgAWlS09IzMrOyc3LychKSPPgFhGEKU-Krqmtr0+N5WRThi-iEROABeFHQMADpW0pEACgQxAjt9XQAuRHHAuEF6elm0TD6AMQBXVhFgPmGAbTX+gDktkA1dYYBKFRO+88vrm4Bde97Hi6uoW7v5wI0LYaVafba7GD7VhHB5PH63D7rOEvd49JHfF7-BZwEBbLyg9bgvYHY6fZG-O5os4Yimo2E0v5KAGEejAPQE-pEyEk+nPCmI6l8250skMm5Y-DYMTYG7xRKVOqKpVKio6fSGDAVZXanX5Bp8ZqTAxGLpwVjMNSaNXGjDDQbtGCyo0avogDAwAAWEHowwoS3oFBUw24MX4AEl6CpBCoNDcugA+RZwADUcFjYmdRld7q9PooQI0gbgwdDMAjUZjcc6icEKTTTvsLrdnu9vtxXiLJd84cji0rCaTACp6xnG1nm7nfay9J2Q92y73o-WB7WkumtbrN1vUhV5IoN9vD8r9U14F7mt1zUw5AoYLcxOeYH0tnZhpmMLLH30fIo-MMAKwAAzAbKB5HuBNQVN485gRBcG5CezRzrEppXpanilnaJQOioFAejAMBgNMiReBA3CCF4j7TEBwGcBQsqNM0-qmoITCCMA8DIfwfTkV4Xi+v6RYAIwqAATAxBrwAWLFsRxcBcU+vH8fmwLCWJEmnjieIyexnGljxFHKe2alwOJYiMfA046XJCkGXxU5siZZmMRAXj9KRADmRz+ioBYqO2KjTq8cbyocADMKjJCJpkqIBfT-q8QA). For an example of a splitting Service and Client across different applications, see the `example` project provided with this repository.
+
 
 ```typescript
 import { Type }             from '@sidewinder/contract'
@@ -75,16 +76,18 @@ service.method('div', (clientId, a, b) => a / b)
 // ---------------------------------------------------------------------------
 // Host
 // ---------------------------------------------------------------------------
-
 const host = new Host()
-host.use('/math', service)
+host.use(service)
 host.listen(5000)
 
 // ---------------------------------------------------------------------------
 // Client
 // ---------------------------------------------------------------------------
 
-const client = new WebClient(Contract, 'http://localhost:5000/math')
-const result = await client.call('add', 1, 2)
-console.log(result) // 3
+const client = new WebClient(Contract, 'http://localhost:5000/')
+const add = await client.call('add', 1, 2)
+const sub = await client.call('sub', 1, 2)
+const mul = await client.call('mul', 1, 2)
+const div = await client.call('div', 1, 2)
+console.log([add, sub, mul, div]) // [3, -1, 2, 0.5]
 ```
