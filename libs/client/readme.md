@@ -56,7 +56,7 @@ console.log([add, sub, mul, div]) // [3, -1, 2, 0.5]
 
 ## WebClient
 
-The `WebClient` connects to `WebService` implementations. This client type communicates over Http and supports uni-directional request / response calling patterns only. The `WebService` client provides two methods, `call()` and `send()`. The first argument is the name of the method to call, with subsequent arguments passed as parameters to the remote function.
+The WebClient connects to WebService server implementations. This client type communicates over Http and supports uni-directional request / response calling patterns only. The `WebService` client provides two methods, `call()` and `send()`. The first argument is the name of the method to call, with subsequent arguments passed as parameters to the remote function.
 
 <details>
 <summary>Contract</summary>
@@ -81,25 +81,23 @@ import { Contract } from '../shared/contract'
 
 const client = new WebClient(Contract, 'http://localhost:5000/')
 
-// --------------------------------------------------------------------------------
-// Use the call() function to execute a remote service method and obtain a result.
-// --------------------------------------------------------------------------------
-
+/**
+ * Use the call() function to execute a remote service method and obtain a result.
+ */
 const result = client.call('add', 1, 2)
 
-// --------------------------------------------------------------------------------
-// Use the send() function to execute a remote method and ignore the result. Note
-// the send() function returns void and should only be used for transient
-// notification events. For the majority of cases, use call().
-// --------------------------------------------------------------------------------
-
+/**
+ * Use the send() function to execute a remote method and ignore the result. Note
+ * the send() function returns void and should only be used for transient
+ * notification events. For the majority of cases, use call().
+ */
 client.send('add', 1, 2)
 ```
 
 
 ## WebSocketClient
 
-The WebSocketClient connects to WebSocketService implementations. This client type provides the same functionality as the WebClient but offers additional support for bi-directional method calls as well as connection retry options. The following example creates a WebSocketClient that connects to a WebSocketService that carries out a long running rendering task. We expect that this task will take a some time to complete, so this service provides a `progress` notification event (as informed by the Contract) to notify the client of rendering progress.
+The WebSocketClient connects to WebSocketService server implementations. This client type provides the same functionality as the WebClient but offers additional support for bi-directional method calls as well as connection retry options. The following example creates a WebSocketClient that connects to a WebSocketService that carries out a long running rendering task. We expect that this task will take a some time to complete, so this service provides a `progress` notification event (as informed by the Contract) to notify the client of rendering progress.
 
 <details>
   <summary>Contract</summary>
@@ -165,23 +163,21 @@ const client = new WebSocketClient(Contract, 'ws://localhost:5000/', {
     autoReconnectTimeout: number
 })
 
-// ---------------------------------------------------------------------------
-// As there is a `progress` method defined on the client section of the
-// contract, the WebSocketClient can register a method implementation to
-// receive progress events emitted from the service.
-// ---------------------------------------------------------------------------
-
+/**
+ * As there is a `progress` method defined on the client section of the
+ * contract, the WebSocketClient can register a method implementation to
+ * receive progress events emitted from the service.
+ */
 client.method('progress', progress => {
     console.log('method',  progess.method)   // i.e: 'render'
     console.log('percent', progress.percent) // i.e: 35%
 })
 
-// ---------------------------------------------------------------------------
-// Here we call the render service method here and await for the result. 
-// While this operation is being run on the service, the client can expect 
-// to receive a series of progress updates before the result is returned.
-// ---------------------------------------------------------------------------
-
+/**
+ * Here we call the render service method here and await for the result. 
+ * While this operation is being run on the service, the client can expect 
+ * to receive a series of progress updates before the result is returned.
+ */
 const result = await client.call('render', {
     modelUrl: 'https://domain.com/model/model.blend'
 })
