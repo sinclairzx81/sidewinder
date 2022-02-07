@@ -10,7 +10,7 @@
 
 ## Overview
 
-This package contains the `WebClient` (Http) and `WebSocketClient` (Ws) client libraries used to connect to Sidewinder services. This package is designed to operate in both Node and Browser environments.
+This package contains the WebClient (Http) and WebSocketClient (Ws) client libraries used to connect to Sidewinder services. This package is designed to operate in both Node and Browser environments.
 
 ## Contents
 
