@@ -4,6 +4,12 @@
 
 <p>Sidewinder Client Library</p>
 
+<hr />
+
+<img src="https://github.com/sinclairzx81/sidewinder/blob/master/build/assets/sidewinder.png?raw=true" />
+
+<hr />
+
 </div>
 
 ## Overview
@@ -16,8 +22,6 @@ This package contains the Http and Web Socket libraries used to connect to Sidew
 - [Example](#Example)
 - [WebClient](#WebClient)
 - [WebSocketClient](@WebSocketClient)
-- [Calls](@Calls)
-- [Sends](@Sends)
 - [WebProxy](@WebProxy)
 
 ## Example
