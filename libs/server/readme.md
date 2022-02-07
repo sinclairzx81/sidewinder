@@ -8,15 +8,26 @@
 
 ## Overview
 
+This package contains the Http, Web Socket and Hosting libraries used to bulld and host Sidewinder services. 
+
 ## Contents
 
-## Usage
+- [Overview](#Overview)
+- [Example](#Example)
+- [Host](#Host)
+- [WebService](#WebService)
+- [WebSocketService](#WebSocketService)
+- [Middleware](#Middleware)
 
-## Hosts
+## Example
+
+## Host
 
 ## WebService
 
 ## WebSocketService
+
+## Middleware
 
 
 
