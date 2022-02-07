@@ -29,7 +29,7 @@ The following demonstrates creating a Sidewinder `WebService` and `Host`.
   <summary>Contract</summary>
 
 ```typescript
-import { Type }             from '@sidewinder/contract'
+import { Type } from '@sidewinder/contract'
 
 export const Contract = Type.Contract({
     server: {
@@ -59,19 +59,19 @@ host.listen(5000)
 
 ## Host
 
-A Sidewinder `Host` is a specialized Http server that supports mounting Sidewinder and Express services and middleware. The host can be thought of as amalgamation of the [express](https://expressjs.com/) and [ws](https://github.com/websockets/ws) server libraries, and provides additional configuration options for managing Web Sockets.
+A Sidewinder `Host` is a specialized Http server that supports mounting Sidewinder and Express services and middleware. The host can be thought of as combination of the [express](https://expressjs.com/) and [ws](https://github.com/websockets/ws) which provides some additional configuration options for managing Web Sockets.
 
 ```typescript
 import { Host }   from '@sidewinder/service'
 import { Router } from 'express'
 
 const host = new Host({
-	/** 
-	 * Load balancer keep alive. Transmits a `ping` signal to each connected 
+    /** 
+     * Load balancer keep alive. Transmits a `ping` signal to each connected 
      * web socket to prevent inactive sockets being terminated by the balancer.
-	 * 
-	 * (default is 8000) 
-	 */
+     * 
+     * (default is 8000) 
+     */
      keepAliveTimeout: number
 
      /** 
