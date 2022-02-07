@@ -59,7 +59,7 @@ host.listen(5000)
 
 ## Host
 
-A Sidewinder `Host` is a specialized Http server that supports mounting Sidewinder and Express services and middleware. The host can be thought of as combination of the [express](https://expressjs.com/) and [ws](https://github.com/websockets/ws) which provides some additional configuration options for managing Web Sockets.
+A Sidewinder `Host` is a specialized Http server that supports mounting Sidewinder and Express services and middleware. The host can be thought of as combination of the [express](https://expressjs.com/) and [ws](https://github.com/websockets/ws) which provides some additional configuration options for running Web Sockets in load balanced environments.
 
 ```typescript
 import { Host }   from '@sidewinder/service'
