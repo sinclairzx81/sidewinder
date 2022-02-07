@@ -138,36 +138,7 @@ host.listen(5000)
 
 ## WebSocketService
 
-A `WebSocketService` is JSON RPC 2.0 based Web Socket service that accepts web sockets on singular route. The `WebSocketService` accepts a Contract on its constructor and is responsible for implementing the methods of the Contract. Method implementations can be either `sync` or `async` and accept a `clientId` which is reused for all method calls made over the connected socket.
-
-<details>
-  <summary>Contract</summary>
-
-```typescript
-import { Type } from '@sidewinder/contract'
-
-export const Contract = Type.Contract({
-    server: {
-        echo: Type.Function([Type.String()], Type.String())
-    }
-})
-
-```
-</details>
-
-```typescript
-import { WebSocketService } from '@sidewinder/server'
-
-const service = new WebSocketService(Contract)
-
-service.method('echo', (clientId, message) => message)
-
-host.use('/v1/service', service)
-
-host.listen(5000)
-```
-
-The `WebSocketService` supports bi-directional method invocation allowing it to call methods on instances of `WebSocketClient`. The following example implements a service to support the client example located [here](https://github.com/sinclairzx81/sidewinder/blob/master/libs/client/readme.md#websocketclient).
+A WebSocketService is JSON RPC 2.0 based WebSocket service that accepts incoming connectiosn from WebSocketClients. The WebSocketService works the same as the WebService but also provides an API to allow Services to call Clients. The following example implements a WebSocketService to support the WebSocketClient example located [here](https://github.com/sinclairzx81/sidewinder/blob/master/libs/client/readme.md#websocketclient).
 
 <details>
   <summary>Contract</summary>
@@ -197,6 +168,7 @@ export const Contract = Type.Contract({
     }
 })
 ```
+</details>
 
 ```typescript
 import { WebSocketService } from '@sidewinder/service'
@@ -206,12 +178,11 @@ const service = new WebSocketService(Contract)
 
 // ---------------------------------------------------------------------------
 // As there is a `progress` method defined on the client section of the
-// contract, the WebSocketService can issue calls to the client signalling
-// progress updates.
+// Contract, the WebSocketService can send messages to the clients 'progress'
+// implementation to notify of progress updates.
 // ---------------------------------------------------------------------------
 
 service.method('render', async (clientId, request) => {
-    
     // Simulate progress events
     for(let i = 0; i <= 100; i++) {
         service.send(clientId, 'progress', {
@@ -224,7 +195,7 @@ service.method('render', async (clientId, request) => {
 ```
 ## Lifecycle
 
-Both WebService and WebSocketService provide transport lifecycle events which services can use to initialize data associated with both short lived Http requests and long lived Web Socket connections. The following details these events for each service type.
+Both WebService and WebSocketService expose transport lifecycle events which are dispatched on changes to the underlying transport. These events different slightly between WebService and WebSocketService events. The following describes their behaviours.
 
 <details>
   <summary>WebService Lifecycle Events</summary>
