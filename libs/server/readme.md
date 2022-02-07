@@ -2,7 +2,9 @@
 
 <h1>Sidewinder/Server</h1>
 
-<p>Sidewinder Web Service and Host Library</p>
+<p>Sidewinder Web Service and Hosting Library</p>
+
+[<img src="https://img.shields.io/npm/v/@sidewinder/server?label=%40sidewinder%2Fserver">](https://www.npmjs.com/package/@sidewinder/server)
 
 </div>
 
@@ -23,7 +25,6 @@ This package contains the `WebService` (Http), `WebSocketService` (Ws) `Host` li
 
 The following demonstrates creating a Sidewinder `WebService` and `Host`. 
 
-<details>
 <details>
   <summary>Contract</summary>
 
