@@ -4,12 +4,6 @@
 
 <p>Sidewinder Client Library</p>
 
-<hr />
-
-<img src="https://github.com/sinclairzx81/sidewinder/blob/master/build/assets/sidewinder.png?raw=true" />
-
-<hr />
-
 </div>
 
 ## Overview
