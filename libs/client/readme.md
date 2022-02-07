@@ -4,6 +4,8 @@
 
 <p>Sidewinder Client Library</p>
 
+[<img src="https://img.shields.io/npm/v/@sidewinder/client?label=%40sidewinder%2Fclient">](https://www.npmjs.com/package/@sidewinder/client)
+
 </div>
 
 ## Overview
@@ -162,7 +164,7 @@ console.log(result.imageUrl)
 
 ## WebProxy
 
-The `WebProxy` function will transform a `WebClient` or `WebServiceClient` into a object where remote methods can be called as functions (vs passing string names for each function). This can be more ergonimic to use in some cases. The `WebProxy` function will only transform the `call()` functions on the client. The following demonstrates its use.
+The WebProxy function will transform a WebClient or WebServiceClient into a object where remote methods can be called as functions (vs passing string names for each function). This can be more ergonimic to use in some cases. The WebProxy function only transforms the `call()` functions of the client. The following demonstrates its use.
 
 <details>
 <summary>Contract</summary>
@@ -222,7 +224,7 @@ const result = await fetch('http://localhost:5001/', {
 The following calls a WebSocketService method using the JavaScript WebSocket API. Sidewinder sends message using binary sockets only. You can use the JavaScript `TextEncoder` and `TextDecoder` to JSON to and from `Uint8Array`
 
 <details>
-  <summary>Web Socket Example</summary>
+  <summary>WebSocket Example</summary>
   
 ```typescript
 const encoder = new TextEncoder()
