@@ -17,7 +17,9 @@
 
 ## Overview
 
-Sidewinder is a NodeJS web service framework built for micro service architectures. It allows one to create validated RPC methods that can be trivially called over the network. It offers functionality for unidirectional (http) and bidirectional (web socket) method calls, and provides this under a unified service programming model.
+Sidewinder is a NodeJS Web Service framework built for micro service architectures. It allows one to create validated RPC methods that can be trivially called over the network. It offers functionality for both unidirectional (http) and bidirectional (web socket) method calls, and provides this under a unified service programming model.
+
+Sidewinder aims to provide similar functionality to GRPC and WCF. It uses JSON RPC 2.0 for the wire protocol, JSON Schema for message validation and MsgPack for binary message encoding.
 
 License MIT
 
