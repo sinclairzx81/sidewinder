@@ -17,10 +17,11 @@ This package contains the `WebClient` (Http) and `WebSocketClient` (Ws) client l
 - [WebClient](#WebClient)
 - [WebSocketClient](#WebSocketClient)
 - [WebProxy](#WebProxy)
+- [Protocol](#Protocol)
 
 ## Example
 
-The following shows demonstrates creating a Sidewinder `WebClient`.
+The following shows shows general usage of the Sidewinder `WebClient`.
 
 <details>
 <summary>Contract</summary>
