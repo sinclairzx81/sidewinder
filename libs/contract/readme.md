@@ -30,6 +30,7 @@ The following creates a contract where the `server` exposes a `foo` function, an
 import { Type } from '@sidewinder/contract'
 
 const Contract = Type.Contract({
+    format: 'json',
     server: {
         foo: Type.Function([Type.String()], Type.String())
     },

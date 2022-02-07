@@ -23,7 +23,7 @@ This package contains the WebClient (Http) and WebSocketClient (Ws) client libra
 
 ## Example
 
-The following shows shows general usage of the Sidewinder `WebClient`.
+The following shows shows general usage of a Sidewinder client.
 
 <details>
 <summary>Contract</summary>

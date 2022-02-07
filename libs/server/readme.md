@@ -21,17 +21,16 @@ This package contains the `WebService` (Http), `WebSocketService` (Ws) `Host` li
 
 ## Example
 
-The following shows demonstrates creating a Sidewinder `WebService` and `Host`. The Contract is inlined for reference, but would usually be imported as a seperate shared module.
+The following demonstrates creating a Sidewinder `WebService` and `Host`. 
+
+<details>
+<details>
+  <summary>Contract</summary>
 
 ```typescript
 import { Type }             from '@sidewinder/contract'
-import { Host, WebService } from '@sidewinder/server'
 
-// ---------------------------------------------------------------------------
-// Contract
-// ---------------------------------------------------------------------------
-
-const Contract = Type.Contract({
+export const Contract = Type.Contract({
     server: {
         add: Type.Function([Type.Number(), Type.Number()], Type.Number()),
         sub: Type.Function([Type.Number(), Type.Number()], Type.Number()),
@@ -39,20 +38,18 @@ const Contract = Type.Contract({
         div: Type.Function([Type.Number(), Type.Number()], Type.Number()),
     }
 })
+```
+</details>
 
-// ---------------------------------------------------------------------------
-// Service
-// ---------------------------------------------------------------------------
+```typescript
+import { Host, WebService } from '@sidewinder/server'
+import { Contract } from '../shared/contract'
 
 const service = new WebService(Contract)
 service.method('add', (clientId, a, b) => a + b)
 service.method('sub', (clientId, a, b) => a - b)
 service.method('mul', (clientId, a, b) => a * b)
 service.method('div', (clientId, a, b) => a / b)
-
-// ---------------------------------------------------------------------------
-// Host
-// ---------------------------------------------------------------------------
 
 const host = new Host()
 host.use(service)
@@ -111,6 +108,21 @@ host.dispose()
 
 A `WebService` is JSON RPC 2.0 based HTTP service that accepts requests on singular route. The `WebService` accepts a Contract on its constructor and is responsible for implementing the methods of the Contract. Method implementations can be either `sync` or `async` and accept a `clientId` which is unique for each request along with the parameters defined in the Contract. The following implements a `echo` method on a `WebService` and hosts it on the `/v1/service` route.
 
+<details>
+  <summary>Contract</summary>
+
+```typescript
+import { Type } from '@sidewinder/contract'
+
+export const Contract = Type.Contract({
+    server: {
+        echo: Type.Function([Type.String()], Type.String())
+    }
+})
+
+```
+</details>
+
 ```typescript
 import { WebService } from '@sidewinder/server'
 
@@ -127,6 +139,21 @@ host.listen(5000)
 
 A `WebSocketService` is JSON RPC 2.0 based Web Socket service that accepts web sockets on singular route. The `WebSocketService` accepts a Contract on its constructor and is responsible for implementing the methods of the Contract. Method implementations can be either `sync` or `async` and accept a `clientId` which is reused for all method calls made over the connected socket.
 
+<details>
+  <summary>Contract</summary>
+
+```typescript
+import { Type } from '@sidewinder/contract'
+
+export const Contract = Type.Contract({
+    server: {
+        echo: Type.Function([Type.String()], Type.String())
+    }
+})
+
+```
+</details>
+
 ```typescript
 import { WebSocketService } from '@sidewinder/server'
 
@@ -141,28 +168,26 @@ host.listen(5000)
 
 The `WebSocketService` supports bi-directional method invocation allowing it to call methods on instances of `WebSocketClient`. The following example implements a service to support the client example located [here](https://github.com/sinclairzx81/sidewinder/blob/master/libs/client/readme.md#websocketclient).
 
+<details>
+  <summary>Contract</summary>
+
 ```typescript
-import { Type }             from '@sidewinder/contract'
-import { WebSocketService } from '@sidewinder/service'
+import { Type } from '@sidewinder/contract'
 
-// ---------------------------------------------------------------------------
-// Contract
-// ---------------------------------------------------------------------------
-
-const RenderRequest = Type.Object({
+export const RenderRequest = Type.Object({
     modelUrl: Type.String({ format: 'url' })
 })
 
-const RenderResult = Type.Object({
+export const RenderResult = Type.Object({
     imageUrl: Type.String({ format: 'url' })
 })
 
-const Progress = Type.Object({
+export const Progress = Type.Object({
     method:  Type.String(),
     percent: Type.Number()
 })
 
-const Contract = Type.Contract({
+export const Contract = Type.Contract({
     server: {
         render: Type.Function([RenderRequest], RenderResult),
     },
@@ -170,10 +195,11 @@ const Contract = Type.Contract({
         progress: Type.Function([Progress], Type.Any())
     }
 })
+```
 
-// ---------------------------------------------------------------------------
-// Service
-// ---------------------------------------------------------------------------
+```typescript
+import { WebSocketService } from '@sidewinder/service'
+import { Contract }         from '../shared/contract'
 
 const service = new WebSocketService(Contract)
 
@@ -184,9 +210,8 @@ const service = new WebSocketService(Contract)
 // ---------------------------------------------------------------------------
 
 service.method('render', async (clientId, request) => {
-    // ------------------------------------
-    // simulate progress events.
-    // ------------------------------------
+    
+    // Simulate progress events
     for(let i = 0; i <= 100; i++) {
         service.send(clientId, 'progress', {
             method:  'render',
@@ -198,9 +223,10 @@ service.method('render', async (clientId, request) => {
 ```
 ## Lifecycle
 
-Both `WebService` and `WebSocketService` provide transport lifecycle events which services can use to initialize data associated with both short lived Http requests and long lived Web Socket connections. The following details these events for each service type.
+Both WebService and WebSocketService provide transport lifecycle events which services can use to initialize data associated with both short lived Http requests and long lived Web Socket connections. The following details these events for each service type.
 
-### WebService Events
+<details>
+  <summary>WebService Lifecycle Events</summary>
 
 ```typescript
 export type WebServiceAuthorizeCallback = (clientId: string, request: IncomingMessage) => Promise<boolean> | boolean
@@ -233,7 +259,10 @@ public event(event: 'error', callback: WebServiceErrorCallback): WebServiceError
 */
 public event(event: 'close', callback: WebServiceCloseCallback): WebServiceCloseCallback
 ```
-### WebSocketService Events
+</details>
+
+<details>
+  <summary>WebSocketService Lifecycle Events</summary>
 
 ```typescript
 export type WebSocketServiceAuthorizeCallback = (clientId: string, request: IncomingMessage) => Promise<boolean> | boolean
@@ -268,3 +297,4 @@ public event(event: 'error', callback: WebSocketServiceErrorCallback): WebSocket
  */
 public event(event: 'close', callback: WebSocketServiceCloseCallback): WebSocketServiceCloseCallback
 ```
+</details>
