@@ -99,7 +99,7 @@ client.send('add', 1, 2)
 
 ## WebSocketClient
 
-The WebSocketClient connects to WebSocketService implementations. This client type provides the same functionality as the WebClient but offers additional support for bi-directional method invocation. The following example creates a WebSocketClient that connects to a WebSocketService that carries out a long running rendering task. We expect that this task will take a some time to complete, so this service provides a `progress` notification event (as informed by the Contract) to notify the client of rendering progress.
+The WebSocketClient connects to WebSocketService implementations. This client type provides the same functionality as the WebClient but offers additional support for bi-directional method calls as well as connection retry options. The following example creates a WebSocketClient that connects to a WebSocketService that carries out a long running rendering task. We expect that this task will take a some time to complete, so this service provides a `progress` notification event (as informed by the Contract) to notify the client of rendering progress.
 
 <details>
   <summary>Contract</summary>
@@ -136,7 +136,34 @@ export const Contract = Type.Contract({
 import { WebSocketClient } from '@sidewinder/client'
 import { Contract }        from '../shared/contract'
 
-const client = new WebSocketClient(Contract, 'ws://localhost:5000/')
+const client = new WebSocketClient(Contract, 'ws://localhost:5000/', {
+    /**
+     * If true, this socket will attempt to automatically reconnect
+     * to the remote service if the underlying WebSocket transport 
+     * closes. 
+     * 
+     * (Default is false)
+     */
+    autoReconnectEnabled: boolean
+    /**
+     * If true, this socket will buffer any RPC method calls if calls
+     * are made while the underlying WebSocket transport is in a
+     * disconnected state. This option is only available if the
+     * autoReconnectEnabled option is true.
+     * 
+     * (Default is false)
+     */
+    autoReconnectBuffer: boolean
+    /**
+     * The auto reconnection timeout. This is the period of time that
+     * should elapse before a reconnection attempt is made in instances
+     * the underlying WebSocket connection terminates. This option is 
+     * only available if the autoReconnectEnabled option is true.
+     * 
+     * (Default is 4000)
+     */
+    autoReconnectTimeout: number
+})
 
 // ---------------------------------------------------------------------------
 // As there is a `progress` method defined on the client section of the

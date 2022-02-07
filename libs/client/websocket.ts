@@ -35,7 +35,7 @@ export type WebSocketClientErrorCallback   = (error: any) => void
 export type WebSocketClientCloseCallback   = () => void
 
 function defaultClientOptions(partial: Partial<WebSocketClientOptions>): WebSocketClientOptions {
-    const options: WebSocketClientOptions = { autoReconnectEnabled: false, autoReconnectBuffer: false, autoReconnectTimeout: 2000 }
+    const options: WebSocketClientOptions = { autoReconnectEnabled: false, autoReconnectBuffer: false, autoReconnectTimeout: 4000 }
     if (partial.autoReconnectEnabled !== undefined) options.autoReconnectEnabled = partial.autoReconnectEnabled
     if (partial.autoReconnectBuffer !== undefined) options.autoReconnectBuffer = partial.autoReconnectBuffer
     if (partial.autoReconnectTimeout !== undefined) options.autoReconnectTimeout = partial.autoReconnectTimeout
@@ -43,8 +43,31 @@ function defaultClientOptions(partial: Partial<WebSocketClientOptions>): WebSock
 }
 
 export interface WebSocketClientOptions {
+    /**
+     * If true, this socket will attempt to automatically reconnect
+     * to the remote service if the underlying WebSocket transport 
+     * closes. 
+     * 
+     * (Default is false)
+     */
     autoReconnectEnabled: boolean
+    /**
+     * If true, this socket will buffer any RPC method calls if calls
+     * are made while the underlying WebSocket transport is in a
+     * disconnected state. This option is only available if the
+     * autoReconnectEnabled option is true.
+     * 
+     * (Default is false)
+     */
     autoReconnectBuffer: boolean
+    /**
+     * The auto reconnection timeout. This is the period of time that
+     * should elapse before a reconnection attempt is made in instances
+     * the underlying WebSocket connection terminates. This option is 
+     * only available if the autoReconnectEnabled option is true.
+     * 
+     * (Default is 4000)
+     */
     autoReconnectTimeout: number
 }
 
