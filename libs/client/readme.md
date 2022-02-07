@@ -97,7 +97,7 @@ client.send('add', 1, 2)
 
 ## WebSocketClient
 
-The `WebSocketClient` connects to `WebSocketService` implementations. This client type provides the same functionality as the `WebClient` but additionally supports bi-directional method invocation; allowing the service to execute functions on the client. The following example creates a `WebSocketClient` that connects to a `WebSocketService` that carries out a long running rendering task. We expect that this task will take a some time to complete, so this service provides a `progress` notification event (as informed by the Contract) to notify the client of rendering progress.
+The WebSocketClient connects to WebSocketService implementations. This client type provides the same functionality as the WebClient but offers additional support for bi-directional method invocation. The following example creates a WebSocketClient that connects to a WebSocketService that carries out a long running rendering task. We expect that this task will take a some time to complete, so this service provides a `progress` notification event (as informed by the Contract) to notify the client of rendering progress.
 
 <details>
   <summary>Contract</summary>
@@ -197,10 +197,10 @@ Sidewinder implements the [JSON RPC 2.0](https://www.jsonrpc.org/specification) 
 
 ### Http
 
-The following calls a `WebService` function using the JavaScript `fetch()` API.
+The following calls a WebService method using the JavaScript `fetch()` API.
 
 <details>
-  <summary>Example</summary>
+  <summary>Fetch Example</summary>
 
 ```typescript
 const result = await fetch('http://localhost:5001/', {
@@ -219,15 +219,15 @@ const result = await fetch('http://localhost:5001/', {
 
 ### WebSockets
 
-The following calls a `WebSocketService` function using the JavaScript `WebSocket` API. Sidewinder sends message using binary sockets only. You can use the JavaScript `TextEncoder` and `TextDecoder` to JSON to and from `Uint8Array`
+The following calls a WebSocketService method using the JavaScript WebSocket API. Sidewinder sends message using binary sockets only. You can use the JavaScript `TextEncoder` and `TextDecoder` to JSON to and from `Uint8Array`
 
 <details>
-  <summary>Example</summary>
+  <summary>Web Socket Example</summary>
   
 ```typescript
 const encoder = new TextEncoder()
 const decoder = new TextDecoder()
-const socket  = new WebSocket('ws://localhost:5001/math')
+const socket  = new WebSocket('ws://localhost:5001/')
 socket.binaryType = 'arraybuffer'
 
 socket.onmessage = (event) => {
