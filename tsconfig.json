@@ -2,9 +2,9 @@
     "compilerOptions": {
         "strict": true,
         "moduleResolution": "node",
-        "allowSyntheticDefaultImports": true,
         "target": "ESNext",
-        "module": "ESNext",
+        "module": "CommonJS",
+        "esModuleInterop": true,
         "baseUrl": ".",
         "paths": {
             "@sidewinder/client":   ["libs/client/index.ts"],
