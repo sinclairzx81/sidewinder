@@ -36,7 +36,6 @@ const VERSION = '0.8.11'
 
 export async function build(target = 'target/build') {
     await clean()
-    await test()
     await Promise.all([
         compilePackage(target, 'client',   VERSION, 'SideWinder Client'),
         compilePackage(target, 'contract', VERSION, 'SideWinder Contract'),
