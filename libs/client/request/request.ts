@@ -80,12 +80,17 @@ export namespace Request {
                 res.on('end', () => resolve(Buffer.concat(buffers)))
             })
             request.on('error', (error: Error) => reject(error))
-            request.end(body)
+            const version = Environment.version()
+            if(version.major < 16) { // Node 14: Fallback
+                request.end(Buffer.from(body))
+            } else {
+                request.end(body)
+            }
         })
     }
 
     export async function call(endpoint: string, headers: Record<string, string>, body: Uint8Array): Promise<Uint8Array> {
-        return Environment.resolve() === 'browser'
+        return Environment.platform() === 'browser'
             ? await browser(endpoint, headers, body)
             : await node(endpoint, headers, body)
     }

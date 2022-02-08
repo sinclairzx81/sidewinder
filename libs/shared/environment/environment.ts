@@ -26,10 +26,34 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
+
+
 export namespace Environment {
-    
+    export interface Version {
+        major: number,
+        minor: number,
+        revision: string
+    }
+
     /** Resolves the JavaScript environment */
-    export function resolve(): 'node' | 'browser' {
+    export function platform(): 'node' | 'browser' {
         return typeof window === 'undefined' ? 'node' : 'browser'
+    }
+
+    let _version: Version | undefined
+
+    /** Resolves the node version */
+    export function version(): Version {
+        if(_version) return _version
+        if(platform() === 'node') {
+            const [_major, _minor, revision] = process.version.split('.')
+            const major = parseInt(_major.replace('v', ''))
+            const minor = parseInt(_minor.replace('v', ''))
+            _version = {  major, minor, revision }
+            return _version
+        } else {
+            _version = { major: 0, minor: 0, revision: '' }
+            return _version
+        }
     }
 }

@@ -2,6 +2,14 @@ import { Environment } from '@sidewinder/shared'
 import * as assert from '../../assert/index'
 
 describe('shared/environment/Environment', () => {
-    const environment = Environment.resolve()
-    assert.equal(environment, 'node')
+    it('should resolve the JavaScript environment', () => {
+        const environment = Environment.platform()
+        assert.equal(environment, 'node')
+    })
+    it('should resolve the Node version', () => {
+        const version = Environment.version()
+        assert.equal(typeof version.major, 'number')
+        assert.equal(typeof version.minor, 'number')
+        assert.equal(typeof version.revision, 'string')
+    })
 })

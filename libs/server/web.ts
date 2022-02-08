@@ -27,7 +27,7 @@ THE SOFTWARE.
 ---------------------------------------------------------------------------*/
 
 import { Exception, TContract, ContextMapping, ResolveContextMapping, ResolveContractMethodParameters, ResolveContractMethodReturnType } from '@sidewinder/contract'
-import { Encoder, JsonEncoder, MsgPackEncoder } from '@sidewinder/shared'
+import { Environment, Encoder, JsonEncoder, MsgPackEncoder } from '@sidewinder/shared'
 import { ServerMethods, RpcErrorCode, RpcProtocol } from './methods/index'
 import { Request, Response } from 'express'
 import { IncomingMessage } from 'http'
@@ -138,7 +138,12 @@ export class WebService<Contract extends TContract> {
                 'Content-Type': 'application/x-sidewinder',
                 'Content-Length': data.length.toString()
             })
-            response.end(data, () => resolve())
+            const version = Environment.version()
+            if(version.major < 16) { // Node 14: Fallback
+                response.end(Buffer.from(data), () => resolve())
+            } else {
+                response.end(data, () => resolve())
+            }
         })
     }
 

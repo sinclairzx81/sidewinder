@@ -42,7 +42,7 @@ export class UnifiedWebSocket {
         binaryType: 'blob'
     }) {
         this.events = new Events()
-        if (Environment.resolve() === 'browser') {
+        if (Environment.platform() === 'browser') {
             this.socket = new WebSocket(this.endpoint)
             this.socket.binaryType = this.options.binaryType
             this.socket.addEventListener('open',    ()    => this.onOpen())
@@ -89,12 +89,12 @@ export class UnifiedWebSocket {
         return this.events.once(event, func)
     }
     public ping(data?: any, mask?:boolean) {
-        if(Environment.resolve() === 'browser') return 
+        if(Environment.platform() === 'browser') return 
         const socket = this.socket as ws.WebSocket
         socket.ping(data, mask)
     }
     public pong(data?: any, mask?:boolean) {
-        if(Environment.resolve() === 'browser') return 
+        if(Environment.platform() === 'browser') return 
         const socket = this.socket as ws.WebSocket
         socket.pong(data, mask)
     }
