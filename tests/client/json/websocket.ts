@@ -2,6 +2,7 @@ import { Type, Exception } from '@sidewinder/contract'
 import { Host, WebSocketService } from '@sidewinder/server'
 import { WebSocketClient, WebSocketClientOptions } from '@sidewinder/client'
 import * as assert from '../../assert/index'
+import { nextPort } from '../port'
 
 export type ContextCallback = (host: Host, service: WebSocketService<typeof Contract>, client: WebSocketClient<typeof Contract>) => Promise<void>
 
@@ -25,6 +26,7 @@ const Contract = Type.Contract({
 
 function context(callback: ContextCallback, options?: WebSocketClientOptions) {
     return async () => {
+        const port = nextPort()
         let store: string = ''
         const service = new WebSocketService(Contract)
         service.method('echo', async (clientId, message) => await service.call(clientId, 'echo', message))
@@ -39,14 +41,13 @@ function context(callback: ContextCallback, options?: WebSocketClientOptions) {
         
         const host = new Host()
         host.use(service)
-        await host.listen(5000)
+        await host.listen(port)
 
-        const client = new WebSocketClient(Contract, 'ws://localhost:5000', options)
+        const client = new WebSocketClient(Contract, `ws://localhost:${port}`, options)
         
         await callback(host, service, client)
         client.close()
         await host.dispose()
-        await assert.delay(50)
     }
 }
 

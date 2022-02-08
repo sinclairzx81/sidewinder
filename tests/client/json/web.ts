@@ -2,6 +2,7 @@ import { Type, Exception } from '@sidewinder/contract'
 import { Host, WebService } from '@sidewinder/server'
 import { WebClient } from '@sidewinder/client'
 import * as assert from '../../assert/index'
+import { nextPort } from '../port'
 
 export type ContextCallback = (host: Host, service: WebService<typeof Contract>, client: WebClient<typeof Contract>) => Promise<void>
 
@@ -21,7 +22,9 @@ const Contract = Type.Contract({
 
 function context(callback: ContextCallback) {
     return async () => {
+        const port = nextPort()
         let store: string = ''
+
         const service = new WebService(Contract)
         service.method('store', (clientId, data) => { store = data })
         service.method('fetch', (clientId) => store)
@@ -34,12 +37,11 @@ function context(callback: ContextCallback) {
 
         const host = new Host()
         host.use(service)
-        await host.listen(5000)
+        await host.listen(port)
 
-        const client = new WebClient(Contract, 'http://localhost:5000')
+        const client = new WebClient(Contract, `http://localhost:${port}`)
         await callback(host, service, client)
         await host.dispose()
-        await assert.delay(50)
     }
 }
 
