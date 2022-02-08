@@ -30,7 +30,7 @@ License MIT
 ## Install
 
 ```bash
-$ npm install @sidewinder/contract   # Service Description Types
+$ npm install @sidewinder/contract   # Function Schematics
 $ npm install @sidewinder/server     # Http and Web Socket Services
 $ npm install @sidewinder/client     # Http and Web Socket Clients
 ```
