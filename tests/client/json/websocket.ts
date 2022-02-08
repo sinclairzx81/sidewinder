@@ -46,6 +46,7 @@ function context(callback: ContextCallback, options?: WebSocketClientOptions) {
         await callback(host, service, client)
         client.close()
         await host.dispose()
+        await assert.delay(50)
     }
 }
 

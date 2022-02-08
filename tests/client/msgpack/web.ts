@@ -39,6 +39,7 @@ function context(callback: ContextCallback) {
         const client = new WebClient(Contract, 'http://localhost:5000')
         await callback(host, service, client)
         await host.dispose()
+        await assert.delay(50)
     }
 }
 
