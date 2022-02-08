@@ -1,6 +1,6 @@
 <div align='center'>
 
-<h1>Sidewinder/Contract</h1>
+<h1>Sidewinder Contract</h1>
 
 <p>Type System and Runtime Schematics</p>
 
@@ -10,7 +10,7 @@
 
 ## Overview
 
-Sidewinder Contracts are JSON Schema interface schematics that describe callable methods on remote services. This package provides the `Type` API to allow one to construct Contracts from simple type primitives with each type staticcally resolvable to TypeScript types. Contracts are used both for data validation, as well as type inference. They can also be published as machine readable documentation to remote systems.
+Sidewinder Contracts are JSON Schema interface schematics that describe callable methods on remote services. This package provides a Type API to allow one to construct Contracts from simple primitive with each Contract resolvable to TypeScript static types. Contracts are used both for data validation, as well as type inference. They can also be published as machine readable documentation to remote systems.
 
 Licence MIT
 

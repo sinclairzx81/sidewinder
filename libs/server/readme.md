@@ -1,6 +1,6 @@
 <div align='center'>
 
-<h1>Sidewinder/Server</h1>
+<h1>Sidewinder Server</h1>
 
 <p>Sidewinder Web Service and Hosting Library</p>
 

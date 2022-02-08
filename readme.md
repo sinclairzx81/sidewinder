@@ -92,7 +92,7 @@ host.listen(5000)
 //
 // Clients connect to Services. The clients `call()` function is inferred
 // from the Contract. The following connects to the service hosted above
-// anc calls each of its methods.
+// and calls each of its methods.
 //
 // ---------------------------------------------------------------------------
 
