@@ -109,7 +109,7 @@ host.dispose()
 
 ## Express
 
-Sidewinder Hosts are run on top express and support hosting any compatiable express middleware. Hosts only exposes the express `use(...)` function however, so needing to handle specific HTTP verbs such as `get`, `post`, `put` and `delete` will need to write these handlers on express `Router`.
+Sidewinder Hosts are run on top express and support hosting any compatiable express middleware. Hosts only exposes the express `use(...)` function however, so applications needing to handle HTTP verbs such as `get`, `post`, `put` and `delete` will need to write these handlers on an express `Router`.
 
 ```typescript
 import { Host } from '@sidewinder/server'
