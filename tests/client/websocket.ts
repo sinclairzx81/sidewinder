@@ -119,7 +119,7 @@ describe('client/WebSocketClient', () => {
     }))
 
 
-    it('Should throw error when call() in disconnected state (UniSocket)', context(async (host, service, client) => {
+    it('Should throw error when call() in disconnected state (RetrySocket)', context(async (host, service, client) => {
         const add = await client.call('add', 1, 2)
         assert.equal(add, 3)
         client.close()
@@ -131,7 +131,7 @@ describe('client/WebSocketClient', () => {
         autoReconnectTimeout: 1000
     }))
 
-    it('Should not throw error when send() in disconnected state (UniSocket)', context(async (host, service, client) => {
+    it('Should not throw error when send() in disconnected state (RetrySocket)', context(async (host, service, client) => {
         const add = await client.call('add', 1, 2)
         assert.equal(add, 3)
         client.close()
@@ -141,4 +141,21 @@ describe('client/WebSocketClient', () => {
         autoReconnectBuffer: true,
         autoReconnectTimeout: 1000
     }))
+
+
+    // ------------------------------------------------------------------
+    // RetrySocket
+    // ------------------------------------------------------------------
+
+    // it('[RetrySocket] Should throw when send() is called in disconnected state when autoReconnectBuffer is false', context(async (host, service, client) => {
+    //     const add = await client.call('add', 1, 2)
+    //     assert.equal(add, 3)
+    //     await host.dispose()
+    //     await client.send('add', 1, 2)
+    // }, {
+    //     autoReconnectEnabled: true,
+    //     autoReconnectBuffer: false,
+    //     autoReconnectTimeout: 1000
+    // })).timeout(100000)
+
 })

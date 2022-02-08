@@ -134,19 +134,18 @@ export class WebSocketService<Contract extends TContract> {
     }
 
     /** Calls a remote method */
-    public call<
+    public async call<
         Method extends keyof Contract['$static']['client'],
         Parameters extends ResolveContractMethodParameters<Contract['$static']['client'][Method]>,
         ReturnType extends ResolveContractMethodReturnType<Contract['$static']['client'][Method]>
     >(clientId: string, method: Method, ...params: Parameters): Promise<ReturnType> {
-        return new Promise((resolve, reject) => {
-            if (!this.sockets.has(clientId)) return reject(new Error('ClientId not found'))
-            const handle = this.responder.register(clientId, resolve, reject)
-            const socket = this.sockets.get(clientId)!
-            const request = RpcProtocol.encodeRequest(handle, method as string, params)
-            const message = this.encoder.encode(request)
-            socket.send(message)
-        })
+        if (!this.sockets.has(clientId)) throw new Error('ClientId not found')
+        const handle = this.responder.register(clientId)
+        const socket = this.sockets.get(clientId)!
+        const request = RpcProtocol.encodeRequest(handle, method as string, params)
+        const message = this.encoder.encode(request)
+        socket.send(message)
+        return await this.responder.wait(handle)
     }
     
     /** Sends a message to a remote method and ignores the result */

@@ -39,16 +39,18 @@ export interface RetryWebSocketOptions {
 }
 
 /** 
- * A retry web socket that will attempt to reconnect in
- * the instance the underlying socket closes. Provides
- * options for reconnection timeout and buffering when in
- * a disconnected state.
+ * RetryWebSocket:
+ * 
+ * This socket manages an internal web socket connection to a remote endpoint. This
+ * socket emits the same events as a typical socket, however the `open` and `close`
+ * events may raise multiple times. Callers should be mindful of this behavior when
+ * applying state on these events.
  */
 export class RetryWebSocket {
     private readonly barrier: Barrier
     private readonly events:  Events
     private socket:           UnifiedWebSocket | null
-    private closed:           boolean
+    private explicitClosed:   boolean
 
     constructor(private readonly endpoint: string, private readonly options: RetryWebSocketOptions = {
         binaryType:       'blob',
@@ -57,29 +59,75 @@ export class RetryWebSocket {
     }) {
         this.barrier          = new Barrier()
         this.events           = new Events()
-        this.closed           = false
+        this.explicitClosed           = false
         this.socket           = null
         this.establish()
     }
 
+    /** 
+     * Subscribes to the connection 'open' events. This event will raise each time
+     * the underlying socket establishes a connection to a remote endpoint.
+     */
     public on(event: 'open',    func: EventHandler<any>): EventListener
+
+    /** 
+     * Subscribes to the connection 'message' events. This event will raise each time
+     * a message is received on the transport.
+     */
     public on(event: 'message', func: EventHandler<any>): EventListener
+
+    /** 
+     * Subscribes to the connection 'error' events. This event will raise each time
+     * an error occurs on the transport. Multiple error events may be raised
+     * across multiple connections created during disconnection events.
+     */
     public on(event: 'error',   func: EventHandler<any>): EventListener
+
+    /** 
+     * Subscribes to the connection 'close' events. This event will raise each time
+     * an underlying transport terminates. Multiple error events may be raised
+     * across multiple connections created during disconnection events.
+     */
     public on(event: 'close',   func: EventHandler<any>): EventListener
+
     public on(event: string,    func: EventHandler<any>): EventListener {
         return this.events.on(event, func)
     }
 
+    /** 
+     * Subscribes to the connection 'open' events. This event will raise each time
+     * the underlying socket establishes a connection to a remote endpoint.
+     */
     public once(event: 'open',    func: EventHandler<any>): EventListener
+    /** 
+     * Subscribes to the connection 'message' events. This event will raise each time
+     * a message is received on the transport.
+     */
     public once(event: 'message', func: EventHandler<any>): EventListener
+    /** 
+     * Subscribes to the connection 'error' events. This event will raise each time
+     * an error occurs on the transport. Multiple error events may be raised
+     * across multiple connections created during disconnection events.
+     */
     public once(event: 'error',   func: EventHandler<any>): EventListener
+    /** 
+     * Subscribes to the connection 'close' events. This event will raise each time
+     * an underlying transport terminates. Multiple error events may be raised
+     * across multiple connections created during disconnection events.
+     */
     public once(event: 'close',   func: EventHandler<any>): EventListener
+
     public once(event: string,    func: EventHandler<any>): EventListener {
         return this.events.once(event, func)
     }
 
-    public async send(data: any) {
-        if (this.closed) {
+    /**
+     * Sends a message to this socket. If the socket has been explicitly
+     * closed, or the socket is in a disconnected and at reconnnectBuffer
+     * is false, this call will throw.
+     */
+    public async send(data: unknown) {
+        if (this.explicitClosed) {
             throw new Error('Socket has been closed')
         }
         if (this.socket === null && this.options.reconnectBuffer === false) {
@@ -89,15 +137,16 @@ export class RetryWebSocket {
         this.socket!.send(data)
     }
 
+    /** Closes this Web Socket.  */
     public async close() {
-        this.closed = true
+        this.explicitClosed = true
         if (this.socket) this.socket.close()
         this.events.send('close', void 0)
     }
 
     private async establish() {
         while (true) {
-            if (this.closed) return
+            if (this.explicitClosed) return
             if (this.socket !== null) {
                 await Delay.run(this.options.reconnectTimeout)
                 continue
