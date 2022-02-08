@@ -1,6 +1,6 @@
 /*--------------------------------------------------------------------------
 
-@sidewinder/shared
+@sidewinder/client
 
 The MIT License (MIT)
 
@@ -26,9 +26,8 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-import { Type, TFunction } from '@sidewinder/contract'
+import { TFunction } from '@sidewinder/contract'
 import { RpcProtocol, RpcErrorCode, RpcRequest, RpcResponse } from './protocol'
-import { Schema, ValidateFunction } from './schema'
 import { Exception } from './exception'
 
 export interface ExecuteResultWithResponse {
@@ -59,43 +58,22 @@ export type ExecuteResponse =
     | ExecuteResult
     | ExecuteError
 
-export interface RegistryEntry {
-    /** The parameter validator */
-    paramsValidator: ValidateFunction
-    /** The return type validator */
-    returnValidator: ValidateFunction
-    /** The context mapping function */
-    mapping: (clientId: string) => any
+export interface RegisteredClientMethod {
     /** The callback function */
     callback: Function
 }
 
 type MethodName = string 
 
-/** 
- * A method container that houses methods registered by services and clients. Provides
- * direct and protocol invocation on the methods, as well as schema validation.
- */
-export class Methods {
-    private readonly methods: Map<MethodName, RegistryEntry>
+export class ClientMethods {
+    private readonly methods: Map<MethodName, RegisteredClientMethod>
     
     constructor() {
-        this.methods = new Map<MethodName, RegistryEntry>()
-    }
-
-    public register(method: MethodName, schema: TFunction<any[], any>, mapping: (clientId: string) => any, callback: Function) {
-        const paramsValidator = Schema.compile(Type.Tuple(schema.parameters))
-        const returnValidator = Schema.compile(schema.returns)
-        this.methods.set(method, { paramsValidator, returnValidator, mapping, callback })
+        this.methods = new Map<MethodName, RegisteredClientMethod>()
     }
     
-    public async executeServerMethod(clientId: string, method: MethodName, params: unknown[]) {
-        this.validateMethodExists(method)
-        const entry = this.methods.get(method)!
-        this.validateMethodParameters(entry, method as string, params)
-        const result = await entry.callback(entry.mapping(clientId), ...params)
-        this.validateMethodReturnType(entry, method as string, result)
-        return result
+    public register(method: MethodName, schema: TFunction<any[], any>, callback: Function) {
+        this.methods.set(method, { callback })
     }
     
     public async executeClientMethod(method: MethodName, params: unknown[]) {
@@ -105,15 +83,6 @@ export class Methods {
         const result = await entry.callback(...params)
         this.validateMethodReturnType(entry, method, result)
         return result
-    }
-
-    public async executeServerProtocol(clientId: string, request: RpcRequest): Promise<ExecuteResponse> {
-        try {
-            const result = await this.executeServerMethod(clientId, request.method, request.params)
-            return this.encodeResultExecuteResponse(request, result)
-        } catch (error) {
-            return this.encodeErrorExecuteResponse(request, error)
-        }
     }
 
     public async executeClientProtocol(request: RpcRequest): Promise<ExecuteResponse> {
@@ -170,15 +139,11 @@ export class Methods {
         }
     }
 
-    private validateMethodParameters(entry: RegistryEntry, method: string, params: unknown[]) {
-        if (!entry.paramsValidator(params)) {
-            throw new Exception(`Parameters for method '${method}' are invalid`, RpcErrorCode.InvalidParams, entry.paramsValidator.errors)
-        }
+    private validateMethodParameters(entry: RegisteredClientMethod, method: string, params: unknown[]) {
+
     }
 
-    private validateMethodReturnType(entry: RegistryEntry, method: string, result: unknown) {
-        if (!entry.returnValidator(result)) {
-            throw new Exception(`Method '${method}' returned an invalid result`, RpcErrorCode.InternalServerError, {})
-        }
+    private validateMethodReturnType(entry: RegisteredClientMethod, method: string, result: unknown) {
+
     }
 }

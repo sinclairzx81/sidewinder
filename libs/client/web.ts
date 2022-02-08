@@ -27,8 +27,10 @@ THE SOFTWARE.
 ---------------------------------------------------------------------------*/
 
 import { TContract, ResolveContractMethodParameters, ResolveContractMethodReturnType } from '@sidewinder/contract'
-import { Exception, Encoder, MsgPackEncoder, JsonEncoder, RpcProtocol } from '@sidewinder/shared'
-import { Request} from './request/index'
+import { Encoder, MsgPackEncoder, JsonEncoder } from '@sidewinder/shared'
+import { Exception, RpcProtocol } from './methods/index'
+import { Request } from './request/index'
+
 
 export class WebClient<Contract extends TContract> {
     private readonly encoder: Encoder

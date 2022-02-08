@@ -26,8 +26,9 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-import { TContract, ContextMapping, ResolveContextMapping, ResolveContractMethodParameters, ResolveContractMethodReturnType, TFunction } from '@sidewinder/contract'
-import { Methods, Exception, Encoder, JsonEncoder, MsgPackEncoder, RpcErrorCode, RpcProtocol } from '@sidewinder/shared'
+import { TContract, ContextMapping, ResolveContextMapping, ResolveContractMethodParameters, ResolveContractMethodReturnType } from '@sidewinder/contract'
+import { Encoder, JsonEncoder, MsgPackEncoder } from '@sidewinder/shared'
+import { ServerMethods, Exception, RpcErrorCode, RpcProtocol } from './methods/index'
 import { Request, Response } from 'express'
 import { IncomingMessage } from 'http'
 
@@ -41,8 +42,9 @@ export class WebService<Contract extends TContract> {
     private onConnectCallback: WebServiceConnectCallback
     private onErrorCallback: WebServiceErrorCallback
     private onCloseCallback: WebServiceCloseCallback
+    private readonly methods: ServerMethods
     private readonly encoder: Encoder
-    private readonly methods: Methods
+    
 
     constructor(public readonly contract: Contract) {
         this.onAuthorizeCallback = () => true
@@ -50,7 +52,7 @@ export class WebService<Contract extends TContract> {
         this.onErrorCallback = () => { }
         this.onCloseCallback = () => { }
         this.encoder = this.contract.format === 'json' ? new JsonEncoder() : new MsgPackEncoder()
-        this.methods = new Methods()
+        this.methods = new ServerMethods()
     }
 
     /**

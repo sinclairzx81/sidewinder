@@ -26,7 +26,7 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-export * from './async'
-export * from './encoder'
-export * from './environment'
-export * from './events'
+export interface Encoder {
+    encode<T = any>(data: T): Uint8Array
+    decode<T = any>(data: Uint8Array): T
+}

@@ -26,7 +26,10 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-export * from './async'
-export * from './encoder'
-export * from './environment'
-export * from './events'
+export namespace Environment {
+    
+    /** Resolves the JavaScript environment */
+    export function resolve(): 'node' | 'browser' {
+        return typeof window === 'undefined' ? 'node' : 'browser'
+    }
+}

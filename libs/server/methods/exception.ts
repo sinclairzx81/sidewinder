@@ -26,7 +26,8 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-export * from './async'
-export * from './encoder'
-export * from './environment'
-export * from './events'
+export class Exception extends Error {
+    constructor(message: string, public code: number, public readonly data: unknown) {
+        super(message)
+    }
+}

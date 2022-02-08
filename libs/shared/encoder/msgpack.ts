@@ -26,7 +26,14 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-export * from './async'
-export * from './encoder'
-export * from './environment'
-export * from './events'
+import { Encoder } from './encoder'
+import * as msgpack from '@msgpack/msgpack'
+
+export class MsgPackEncoder implements Encoder {
+    public encode<T = any>(data: T): Uint8Array {
+        return msgpack.encode(data)
+    }
+    public decode<T = any>(data: Uint8Array): T {
+        return msgpack.decode(data as Uint8Array) as T
+    }
+}

@@ -27,7 +27,8 @@ THE SOFTWARE.
 ---------------------------------------------------------------------------*/
 
 import { TContract, ResolveContractMethodParameters, ResolveContractMethodReturnType, TFunction } from '@sidewinder/contract'
-import { Methods, Exception, Responder, Encoder, JsonEncoder, MsgPackEncoder, Barrier, RpcErrorCode, RpcProtocol } from '@sidewinder/shared'
+import { Responder, Encoder, JsonEncoder, MsgPackEncoder, Barrier } from '@sidewinder/shared'
+import { ClientMethods, Exception, RpcErrorCode, RpcProtocol } from './methods/index'
 import { RetryWebSocket, UnifiedWebSocket } from './sockets'
 
 export type WebSocketClientConnectCallback = () => void
@@ -77,10 +78,10 @@ export class WebSocketClient<Contract extends TContract> {
     private onCloseCallback: WebSocketClientCloseCallback = () => { }
 
     private readonly encoder:   Encoder
+    private readonly methods:   ClientMethods
     private readonly socket:    RetryWebSocket | UnifiedWebSocket
     private readonly options:   WebSocketClientOptions
     private readonly responder: Responder
-    private readonly methods:   Methods
     private readonly barrier:   Barrier
     private closed: boolean
 
@@ -90,7 +91,7 @@ export class WebSocketClient<Contract extends TContract> {
         this.onErrorCallback = () => { }
         this.onCloseCallback = () => { }
         this.encoder = this.contract.format === 'json' ? new JsonEncoder() : new MsgPackEncoder()
-        this.methods = new Methods()
+        this.methods = new ClientMethods()
         this.barrier = new Barrier()
         this.responder = new Responder()
         this.socket = this.options.autoReconnectEnabled
@@ -134,10 +135,8 @@ export class WebSocketClient<Contract extends TContract> {
         ReturnType extends ResolveContractMethodReturnType<Contract['$static']['client'][Method]>
     >(method: Method, callback: (...params: Parameters) => Promise<ReturnType> | ReturnType) {
         if((this.contract.client as any)[method] === undefined) throw Error(`Cannot define method '${method}' as it does not exist in contract`)
-        this.methods.register(method as string, (this.contract.client as any)[method], (clientId: string) => clientId, callback)
-        return async (...params: Parameters): Promise<ReturnType> => {
-            return this.methods.executeClientMethod(method as string, params)
-        }
+        this.methods.register(method as string, (this.contract.client as any)[method], callback)
+        return async (...params: Parameters): Promise<ReturnType> => await this.methods.executeClientMethod(method as string, params)
     }
 
     /** Calls a remote method */
@@ -223,7 +222,7 @@ export class WebSocketClient<Contract extends TContract> {
 
     private setupNotImplemented() {
         for (const [name, schema] of Object.entries(this.contract.client)) {
-            this.methods.register(name, schema as TFunction, (clientId: string) => clientId, () => {
+            this.methods.register(name, schema as TFunction, () => {
                 throw new Exception(`Method '${name}' not implemented`, RpcErrorCode.InternalServerError, {})
             })
         }

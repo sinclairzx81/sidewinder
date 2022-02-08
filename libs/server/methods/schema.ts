@@ -1,6 +1,6 @@
 /*--------------------------------------------------------------------------
 
-@sidewinder/shared
+@sidewinder/server
 
 The MIT License (MIT)
 
@@ -25,7 +25,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
-
 
 import { TSchema, Static, TUint8Array } from '@sidewinder/contract'
 import addFormats                       from 'ajv-formats'

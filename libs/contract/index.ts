@@ -26,4 +26,5 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
+export * from '../client/methods/exception'
 export * from './types'

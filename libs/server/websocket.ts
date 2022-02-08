@@ -27,9 +27,11 @@ THE SOFTWARE.
 ---------------------------------------------------------------------------*/
 
 import { TContract, ContextMapping, ResolveContextMapping, ResolveContractMethodParameters, ResolveContractMethodReturnType, TFunction } from '@sidewinder/contract'
-import { Methods, Exception, Responder, Encoder, JsonEncoder, MsgPackEncoder, RpcErrorCode, RpcProtocol } from '@sidewinder/shared'
+import { Responder, Encoder, JsonEncoder, MsgPackEncoder } from '@sidewinder/shared'
+import { ServerMethods, Exception, RpcErrorCode, RpcProtocol } from './methods/index'
 import { WebSocket, MessageEvent, CloseEvent, ErrorEvent } from 'ws'
 import { IncomingMessage } from 'http'
+
 
 export type WebSocketServiceAuthorizeCallback = (clientId: string, request: IncomingMessage) => Promise<boolean> | boolean
 export type WebSocketServiceConnectCallback = (clientId: string) => Promise<void> | void
@@ -45,7 +47,7 @@ export class WebSocketService<Contract extends TContract> {
     private readonly sockets: Map<string, WebSocket>
     private readonly encoder: Encoder
     private readonly responder: Responder
-    private readonly methods: Methods
+    private readonly methods: ServerMethods
 
     constructor(public readonly contract: Contract) {
         this.onAuthorizeCallback = () => true
@@ -55,7 +57,7 @@ export class WebSocketService<Contract extends TContract> {
         this.sockets = new Map<string, WebSocket>()
         this.encoder = this.contract.format === 'json' ? new JsonEncoder() : new MsgPackEncoder()
         this.responder = new Responder()
-        this.methods = new Methods()
+        this.methods = new ServerMethods()
         this.setupNotImplemented()
     }
 
