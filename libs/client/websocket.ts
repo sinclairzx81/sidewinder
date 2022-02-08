@@ -72,6 +72,8 @@ export interface WebSocketClientOptions {
     autoReconnectTimeout: number
 }
 
+function into(callback: Function) { callback() }
+
 export class WebSocketClient<Contract extends TContract> {
     private onConnectCallback: WebSocketClientConnectCallback = () => { }
     private onErrorCallback: WebSocketClientErrorCallback = () => { }
@@ -148,6 +150,7 @@ export class WebSocketClient<Contract extends TContract> {
         ReturnType extends ResolveContractMethodReturnType<Contract['$static']['server'][Method]>
     >(method: Method, ...params: Parameters): Promise<ReturnType> {
         await this.barrier.wait()
+        this.assertMethodExists(method as string)
         this.assertCanSend()
         const handle  = this.responder.register('client')
         const request = RpcProtocol.encodeRequest(handle, method as string, params)
@@ -161,9 +164,10 @@ export class WebSocketClient<Contract extends TContract> {
         Method extends keyof Contract['$static']['server'],
         Parameters extends ResolveContractMethodParameters<Contract['$static']['server'][Method]>,
         >(method: Method, ...params: Parameters): void {
-        (async () => {
+        this.assertMethodExists(method as string)
+        into(async () => {
             try {
-                await this.barrier.wait()
+                await this.barrier.wait()       
                 this.assertCanSend()
                 const request = RpcProtocol.encodeRequest(undefined, method as string, params)
                 const message = this.encoder.encode(request)
@@ -171,7 +175,7 @@ export class WebSocketClient<Contract extends TContract> {
             } catch(error) {
                 this.onErrorCallback(error)
             }
-        })()
+        })
     }
 
     private onOpen() {
@@ -217,6 +221,11 @@ export class WebSocketClient<Contract extends TContract> {
     public close() {
         this.socket.close()
     }
+
+    private assertMethodExists(method: string) {
+        if(!Object.keys(this.contract.server).includes(method)) throw new Error(`Method '${method}' not defined in contract`)
+    }
+
     private assertCanSend() {
         if (this.closed) throw new Error('WebSocket has closed')
     }

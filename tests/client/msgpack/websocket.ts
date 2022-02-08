@@ -1,13 +1,16 @@
 import { Type } from '@sidewinder/contract'
 import { Host, WebSocketService } from '@sidewinder/server'
 import { WebSocketClient, WebSocketClientOptions } from '@sidewinder/client'
-import * as assert from '../assert/index'
+import * as assert from '../../assert/index'
 
 export type ContextCallback = (host: Host, service: WebSocketService<typeof Contract>, client: WebSocketClient<typeof Contract>) => Promise<void>
 
 const Contract = Type.Contract({
+    format: 'msgpack',
     server: {
         echo: Type.Function([Type.String()], Type.String()),
+        store: Type.Function([Type.String()], Type.Any()),
+        fetch: Type.Function([], Type.String()),
         add: Type.Function([Type.Number(), Type.Number()], Type.Number()),
         sub: Type.Function([Type.Number(), Type.Number()], Type.Number()),
         mul: Type.Function([Type.Number(), Type.Number()], Type.Number()),
@@ -20,13 +23,16 @@ const Contract = Type.Contract({
 
 function context(callback: ContextCallback, options?: WebSocketClientOptions) {
     return async () => {
+        let store: string = ''
         const service = new WebSocketService(Contract)
+        service.method('echo', async (clientId, message) => await service.call(clientId, 'echo', message))
+        service.method('store', (clientId, data) => { store = data })
+        service.method('fetch', (clientId) => store)
         service.method('add', (clientId, a, b) => a + b)
         service.method('sub', (clientId, a, b) => a - b)
         service.method('mul', (clientId, a, b) => a * b)
         service.method('div', (clientId, a, b) => a / b)
-        service.method('echo', async (clientId, message) => await service.call(clientId, 'echo', message))
-
+        
         const host = new Host()
         host.use(service)
         await host.listen(5000)
@@ -39,13 +45,13 @@ function context(callback: ContextCallback, options?: WebSocketClientOptions) {
     }
 }
 
-describe('client/WebSocketClient', () => {
+describe('client/WebSocketClient:MsgPack', () => {
 
     // ------------------------------------------------------------------
     // Call()
     // ------------------------------------------------------------------
 
-    it('Should support synchronous call', context(async (host, service, client) => {
+    it('should support synchronous call', context(async (host, service, client) => {
         const add = await client.call('add', 1, 2)
         const sub = await client.call('sub', 1, 2)
         const mul = await client.call('mul', 1, 2)
@@ -56,7 +62,7 @@ describe('client/WebSocketClient', () => {
         assert.equal(div, 0.5)
     }))
 
-    it('Should support asynchronous call', context(async (host, service, client) => {
+    it('should support asynchronous call', context(async (host, service, client) => {
         const [add, sub, mul, div] = await Promise.all([
             client.call('add', 1, 2),
             client.call('sub', 1, 2),
@@ -69,7 +75,7 @@ describe('client/WebSocketClient', () => {
         assert.equal(div, 0.5)
     }))
 
-    it('Should throw when call() is passed invalid method', context(async (host, service, client) => {
+    it('should throw when call() is passed invalid method', context(async (host, service, client) => {
         // @ts-ignore
         await assert.throwsAsync(async () => await client.call('foo', 1, 2))
     }))
@@ -78,15 +84,22 @@ describe('client/WebSocketClient', () => {
     // Send()
     // ------------------------------------------------------------------
 
-    it('Should support synchronous send()', context(async (host, service, client) => {
+    it('should store and fetch with send()',context(async (host, service, client) => {
+        const value = assert.random()
+        client.send('store', value)
+        const result = await client.call('fetch')
+        assert.equal(value, result)
+    }))
+
+    it('should support synchronous send()', context(async (host, service, client) => {
         client.send('add', 1, 2)
         client.send('sub', 1, 2)
         client.send('mul', 1, 2)
         client.send('div', 1, 2)
     }))
 
-    it('Should support asynchronous send()', context(async (host, service, client) => {
-        const [add, sub, mul, div] = await Promise.all([
+    it('should support asynchronous send()', context(async (host, service, client) => {
+        await Promise.all([
             client.send('add', 1, 2),
             client.send('sub', 1, 2),
             client.send('mul', 1, 2),
@@ -94,12 +107,12 @@ describe('client/WebSocketClient', () => {
         ])
     }))
 
-    it('Should not throw when send() is passed invalid method', context(async (host, service, client) => {
+    it('should throw when send() is passed invalid method', context(async (host, service, client) => {
         // @ts-ignore
-        client.send('foo', 1, 2)
+        assert.throws(() => client.send('foo', 1, 2))
     }))
 
-    it('Should not throw when send() is passed invalid parameters', context(async (host, service, client) => {
+    it('should not throw when send() is passed invalid parameters', context(async (host, service, client) => {
         // @ts-ignore
         client.send('add', 'hello', 'world')
     }))
@@ -109,14 +122,14 @@ describe('client/WebSocketClient', () => {
     // Error: Explicit Close
     // ------------------------------------------------------------------
 
-    it('Should throw error when call() in disconnected state (UniSocket)', context(async (host, service, client) => {
+    it('should throw error when call() in disconnected state (UniSocket)', context(async (host, service, client) => {
         const add = await client.call('add', 1, 2)
         assert.equal(add, 3)
         client.close()
         await assert.throwsAsync(async () => await client.call('add', 1, 2))
     }))
 
-    it('Should not throw error when send() in disconnected state (UniSocket)', context(async (host, service, client) => {
+    it('should not throw error when send() in disconnected state (UniSocket)', context(async (host, service, client) => {
         const add = await client.call('add', 1, 2)
         assert.equal(add, 3)
         client.close()
@@ -124,7 +137,7 @@ describe('client/WebSocketClient', () => {
     }))
 
 
-    it('Should throw error when call() in disconnected state (RetrySocket)', context(async (host, service, client) => {
+    it('should throw error when call() in disconnected state (RetrySocket)', context(async (host, service, client) => {
         const add = await client.call('add', 1, 2)
         assert.equal(add, 3)
         client.close()
@@ -136,7 +149,7 @@ describe('client/WebSocketClient', () => {
         autoReconnectTimeout: 1000
     }))
 
-    it('Should not throw error when send() in disconnected state (RetrySocket)', context(async (host, service, client) => {
+    it('should not throw error when send() in disconnected state (RetrySocket)', context(async (host, service, client) => {
         const add = await client.call('add', 1, 2)
         assert.equal(add, 3)
         client.close()
@@ -152,7 +165,7 @@ describe('client/WebSocketClient', () => {
     // Duplex
     // ------------------------------------------------------------------
 
-    it('Should support duplex echo call from client to server to client', context(async (host, service, client) => {
+    it('should support duplex echo call from client to server to client', context(async (host, service, client) => {
         client.method('echo', message =>  message)
         const message = 'hello world'
         const result = await client.call('echo', 'hello world')

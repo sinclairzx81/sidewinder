@@ -45,6 +45,7 @@ export class WebClient<Contract extends TContract> {
         Parameters extends ResolveContractMethodParameters<Contract['$static']['server'][Method]>,
         ReturnType extends ResolveContractMethodReturnType<Contract['$static']['server'][Method]>
     >(method: Method, ...params: Parameters): Promise<ReturnType> {
+        this.assertMethodExists(method as string)
         const request = RpcProtocol.encodeRequest('unknown', method as string, params)
         const encoded = this.encoder.encode(request)
         const decoded = this.encoder.decode(await Request.call(this.endpoint, {}, encoded))
@@ -66,8 +67,13 @@ export class WebClient<Contract extends TContract> {
         Method extends keyof Contract['$static']['server'],
         Parameters extends ResolveContractMethodParameters<Contract['$static']['server'][Method]>,
         >(method: Method, ...params: Parameters) {
+        this.assertMethodExists(method as string)
         const request = RpcProtocol.encodeRequest('unknown', method as string, params)
         const encoded = this.encoder.encode(request)
-        request(this.endpoint, {}, encoded).catch(() => { /* ignore */ })
+        Request.call(this.endpoint, {}, encoded).catch(() => { /* ignore */ })
+    }
+
+    private assertMethodExists(method: string) {
+        if(!Object.keys(this.contract.server).includes(method)) throw new Error(`Method '${method}' not defined in contract`)
     }
 }
