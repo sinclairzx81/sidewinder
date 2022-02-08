@@ -89,7 +89,12 @@ export class ClientMethods {
             const result = await this.executeClientMethod(request.method, request.params)
             return this.encodeResultExecuteResponse(request, result)
         } catch (error) {
-            return this.encodeErrorExecuteResponse(request, error)
+            if(error instanceof Exception) {
+                return this.encodeErrorExecuteResponse(request, error)
+            } else {
+                const exception = new Exception('Internal Server Error', RpcErrorCode.InternalServerError, {})
+                return this.encodeErrorExecuteResponse(request, exception)
+            }
         }
     }
 
@@ -109,14 +114,14 @@ export class ClientMethods {
                 const response = RpcProtocol.encodeError(request.id, { code, message, data })
                 return { type: 'error-with-response', error, response }
             } else if (error instanceof Error) {
-                const code = RpcErrorCode.InternalError
-                const message = 'Internal server error'
+                const code = RpcErrorCode.InternalServerError
+                const message = 'Internal Server Error'
                 const data = {}
                 const response = RpcProtocol.encodeError(request.id, { code, message, data })
                 return { type: 'error-with-response', error, response }
             } else {
-                const code = RpcErrorCode.InternalError
-                const message = 'Internal server error'
+                const code = RpcErrorCode.InternalServerError
+                const message = 'Internal Server Error'
                 const data = {}
                 const response = RpcProtocol.encodeError(request.id, { code, message, data })
                 return { type: 'error-with-response', error: Error(`Exception thrown: ${error}`), response }

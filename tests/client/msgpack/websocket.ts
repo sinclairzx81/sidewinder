@@ -1,4 +1,4 @@
-import { Type } from '@sidewinder/contract'
+import { Type, Exception } from '@sidewinder/contract'
 import { Host, WebSocketService } from '@sidewinder/server'
 import { WebSocketClient, WebSocketClientOptions } from '@sidewinder/client'
 import * as assert from '../../assert/index'
@@ -8,6 +8,8 @@ export type ContextCallback = (host: Host, service: WebSocketService<typeof Cont
 const Contract = Type.Contract({
     format: 'msgpack',
     server: {
+        error: Type.Function([], Type.Any()),
+        exception: Type.Function([], Type.Any()),
         echo: Type.Function([Type.String()], Type.String()),
         store: Type.Function([Type.String()], Type.Any()),
         fetch: Type.Function([], Type.String()),
@@ -28,6 +30,8 @@ function context(callback: ContextCallback, options?: WebSocketClientOptions) {
         service.method('echo', async (clientId, message) => await service.call(clientId, 'echo', message))
         service.method('store', (clientId, data) => { store = data })
         service.method('fetch', (clientId) => store)
+        service.method('error', (clientId) => { throw Error('boom' )})
+        service.method('exception', (clientId) => { throw new Exception('boom', 3000, {})})
         service.method('add', (clientId, a, b) => a + b)
         service.method('sub', (clientId, a, b) => a - b)
         service.method('mul', (clientId, a, b) => a * b)
@@ -172,4 +176,27 @@ describe('client/WebSocketClient:MsgPack', () => {
         assert.equal(message, result)
     }))
 
+    // ------------------------------------------------------------------
+    // Errors and Exceptions
+    // ------------------------------------------------------------------
+
+    it('should throw "Internal Server Error" exceptions for thrown native JavaScript errors', context(async (host, service, client) => {
+        try {
+            await client.call('error')
+        } catch(error) {
+            if(!(error instanceof Exception)) throw Error('Excepted Exception')
+            assert.equal(error.message, 'Internal Server Error')
+            assert.equal(error.code, -32001)
+        }
+    }))
+
+    it('should throw a "Custom Error" exceptions for Exception thrown errors', context(async (host, service, client) => {
+        try {
+            await client.call('exception')
+        } catch(error) {
+            if(!(error instanceof Exception)) throw Error('Excepted Exception')
+            assert.equal(error.message, 'boom')
+            assert.equal(error.code, 3000)
+        }
+    }))
 })

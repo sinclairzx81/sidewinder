@@ -124,14 +124,14 @@ export class ServerMethods {
                 const response = RpcProtocol.encodeError(request.id, { code, message, data })
                 return { type: 'error-with-response', error, response }
             } else if (error instanceof Error) {
-                const code = RpcErrorCode.InternalError
-                const message = 'Internal server error'
+                const code = RpcErrorCode.InternalServerError
+                const message = 'Internal Server Error'
                 const data = {}
                 const response = RpcProtocol.encodeError(request.id, { code, message, data })
                 return { type: 'error-with-response', error, response }
             } else {
-                const code = RpcErrorCode.InternalError
-                const message = 'Internal server error'
+                const code = RpcErrorCode.InternalServerError
+                const message = 'Internal Server Error'
                 const data = {}
                 const response = RpcProtocol.encodeError(request.id, { code, message, data })
                 return { type: 'error-with-response', error: Error(`Exception thrown: ${error}`), response }
