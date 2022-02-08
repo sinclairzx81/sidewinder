@@ -20,6 +20,7 @@ This package contains the WebService (Http), WebSocketService (Ws) and Host type
 - [WebService](#WebService)
 - [WebSocketService](#WebSocketService)
 - [Lifecycle](#Lifecycle)
+- [Exceptions](#Exceptions)
 
 ## Example
 
@@ -271,3 +272,43 @@ public event(event: 'error', callback: WebSocketServiceErrorCallback): WebSocket
 public event(event: 'close', callback: WebSocketServiceCloseCallback): WebSocketServiceCloseCallback
 ```
 </details>
+
+## Exceptions
+
+Sidewinder services will respond to clients using default error codes defined in the JSON RPC 2.0 specification. General errors thrown in method handlers will result in a default `InternalServerError` with minimal information returned to the client about the nature of the error. Users can override this behavior by throwing types of `Exception`. The `Exception` type is located inside the `@sidewinder/contract` package. This type can either be derived into custom error types, or thrown outright. 
+
+The following creates some custom error types that report meaningful information to the caller.
+
+```typescript
+import { Exception } from '@sidewinder/contract'
+
+export class UsernameAlreadyExistsException extends Exception {
+    constructor(email: string) {
+        super(`The email '${email}' already exists`, 1000, {})
+    }
+}
+export class EmailAlreadyExistsException extends Exception {
+    constructor(email: string) {
+        super(`The email '${email}' already exists`, 1000, {})
+    }
+}
+export class PasswordNotStrongEnoughException extends Exception {
+    constructor() {
+        super(`Password not strong enough`, 1001, {})
+    }
+}
+
+server.method('user:create', (clientId, request) => {
+    // guards
+    if(await database.usernameExists(request.email)) throw new UsernameAlreadyExistsException(request.username)
+    if(await database.emailExists(request.email)) throw new EmailAlreadyExistsException(request.email)
+    if(!passwords.checkPasswordStength(request.password)) throw new EmailAlreadyExistsException(request.password)
+    
+    const { userId } = await database.createUser({
+        username: request.username,
+        password: request.password,
+        email: request.email
+    })
+    return { userId }
+})
+```
