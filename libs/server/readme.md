@@ -17,6 +17,7 @@ This package contains the WebService (Http), WebSocketService (Ws) and Host type
 - [Overview](#Overview)
 - [Example](#Example)
 - [Host](#Host)
+- [Express](#Express)
 - [WebService](#WebService)
 - [WebSocketService](#WebSocketService)
 - [Lifecycle](#Lifecycle)
@@ -104,6 +105,24 @@ host.listen(5000, '0.0.0.0')
 
 // Disposes of the host and terminates all connections.
 host.dispose()
+```
+
+## Express
+
+Sidewinder Hosts are run on top express and support hosting any compatiable express middleware. Hosts only exposes the express `use(...)` function however, so needing to handle specific HTTP verbs such as `get`, `post`, `put` and `delete` will need to write these handlers on express `Router`.
+
+```typescript
+import { Host } from '@sidewinder/server'
+import { Router } from 'express'
+
+const router = Router()
+router.get('/', (req, res) => res.send('home page'))
+router.get('/about', (req, res) => res.send('about page'))
+router.get('/contact', (req, res) => res.send('contact page'))
+
+const host = new Host()
+host.use(router)
+host.listen(5000)
 ```
 
 ## WebService
