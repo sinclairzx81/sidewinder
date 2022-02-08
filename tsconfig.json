@@ -4,7 +4,7 @@
         "moduleResolution": "node",
         "allowSyntheticDefaultImports": true,
         "target": "ESNext",
-        "module": "CommonJS",
+        "module": "ESNext",
         "baseUrl": ".",
         "paths": {
             "@sidewinder/client":   ["libs/client/index.ts"],
