@@ -10,13 +10,14 @@
 
 ## Overview
 
-Sidewinder Contracts are JSON schema interface schematics that describe callable methods on remote services. This package provides a TypeScript API to allow one to construct contracts from simple type primitives, with each type resolvable to a static TypeScript types. Contracts are used both for validation, as well as inference. They can also be published as machine readable documentation.
+Sidewinder Contracts are JSON Schema interface schematics that describe callable methods on remote services. This package provides the `Type` API to allow one to construct Contracts from simple type primitives with each type staticcally resolvable to TypeScript types. Contracts are used both for data validation, as well as type inference. They can also be published as machine readable documentation to remote systems.
 
 Licence MIT
 
 ## Contents
 
 - [Contracts](#Contracts)
+- [Formats](#Formats)
 - [Functions](#Functions)
 - [Types](#Types)
 - [Modifiers](#Modifiers)
@@ -36,6 +37,20 @@ const Contract = Type.Contract({
     },
     client: {
         bar: Type.Function([Type.String()], Type.String())
+    }
+})
+```
+## Formats
+
+Contracts can specify a `format` option to inform Client and Server the message encoding format that should be used to exchange messages. Sidewinder provides encoding options for `json` and `msgpack` with `json` being the default. By setting the `format` to `msgpack`, Sidewinder can exchange binary buffers of type `Uint8Array`. The following uses the `msgpack` format.
+
+```typescript
+import { Type } from '@sidewinder/contract'
+
+const Contract = Type.Contract({
+    format: 'msgpack',
+    server: {
+        test: Type.Function([Type.String()], Type.String())
     }
 })
 ```
