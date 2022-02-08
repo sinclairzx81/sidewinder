@@ -37,6 +37,7 @@ export type WebServiceConnectCallback = (clientId: string) => Promise<void> | vo
 export type WebServiceErrorCallback = (clientId: string, error: unknown) => Promise<void> | void
 export type WebServiceCloseCallback = (clientId: string) => Promise<void> | void
 
+/** A JSON RPC 2.0 based HTTP service that supports remote method invocation via HTTP POST requests. */
 export class WebService<Contract extends TContract> {
     private onAuthorizeCallback: WebServiceAuthorizeCallback
     private onConnectCallback: WebServiceConnectCallback

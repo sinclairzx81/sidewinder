@@ -31,6 +31,7 @@ import { Encoder, MsgPackEncoder, JsonEncoder } from '@sidewinder/shared'
 import { RpcProtocol } from './methods/index'
 import { Request } from './request/index'
 
+/** A JSON RPC 2.0 based HTTP client used to connect to Sidewinder WebService endpoints. */
 export class WebClient<Contract extends TContract> {
     private readonly encoder: Encoder
 

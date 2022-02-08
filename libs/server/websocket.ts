@@ -38,6 +38,12 @@ export type WebSocketServiceConnectCallback = (clientId: string) => Promise<void
 export type WebSocketServiceErrorCallback = (clientId: string, error: unknown) => Promise<void> | void
 export type WebSocketServiceCloseCallback = (clientId: string) => Promise<void> | void
 
+/** 
+ * A JSON RPC 2.0 based WebSocket service that supports remote method invocation over 
+ * RFC6455 compatible WebSockets. This service supports bi-directional method invocation
+ * and offers additional functions to enable this service to call remote methods on its 
+ * clients.
+ */
 export class WebSocketService<Contract extends TContract> {
     private onAuthorizeCallback: WebSocketServiceAuthorizeCallback
     private onConnectCallback: WebSocketServiceConnectCallback
