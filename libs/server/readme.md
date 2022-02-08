@@ -204,7 +204,7 @@ Both WebService and WebSocketService expose transport lifecycle events which are
 ```typescript
 export type WebServiceAuthorizeCallback = (clientId: string, request: IncomingMessage) => Promise<boolean> | boolean
 export type WebServiceConnectCallback = (clientId: string) => Promise<void> | void
-export type WebServiceErrorCallback = (clientId: string, error: unknown) => void
+export type WebServiceErrorCallback = (clientId: string, error: unknown) => Promise<void> | void
 export type WebServiceCloseCallback = (clientId: string) => Promise<void> | void
 
 /**
@@ -240,7 +240,7 @@ public event(event: 'close', callback: WebServiceCloseCallback): WebServiceClose
 ```typescript
 export type WebSocketServiceAuthorizeCallback = (clientId: string, request: IncomingMessage) => Promise<boolean> | boolean
 export type WebSocketServiceConnectCallback = (clientId: string) => Promise<void> | void
-export type WebSocketServiceErrorCallback = (clientId: string, error: unknown) => void
+export type WebSocketServiceErrorCallback = (clientId: string, error: unknown) => Promise<void> | void
 export type WebSocketServiceCloseCallback = (clientId: string) => Promise<void> | void
 
 /** 

@@ -34,7 +34,7 @@ import { IncomingMessage } from 'http'
 
 export type WebServiceAuthorizeCallback = (clientId: string, request: IncomingMessage) => Promise<boolean> | boolean
 export type WebServiceConnectCallback = (clientId: string) => Promise<void> | void
-export type WebServiceErrorCallback = (clientId: string, error: unknown) => void
+export type WebServiceErrorCallback = (clientId: string, error: unknown) => Promise<void> | void
 export type WebServiceCloseCallback = (clientId: string) => Promise<void> | void
 
 export class WebService<Contract extends TContract> {

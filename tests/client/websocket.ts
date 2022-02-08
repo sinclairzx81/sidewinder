@@ -7,10 +7,14 @@ export type ContextCallback = (host: Host, service: WebSocketService<typeof Cont
 
 const Contract = Type.Contract({
     server: {
+        echo: Type.Function([Type.String()], Type.String()),
         add: Type.Function([Type.Number(), Type.Number()], Type.Number()),
         sub: Type.Function([Type.Number(), Type.Number()], Type.Number()),
         mul: Type.Function([Type.Number(), Type.Number()], Type.Number()),
         div: Type.Function([Type.Number(), Type.Number()], Type.Number()),
+    },
+    client: {
+        echo: Type.Function([Type.String()], Type.String())
     }
 })
 
@@ -21,6 +25,7 @@ function context(callback: ContextCallback, options?: WebSocketClientOptions) {
         service.method('sub', (clientId, a, b) => a - b)
         service.method('mul', (clientId, a, b) => a * b)
         service.method('div', (clientId, a, b) => a / b)
+        service.method('echo', async (clientId, message) => await service.call(clientId, 'echo', message))
 
         const host = new Host()
         host.use(service)
@@ -144,18 +149,14 @@ describe('client/WebSocketClient', () => {
 
 
     // ------------------------------------------------------------------
-    // RetrySocket
+    // Duplex
     // ------------------------------------------------------------------
 
-    // it('[RetrySocket] Should throw when send() is called in disconnected state when autoReconnectBuffer is false', context(async (host, service, client) => {
-    //     const add = await client.call('add', 1, 2)
-    //     assert.equal(add, 3)
-    //     await host.dispose()
-    //     await client.send('add', 1, 2)
-    // }, {
-    //     autoReconnectEnabled: true,
-    //     autoReconnectBuffer: false,
-    //     autoReconnectTimeout: 1000
-    // })).timeout(100000)
+    it('Should support duplex echo call from client to server to client', context(async (host, service, client) => {
+        client.method('echo', message =>  message)
+        const message = 'hello world'
+        const result = await client.call('echo', 'hello world')
+        assert.equal(message, result)
+    }))
 
 })

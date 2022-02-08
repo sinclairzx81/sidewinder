@@ -35,7 +35,7 @@ import { IncomingMessage } from 'http'
 
 export type WebSocketServiceAuthorizeCallback = (clientId: string, request: IncomingMessage) => Promise<boolean> | boolean
 export type WebSocketServiceConnectCallback = (clientId: string) => Promise<void> | void
-export type WebSocketServiceErrorCallback = (clientId: string, error: unknown) => void
+export type WebSocketServiceErrorCallback = (clientId: string, error: unknown) => Promise<void> | void
 export type WebSocketServiceCloseCallback = (clientId: string) => Promise<void> | void
 
 export class WebSocketService<Contract extends TContract> {
