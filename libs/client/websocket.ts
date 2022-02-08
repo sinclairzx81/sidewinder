@@ -26,9 +26,9 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-import { TContract, ResolveContractMethodParameters, ResolveContractMethodReturnType, TFunction } from '@sidewinder/contract'
+import { Exception, TContract, ResolveContractMethodParameters, ResolveContractMethodReturnType, TFunction } from '@sidewinder/contract'
 import { Responder, Encoder, JsonEncoder, MsgPackEncoder, Barrier } from '@sidewinder/shared'
-import { ClientMethods, Exception, RpcErrorCode, RpcProtocol } from './methods/index'
+import { ClientMethods, RpcErrorCode, RpcProtocol } from './methods/index'
 import { RetryWebSocket, UnifiedWebSocket } from './sockets'
 
 export type WebSocketClientConnectCallback = () => void

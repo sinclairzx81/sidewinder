@@ -26,9 +26,9 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-import { TContract, ContextMapping, ResolveContextMapping, ResolveContractMethodParameters, ResolveContractMethodReturnType, TFunction } from '@sidewinder/contract'
+import { Exception, TContract, ContextMapping, ResolveContextMapping, ResolveContractMethodParameters, ResolveContractMethodReturnType, TFunction } from '@sidewinder/contract'
 import { Responder, Encoder, JsonEncoder, MsgPackEncoder } from '@sidewinder/shared'
-import { ServerMethods, Exception, RpcErrorCode, RpcProtocol } from './methods/index'
+import { ServerMethods, RpcErrorCode, RpcProtocol } from './methods/index'
 import { WebSocket, MessageEvent, CloseEvent, ErrorEvent } from 'ws'
 import { IncomingMessage } from 'http'
 

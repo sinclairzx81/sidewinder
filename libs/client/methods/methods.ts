@@ -26,9 +26,8 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-import { TFunction } from '@sidewinder/contract'
+import { Exception, TFunction } from '@sidewinder/contract'
 import { RpcProtocol, RpcErrorCode, RpcRequest, RpcResponse } from './protocol'
-import { Exception } from './exception'
 
 export interface ExecuteResultWithResponse {
     type: 'result-with-response'

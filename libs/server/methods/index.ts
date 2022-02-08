@@ -26,7 +26,6 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-export * from './exception'
 export * from './methods'
 export * from './schema'
 export * from './protocol'
