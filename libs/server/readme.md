@@ -289,12 +289,12 @@ export class UsernameAlreadyExistsException extends Exception {
 }
 export class EmailAlreadyExistsException extends Exception {
     constructor(email: string) {
-        super(`The email '${email}' already exists`, 1000, {})
+        super(`The email '${email}' already exists`, 1001, {})
     }
 }
 export class PasswordNotStrongEnoughException extends Exception {
     constructor() {
-        super(`Password not strong enough`, 1001, {})
+        super(`Password not strong enough`, 1002, {})
     }
 }
 
@@ -302,7 +302,7 @@ server.method('user:create', (clientId, request) => {
     // guards
     if(await database.usernameExists(request.email)) throw new UsernameAlreadyExistsException(request.username)
     if(await database.emailExists(request.email)) throw new EmailAlreadyExistsException(request.email)
-    if(!passwords.checkPasswordStength(request.password)) throw new EmailAlreadyExistsException(request.password)
+    if(!passwords.checkPasswordStength(request.password)) throw new PasswordNotStrongEnoughException(request.password)
     
     const { userId } = await database.createUser({
         username: request.username,
