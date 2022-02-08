@@ -26,6 +26,7 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
+export * from './methods/index'
 export * from './host'
 export * from './web'
 export * from './websocket'

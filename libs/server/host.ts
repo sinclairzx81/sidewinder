@@ -37,43 +37,44 @@ import { v4 } from 'uuid'
 import ws from 'ws'
 
 export interface HostOptions {
-	/** 
-	 * Load balancer keep alive. Transmits a `ping` signal to each connected 
+    /** 
+     * Load balancer keep alive. Transmits a `ping` signal to each connected 
      * web socket to prevent inactive sockets being terminated by the balancer.
-	 * 
-	 * (default is 8000) 
-	 */
-     keepAliveTimeout: number
+     * 
+     * (default is 8000) 
+     */
+    keepAliveTimeout: number
 
-     /** 
-      * Disables client message compression. By default, browsers will compress web 
-      * socket frames which the server needs to decompress on a per message basis. 
-      * Setting this value to false means the server can skip frame decompression 
-      * (reducing CPU overhead) but at the expense of adding IO / Network overhead.
-      * 
-      * (Default is false)
-      */
-     disableFrameCompression: boolean
- 
-     /**
-      * Sets an upper limit for the number of concurrent web sockets allowed on the 
-      * host. This can be useful for autoscaling scenarios where the AWS ALB will 
-      * limited connections to around 4075, but where autoscaling may be dependent on
-      * service latency.
-      * 
-      * (Default is 16384)
-      */
-     maxSocketCount: number 
+    /** 
+     * Disables client message compression. By default, browsers will compress web 
+     * socket frames which the server needs to decompress on a per message basis. 
+     * Setting this value to false means the server can skip frame decompression 
+     * (reducing CPU overhead) but at the expense of adding IO / Network overhead.
+     * 
+     * (Default is false)
+     */
+    disableFrameCompression: boolean
+
+    /**
+     * Sets an upper limit for the number of concurrent web sockets allowed on the 
+     * host. This can be useful for autoscaling scenarios where the AWS ALB will 
+     * limited connections to around 4075, but where autoscaling may be dependent on
+     * service latency.
+     * 
+     * (Default is 16384)
+     */
+    maxSocketCount: number
 }
 
 export class Host {
-    private readonly server:      Server
-    private readonly wsserver:    WebSocketServer
+    private readonly server: Server
+    private readonly wsserver: WebSocketServer
     private readonly application: Application
-    private readonly services:    Map<string, WebSocketService<any>>
-    private readonly sockets:     Map<number, ws.WebSocket>
+    private readonly services: Map<string, WebSocketService<any>>
+    private readonly sockets: Map<number, ws.WebSocket>
+    private readonly keepAliveInterval: NodeJS.Timer
     private socketOrdinal: number
-    private socketCount:   number
+    private socketCount: number
     private disposed: boolean
 
     constructor(private readonly options: HostOptions = {
@@ -81,53 +82,54 @@ export class Host {
         disableFrameCompression: false,
         maxSocketCount: 16384
     }) {
-        this.services      = new Map<string, WebSocketService<any>>()
-        this.sockets       = new Map<number, ws.WebSocket>()
-        this.application   = express()
-        this.server        = createServer(this.application)
-        this.server.on('upgrade', (request, socket, head) => this.upgrade( request, socket as Socket, head))
-        this.wsserver      = new WebSocketServer({ noServer: true, ...this.options.disableFrameCompression ? ({ perMessageDeflate: false }) : ({}) })
+        this.services = new Map<string, WebSocketService<any>>()
+        this.sockets = new Map<number, ws.WebSocket>()
+        this.application = express()
+        this.server = createServer(this.application)
+        this.server.on('upgrade', (request, socket, head) => this.upgrade(request, socket as Socket, head))
+        this.wsserver = new WebSocketServer({ noServer: true, ...this.options.disableFrameCompression ? ({ perMessageDeflate: false }) : ({}) })
+        this.keepAliveInterval = setInterval(() => this.keepAlive())
         this.socketOrdinal = 0
-        this.socketCount   = 0
+        this.socketCount = 0
         this.disposed = false
-        this.keepAlive()
+        
     }
-    
+
     /** Uses a WebSocketService to the specified path  */
     public use(path: string, service: WebSocketService<any>): void
-    
+
     /** Uses a WebService to the specified path  */
     public use(path: string, service: WebService<any>): void
-    
+
     /** Uses express middleware on the specified path  */
     public use(path: string, service: RequestHandler): void
-    
+
     /** Uses a WebSocketService  */
     public use(service: WebSocketService<any>): void
-    
+
     /** Uses a WebService */
     public use(service: WebService<any>): void
-    
+
     /** Uses express middleware */
     public use(middleware: RequestHandler): void
-    
+
     /** Uses a service */
     public use(...args: any[]): void {
         this.assertDisposed()
-        if(args.length === 2) {
+        if (args.length === 2) {
             const [path, service] = [args[0], args[1]]
             if (service instanceof WebSocketService) {
                 this.services.set(path, service)
-            } else if(service instanceof WebService) {
+            } else if (service instanceof WebService) {
                 this.application.post(path, (req, res) => service.accept(v4(), req, res))
             } else {
                 this.application.use(path, service)
             }
-        } else if(args.length === 1) {
+        } else if (args.length === 1) {
             const service = args[0]
             if (service instanceof WebSocketService) {
                 this.services.set('/', service)
-            } else if(service instanceof WebService) {
+            } else if (service instanceof WebService) {
                 this.application.post('/', (req, res) => service.accept(v4(), req, res))
             } else {
                 this.application.use(service)
@@ -146,9 +148,18 @@ export class Host {
     }
 
     /** Disposes of this host and terminates all connections */
-    public dispose() {
+    public async dispose(): Promise<void> {
         this.disposed = true
-        this.wsserver.close(() => this.server.close())
+        clearInterval(this.keepAliveInterval)
+        return new Promise((resolve, reject) => {
+            this.wsserver.close(error => {
+                if (error) return reject(error)
+                this.server.close(error => {
+                    if (error) return reject(error)
+                    resolve()
+                })
+            })
+        })
     }
 
     private nextSocketOrdinal() {
@@ -198,9 +209,8 @@ export class Host {
             socket.destroy()
         }
     }
-    
+
     private keepAlive() {
-        setTimeout(() => this.keepAlive(), this.options.keepAliveTimeout)
         for (const [ordinal, socket] of this.sockets) {
             socket.ping(void 0, false, error => {
                 if (error === undefined || error === null) return
@@ -211,7 +221,7 @@ export class Host {
     }
 
     private assertDisposed() {
-        if(this.disposed) throw Error('Host is disposed')
+        if (this.disposed) throw Error('Host is disposed')
     }
 
 }
