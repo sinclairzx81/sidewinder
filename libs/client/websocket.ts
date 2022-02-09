@@ -101,8 +101,8 @@ export class WebSocketClient<Contract extends TContract> {
         this.socket = this.options.autoReconnectEnabled
             ? new RetryWebSocket(this.endpoint, {
                 binaryType: 'arraybuffer',
-                reconnectBuffer: this.options.autoReconnectBuffer,
-                reconnectTimeout: this.options.autoReconnectTimeout
+                autoReconnectBuffer: this.options.autoReconnectBuffer,
+                autoReconnectTimeout: this.options.autoReconnectTimeout
             })
             : new UnifiedWebSocket(this.endpoint, {
                 binaryType: 'arraybuffer'

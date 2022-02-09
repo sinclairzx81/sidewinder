@@ -9,3 +9,4 @@ export const Contract = Type.Contract({
         div: Type.Function([Type.Number(), Type.Number()], Type.Number()),
     }
 })
+

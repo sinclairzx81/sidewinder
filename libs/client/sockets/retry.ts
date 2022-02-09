@@ -33,9 +33,9 @@ export interface RetryWebSocketOptions {
     /** The web socket binary type */
     binaryType: BinaryType
     /** Sets the reconnect timeout in the event this socket disconnects. */
-    reconnectTimeout: number
+    autoReconnectTimeout: number
     /** If true, the socket will buffer messages while in a disconnected state. */
-    reconnectBuffer: boolean
+    autoReconnectBuffer: boolean
 }
 
 /** 
@@ -54,8 +54,8 @@ export class RetryWebSocket {
 
     constructor(private readonly endpoint: string, private readonly options: RetryWebSocketOptions = {
         binaryType:       'blob',
-        reconnectTimeout: 2000,
-        reconnectBuffer:  false
+        autoReconnectTimeout: 2000,
+        autoReconnectBuffer:  false
     }) {
         this.barrier          = new Barrier()
         this.events           = new Events()
@@ -130,8 +130,8 @@ export class RetryWebSocket {
         if (this.explicitClosed) {
             throw new Error('Socket has been closed')
         }
-        if (this.socket === null && this.options.reconnectBuffer === false) {
-            throw Error('Socket is not currently connected')
+        if (this.socket === null && this.options.autoReconnectBuffer === false) {
+            throw Error('Socket is not currently connected. Consider setting autoReconnectBuffer to true to buffer messages while disconnected.')
         }
         await this.barrier.wait()
         this.socket!.send(data)
@@ -148,7 +148,7 @@ export class RetryWebSocket {
         while (true) {
             if (this.explicitClosed) return
             if (this.socket !== null) {
-                await Delay.run(this.options.reconnectTimeout)
+                await Delay.run(this.options.autoReconnectTimeout)
                 continue
             }
             try {
@@ -168,7 +168,7 @@ export class RetryWebSocket {
                 this.barrier.resume()
             } catch (error) {
                 this.events.send('error', error)
-                await Delay.run(this.options.reconnectTimeout)
+                await Delay.run(this.options.autoReconnectTimeout)
             }
         }
     }

@@ -139,18 +139,24 @@ export interface ContractOptions {
 
 export interface TContract<Options extends ContractOptions = ContractOptions> extends TSchema {
     $static: {
+        /** The encoding format for this contract. The default is 'json' */
         format: ResolveContractFormat<Options['format']>
+        /** The server interface methods */
         server: ResolveContractInterface<Options['server'], {}> extends infer Interface ? {
             [K in keyof Interface]: Interface[K] extends TFunction<any[], any> ? Interface[K]['$static'] : never
         } : {},
+        /** The client interface methods */
         client: ResolveContractInterface<Options['client'], {}> extends infer Interface ? {
             [K in keyof Interface]: Interface[K] extends TFunction<any[], any> ? Interface[K]['$static'] : never
         }: {}
     },
     type: 'contract',
     kind: 'Contract',
-    format: ResolveContractFormat<Options['format']>
+    /** The encoding format for this contract. The default is 'json' */
+    format: ResolveContractFormat<Options['format']>,
+    /** The server interface methods */
     server: ResolveContractInterface<Options['server'], {}>,
+    /** The client interface methods */
     client: ResolveContractInterface<Options['client'], {}>,
 }
 
