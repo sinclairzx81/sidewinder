@@ -114,7 +114,7 @@ console.log([add, sub, mul, div]) // [3, -1, 2, 0.5]
 
 [TypeScript Example Link](https://www.typescriptlang.org/play?#code/JYWwDg9gTgLgBAbzgFQJ5gKZwL5z-uAMyghDgHIABAZ2ABMMB3YAOwagHoBjCFmKAIZcY5AFChIsRHADqGAEYBlDFABuwLllzFSFGvSat2HaitUqxojhzgBaew8dPnL12-ce3VmwGFe-IRhvO09QsPCIx1FRHhZqeD8+QWE4AF4UdAwAOkSA4QAKBFECQmgQARgALgoAK2pecgAaYvxTNRVqooICcgE6OnJqtEwsgDEAVxZhYF58gG1h7IA5cZB5FXyASkaMkZW1jc2AXR3FrP31qC3tlrxsUWxN6OsQyLf39+DlNQ0MYI+AYDPNFYvE4G11Jo0nAWExZApvpCMPlcskYE8YrwwX06BMpjAZixoRDflkQBgYAALCB0fK9fpNOD5LgAG2AGD4AEk6DsBDt5Js0gA+OACOAAajgAueNiBcvlDmCyAw8X+CvVAJBWPgOOhAkYAmAOv6eOms3IAB5WeyuXQhYyAIw7ABMGOAhHyuoAhKl0gBmQVUkiMOAAUSgJCu5AAqrCAB6YYQYOhwKAq8YskSbIA)
 
-Sidewinder allows service methods to be tested directly without implicating the network. The `method(...)` function used to define service methods returns a awaitable function that when called; will execute the body of the function. The returned function implements the same schema validation checks that are used to validate data received via RPC.
+Sidewinder allows service methods to be tested directly without implicating the network. The `method(...)` function used to define service methods returns an awaitable function that when called; will execute the body of the function. The returned function implements the same schema validation checks that are used to validate data received via RPC.
 
 ```typescript
 import { Type }       from '@sidewinder/contract'
