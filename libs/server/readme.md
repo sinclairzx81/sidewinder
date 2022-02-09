@@ -22,6 +22,8 @@ This package contains the WebService (Http), WebSocketService (Ws) and Host type
 - [WebSocketService](#WebSocketService)
 - [Lifecycle](#Lifecycle)
 - [Exceptions](#Exceptions)
+- [Testing](#Testing)
+- [Classes](#Classes)
 
 ## Example
 
@@ -330,4 +332,93 @@ server.method('user:create', (clientId, request) => {
     })
     return { userId }
 })
+```
+
+
+## Testing
+
+[TypeScript Example Link](https://www.typescriptlang.org/play?#code/JYWwDg9gTgLgBAbzgFQJ5gKZwL5z-uAMyghDgHIABAZ2ABMMB3YAOwagHoBjCFmKAIZcY5AFChIsRHADqGAEYBlDFABuwLllzFSFGvSat2HaitUqxojhzgBaew8dPnL12-ce3VmwGFe-IRhvO09QsPCIx1FRHhZqeD8+QWE4AF4UdAwAOkSA4QAKBFECQmgQARgALgoAK2pecgAaYvxTNRVqooICcgE6OnJqtEwsgDEAVxZhYF58gG1h7IA5cZB5FXyASkaMkZW1jc2AXR3FrP31qC3tlrxsUWxN6OsQyLf39+DlNQ0MYI+AYDPNFYvE4G11Jo0nAWExZApvpCMPlcskYE8YrwwX06BMpjAZixoRDflkQBgYAALCB0fK9fpNOD5LgAG2AGD4AEk6DsBDt5Js0gA+OACOAAajgAueNiBcvlDmCyAw8X+CvVAJBWPgOOhAkYAmAOv6eOms3IAB5WeyuXQhYyAIw7ABMGOAhHyuoAhKl0gBmQVUkiMOAAUSgJCu5AAqrCAB6YYQYOhwKAq8YskSbIA)
+
+Sidewinder allows service methods to be tested directly without implicating the network. The `method(...)` function used to define service methods returns an awaitable function that when called; will execute the body of the function. The returned function implements the same schema validation checks that are used to validate data received via RPC.
+
+```typescript
+import { Type }       from '@sidewinder/contract'
+import { WebService } from '@sidewinder/server'
+
+// ---------------------------------------------------------------------------
+// Contract
+// ---------------------------------------------------------------------------
+
+const Contract = Type.Contract({
+    format: 'json',
+    server: {
+        'add': Type.Function([Type.Number(), Type.Number()], Type.Number()),
+    }
+})
+
+// ---------------------------------------------------------------------------
+// Service
+// ---------------------------------------------------------------------------
+
+const service = new WebService(Contract)
+
+const addFunction = service.method('add', (clientId, a, b) => a + b)
+
+// ---------------------------------------------------------------------------
+// Test
+// ---------------------------------------------------------------------------
+
+const add = await addFunction('<clientId>', 1, 2)
+
+if(add !== 3) throw Error('Unexpected result')
+```
+
+## Classes
+
+[TypeScript Example Link](https://www.typescriptlang.org/play?#code/JYWwDg9gTgLgBAbzgFQJ5gKZwL5z-g-AMyghDgHIABAZ2ABMMB3YAO0agHoBjCVmKAENuMCgChQkWIjgAJCDRgAaOAHUMAIwDKGKADdg3LLhJlKtBszYdONXXt3ixnTnAC0Hz1+8-ff-wGB-s6uAMJ8AsIwIe5BcfEJiV5iYrysinDh-EIicAC8KOgYAHRZkSIAFAhiBETQIIIwAFyUAFY0fBRKNfh2+rot1YT4FIL09BQtaJjFAGIArqwiwHwVANrTJQBy8yAauhUAlCqbxTt7B4cAuidFZ7v7UEfHPcMUNPMak4UzC0swK1Y61O50eR1uM1BlxuP22D0uL2GeAoIHmABtvqc-stVhs7lCnsdYfcLoSYSD4YTEUiKPRgHpMXdsQDcRTSeDiQSjuT8ZTnt0CNgxNhDikXLEkpKpVKYgBZRoACx0+kMGBi0o1mqCKQwAA8pPBuGjBDQaHAADIQADmVt0MlecDR1oqxVdgigVpoLUErFQayuhxkaQ6aJKTqtLrdHpogaFQrEeoNcCNJrN8pgSvsqrgepgGHYZvU2izRgAPDAihAiJkIjkYAA+RAO4MCeYiaAVMBQemNLBQDBjPho1CO622qAtS023SBoZIj6YJ5lOuiwUOsCfNGGOBjej5OAZ4A0YogDAZiD0CqjcZdOAVI3AfMwACS9BUghUGkDeUbSEPx-DcdinDK9uEENFQz3XcKEOABuOB+xgeYoFYHc4AAajgDQcFXfANw0LduDgD5sIKf8TzPBULyvEjb3vLcn1fd9P2-X8DwVI9gLHXQuIjCgwIgjA91ouCELPZDUMEdwsJw9dN23VE0X3cjT3PS8UXROiH0Yt8dxY-I2PIwCeJA-jwMguBFJg+DEIktCACoZJFOSCO3Ok9GUjjj1Uqj1PcrSGP4Ji9Kw1iZCM7ioF40DzKEuB-NE2yULQ1xsOc+MW2IkssAKVhmDgdNMxVIwKjypgLUi54Yj6AwjGKXcr1LbSgvoetbwARhUAAmQ5igzfMKn7D40XgH9EFdYoRTgcUIDAFlWHAlJMqojJcvy+RFCOMQVpgYp5jsCoatVUUduAo88yBABWAAGW7DiAA)
+
+Sidewinder provides support for class based programming by allowing RPC service types to be extended. This allows services to define dependencies via constructors and provides a basis for dependency injection. Sidewinder does not support decorators, but instead reuses the `method(...)` function defined on the base class. This allows functions to infer parameter and return types without explicit annotation.
+
+```typescript
+import { Type }             from '@sidewinder/contract'
+import { Host, WebService } from '@sidewinder/server'
+
+// ---------------------------------------------------------------------------
+// Contract
+// ---------------------------------------------------------------------------
+
+const Contract = Type.Contract({
+    format: 'json',
+    server: {
+        'add': Type.Function([Type.Number(), Type.Number()], Type.Number()),
+        'sub': Type.Function([Type.Number(), Type.Number()], Type.Number()),
+        'mul': Type.Function([Type.Number(), Type.Number()], Type.Number()),
+        'div': Type.Function([Type.Number(), Type.Number()], Type.Number()),
+    }
+})
+
+// ---------------------------------------------------------------------------
+// MathService
+// ---------------------------------------------------------------------------
+
+export class Logger { 
+    log(...args: any[]) { console.log(...args) }
+}
+
+export class MathService extends WebService<typeof Contract> {
+    constructor(private readonly logger: Logger) {
+        super(Contract)
+    }
+    public add = this.method('add', (clientId, a, b) => { this.logger.log('called add'); return a + b })
+    public sub = this.method('sub', (clientId, a, b) => { this.logger.log('called sub'); return a - b })
+    public mul = this.method('mul', (clientId, a, b) => { this.logger.log('called mul'); return a * b })
+    public div = this.method('div', (clientId, a, b) => { this.logger.log('called div'); return a / b })
+}
+
+const service = new MathService(new Logger())
+// service.add('<clientId>', 1, 2).then(result => {...}) // optional
+
+const host = new Host()
+host.use(service)
+host.listen(5000)
 ```
