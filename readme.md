@@ -37,7 +37,7 @@ $ npm install @sidewinder/client     # Http and Web Socket Clients
 
 ## Example
 
-[TypeScript Example Link](https://www.typescriptlang.org/play?#code/JYWwDg9gTgLgBAbzgFQJ5gKZwL5z-g-AMyghDgHIABAZ2ABMMB3YAO0agHoBjCVmKAENuMCgChQkWIjgAJCDRgAaOAHUMAIwDKGKADdg3LLhJlKtBszYdONXXt3jJ0eEnUaAwgBtgGfjkJiUnJqOkYWdl0eHz9RMTFOTjgAWlS09IzMrOyc3LychKSPPgFhGELCuGL+IREaOEEoLDYYXSJhDHqYAAtBeEYabihgDSxuQS8vQQ0vLBAMHoh6er44O31DToA6OAAhVDhK7l7WAHM2U4aqktr4VAgAVzgQQQO2PQmGPqwNCB6qmL+aBwHT6XQ7LSWCIcSoPOxdbpYNCYLRDYBgeC8cDAWZQOAwCBrGB9QwTLwHY4YbgAa3xiLgvCgTRErE6KyIcF+PUqklm834JL4NB2yCgFJO5zOdKwRAgkwgEUuYEagnmrSg9UE7DgTRgDygrHx6G2FUSKXyFstVut6XivFYimuNTKcAAvChjVtqqURAAKBBiAjrBxQABciEDgQa9Ho4eRGC2ADEHqwRMA+L6ANrxrYAOQeIFGUF9AEoVDn84XdKWALrlz2VoulsuRwI0B4aOOe5OpmDp1hZisFptlj2YPPD6slutjhONqctqPPB5eLvjntpjPZhuT4ujodVvczg8jxdR+jAPRrhMbvtbk9T+vj+dHp9z3fNpStnBibAl+JmjaQHASBySVKCBhGKaSQQZs9RgKQBiMAyfBDAszTgHysSCg6cCyni3q3MKIL2JsOpUhgl4YJUghwCmwAAI4PM0jD8MARC+Hi+FwBgwjdHArJMORTGdDAOwAJKYRg-LEneuHjIacJYD0wA0DyrF9hxuj4oSgg0DQEDcMA3zSgygIwOJ9BwCw-yKCZTRMcATRWdxPRYA5zGKDslTIPSsryoqKHIby0mxAiWAAAbBroEVOj68Bqt0SzCtB5qgelGVZHaQrwMGZHuoJaiaLBRi+oRZT-nlRhbIlSy+hQggxhQKi+tw5mWSoggqBoJZugAfFcADUnKVaR1W1fQ9XthozVwK17X0J13W9a6A20ckI1iFVCYTfVIArrN82+PwHUNMt-VXAAVJt201QsSWTRQF56IdbXHRZi1nSNF20UkPXZQ68BJY6BXMHICgwKWYjA2JSm+tt-4w1sPiKH4voAKwAAzY-+lSZfjBOVN472pcTYUoawrIiDpJEbEYxG+WM5n1BF4yTKWsVECmm6GqpcBsEQujOZUpjkG5cW3CKflyl4CoXBTVMwF0hLi9tcAwxgVnTBADg0amDJkvUvHHHAEAcsASvPPdyVbKlBP2+lAOOm9sRugJYPuGT-BlTcZQqBQ3QwDAYChokstszDoZY9jnAUP+9qOo1VnuoITCCBbZnvVsbNePVSezQAjCoABM8c5WsHZu6n6eYuZ2dklNHaFyXZeA8uXhV2nGcu-w9fsxQ+1eM3cCl2ICf9Jenc15nsR97nT2XsPo8J3KCay6cWZJyo00qIPKjPTWvVmpmADMKjJEXI8qJjWzozWQA)
+[TypeScript Example Link](https://www.typescriptlang.org/play?#code/JYWwDg9gTgLgBAbzgFQJ5gKZwL5z-g-AMyghDgHIABAZ2ABMMB3YAO0agHoBjCVmKAENuMCgChQkWIjgAJCDRgAaOAHUMAIwDKGKADdg3LLhJlKtBszYdONXXt3jJ0eEnUaAwgBtgGfjkJiUnJqOkYWdl0eHz9RMTFOTjgAWlS09IzMrOyc3LychKSPPgFhGELCuGL+IREaOEEoLDYYXSJhDHqYAAtBeEYabihgDSxuQS8vQQ0vLBAMHoh6er44O31DToA6OAAhVDhK7l7WAHM2U4aqktr4VAgAVzgQQQO2PQmGPqwNCB6qmL+aBwHT6XQ7LSWCIcSoPOxdbpYNCYLRDYBgeC8cDAWZQOAwCBrGB9QwTLwHY4YbgAa3xiLgvCgTRErE6KyIcF+PUqklm834JL4NB2yCgFJO5zOdKwRAgkwgEUuYEagnmrSg9UE7DgTRgDygrHx6G2FUSKXyFstVut6XivFYimuNTKcAAvChjVtqqURAAKBBiAiyqAvGAALkoACsaHwKEpA-h1g4oBGA4E8BRBPR6BQI8iMFsAGIPVgiYB8X0AbXzWwAcg8QKMoL6AJQqGv1xu6VsAXXbns7TdbbYTgQoNAeGlzHswRZLZYr1YHDaHbZnBcH3ZbffXdZXW5H6coIAeXmnNeLpZg5dYVY7++ba-vXcfO+fq8P6Yo9GAenPnsvBdbyXWdN0fftQIfXsII3KCW0-PBsDEbAW3iM0bQwzCsOSSpQQMIxTSSPDNnqMBSAMRgGT4IYFmacA+ViQUHTgYMnR9GBhRBexNh1KkMF-DBKkEOAS2AABHB5mkYfhgCIXw8VYjBhG6OBWSYXiJM6GAdgASXojB+WJa8hQZLURLsOlgBoHlpOvOTdHxQlBBoGNuGAb5pQZQEYB0+g4BYf5FA8poJOAJo-NYnosBCyTFB2SpkHpWV5UVKjKN5AzYgRLAAAMk10HK2NuZ4Fm6JZhUI81sOqmqsjtIV4CTHj3TUtRNGIoxfW9W5UKaowtjVMr6F9TNszjOBfW4bzfJUQQVA0Fs3QAPiuABqTleu4-rBqWEaJynFRJum+hZvmxbXRW4Tkg2sQ+oLHbhooE8z0OqbfH4GaGjO5argAKhuu6BtK3bv1-cajvenyTq+jafuEpIFvqh14DKx0WuYOQFBgVsxFR7S4QwX07tQvGth8RQ-F9ABWAAGOnUMqWqmeZypvEhyq2ayqjWFZERHK4jYjE4xKxm8+ocvGSZW0Koh52Mw0rLgNgiF0cLKlMcgoqKsoRSSuUvAVC5ud5jj+a1u64DxjA-OmCAHCE7VJa8eolOOOAIA5YBTYeirEkZ5mA+wpHHTe2I3VUjH3E5-gupuMoVAoboYBgMAw0SA3JbxsNabpzgKFQ+1HSzPz3UEJhBC9rzIa2J2RuL8aAEYVAAJgLhq1kncOy4rzFvJrsk9snRuW7b5HnlPLvy8r0P+H7qWntPYe4FbsRC-6X9J57qvYjnrwRp-P8VCb5fR5jWYyYgU4q2LlR9pUZ6VAPntFrNSsAGYVGSY-m5UGmtipnsQA)
 
 Sidewinder services consist of three main components, a [Contract](libs/contract/readme.md), [Service](libs/server/readme.md) and [Client](libs/client/readme.md). A Contract defines a set of callable RPC methods and is shared between both Client and Server. A Service provides an implementation for a Contract; and a Client calls methods implemented on the Service. Contracts are used to infer type safe functions on Services and Clients, well as validate method calls made over the network.
 
@@ -61,10 +61,10 @@ import { WebClient }        from '@sidewinder/client'
 const Contract = Type.Contract({
     format: 'json',
     server: {
-        add: Type.Function([Type.Number(), Type.Number()], Type.Number()),
-        sub: Type.Function([Type.Number(), Type.Number()], Type.Number()),
-        mul: Type.Function([Type.Number(), Type.Number()], Type.Number()),
-        div: Type.Function([Type.Number(), Type.Number()], Type.Number()),
+        'add': Type.Function([Type.Number(), Type.Number()], Type.Number()),
+        'sub': Type.Function([Type.Number(), Type.Number()], Type.Number()),
+        'mul': Type.Function([Type.Number(), Type.Number()], Type.Number()),
+        'div': Type.Function([Type.Number(), Type.Number()], Type.Number()),
     }
 })
 
