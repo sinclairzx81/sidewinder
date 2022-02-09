@@ -196,7 +196,7 @@ export class WebSocketClient<Contract extends TContract> {
                 }
             } else if (message.type === 'response') {
                 const response = message.data
-                if (response.result) {
+                if (response.result !== undefined) {
                     this.responder.resolve(response.id, response.result)
                 } else if (response.error) {
                     const { message, code, data } = response.error
