@@ -32,6 +32,8 @@ import Ajv, { ValidateFunction }        from 'ajv'
 export { ValidateFunction }             from 'ajv'
 
 export namespace Schema {
+
+    /** Validates for Uint8Array. This is only possible for binary encoded formats */
     function validateUint8Array(data: any, parentSchema: any) {
         const schema = parentSchema       as TUint8Array
         const facade = validateUint8Array as any
@@ -52,10 +54,15 @@ export namespace Schema {
         }
         return true
     }
+    /** Validates for undefined. This validation cannot work across network calls. */
+    function validateUndefined(data: any, parentSchema: any) {
+        return data === undefined
+    }
 
     function validateSpecialized(specializedType: string, data: any, parentSchema: any) {
         switch(specializedType) {
             case 'Uint8Array': return validateUint8Array(data, parentSchema)
+            case 'Undefined': return validateUndefined(data, parentSchema)
             default: return false
         }
     }

@@ -79,8 +79,10 @@ export class ClientMethods {
         this.validateMethodExists(method)
         const entry = this.methods.get(method)!
         this.validateMethodParameters(entry, method, params)
-        const result = await entry.callback(...params)
-        this.validateMethodReturnType(entry, method, result)
+        const output = await entry.callback(...params)
+        // Note: To support void, we remap a undefined result to null
+        const result = output === undefined ? null : output
+        this.validateMethodReturnType(entry, method as string, result)
         return result
     }
 

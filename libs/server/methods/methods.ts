@@ -92,12 +92,12 @@ export class ServerMethods {
         this.validateMethodExists(method)
         const entry = this.methods.get(method)!
         this.validateMethodParameters(entry, method as string, params)
-        const result = await entry.callback(entry.mapping(clientId), ...params)
+        const output = await entry.callback(entry.mapping(clientId), ...params)
+        // Note: To support void, we remap a undefined result to null
+        const result = output === undefined ? null : output
         this.validateMethodReturnType(entry, method as string, result)
         return result
     }
-    
-
 
     public async executeServerProtocol(clientId: string, request: RpcRequest): Promise<ExecuteResponse> {
         try {

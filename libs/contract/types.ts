@@ -461,9 +461,10 @@ export interface TTuple<T extends TSchema[]> extends TSchema {
 // --------------------------------------------------------------------------
 
 export interface TUndefined extends TSchema {
-    $static: undefined,
-    kind: 'Undefined',
-    type: 'undefined'
+    $static: undefined
+    specialized: 'Undefined'
+    kind: 'Undefined'
+    type: 'object'
 }
 
 // --------------------------------------------------------------------------
@@ -508,7 +509,7 @@ export interface TUnknown extends TSchema {
 export interface TVoid extends TSchema {
     $static: void,
     kind: 'Void',
-    type: 'void'
+    type: 'null'
 }
 
 // --------------------------------------------------------------------------
@@ -688,7 +689,7 @@ export class TypeBuilder {
         return this.Create(schema)
     }
 
-    /** Creates a promise type */
+    /** Creates a promise type. This type cannot be represented in schema. */
     public Promise<T extends TSchema>(item: T, options: SchemaOptions = {}): TPromise<T> {
         return this.Create({ ...options, kind: 'Promise', type: 'promise', item })
     }
@@ -777,9 +778,9 @@ export class TypeBuilder {
         return this.Create(schema)
     }
 
-    /** Creates a undefined type */
+    /** Creates a undefined type. This type cannot be used in service contracts and is non-validatable over the network. */
     public Undefined(options: SchemaOptions = {}): TUndefined {
-        return this.Create({ ...options, kind: 'Undefined', type: 'undefined' })
+        return this.Create({ ...options, kind: 'Undefined', type: 'object', specialized: 'Undefined' })
     }
 
     /** Creates a union type */
@@ -796,15 +797,10 @@ export class TypeBuilder {
     public Unknown(options: SchemaOptions = {}): TUnknown {
         return this.Create({ ...options, kind: 'Unknown' })
     }
-
-    /** Creates a void type */
+    
+    /** Creates a void type. This type creates a `null` schema but infers as void */
     public Void(options: SchemaOptions = {}): TVoid {
-        return this.Create({ ...options, kind: 'Void', type: 'void' })
-    }
-
-    /** Omits the `kind` and `modifier` properties from the underlying schema */
-    public Strict<T extends TSchema>(schema: T, options: SchemaOptions = {}): T {
-        return JSON.parse(JSON.stringify({ ...options, ...schema })) as T
+        return this.Create({ ...options, kind: 'Void', type: 'null' })
     }
 
     /** Clones the given object */
@@ -841,5 +837,5 @@ export class TypeBuilder {
     }
 }
 
-
+/** Runtime Type System based on JSON schema */
 export const Type = new TypeBuilder()
