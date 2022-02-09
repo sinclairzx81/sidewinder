@@ -29,6 +29,10 @@ THE SOFTWARE.
 import { Environment, Events, EventHandler, EventListener } from '@sidewinder/shared'
 import type * as ws from 'ws'
 
+function dynamicImport<T = any>(name: string): T {
+    return (new Function('require', 'name', 'return require(name)'))(require, name)
+}
+
 export interface UnifiedWebSocketOptions {
     binaryType: BinaryType
 }
@@ -50,7 +54,7 @@ export class UnifiedWebSocket {
             this.socket.addEventListener('error',   event => this.onError(event))
             this.socket.addEventListener('close',   ()    => this.onClose())
         } else {
-            const WebSocket = require('ws').WebSocket
+            const WebSocket = dynamicImport('ws').WebSocket
             this.socket = new WebSocket(this.endpoint) as ws.WebSocket
             this.socket.binaryType = this.options.binaryType as any
             this.socket.addEventListener('open',    ()    => this.onOpen())

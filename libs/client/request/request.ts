@@ -46,13 +46,18 @@ export namespace Request {
         }
     }
 
-    async function browser(endpoint: string, headers: Record<string, string>, body: Uint8Array) {
-        const required = createRequiredHeader(body)
-        const response = await fetch(endpoint, { method: 'POST', body, headers: { ...headers, ...required } })
+    async function browser(endpoint: string, additionalHeaders: Record<string, string>, body: Uint8Array) {
+        const requiredHeaders = createRequiredHeader(body)
+        const headers = { ...additionalHeaders, ...requiredHeaders }
+        const response = await fetch(endpoint, { method: 'POST', body, headers })
         assertResponseOk(endpoint, response.ok)
         assertResponseType(endpoint, response.headers.get('Content-Type'))
         const arraybuffer = await response.arrayBuffer()
         return new Uint8Array(arraybuffer)
+    }
+
+    function dynamicImport<T = any>(name: string): T {
+        return (new Function('require', 'name', 'return require(name)'))(require, name)
     }
 
     /** 
@@ -61,14 +66,13 @@ export namespace Request {
      * use lazy require() in this function to avoid esbuild inserting these imports
      * when bundling. Replace with actual fetch in Node v18.x
      */
-    function node(endpoint: string, headers: Record<string, string>, body: Uint8Array) {
+    function node(endpoint: string, additionalHeaders: Record<string, string>, body: Uint8Array) {
         return new Promise<Uint8Array>((resolve, reject) => {
-            const required = createRequiredHeader(body)
-            const request =  require('http').request({
-                method: 'POST',
-                headers: { ...headers, ...required },
-                ...require('url').parse(endpoint),
-            }, (res: any) => {
+            const urlObject = dynamicImport('url').parse(endpoint)
+            const http = urlObject.protocol === 'https:' ? dynamicImport('https') : dynamicImport('http')
+            const requiredHeaders = createRequiredHeader(body)
+            const headers = { ...additionalHeaders, ...requiredHeaders }
+            const request =  http.request({ method: 'POST', headers, ...urlObject }, (res: any) => {
                 try {
                     assertResponseType(endpoint, res.headers['content-type'])
                 } catch (error) {
