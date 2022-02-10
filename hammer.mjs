@@ -13,10 +13,9 @@ export async function clean() {
 // -------------------------------------------------------------
 
 export async function start() {
-    const external = "zlib https http events net crypto stream url tls"
     await Promise.all([
         shell('hammer run example/server/index.ts --dist target/example/server'),
-        shell(`hammer serve example/client/index.html --dist target/example/client --minify --external "${external}"`)
+        shell(`hammer serve example/client/index.html --dist target/example/client --minify`)
     ])
 }
 
