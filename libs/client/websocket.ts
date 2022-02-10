@@ -133,7 +133,7 @@ export class WebSocketClient<Contract extends TContract> {
         return callback
     }
 
-    /** Defines a method implementation */
+    /** Defines a client method implementation */
     public method<
         Method extends keyof Contract['$static']['client'],
         Parameters extends ResolveContractMethodParameters<Contract['$static']['client'][Method]>,
