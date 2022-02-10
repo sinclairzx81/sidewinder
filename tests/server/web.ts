@@ -58,7 +58,7 @@ describe('server/WebService', () => {
             'authorize', 'connect', 'call', 'close'
         ])
     })
-    
+
     it('should terminate on authorize false', async () => {
         const buffer  = [] as any[]
         const port    = assert.nextPort()
@@ -123,6 +123,27 @@ describe('server/WebService', () => {
         
         assert.deepEqual(buffer, [
             'error', 'error', 'error', 'error'
+        ])
+    })
+    // ------------------------------------------------------------------
+    // Context Mapping
+    // ------------------------------------------------------------------
+    it('should support context mapping the clientId', async () => {
+        const buffer  = [] as any[]
+        const port    = assert.nextPort()
+        const service = new WebService(Contract)
+        service.method('test', (clientId) => [1, 2, 3], async (data) => { buffer.push(data) })
+
+        const host = new Host()
+        host.use(service)
+        host.listen(port)
+
+        const client = new WebClient(Contract, `http://localhost:${port}`)
+        await client.call('test').catch(() => buffer.push('error'))
+        await host.dispose()
+        
+        assert.deepEqual(buffer, [
+            [1, 2, 3]
         ])
     })
 })
