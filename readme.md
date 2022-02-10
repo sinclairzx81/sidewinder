@@ -14,7 +14,7 @@
 
 Sidewinder is a strictly typed NodeJS Web Service framework built primarily for micro service architectures. It enables one to create schema validated RPC methods that can be trivially called over a network. It offers functionality for both unidirectional (http) and bidirectional (web socket) method calls; and provides this functionality under a unified service programming model.
 
-Sidewinder offers functionality similar to gRPC but uses JSON RPC 2.0 for the wire protocol, JSON Schema for message validation and offers optional binary message encoding using MsgPack. It also provides excellent type inference support for both TypeScript and JavaScript.
+Sidewinder offers functionality similar to gRPC but uses JSON RPC 2.0 for the wire protocol, JSON Schema for message validation and offers optional binary message encoding using MsgPack. It also provides excellent type inference support for TypeScript as well as JavaScript.
 
 License MIT
 
@@ -30,7 +30,7 @@ License MIT
 ## Install
 
 ```bash
-$ npm install @sidewinder/contract   # Function Schematics
+$ npm install @sidewinder/contract   # Json Schema Based Service Descriptions
 $ npm install @sidewinder/server     # Http and Web Socket Services
 $ npm install @sidewinder/client     # Http and Web Socket Clients
 ```
