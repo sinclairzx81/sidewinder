@@ -72,10 +72,11 @@ export interface RegisteredServerMethod {
 type MethodName = string 
 
 /** 
- * A method container that houses methods registered by services and clients. Provides
- * direct and protocol invocation on the methods, as well as schema validation.
+ * A Service method container for a set of methods. This container provides an interface to allow
+ * callers to register schema validated function and execute those function either directly or
+ * via JSON RPC 2.0 protocol.
  */
-export class ServerMethods {
+export class ServiceMethods {
     private readonly methods: Map<MethodName, RegisteredServerMethod>
     
     constructor() {

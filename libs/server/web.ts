@@ -26,9 +26,9 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-import { Exception, TContract, ContextMapping, ResolveContextMapping, ResolveContractMethodParameters, ResolveContractMethodReturnType } from '@sidewinder/contract'
+import { Exception, TContract, ContextMapping, ResolveContextMapping, ResolveContractMethodParameters, ResolveContractMethodReturnType, TFunction } from '@sidewinder/contract'
 import { Environment, Encoder, JsonEncoder, MsgPackEncoder } from '@sidewinder/shared'
-import { ServerMethods, RpcErrorCode, RpcProtocol } from './methods/index'
+import { ServiceMethods, RpcErrorCode, RpcProtocol } from './methods/index'
 import { IncomingMessage, ServerResponse } from 'http'
 
 export type WebServiceAuthorizeCallback = (clientId: string, request: IncomingMessage) => Promise<boolean> | boolean
@@ -42,9 +42,8 @@ export class WebService<Contract extends TContract> {
     private onConnectCallback: WebServiceConnectCallback
     private onErrorCallback: WebServiceErrorCallback
     private onCloseCallback: WebServiceCloseCallback
-    private readonly methods: ServerMethods
+    private readonly methods: ServiceMethods
     private readonly encoder: Encoder
-    
 
     constructor(public readonly contract: Contract) {
         this.onAuthorizeCallback = () => true
@@ -52,9 +51,9 @@ export class WebService<Contract extends TContract> {
         this.onErrorCallback = () => { }
         this.onCloseCallback = () => { }
         this.encoder = this.contract.format === 'json' ? new JsonEncoder() : new MsgPackEncoder()
-        this.methods = new ServerMethods()
+        this.methods = new ServiceMethods()
     }
-
+    
     /**
      * Subscribes to authorize events. This event is raised each time a http rpc request is made. Callers
      * can use this event to setup any associated state for the request
@@ -80,7 +79,7 @@ export class WebService<Contract extends TContract> {
      */
     public event(event: 'close', callback: WebServiceCloseCallback): WebServiceCloseCallback
 
-    /** Sucribes to events */
+    /** Subscribes to events */
     public event(event: string, callback: (...args: any[]) => any): any {
         switch (event) {
             case 'authorize': { this.onAuthorizeCallback = callback; break }
@@ -92,7 +91,7 @@ export class WebService<Contract extends TContract> {
         return callback
     }
 
-    /** Defines an method implementation */
+    /** Defines a server method implementation */
     public method<
         Method extends keyof Contract['$static']['server'],
         Parameters extends ResolveContractMethodParameters<Contract['$static']['server'][Method]>,
@@ -104,7 +103,7 @@ export class WebService<Contract extends TContract> {
         callback: (context: ResolveContextMapping<Mapping>, ...params: Parameters) => Promise<ReturnType> | ReturnType
     ): (clientId: string, ...params: Parameters) => Promise<ReturnType>
 
-    /** Defines an method implementation */
+    /** Defines a server method implementation */
     public method<
         Method extends keyof Contract['$static']['server'],
         Parameters extends ResolveContractMethodParameters<Contract['$static']['server'][Method]>,
@@ -114,11 +113,12 @@ export class WebService<Contract extends TContract> {
         callback: (clientId: string, ...params: Parameters) => Promise<ReturnType> | ReturnType
     ): (clientId: string, ...params: Parameters) => Promise<ReturnType>
 
-    /** Defines an method implementation */
+    /** Defines a server method implementation */
     public method(...args: any[]): any {
         const [method, mapping, callback] = (args.length === 3) ? [args[0], args[1], args[2]] : [args[0], (x: any) => x, args[1]]
-        if((this.contract.server as any)[method] === undefined) throw Error(`Cannot define method '${method}' as it does not exist in contract`)
-        this.methods.register(method, (this.contract.server as any)[method], mapping, callback)
+        const target = (this.contract.server as any)[method] as TFunction | undefined
+        if(target === undefined) throw Error(`Cannot define method '${method}' as it does not exist in contract`)
+        this.methods.register(method, target, mapping, callback)
         return async (clientId: string, ...params: any[]) => await this.methods.executeServerMethod(clientId, method, params)
     }
 
@@ -145,7 +145,6 @@ export class WebService<Contract extends TContract> {
             }
         })
     }
-
 
     /**
      * Accepts an incoming HTTP request and processes it as JSON RPC method call. This method is

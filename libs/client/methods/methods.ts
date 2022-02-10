@@ -64,6 +64,12 @@ export interface RegisteredClientMethod {
 
 type MethodName = string 
 
+/** 
+ * A Client method container for a set of methods. This container provides an interface to allow
+ * callers to register functions and execute those functions directly or via JSON RPC 2.0 protocol.
+ * This container works like the ServiceMethods container except data is not strictly validated by
+ * JSON Schema.
+ */
 export class ClientMethods {
     private readonly methods: Map<MethodName, RegisteredClientMethod>
     
@@ -71,10 +77,12 @@ export class ClientMethods {
         this.methods = new Map<MethodName, RegisteredClientMethod>()
     }
     
+    /** Registers a client method. */
     public register(method: MethodName, schema: TFunction<any[], any>, callback: Function) {
         this.methods.set(method, { callback })
     }
     
+    /** Executes a client method and returns its result. */
     public async executeClientMethod(method: MethodName, params: unknown[]) {
         this.validateMethodExists(method)
         const entry = this.methods.get(method)!
@@ -86,6 +94,7 @@ export class ClientMethods {
         return result
     }
 
+    /** Executes a client method via JSON RPC protocol. */
     public async executeClientProtocol(request: RpcRequest): Promise<ExecuteResponse> {
         try {
             const result = await this.executeClientMethod(request.method, request.params)
@@ -146,10 +155,10 @@ export class ClientMethods {
     }
 
     private validateMethodParameters(entry: RegisteredClientMethod, method: string, params: unknown[]) {
-
+        // note: Parameter validation not implemented on clients
     }
 
     private validateMethodReturnType(entry: RegisteredClientMethod, method: string, result: unknown) {
-
+        // note: Parameter validation not implemented on clients
     }
 }

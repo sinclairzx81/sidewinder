@@ -28,7 +28,7 @@ THE SOFTWARE.
 
 import { Exception, TContract, ContextMapping, ResolveContextMapping, ResolveContractMethodParameters, ResolveContractMethodReturnType, TFunction } from '@sidewinder/contract'
 import { Responder, Encoder, JsonEncoder, MsgPackEncoder } from '@sidewinder/shared'
-import { ServerMethods, RpcErrorCode, RpcProtocol } from './methods/index'
+import { ServiceMethods, RpcErrorCode, RpcProtocol } from './methods/index'
 import { WebSocket, MessageEvent, CloseEvent, ErrorEvent } from 'ws'
 import { IncomingMessage } from 'http'
 
@@ -38,7 +38,7 @@ export type WebSocketServiceConnectCallback = (clientId: string) => Promise<void
 export type WebSocketServiceErrorCallback = (clientId: string, error: unknown) => Promise<void> | void
 export type WebSocketServiceCloseCallback = (clientId: string) => Promise<void> | void
 
-/** 
+/**
  * A JSON RPC 2.0 based WebSocket service that supports remote method invocation over 
  * RFC6455 compatible WebSockets. This service supports bi-directional method invocation
  * and offers additional functions to enable this service to call remote methods on its 
@@ -53,7 +53,7 @@ export class WebSocketService<Contract extends TContract> {
     private readonly sockets: Map<string, WebSocket>
     private readonly encoder: Encoder
     private readonly responder: Responder
-    private readonly methods: ServerMethods
+    private readonly methods: ServiceMethods
 
     constructor(public readonly contract: Contract) {
         this.onAuthorizeCallback = () => true
@@ -63,7 +63,7 @@ export class WebSocketService<Contract extends TContract> {
         this.sockets = new Map<string, WebSocket>()
         this.encoder = this.contract.format === 'json' ? new JsonEncoder() : new MsgPackEncoder()
         this.responder = new Responder()
-        this.methods = new ServerMethods()
+        this.methods = new ServiceMethods()
         this.setupNotImplemented()
     }
 
@@ -104,12 +104,12 @@ export class WebSocketService<Contract extends TContract> {
         return callback
     }
 
-    /** Returns an iterator for this services clients */
+    /** Returns an iterator for each clientId currently connected to this service */
     public clients(): IterableIterator<string> {
         return this.sockets.keys()
     }
 
-    /** Defines an method implementation */
+    /** Defines a server method implementation */
     public method<
         Method extends keyof Contract['$static']['server'],
         Parameters extends ResolveContractMethodParameters<Contract['$static']['server'][Method]>,
@@ -121,7 +121,7 @@ export class WebSocketService<Contract extends TContract> {
         callback: (context: ResolveContextMapping<Mapping>, ...params: Parameters) => Promise<ReturnType> | ReturnType
     ): (clientId: string, ...params: Parameters) => Promise<ReturnType>
 
-    /** Defines a method implementation */
+    /** Defines a server method implementation */
     public method<
         Method extends keyof Contract['$static']['server'],
         Parameters extends ResolveContractMethodParameters<Contract['$static']['server'][Method]>,
@@ -131,15 +131,16 @@ export class WebSocketService<Contract extends TContract> {
         callback: (clientId: string, ...params: Parameters) => Promise<ReturnType> | ReturnType
     ): (clientId: string, ...params: Parameters) => Promise<ReturnType>
 
-    /** Defines an method implementation */
+    /** Defines a server method implementation */
     public method(...args: any[]): any {
         const [method, mapping, callback] = (args.length === 3) ? [args[0], args[1], args[2]] : [args[0], (x: any) => x, args[1]]
-        if((this.contract.server as any)[method] === undefined) throw Error(`Cannot define method '${method}' as it does not exist in contract`)
-        this.methods.register(method, (this.contract.server as any)[method], mapping, callback)
+        const target = (this.contract.server as any)[method] as TFunction | undefined
+        if(target === undefined) throw Error(`Cannot define method '${method}' as it does not exist in contract`)
+        this.methods.register(method, target, mapping, callback)
         return async (clientId: string, ...params: any[]) => await this.methods.executeServerMethod(clientId, method, params)
     }
 
-    /** Calls a remote method */
+    /** Calls a remote client method */
     public async call<
         Method extends keyof Contract['$static']['client'],
         Parameters extends ResolveContractMethodParameters<Contract['$static']['client'][Method]>,
@@ -154,7 +155,7 @@ export class WebSocketService<Contract extends TContract> {
         return await this.responder.wait(handle)
     }
     
-    /** Sends a message to a remote method and ignores the result */
+    /** Sends a message to a remote client method and ignores the result */
     public send<
         Method extends keyof Contract['$static']['client'],
         Parameters extends ResolveContractMethodParameters<Contract['$static']['client'][Method]>,

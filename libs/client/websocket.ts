@@ -139,8 +139,9 @@ export class WebSocketClient<Contract extends TContract> {
         Parameters extends ResolveContractMethodParameters<Contract['$static']['client'][Method]>,
         ReturnType extends ResolveContractMethodReturnType<Contract['$static']['client'][Method]>
     >(method: Method, callback: (...params: Parameters) => Promise<ReturnType> | ReturnType) {
-        if((this.contract.client as any)[method] === undefined) throw Error(`Cannot define method '${method}' as it does not exist in contract`)
-        this.methods.register(method as string, (this.contract.client as any)[method], callback)
+        const target = (this.contract.client as any)[method] as TFunction | undefined
+        if(target === undefined) throw Error(`Cannot define method '${method}' as it does not exist in contract`)
+        this.methods.register(method as string, target, callback)
         return async (...params: Parameters): Promise<ReturnType> => await this.methods.executeClientMethod(method as string, params)
     }
 
