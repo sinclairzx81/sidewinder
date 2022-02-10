@@ -158,7 +158,7 @@ export class Host {
         })
     }
 
-    /** Listens on the given port and optional hostname */
+    /** Listens on the given port and optional hostname. Requires key and cert options to passed as options. */
     public listenTls(port: number, hostname: string = '0.0.0.0', options: ServerOptions = {}): Promise<void> {
         this.assertDisposed()
         this.assertNotListening()
