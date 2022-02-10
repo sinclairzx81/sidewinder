@@ -2,7 +2,7 @@
 
 <h1>Sidewinder Contract</h1>
 
-<p>Type System and Runtime Schematics</p>
+<p>Runtime Type System and Service Interface Schematics</p>
 
 [<img src="https://img.shields.io/npm/v/@sidewinder/contract?label=%40sidewinder%2Fcontract">](https://www.npmjs.com/package/@sidewinder/contract)
 
