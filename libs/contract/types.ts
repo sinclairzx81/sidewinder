@@ -843,5 +843,5 @@ export class TypeBuilder {
     }
 }
 
-/** Runtime Type System based on JSON schema */
+/** JSON Schema type builder with static type resolution for TypeScript */
 export const Type = new TypeBuilder()
