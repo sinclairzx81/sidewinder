@@ -20,7 +20,7 @@ This package contains the WebService (Http), WebSocketService (Ws) and Host type
 - [Express](#Express)
 - [WebService](#WebService)
 - [WebSocketService](#WebSocketService)
-- [Lifecycle](#Lifecycle)
+- [Lifecycle Events](#Lifecycle-Events)
 - [Exceptions](#Exceptions)
 - [Testing](#Testing)
 - [Classes](#Classes)
@@ -111,7 +111,7 @@ host.dispose()
 
 ## Express
 
-Sidewinder Hosts are run on top express and support hosting any compatiable express middleware. Hosts only exposes the express `use(...)` function however, so applications needing to handle HTTP verbs such as `get`, `post`, `put` and `delete` will need to write these handlers on an express `Router`.
+Sidewinder Hosts are run on top express and support hosting any compatiable express middleware. Hosts only expose the express `use(...)` function, so applications needing to handle verbs such as `get`, `post`, `put` and `delete` will need to write these handlers via express `Router`.
 
 ```typescript
 import { Host } from '@sidewinder/server'
@@ -160,7 +160,7 @@ host.listen(5000)
 
 ## WebSocketService
 
-A WebSocketService is JSON RPC 2.0 based WebSocket service that accepts incoming connectiosn from WebSocketClients. The WebSocketService works the same as the WebService but also provides an API to allow Services to call Clients. The following example implements a WebSocketService to support the WebSocketClient example located [here](https://github.com/sinclairzx81/sidewinder/blob/master/libs/client/readme.md#websocketclient).
+A WebSocketService is JSON RPC 2.0 based WebSocket service that accepts incoming WebSocket connections from WebSocketClients. The WebSocketService offers the same functionality as the WebService but also offers an additional API to allow Services to call and send messages to WebSocketClient methods. The following example implements a WebSocketService to support the WebSocketClient example located [here](https://github.com/sinclairzx81/sidewinder/blob/master/libs/client/readme.md#websocketclient).
 
 <details>
   <summary>Contract</summary>
@@ -198,27 +198,21 @@ import { Contract }         from '../shared/contract'
 
 const service = new WebSocketService(Contract)
 
-/**
- * As there is a `progress` method defined on the client section of the
- * Contract, the WebSocketService can send messages to the clients 'progress'
- * implementation to notify of progress updates.
- */
 service.method('render', async (clientId, request) => {
     /** Simulate Progress Events */
-    for(let i = 0; i <= 100; i++) {
-        service.send(clientId, 'progress', {
-            method:  'render',
-            percent: i
-        })
+    for(let percent = 0; percent <= 100; percent++) {
+        service.send(clientId, 'progress', { method: 'render', percent })
     }
     return { 
         imageUrl: 'https://domain.com/model/model.png' 
     }
 })
 ```
-## Lifecycle
 
-Both WebService and WebSocketService expose transport lifecycle events which are dispatched on changes to the underlying transport. These events different slightly between WebService and WebSocketService events. The following describes their behaviours.
+<a name="Lifecycle-Events" />
+## Lifecycle Events
+
+Both WebService and WebSocketService expose transport lifecycle events which are dispatched on changes to the underlying transport. Each event passes a unique `clientId` parameter than can be used to associate user state initialized for the connection. These events have slightly different behaviors between WebService and WebSocketService. The following describes their behaviours.
 
 <details>
   <summary>WebService Lifecycle Events</summary>
@@ -296,7 +290,7 @@ public event(event: 'close', callback: WebSocketServiceCloseCallback): WebSocket
 
 ## Exceptions
 
-Sidewinder services will respond to clients using default error codes defined in the JSON RPC 2.0 specification. General errors thrown in method handlers will result in a default `InternalServerError` with minimal information returned to the client about the nature of the error. Users can override this behavior by throwing types of `Exception`. The `Exception` type is located inside the `@sidewinder/contract` package. This type can either be derived into custom error types, or thrown outright. 
+Sidewinder services will respond to clients using default error codes defined in the JSON RPC 2.0 specification. General errors thrown inside service method handlers will result in a default `InternalServerError` with minimal information returned to the client about the nature of the error. Users can override this behavior by throwing types of `Exception`. The `Exception` type is located inside the `@sidewinder/contract` package. This type can be thrown directly or derived to create specialized application errors.
 
 The following creates some custom error types that report meaningful information to the caller.
 
@@ -339,7 +333,7 @@ server.method('user:create', (clientId, request) => {
 
 [TypeScript Example Link](https://www.typescriptlang.org/play?#code/JYWwDg9gTgLgBAbzgFQJ5gKZwL5z-uAMyghDgHIABAZ2ABMMB3YAOwagHoBjCFmKAIZcY5AFChIsRHADqGAEYBlDFABuwLllzFSFGvSat2HaitUqxojhzgBaew8dPnL12-ce3VmwGFe-IRhvO09QsPCIx1FRHhZqeD8+QWE4AF4UdAwAOkSA4QAKBFECQmgQARgALgoAK2pecgAaYvxTNRVqooICcgE6OnJqtEwsgDEAVxZhYF58gG1h7IA5cZB5FXyASkaMkZW1jc2AXR3FrP31qC3tlrxsUWxN6OsQyLf39+DlNQ0MYI+AYDPNFYvE4G11Jo0nAWExZApvpCMPlcskYE8YrwwX06BMpjAZixoRDflkQBgYAALCB0fK9fpNOD5LgAG2AGD4AEk6DsBDt5Js0gA+OACOAAajgAueNiBcvlDmCyAw8X+CvVAJBWPgOOhAkYAmAOv6eOms3IAB5WeyuXQhYyAIw7ABMGOAhHyuoAhKl0gBmQVUkiMOAAUSgJCu5AAqrCAB6YYQYOhwKAq8YskSbIA)
 
-Sidewinder allows service methods to be tested directly without implicating the network. The `method(...)` function used to define service methods returns an awaitable function that when called; will execute the body of the function. The returned function implements the same schema validation checks that are used to validate data received via RPC.
+Sidewinder service methods can be tested directly without implicating the network. The `method(...)` provided on each service returns an awaitable function that when called; will execute the body of the function. The returned function implements the same schema validation checks that are used to validate data received via RPC.
 
 ```typescript
 import { Type }       from '@sidewinder/contract'
@@ -377,7 +371,7 @@ if(add !== 3) throw Error('Unexpected result')
 
 [TypeScript Example Link](https://www.typescriptlang.org/play?#code/JYWwDg9gTgLgBAbzgFQJ5gKZwL5z-g-AMyghDgHIABAZ2ABMMB3YAO0agHoBjCVmKAENuMCgChQkWIjgAJCDRgAaOAHUMAIwDKGKADdg3LLhJlKtBszYdONXXt3ixnTnAC0Hz1+8-ff-wGB-s6uAMJ8AsIwIe5BcfEJiV5iYrysinDh-EIicAC8KOgYAHRZkSIAFAhiBETQIIIwAFyUAFY0fBRKNfh2+rot1YT4FIL09BQtaJjFAGIArqwiwHwVANrTJQBy8yAauhUAlCqbxTt7B4cAuidFZ7v7UEfHPcMUNPMak4UzC0swK1Y61O50eR1uM1BlxuP22D0uL2GeAoIHmABtvqc-stVhs7lCnsdYfcLoSYSD4YTEUiKPRgHpMXdsQDcRTSeDiQSjuT8ZTnt0CNgxNhDikXLEkpKpVKYgBZRoACx0+kMGBi0o1mqCKQwAA8pPBuGjBDQaHAADIQADmVt0MlecDR1oqxVdgigVpoLUErFQayuhxkaQ6aJKTqtLrdHpogaFQrEeoNcCNJrN8pgSvsqrgepgGHYZvU2izRgAPDAihAiJkIjkYAA+RAO4MCeYiaAVMBQemNLBQDBjPho1CO622qAtS023SBoZIj6YJ5lOuiwUOsCfNGGOBjej5OAZ4A0YogDAZiD0CqjcZdOAVI3AfMwACS9BUghUGkDeUbSEPx-DcdinDK9uEENFQz3XcKEOABuOB+xgeYoFYHc4AAajgDQcFXfANw0LduDgD5sIKf8TzPBULyvEjb3vLcn1fd9P2-X8DwVI9gLHXQuIjCgwIgjA91ouCELPZDUMEdwsJw9dN23VE0X3cjT3PS8UXROiH0Yt8dxY-I2PIwCeJA-jwMguBFJg+DEIktCACoZJFOSCO3Ok9GUjjj1Uqj1PcrSGP4Ji9Kw1iZCM7ioF40DzKEuB-NE2yULQ1xsOc+MW2IkssAKVhmDgdNMxVIwKjypgLUi54Yj6AwjGKXcr1LbSgvoetbwARhUAAmQ5igzfMKn7D40XgH9EFdYoRTgcUIDAFlWHAlJMqojJcvy+RFCOMQVpgYp5jsCoatVUUduAo88yBABWAAGW7DiAA)
 
-Sidewinder provides support for class based programming by allowing RPC service types to be extended. This allows services to define dependencies via constructors and provides a basis for dependency injection. Sidewinder does not support decorators, but instead reuses the `method(...)` function defined on the base class. This allows functions to infer parameter and return types without explicit annotation.
+Sidewinder supports class based programming by allowing RPC service types to be extended. This allows services to define dependencies via constructors and provides a basis for dependency injection. Sidewinder does not support decorators, but instead reuses the `method(...)` function defined on the base class. This allows functions to infer parameter and return types without explicit annotation.
 
 ```typescript
 import { Type }             from '@sidewinder/contract'
