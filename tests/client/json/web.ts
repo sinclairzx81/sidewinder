@@ -2,7 +2,6 @@ import { Type, Exception } from '@sidewinder/contract'
 import { Host, WebService } from '@sidewinder/server'
 import { WebClient } from '@sidewinder/client'
 import * as assert from '../../assert/index'
-import { nextPort } from '../port'
 
 export type ContextCallback = (host: Host, service: WebService<typeof Contract>, client: WebClient<typeof Contract>) => Promise<void>
 
@@ -24,7 +23,7 @@ const Contract = Type.Contract({
 
 function context(callback: ContextCallback) {
     return async () => {
-        const port = nextPort()
+        const port = assert.nextPort()
         let store: string = ''
         const service = new WebService(Contract)
         service.method('send:store',       (clientId, data) => { store = data })
@@ -54,7 +53,7 @@ describe('client/WebClient:Json', () => {
     // Call()
     // ------------------------------------------------------------------
 
-    it('Should support synchronous call', context(async (host, service, client) => {
+    it('should support synchronous call', context(async (host, service, client) => {
         const add = await client.call('basic:add', 1, 2)
         const sub = await client.call('basic:sub', 1, 2)
         const mul = await client.call('basic:mul', 1, 2)
@@ -65,7 +64,7 @@ describe('client/WebClient:Json', () => {
         assert.equal(div, 0.5)
     }))
 
-    it('Should support asynchronous call', context(async (host, service, client) => {
+    it('should support asynchronous call', context(async (host, service, client) => {
         const [add, sub, mul, div] = await Promise.all([
             client.call('basic:add', 1, 2),
             client.call('basic:sub', 1, 2),
@@ -78,7 +77,7 @@ describe('client/WebClient:Json', () => {
         assert.equal(div, 0.5)
     }))
 
-    it('Should throw when call() is passed invalid method', context(async (host, service, client) => {
+    it('should throw when call() is passed invalid method', context(async (host, service, client) => {
         // @ts-ignore
         await assert.throwsAsync(async () => await client.call('foo', 1, 2))
     }))
@@ -95,14 +94,14 @@ describe('client/WebClient:Json', () => {
         assert.equal(value, result)
     }))
 
-    it('Should support synchronous send()', context(async (host, service, client) => {
+    it('should support synchronous send()', context(async (host, service, client) => {
         client.send('basic:add', 1, 2)
         client.send('basic:sub', 1, 2)
         client.send('basic:mul', 1, 2)
         client.send('basic:div', 1, 2)
     }))
 
-    it('Should support asynchronous send()', context(async (host, service, client) => {
+    it('should support asynchronous send()', context(async (host, service, client) => {
         await Promise.all([
             client.send('basic:add', 1, 2),
             client.send('basic:sub', 1, 2),
@@ -111,12 +110,12 @@ describe('client/WebClient:Json', () => {
         ])
     }))
 
-    it('Should throw when send() is passed invalid method', context(async (host, service, client) => {
+    it('should throw when send() is passed invalid method', context(async (host, service, client) => {
         // @ts-ignore
         assert.throws(() => client.send('foo', 1, 2))
     }))
 
-    it('Should not throw when send() is passed invalid parameters', context(async (host, service, client) => {
+    it('should not throw when send() is passed invalid parameters', context(async (host, service, client) => {
         // @ts-ignore
         client.send('basic:add', 'hello', 'world')
     }))

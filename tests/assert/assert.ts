@@ -1,6 +1,13 @@
 import * as assert from 'assert'
 import * as uuid from 'uuid'
 
+let port = 9000
+/** Generates a new port used for host binding */
+export function nextPort() {
+    const next = port++
+    return next
+}
+
 /** Creates a delay for out of band read/write tests */
 export function delay(ms: number) {
     return new Promise(resolve => setTimeout(resolve, ms))

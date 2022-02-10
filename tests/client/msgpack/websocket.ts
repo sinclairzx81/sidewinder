@@ -2,7 +2,6 @@ import { Type, Exception } from '@sidewinder/contract'
 import { Host, WebSocketService } from '@sidewinder/server'
 import { WebSocketClient, WebSocketClientOptions } from '@sidewinder/client'
 import * as assert from '../../assert/index'
-import { nextPort } from '../port'
 
 export type ContextCallback = (host: Host, service: WebSocketService<typeof Contract>, client: WebSocketClient<typeof Contract>, port: number) => Promise<void>
 
@@ -32,7 +31,7 @@ const Contract = Type.Contract({
 
 function context(callback: ContextCallback, options?: WebSocketClientOptions) {
     return async () => {
-        const port = nextPort()
+        const port = assert.nextPort()
         let store: string = ''
         
         const service = new WebSocketService(Contract)
@@ -62,7 +61,6 @@ function context(callback: ContextCallback, options?: WebSocketClientOptions) {
 }
 
 describe('client/WebSocketClient:MsgPack', () => {
-
     // ------------------------------------------------------------------
     // Call()
     // ------------------------------------------------------------------
@@ -237,25 +235,29 @@ describe('client/WebSocketClient:MsgPack', () => {
     // --------------------------------------------------------------------------
     it('should raise lifetime events in order (client close)', context(async (host, service, _client, port) => {
         const client = new WebSocketClient(Contract, `ws://localhost:${port}`)
-        let [index, buffer] = [0, [] as any[]]
-        client.event('connect', () => buffer.push(['connect', index++]))
-        client.event('close', () => buffer.push(['close', index++]))
+        const buffer = [] as string[]
+        client.event('connect', () => buffer.push('connect'))
+        client.event('close', () => buffer.push('close'))
         await client.call('basic:add', 1, 1)
         client.close()
         await assert.delay(50)
-        assert.deepEqual(buffer[0], ['connect', 0])
-        assert.deepEqual(buffer[1], ['close', 1])
+        assert.deepEqual(buffer, [
+            'connect',
+            'close'
+        ])
     }))
     
     it('should raise lifetime events in order (host close)', context(async (host, service, _client, port) => {
+        const buffer = [] as string[]
         const client = new WebSocketClient(Contract, `ws://localhost:${port}`)
-        let [index, buffer] = [0, [] as any[]]
-        client.event('connect', () => buffer.push(['connect', index++]))
-        client.event('close', () => buffer.push(['close', index++]))
+        client.event('connect', () => buffer.push('connect'))
+        client.event('close', () => buffer.push('close'))
         await client.call('basic:add', 1, 2)
         await host.dispose()
         await assert.delay(50)
-        assert.deepEqual(buffer[0], ['connect', 0])
-        assert.deepEqual(buffer[1], ['close', 1])
+        assert.deepEqual(buffer, [
+            'connect',
+            'close'
+        ])
     }))
 })
