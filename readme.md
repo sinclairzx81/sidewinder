@@ -37,7 +37,7 @@ $ npm install @sidewinder/client     # Http and Web Socket Clients
 
 ## Example
 
-[TypeScript Example Link](https://www.typescriptlang.org/play?#code/JYWwDg9gTgLgBAbzgFQJ5gKZwL5z-g-AMyghDgHIABAZ2ABMMB3YAO0agHoBjCVmKAENuMCgChQkWIjgAJCDRgAaOAHUMAIwDKGKADdg3LLhJlKtBszYdONXXt3jJ0eEnUaAwgBtgGfjkJiUnJqOkYWdl0eHz9RMTFOTjgAWlS09IzMrOyc3LychKSPPgFhGELCuGL+IREaOEEoLDYYXSJhDHqYAAtBeEYabihgDSxuQS8vQQ0vLBAMHoh6er44O31DToA6OAAhVDhK7l7WAHM2U4aqktr4VAgAVzgQQQO2PQmGPqwNCB6qmL+aBwHT6XQ7LSWCIcSoPOxdbpYNCYLRDYBgeC8cDAWZQOAwCBrGB9QwTLwHY4YbgAa3xiLgvCgTRErE6KyIcF+PUqklm834JL4NB2yCgFJO5zOdKwRAgkwgEUuYEagnmrSg9UE7DgTRgDygrHx6G2FUSKXyFstVut6XivFYimuNTKcAAvChjVtqqURAAKBBiAiyqAvGAALkoACsaHwKEpA-h1g4oBGA4E8BRBPR6BQI8iMFsAGIPVgiYB8X0AbXzWwAcg8QKMoL6AJQqGv1xu6VsAXXbns7TdbbYTgQoNAeGlzHswRZLZYr1YHDaHbZnBcH3ZbffXdZXW5H6coIAeXmnNeLpZg5dYVY7++ba-vXcfO+fq8P6Yo9GAenPnsvBdbyXWdN0fftQIfXsII3KCW0-PBsDEbAW3iM0bQwzCsOSSpQQMIxTSSPDNnqMBSAMRgGT4IYFmacA+ViQUHTgYMnR9GBhRBexNh1KkMF-DBKkEOAS2AABHB5mkYfhgCIXw8VYjBhG6OBWSYXiJM6GAdgASXojB+WJa8hQZLURLsOlgBoHlpOvOTdHxQlBBoGNuGAb5pQZQEYB0+g4BYf5FA8poJOAJo-NYnosBCyTFB2SpkHpWV5UVKjKN5AzYgRLAAAMk10HK2NuZ4Fm6JZhUI81sOqmqsjtIV4CTHj3TUtRNGIoxfW9W5UKaowtjVMr6F9TNszjOBfW4bzfJUQQVA0Fs3QAPiuABqTleu4-rBqWEaJynFRJum+hZvmxbXRW4Tkg2sQ+oLHbhooE8z0OqbfH4GaGjO5argAKhuu6BtK3bv1-cajvenyTq+jafuEpIFvqh14DKx0WuYOQFBgVsxFR7S4QwX07tQvGth8RQ-F9ABWAAGOnUMqWqmeZypvEhyq2ayqjWFZERHK4jYjE4xKxm8+ocvGSZW0Koh52Mw0rLgNgiF0cLKlMcgoqKsoRSSuUvAVC5ud5jj+a1u64DxjA-OmCAHCE7VJa8eolOOOAIA5YBTYeirEkZ5mA+wpHHTe2I3VUjH3E5-gupuMoVAoboYBgMAw0SA3JbxsNabpzgKFQ+1HSzPz3UEJhBC9rzIa2J2RuL8aAEYVAAJgLhq1kncOy4rzFvJrsk9snRuW7b5HnlPLvy8r0P+H7qWntPYe4FbsRC-6X9J57qvYjnrwRp-P8VCb5fR5jWYyYgU4q2LlR9pUZ6VAPntFrNSsAGYVGSY-m5UGmtipnsQA)
+[TypeScript Example Link](https://www.typescriptlang.org/play?#code/JYWwDg9gTgLgBAbzgFQJ5gKZwL5z-g-AMyghDgHIABAZ2ABMMB3YAO0agHoBjCVmKAENuMCgChQkWIjgAJCDRgAaOAHUMAIwDKGKADdg3LLhJlKtBszYdONXXt3jJ0eEnUaAwgBtgGfjkJiUnJqOkYWdl0eHz9RMTFOTjgAWlS09IzMrOyc3LychKSPPgFhGELCuGL+IREaOEEoLDt9Qyw2GF0iYSxGGm4oYDAYYD56mAALQXg+geANLEE4O3gIIjhuQS8vQQ0vDEqiAFdWEVHWesF2BtY4CGHzrbg-Xno2AHM4ImgQaYA6OBaSwRDhwI52erVUp1OAwCBwSp6LYMaa9aZLOz+CAOKANOCsDAwJjQADWDXqTAw23JsPhimmhi2XlQcDYRF0VRi-kqV3ogPsHJAhImEHo9TYKHQGC0c2GAOQUBZ3CmrHeH1hEywYEagiFnSgl2uTRgRygt0qMCl9W+uMmWGOpxGYzgCy8ECYtNZrCRPnoqM5vn8vP5+kFwtFND+FUSKXycfjCcT6XivAu8ChtXgAF5JZg-hmygAKBBiAg234wABclAAVjQ+BQlKX8C0cdWS4E8BRBPR6BRq2g8wAxE5nPiFgDag4wfwAckcQAsoIWAJQqadzhdL1cAXXXUs3i90q7XzcCFBoRw0-dzM5HjvOk4386Py7Xt8P25Xe4-L6-p87SgQCOLwbw3e8x1YJ8Dz-Y932fLc4J-BDXxPJtAIoN49DAg8IKdKCpxgxC333PNYLfZCiNQlcAPwbAxGwFd4hjJNWLY9jkkqHRWiMaMkm4gwjHqMBSAMRgNj4AZCXacB9iFfgGWdG0qhKTNIxDQSMHqJojGABweTBVhgAARyOLBuC5GAAEk+UsfhgCIXxcWUjBhAmfFmDgJpTK0mAASs2SMHkmBFIuDYrgRGNwSwSZgHFRh7Mcjk4TgHxWDJQQaHrbhgFRPl6U6L5oA1LBvLMxR5U1IrtnddVKleGSwDk2Jxiq1sOVTaF4D1EUxSjRJKg4obhoKMRU0UZZ7DaOAcwJD13AEtpCwLEQmNbNo-h60VC27XtGzgQsLMDaz6BUQQVA0FcZoAPjxABqF01qmoxNvDegdsva8VEOyybLOi6rqzW6lmSR6xHWl6tveihgNA76jtiP6GgBm68QAKjBiGZyhnasP2n7jqR87HtRpYkkulMxngEUJtmzz5EUVcxBpvzosLLGmJZv4fEUPxCwAVgABmFpjBpG8Xxcqbxjr4gMWok1gCRET1FqEgEgXCawORE7FLHGYkNks2ErUqrBDmAA14DivF3Gl2I4CYCZDHc1MlZgcZ4QW57GuahT8PqbEOUqWQYBgMAzuuO1JtTWzLjUTQtAgbgSUJO3-Ed52Fbdj34+0JOU5gVWzZjSRfZC-27hxG3NEBfPCVN6q3QiT4pNROPbaNlL6rGBcYra72Gg0QP+s4MWJfH9jKbTQ3jpmjz5s0NOYGW1SyhUCgJlDsBK0SN1Ni8FnKyF4XOAoJjxvgHs+RzQQmEEYB4AR-g-n3rwdqv-aAEYVAAJnPqnlhXjnrfe+j9LIvyZB9K8X9f7-2nrDYBd8H4z1iBA7YO1YYwLgH-MaACsKINASg5+r9cZ6SwTg8aEB9jcwgO8ScV8VCfRULDFQWEdxXRjBOAAzCoZI39sEqEFn8fmO4gA)
 
 Sidewinder services consist of three main components, a [Contract](libs/contract/readme.md), [Service](libs/server/readme.md) and [Client](libs/client/readme.md). A Contract defines a set of callable RPC methods and is shared between both Client and Server. A Service provides an implementation for a Contract; and a Client calls methods implemented on the Service. Contracts are used to infer type safe functions on Services and Clients, well as validate method calls made over the network.
 
@@ -51,10 +51,11 @@ import { WebClient }        from '@sidewinder/client'
 // ---------------------------------------------------------------------------
 // Contract
 //
-// Contracts are interfaces that describe callable methods on services. By 
-// changing a Contract you may invalidate both Client or Server. Sidewinder
-// uses the TypeScript compiler to statically check the correctness of both
-// implementations. Try changing the following parameters and return types.
+// Contracts are service interface descriptions that describe a set of callable
+// functions and an optional encoding format. Sidewinder uses Contracts to 
+// validate data sent over a network as well as to statically infer Client 
+// and Server methods in TypeScript. Try changing the parameters and return 
+// types for the functions below to invalidate Client and Server methods.
 //
 // ---------------------------------------------------------------------------
 
@@ -71,10 +72,10 @@ const Contract = Type.Contract({
 // ---------------------------------------------------------------------------
 // Service
 //
-// Services provide concrete implementations for Contracts. Service receive
-// a unique identifier for each new request. Implementations can use this
-// identifier to associate the clientId with state required for the request. 
-// The following code implements the `server` Contract methods.
+// Services provide concrete implementations for Contracts. Services receive
+// a unique clientId identifier for each new request. Implementations can 
+// use this identifier to link associated state for the request. The following 
+// code implements the server contract methods.
 //
 // ---------------------------------------------------------------------------
 
@@ -91,9 +92,11 @@ host.listen(5000)
 // ---------------------------------------------------------------------------
 // Client
 //
-// Clients connect to Services. The clients `call()` function is inferred
-// from the Contract. The following connects to the service hosted above
-// and calls each of its methods.
+// Clients connect to Services. Sidewinder provides two client types. The 
+// first is a WebClient which connects to WebService implementations over 
+// Http, and the second is a WebSocketClient which connects to WebSocketService 
+// implementations over a Web Socket. The following creates a WebClient to 
+// consume the service above.
 //
 // ---------------------------------------------------------------------------
 
