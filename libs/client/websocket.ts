@@ -180,7 +180,7 @@ export class WebSocketClient<Contract extends TContract> {
         })
     }
 
-    /** Closes this client. Any awaited calls will be rejected. */
+    /** Closes this client. */
     public close() {
         this.socket.close()
     }
