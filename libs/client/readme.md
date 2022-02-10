@@ -23,7 +23,7 @@ This package contains the WebClient (Http) and WebSocketClient (Ws) client types
 
 ## Example
 
-The following shows shows general usage of a Sidewinder client.
+The following shows general usage of the Sidewinder WebClient.
 
 <details>
 <summary>Contract</summary>
@@ -56,7 +56,7 @@ console.log([add, sub, mul, div]) // [3, -1, 2, 0.5]
 
 ## WebClient
 
-The WebClient connects to WebService server implementations. This client type communicates over Http and supports uni-directional request / response calling patterns only. The `WebService` client provides two methods, `call()` and `send()`. The first argument is the name of the method to call, with subsequent arguments passed as parameters to the remote function.
+The WebClient connects to WebService server implementations. This client type communicates over Http and supports uni-directional request / response calling patterns only. The `WebService` client provides two methods; `call()` and `send()`. The first argument is the name of the method to call, with subsequent arguments passed as parameters to the remote function.
 
 <details>
 <summary>Contract</summary>
@@ -97,7 +97,43 @@ client.send('add', 1, 2)
 
 ## WebSocketClient
 
-The WebSocketClient connects to WebSocketService server implementations. This client type provides the same functionality as the WebClient but offers additional support for bi-directional method calls as well as connection retry options. The following example creates a WebSocketClient that connects to a WebSocketService that carries out a long running rendering task. We expect that this task will take a some time to complete, so this service provides a `progress` notification event (as informed by the Contract) to notify the client of rendering progress.
+The WebSocketClient connects to WebSocketService implementations. This client type provides the same functionality as the WebClient but offers additional support for bi-directional method calls as well as connection retry options. The following example creates a WebSocketClient that connects to a WebSocketService that carries out a long running rendering task. We expect that this task will take a some time to complete, so this service provides a `progress` notification event (as informed by the Contract) to notify the client of rendering progress.
+
+<details>
+  <summary>Options</summary>
+
+```typescript
+const client = new WebSocketClient(Contract, 'ws://localhost:5000/', {
+    /**
+     * If true, this socket will attempt to automatically reconnect
+     * to the remote service if the underlying WebSocket transport 
+     * closes. 
+     * 
+     * (Default is false)
+     */
+    autoReconnectEnabled: false,
+    /**
+     * If true, this socket will buffer any RPC method calls if calls
+     * are made while the underlying WebSocket transport is in a
+     * disconnected state. This option is only available if the
+     * autoReconnectEnabled option is true.
+     * 
+     * (Default is false)
+     */
+    autoReconnectBuffer: false,
+    /**
+     * The auto reconnection timeout. This is the period of time that
+     * should elapse before a reconnection attempt is made in instances
+     * the underlying WebSocket connection terminates. This option is 
+     * only available if the autoReconnectEnabled option is true.
+     * 
+     * (Default is 4000)
+     */
+    autoReconnectTimeout: false
+})
+```
+
+</details>
 
 <details>
   <summary>Contract</summary>
@@ -109,7 +145,7 @@ export const RenderRequest = Type.Object({
     modelUrl: Type.String({ format: 'url' })
 })
 
-export const RenderResult = Type.Object({
+export const RenderResponse = Type.Object({
     imageUrl: Type.String({ format: 'url' })
 })
 
@@ -120,7 +156,7 @@ export const Progress = Type.Object({
 
 export const Contract = Type.Contract({
     server: {
-        render: Type.Function([RenderRequest], RenderResult),
+        render: Type.Function([RenderRequest], RenderResponse),
     },
     client: {
         progress: Type.Function([Progress], Type.Any())
@@ -134,50 +170,15 @@ export const Contract = Type.Contract({
 import { WebSocketClient } from '@sidewinder/client'
 import { Contract }        from '../shared/contract'
 
-const client = new WebSocketClient(Contract, 'ws://localhost:5000/', {
-    /**
-     * If true, this socket will attempt to automatically reconnect
-     * to the remote service if the underlying WebSocket transport 
-     * closes. 
-     * 
-     * (Default is false)
-     */
-    autoReconnectEnabled: boolean
-    /**
-     * If true, this socket will buffer any RPC method calls if calls
-     * are made while the underlying WebSocket transport is in a
-     * disconnected state. This option is only available if the
-     * autoReconnectEnabled option is true.
-     * 
-     * (Default is false)
-     */
-    autoReconnectBuffer: boolean
-    /**
-     * The auto reconnection timeout. This is the period of time that
-     * should elapse before a reconnection attempt is made in instances
-     * the underlying WebSocket connection terminates. This option is 
-     * only available if the autoReconnectEnabled option is true.
-     * 
-     * (Default is 4000)
-     */
-    autoReconnectTimeout: number
+const client = new WebSocketClient(Contract, 'ws://localhost:5000/')
+
+/** Define `progress` method to receive progress events from service */
+client.method('progress', ({ method, percent }) => {
+    console.log('method',  method)   // i.e: 'render'
+    console.log('percent', percent) // i.e: 35%
 })
 
-/**
- * As there is a `progress` method defined on the client section of the
- * contract, the WebSocketClient can register a method implementation to
- * receive progress events emitted from the service.
- */
-client.method('progress', progress => {
-    console.log('method',  progess.method)   // i.e: 'render'
-    console.log('percent', progress.percent) // i.e: 35%
-})
-
-/**
- * Here we call the render service method here and await for the result. 
- * While this operation is being run on the service, the client can expect 
- * to receive a series of progress updates before the result is returned.
- */
+/** Execute render service function */
 const result = await client.call('render', {
     modelUrl: 'https://domain.com/model/model.blend'
 })
@@ -187,7 +188,7 @@ console.log(result.imageUrl)
 
 ## WebProxy
 
-The WebProxy function will transform a WebClient or WebServiceClient into a object where remote methods can be called as functions (vs passing string names for each function). This can be more ergonimic to use in some cases. The WebProxy function only transforms the `call()` functions of the client. The following demonstrates its use.
+The WebProxy is a utility function that transforms either WebClient or WebServiceClient into a object where remote methods can be called as functions (vs passing string names for each function). This can be more ergonimic to use in some cases. Note the WebProxy function only transforms the `call()` function of the client. The following demonstrates its use.
 
 <details>
 <summary>Contract</summary>
@@ -218,11 +219,11 @@ const div = await client.div(1, 2)
 
 ## Protocol
 
-Sidewinder implements the [JSON RPC 2.0](https://www.jsonrpc.org/specification) protocol specification over both Http and Web Sockets service types.
+Sidewinder implements the [JSON RPC 2.0](https://www.jsonrpc.org/specification) protocol specification over both Http and Web Sockets service types. The following section details how remote systems can communicate with Sidewinder services using JavaScript API.
 
 ### Http
 
-The following calls a WebService method using the JavaScript `fetch()` API.
+The following calls a WebService method using the JavaScript `fetch(...)` API.
 
 <details>
   <summary>Fetch Example</summary>
@@ -244,7 +245,7 @@ const result = await fetch('http://localhost:5001/', {
 
 ### WebSockets
 
-The following calls a WebSocketService method using the JavaScript WebSocket API. Sidewinder sends message using binary sockets only. You can use the JavaScript `TextEncoder` and `TextDecoder` to JSON to and from `Uint8Array`
+The following calls a WebSocketService method using the JavaScript WebSocket API. Note Sidewinder transmits message using binary RFC6455 sockets only. You can use the JavaScript `TextEncoder` and `TextDecoder` to JSON to and from `Uint8Array`.
 
 <details>
   <summary>WebSocket Example</summary>
