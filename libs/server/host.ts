@@ -147,11 +147,16 @@ export class Host {
         })
     }
 
-    /** Disposes of this host and terminates all connections */
+    /** Disposes this host and terminates all connections */
     public async dispose(): Promise<void> {
+        if(this.disposed) return
         this.disposed = true
-        clearInterval(this.keepAliveInterval)
         return new Promise((resolve, reject) => {
+            clearInterval(this.keepAliveInterval)
+            for(const [socketId, socket] of this.sockets) {
+                this.sockets.delete(socketId)
+                socket.close()
+            }
             this.wsserver.close(error => {
                 if (error) return reject(error)
                 this.server.close(error => {
@@ -191,7 +196,7 @@ export class Host {
         try {
             const clientId = v4()
             const service = this.services.get(url.pathname)!
-            const authorized = await service.authorize(clientId, request)
+            const authorized = await service.upgrade(clientId, request)
             if (!authorized) {
                 socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n')
                 socket.destroy()

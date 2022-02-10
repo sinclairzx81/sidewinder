@@ -173,12 +173,21 @@ export class WebSocketService<Contract extends TContract> {
         socket.close()
     }
 
-    /** HOST FUNCTION: This function is called from the Host to authorize connections on the service.  */
-    public async authorize(clientId: string, request: IncomingMessage): Promise<boolean> {
+    /** 
+     * Accepts a clientId and IncomingMessage and returns a boolean indicating
+     * if the socket should be accepted for ws upgrade. Internally this function
+     * raises the services `authorize` callback event. This function is called
+     * automatically by the Host to determine if a socket should be accepted.
+     */
+    public async upgrade(clientId: string, request: IncomingMessage): Promise<boolean> {
         return await this.onAuthorizeCallback(clientId, request)
     }
 
-    /** HOST FUNCTION: This function is called from the Host to accept upgraded sockets.  */
+    /** 
+     * Accepts an incoming WebSocket. This function is called automatically by the
+     * Host following a successful upgrade. If calling manually, the clientId MUST 
+     * match the clientId passed on the upgrade() call.
+     */
     public async accept(clientId: string, socket: WebSocket) {
         this.sockets.set(clientId, socket)
         socket.binaryType = 'arraybuffer'

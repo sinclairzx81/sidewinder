@@ -4,7 +4,7 @@ import { WebSocketClient, WebSocketClientOptions } from '@sidewinder/client'
 import * as assert from '../../assert/index'
 import { nextPort } from '../port'
 
-export type ContextCallback = (host: Host, service: WebSocketService<typeof Contract>, client: WebSocketClient<typeof Contract>) => Promise<void>
+export type ContextCallback = (host: Host, service: WebSocketService<typeof Contract>, client: WebSocketClient<typeof Contract>, port: number) => Promise<void>
 
 const Contract = Type.Contract({
     format: 'msgpack',
@@ -55,7 +55,7 @@ function context(callback: ContextCallback, options?: WebSocketClientOptions) {
         await host.listen(port)
         
         const client = new WebSocketClient(Contract, `ws://localhost:${port}`, options)
-        await callback(host, service, client)
+        await callback(host, service, client, port)
         client.close()
         await host.dispose()
     }
@@ -66,7 +66,6 @@ describe('client/WebSocketClient:MsgPack', () => {
     // ------------------------------------------------------------------
     // Call()
     // ------------------------------------------------------------------
-
     it('should support synchronous call', context(async (host, service, client) => {
         const add = await client.call('basic:add', 1, 2)
         const sub = await client.call('basic:sub', 1, 2)
@@ -99,7 +98,6 @@ describe('client/WebSocketClient:MsgPack', () => {
     // ------------------------------------------------------------------
     // Send()
     // ------------------------------------------------------------------
-
     it('should store and fetch with send()',context(async (host, service, client) => {
         const value = assert.random()
         client.send('send:store', value)
@@ -133,11 +131,9 @@ describe('client/WebSocketClient:MsgPack', () => {
         client.send('basic:add', 'hello', 'world')
     }))
 
-
     // ------------------------------------------------------------------
     // Error: Explicit Close
     // ------------------------------------------------------------------
-
     it('should throw error when call() in disconnected state (UniSocket)', context(async (host, service, client) => {
         const add = await client.call('basic:add', 1, 2)
         assert.equal(add, 3)
@@ -180,7 +176,6 @@ describe('client/WebSocketClient:MsgPack', () => {
     // ------------------------------------------------------------------
     // Duplex
     // ------------------------------------------------------------------
-
     it('should support duplex echo call from client to server to client', context(async (host, service, client) => {
         client.method('duplex:echo', message =>  message)
         const message = 'hello world'
@@ -198,7 +193,6 @@ describe('client/WebSocketClient:MsgPack', () => {
     // ------------------------------------------------------------------
     // Errors and Exceptions
     // ------------------------------------------------------------------
-
     it('should throw "Internal Server Error" exceptions for thrown native JavaScript errors', context(async (host, service, client) => {
         try {
             await client.call('errors:error')
@@ -222,7 +216,6 @@ describe('client/WebSocketClient:MsgPack', () => {
     // ------------------------------------------------------------------
     // Void
     // ------------------------------------------------------------------
-
     it('should allow callers to pass void parameters', context(async (host, service, client) => {
         const result = await client.call('void:in', void 0)
         assert.equal(result, true)
@@ -237,5 +230,32 @@ describe('client/WebSocketClient:MsgPack', () => {
         client.method('void:inout', (data) => data)
         const result = await client.call('void:inout', void 0)
         assert.equal(result, null)
+    }))
+
+    // --------------------------------------------------------------------------
+    // Lifetime Events (note: transport error events are difficult to simulate)
+    // --------------------------------------------------------------------------
+    it('should raise lifetime events in order (client close)', context(async (host, service, _client, port) => {
+        const client = new WebSocketClient(Contract, `ws://localhost:${port}`)
+        let [index, buffer] = [0, [] as any[]]
+        client.event('connect', () => buffer.push(['connect', index++]))
+        client.event('close', () => buffer.push(['close', index++]))
+        await client.call('basic:add', 1, 1)
+        client.close()
+        await assert.delay(50)
+        assert.deepEqual(buffer[0], ['connect', 0])
+        assert.deepEqual(buffer[1], ['close', 1])
+    }))
+    
+    it('should raise lifetime events in order (host close)', context(async (host, service, _client, port) => {
+        const client = new WebSocketClient(Contract, `ws://localhost:${port}`)
+        let [index, buffer] = [0, [] as any[]]
+        client.event('connect', () => buffer.push(['connect', index++]))
+        client.event('close', () => buffer.push(['close', index++]))
+        await client.call('basic:add', 1, 2)
+        await host.dispose()
+        await assert.delay(50)
+        assert.deepEqual(buffer[0], ['connect', 0])
+        assert.deepEqual(buffer[1], ['close', 1])
     }))
 })

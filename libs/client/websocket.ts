@@ -228,7 +228,9 @@ export class WebSocketClient<Contract extends TContract> {
     }
 
     private assertCanSend() {
-        if (this.closed) throw new Error('WebSocket has closed')
+        if (this.closed) {
+            throw new Error('WebSocket has closed')
+        }
     }
 
     private setupNotImplemented() {

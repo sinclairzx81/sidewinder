@@ -29,8 +29,7 @@ THE SOFTWARE.
 import { Exception, TContract, ContextMapping, ResolveContextMapping, ResolveContractMethodParameters, ResolveContractMethodReturnType } from '@sidewinder/contract'
 import { Environment, Encoder, JsonEncoder, MsgPackEncoder } from '@sidewinder/shared'
 import { ServerMethods, RpcErrorCode, RpcProtocol } from './methods/index'
-import { Request, Response } from 'express'
-import { IncomingMessage } from 'http'
+import { IncomingMessage, ServerResponse } from 'http'
 
 export type WebServiceAuthorizeCallback = (clientId: string, request: IncomingMessage) => Promise<boolean> | boolean
 export type WebServiceConnectCallback = (clientId: string) => Promise<void> | void
@@ -123,7 +122,7 @@ export class WebService<Contract extends TContract> {
         return async (clientId: string, ...params: any[]) => await this.methods.executeServerMethod(clientId, method, params)
     }
 
-    private readRequest(request: Request): Promise<Uint8Array> {
+    private readRequest(request: IncomingMessage): Promise<Uint8Array> {
         return new Promise((resolve, reject) => {
             const buffers: Buffer[] = []
             request.on('data', buffer => buffers.push(buffer))
@@ -132,7 +131,7 @@ export class WebService<Contract extends TContract> {
         })
     }
 
-    private writeResponse(response: Response, status: number, data: Uint8Array): Promise<void> {
+    private writeResponse(response: ServerResponse, status: number, data: Uint8Array): Promise<void> {
         return new Promise((resolve, reject) => {
             response.writeHead(status, {
                 'Content-Type': 'application/x-sidewinder',
@@ -147,45 +146,38 @@ export class WebService<Contract extends TContract> {
         })
     }
 
-    /** HOST FUNCTION: This function is called by the host up accept a RPC request  */
-    public async accept(clientId: string, request: Request, response: Response) {
-        try {
-            // -----------------------------------------------------------------------
-            // Authorization
-            // -----------------------------------------------------------------------
 
-            const authorized = await this.onAuthorizeCallback(clientId, request)
+    /**
+     * Accepts an incoming HTTP request and processes it as JSON RPC method call. This method is
+     * called automatically by the Host.
+     */
+    public async accept(clientId: string, req: IncomingMessage, res: ServerResponse) {
+        try {
+            // Authorization
+            const authorized = await this.onAuthorizeCallback(clientId, req)
             if (!authorized) {
                 const [code, data, message] = [RpcErrorCode.InvalidRequest, {}, 'Unauthorized']
-                return await this.writeResponse(response, 200, this.encoder.encode(RpcProtocol.encodeError('unknown', {
+                return await this.writeResponse(res, 200, this.encoder.encode(RpcProtocol.encodeError('unknown', {
                     data, code, message
                 })))
             }
-
-            // -----------------------------------------------------------------------
-            // Connection Callback
-            // -----------------------------------------------------------------------
-
+            // Connect Callback
             await this.onConnectCallback(clientId)
-
-            // -----------------------------------------------------------------------
-            // Execute
-            // -----------------------------------------------------------------------
-
-            const data = await this.readRequest(request)
-            const message = RpcProtocol.decodeAny(this.encoder.decode(data))
+            // Execute Function
+            const request = await this.readRequest(req)
+            const message = RpcProtocol.decodeAny(this.encoder.decode(request))
             if (message === undefined) return
             if (message.type === 'request') {
                 const request = message.data
                 const result = await this.methods.executeServerProtocol(clientId, request)
                 if (result.type === 'result-with-response' || result.type === 'error-with-response') {
-                    this.writeResponse(response, 200, this.encoder.encode(result.response))
+                    this.writeResponse(res, 200, this.encoder.encode(result.response))
                 } else {
-                    this.writeResponse(response, 200, Buffer.from('{}'))
+                    this.writeResponse(res, 200, Buffer.from('{}'))
                 }
             } else {
                 const [code, data, message] = [RpcErrorCode.InvalidRequest, {}, 'Invalid Request']
-                return await this.writeResponse(response, 200, this.encoder.encode(RpcProtocol.encodeError('unknown', {
+                return await this.writeResponse(res, 200, this.encoder.encode(RpcProtocol.encodeError('unknown', {
                     data, code, message
                 })))
             }
@@ -193,21 +185,17 @@ export class WebService<Contract extends TContract> {
             this.onErrorCallback(clientId, error)
             if (error instanceof Exception) {
                 const [code, data, message] = [error.code, error.data, error.message]
-                return await this.writeResponse(response, 200, this.encoder.encode(RpcProtocol.encodeError('unknown', {
+                await this.writeResponse(res, 200, this.encoder.encode(RpcProtocol.encodeError('unknown', {
                     data, code, message
                 })))
             } else {
                 const [code, data, message] = [RpcErrorCode.InternalServerError, {}, 'Internal Server Error']
-                return await this.writeResponse(response, 200, this.encoder.encode(RpcProtocol.encodeError('unknown', {
+                await this.writeResponse(res, 200, this.encoder.encode(RpcProtocol.encodeError('unknown', {
                     data, code, message
                 })))
             }
         }
-
-        // ------------------------------------------------------------------
         // Close Callback
-        // ------------------------------------------------------------------
-
         await this.onCloseCallback(clientId)
     }
 }
