@@ -10,7 +10,9 @@
 
 ## Overview
 
-Sidewinder Contracts are JSON Schema interface schematics that describe callable methods on remote services. This package provides a Type API to allow one to construct Contracts from simple primitive with each Contract resolvable to TypeScript static types. Contracts are used both for data validation, as well as type inference. They can also be published as machine readable documentation to remote systems.
+Sidewinder Contracts are JSON Schema interface schematics that describe callable methods on remote services. This package provides a Type API to allow one to construct Contracts from simple primitive with each Contract resolvable to TypeScript static types. Contracts are used both for data validation, as well as TypeScript type inference. They can also be published as machine readable documentation to remote systems. 
+
+The Contract API is a RPC enhanced version of the TypeBox JSON Schema library. It provides additional types above and beyond the JSON Schema specification with support for `Uint8Array` as well as validated `void` parameter and return types. For additional information on TypeBox see the official documentation located [here](https://github.com/sinclairzx81/typebox).
 
 Licence MIT
 
