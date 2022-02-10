@@ -209,7 +209,8 @@ service.method('render', async (clientId, request) => {
 })
 ```
 
-<a name="Lifecycle-Events" />
+<a name="Lifecycle-Events"></a>
+
 ## Lifecycle Events
 
 Both WebService and WebSocketService expose transport lifecycle events which are dispatched on changes to the underlying transport. Each event passes a unique `clientId` parameter than can be used to associate user state initialized for the connection. These events have slightly different behaviors between WebService and WebSocketService. The following describes their behaviours.
