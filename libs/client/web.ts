@@ -39,7 +39,7 @@ export class WebClient<Contract extends TContract> {
         this.encoder = contract.format === 'json' ? new JsonEncoder() : new MsgPackEncoder()
     }
 
-    /** Calls a remote method */
+    /** Calls a remote service method */
     public async call<
         Method extends keyof Contract['$static']['server'],
         Parameters extends ResolveContractMethodParameters<Contract['$static']['server'][Method]>,
@@ -62,7 +62,7 @@ export class WebClient<Contract extends TContract> {
         throw Error('Unreachable')
     }
 
-    /** Sends a message to a remote method and ignores the result */
+    /** Sends a message to a remote service method and ignores the result */
     public send<
         Method extends keyof Contract['$static']['server'],
         Parameters extends ResolveContractMethodParameters<Contract['$static']['server'][Method]>,
