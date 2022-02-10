@@ -233,10 +233,10 @@ const result = await fetch('http://localhost:5001/', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-        jsonrpc: '2.0',  // required
-        id:      '1',    // optional if send()
-        method:  'add',  // required
-        params:  [1, 2], // required
+        jsonrpc: '2.0',
+        id:      '1',    // optional: omit if send()
+        method:  'add',
+        params:  [1, 2],
     })
 }).then(res => res.json())
 // result = { jsonrpc: '2.0', id: '1', result: 3 }
@@ -263,7 +263,7 @@ socket.onmessage = (event) => {
 socket.onopen = () => {
     socket.send(encoder.encode(JSON.stringify({
         jsonrpc: '2.0',
-        id:      '1',
+        id:      '1',  // optional: omit if send()
         method:  'add',
         params:  [1, 2]
     })))
