@@ -31,7 +31,7 @@ export async function test() {
 // Build
 // -------------------------------------------------------------
 
-const VERSION = '0.8.25'
+const VERSION = '0.8.26'
 
 export async function build(target = 'target/build') {
     await clean()
