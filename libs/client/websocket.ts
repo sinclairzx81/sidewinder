@@ -180,6 +180,11 @@ export class WebSocketClient<Contract extends TContract> {
         })
     }
 
+    /** Closes this client. Any awaited calls will be rejected. */
+    public close() {
+        this.socket.close()
+    }
+
     private onOpen() {
         this.onConnectCallback()
         this.barrier.resume()
@@ -218,10 +223,6 @@ export class WebSocketClient<Contract extends TContract> {
         this.responder.rejectFor('client', new Error('Unable to communicate with server'))
         this.onCloseCallback()
         this.barrier.resume()
-    }
-
-    public close() {
-        this.socket.close()
     }
 
     private assertMethodExists(method: string) {
