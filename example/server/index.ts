@@ -13,7 +13,6 @@ const host = new Host()
 host.use(cors())
 host.use('/math', service)
 host.listen(5001).then(() => console.log('service running on port 5001'))
-
 async function clientTest() {
     const client = new WebClient(Contract, 'http://localhost:5001/math')
     const result = await client.call('add', 1, 2)

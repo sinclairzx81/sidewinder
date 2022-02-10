@@ -26,7 +26,8 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-import { createServer, Server, IncomingMessage } from 'http'
+import { createServer as createHttpServer, Server, IncomingMessage } from 'http'
+import { createServer as createHttpsServer, ServerOptions } from 'https'
 import { Application, RequestHandler } from 'express'
 import { Socket } from 'net'
 import { WebSocketServer } from 'ws'
@@ -66,8 +67,14 @@ export interface HostOptions {
     maxSocketCount: number
 }
 
+/** 
+ * A Host is a network service mount. It handles the details of listening 
+ * to network interfaces and allows multiple WebService, WebSocketService
+ * and Express middleware to be mounted as services.
+ */
 export class Host {
-    private readonly server: Server
+    private server!: Server // deferred till listen
+
     private readonly wsserver: WebSocketServer
     private readonly application: Application
     private readonly services: Map<string, WebSocketService<any>>
@@ -75,6 +82,7 @@ export class Host {
     private readonly keepAliveInterval: NodeJS.Timer
     private socketOrdinal: number
     private socketCount: number
+    private listening: boolean
     private disposed: boolean
 
     constructor(private readonly options: HostOptions = {
@@ -85,12 +93,11 @@ export class Host {
         this.services = new Map<string, WebSocketService<any>>()
         this.sockets = new Map<number, ws.WebSocket>()
         this.application = express()
-        this.server = createServer(this.application)
-        this.server.on('upgrade', (request, socket, head) => this.upgrade(request, socket as Socket, head))
         this.wsserver = new WebSocketServer({ noServer: true, ...this.options.disableFrameCompression ? ({ perMessageDeflate: false }) : ({}) })
         this.keepAliveInterval = setInterval(() => this.keepAlive())
         this.socketOrdinal = 0
         this.socketCount = 0
+        this.listening = false
         this.disposed = false
         
     }
@@ -140,9 +147,25 @@ export class Host {
     }
 
     /** Listens on the given port and optional hostname */
-    public listen(port: number, hostname: string = '0.0.0.0'): Promise<void> {
+    public listen(port: number, hostname: string = '0.0.0.0', options: ServerOptions = {}): Promise<void> {
         this.assertDisposed()
+        this.assertNotListening()
+        this.listening = true
         return new Promise(resolve => {
+            this.server = createHttpServer(this.application)
+            this.server.on('upgrade', (request, socket, head) => this.upgrade(request, socket as Socket, head))
+            this.server.listen(port, hostname, () => resolve())
+        })
+    }
+
+    /** Listens on the given port and optional hostname */
+    public listenTls(port: number, hostname: string = '0.0.0.0', options: ServerOptions = {}): Promise<void> {
+        this.assertDisposed()
+        this.assertNotListening()
+        this.listening = true
+        return new Promise(resolve => {
+            this.server = createHttpsServer(options, this.application)
+            this.server.on('upgrade', (request, socket, head) => this.upgrade(request, socket as Socket, head))
             this.server.listen(port, hostname, () => resolve())
         })
     }
@@ -159,28 +182,13 @@ export class Host {
             }
             this.wsserver.close(error => {
                 if (error) return reject(error)
+                if(!this.server) return resolve()
                 this.server.close(error => {
                     if (error) return reject(error)
                     resolve()
                 })
             })
         })
-    }
-
-    private nextSocketOrdinal() {
-        return this.socketOrdinal++
-    }
-
-    private incrementSocketCount() {
-        this.socketCount += 1
-    }
-
-    private decrementSocketCount() {
-        this.socketCount -= 1
-    }
-
-    private exceedSocketCount() {
-        return this.socketCount >= this.options.maxSocketCount
     }
 
     private async upgrade(request: IncomingMessage, socket: Socket, head: any) {
@@ -225,8 +233,27 @@ export class Host {
         }
     }
 
+    private nextSocketOrdinal() {
+        return this.socketOrdinal++
+    }
+
+    private incrementSocketCount() {
+        this.socketCount += 1
+    }
+
+    private decrementSocketCount() {
+        this.socketCount -= 1
+    }
+
+    private exceedSocketCount() {
+        return this.socketCount >= this.options.maxSocketCount
+    }
+
+    private assertNotListening() {
+        if(this.listening) throw Error('Host can only listen once')
+    }
+
     private assertDisposed() {
         if (this.disposed) throw Error('Host is disposed')
     }
-
 }
