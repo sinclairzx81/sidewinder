@@ -11,6 +11,12 @@ export interface ArrayComponentProperties<T extends TArray> extends SchemaCompon
 export function ArrayComponent<T extends TArray = TArray>(props: ArrayComponentProperties<T>) {
     const [state, setState] = React.useState(props.value)
     function onChange(property: string, value: any) {
+        const index = parseInt(property)
+        const next = [...state]
+        next[index] = value
+        props.onChange(property, next)
+        setState(next)
+        
         
     }
     return <div className='type-array'>
