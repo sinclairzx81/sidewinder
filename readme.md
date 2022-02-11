@@ -29,7 +29,7 @@ License MIT
 - [Overview](#Overview)
 - [Install](#Install)
 - [Example](#Example)
-- [Type Safety](#Type-Safety)
+- [TypeScript](#TypeScript)
 - [Metadata](#Metadata)
 - [Contract](libs/contract/readme.md)
 - [Server](libs/server/readme.md)
@@ -116,9 +116,7 @@ const div = await client.call('div', 1, 2)
 console.log([add, sub, mul, div]) // [3, -1, 2, 0.5]
 ```
 
-<a name='Type-Safety'></a>
-
-## Type Safety
+## TypeScript
 
 Sidewinder offers both runtime and static type safety derived from Contract definitions. Client and Service methods are statically inferred from Contract definitions, with the Contract also used to validate data received over the wire.
 
