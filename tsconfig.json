@@ -5,12 +5,14 @@
         "target": "ESNext",
         "module": "CommonJS",
         "esModuleInterop": true,
+        "jsx": "react",
         "baseUrl": ".",
         "paths": {
             "@sidewinder/client":   ["libs/client/index.ts"],
-            "@sidewinder/shared":   ["libs/shared/index.ts"],
             "@sidewinder/contract": ["libs/contract/index.ts"],
-            "@sidewinder/server":   ["libs/server/index.ts"]
+            "@sidewinder/react":    ["libs/react/index.tsx"],
+            "@sidewinder/server":   ["libs/server/index.ts"],
+            "@sidewinder/shared":   ["libs/shared/index.ts"]
         }
     }
 }
