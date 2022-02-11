@@ -30,7 +30,7 @@ License MIT
 - [Install](#Install)
 - [Example](#Example)
 - [TypeScript](#TypeScript)
-- [Metadata](#Metadata)
+- [Reflection](#Reflection)
 - [Contract](libs/contract/readme.md)
 - [Server](libs/server/readme.md)
 - [Client](libs/client/readme.md)
@@ -167,7 +167,7 @@ const result = await client.call('add', 1, 1)
 //    +--- result is `number`
 ```
 
-## Metadata
+## Reflection
 
 Sidewinder Contracts are expressed as serializable JavaScript objects with embedded JSON schema used to represent method parameter and return types. Contracts can be used for machine readable schematics and published to remote systems, or used to generate human readable documentation.
 
