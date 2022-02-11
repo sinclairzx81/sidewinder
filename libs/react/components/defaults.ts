@@ -37,7 +37,8 @@ export namespace Defaults {
         }
     }
 
-    export function resolve<T extends TSchema>(schema: T): T['$static'] {
+    /** Resolves default values from the given schema */
+    export function from<T extends TSchema>(schema: T): T['$static'] {
         return defaultSchema(schema)
     }
 }

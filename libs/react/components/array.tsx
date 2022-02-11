@@ -25,7 +25,7 @@ export function ArrayComponent<T extends TArray = TArray>(props: ArrayComponentP
             <SchemaComponent 
                 property=""
                 schema={props.schema.items}
-                value={Defaults.resolve(props.schema.items)}
+                value={Defaults.from(props.schema.items)}
                 onChange={() =>{}}
                 />
         </div>

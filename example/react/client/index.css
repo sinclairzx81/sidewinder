@@ -35,11 +35,11 @@ body, html {
     height: 100%;
 }
 .app > .right {
-    width: 50%;
+    width:  50%;
     height: 100%;
 }
 #container > .body > .left {
-    width: 50%;
+    width:  50%;
     height: 100%;
 }
 

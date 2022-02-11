@@ -42,7 +42,7 @@ const Schema = Type.Array(Vector, { minItems: 2 })
 //     {x: 1, y: 2, z: 3},
 // ] as const
 
-const Value = Defaults.resolve(Schema)
+const Value = Defaults.from(Schema)
 
 ReactDOM.render(<App schema={Schema} value={Value} />, document.getElementById('react'))
 
