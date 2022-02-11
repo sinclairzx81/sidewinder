@@ -17,9 +17,33 @@ body, html {
 }
 #container > .body {
     width: 100%;
-    height: 100%;
-    background-color: pink;
+    height: calc(100% - 64px);
+   
 }
+#react {
+    width: 100%;
+    height: 100%;
+}
+.app {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: row;
+}
+.app > .left {
+    width: 40%;
+    height: 100%;
+}
+.app > .right {
+    width: 50%;
+    height: 100%;
+}
+#container > .body > .left {
+    width: 50%;
+    height: 100%;
+}
+
+
 
 .label { 
     float: left;

@@ -1,7 +1,7 @@
 import * as React from 'react'
 import { TArray } from '@sidewinder/contract'
 import { SchemaComponent, SchemaComponentProperties } from './schema'
-
+import { Defaults } from './defaults'
 export interface ArrayComponentProperties<T extends TArray> extends SchemaComponentProperties {
     schema: T
     property: string
@@ -16,12 +16,18 @@ export function ArrayComponent<T extends TArray = TArray>(props: ArrayComponentP
         next[index] = value
         props.onChange(property, next)
         setState(next)
-        
-        
     }
     return <div className='type-array'>
         <div className='label'>
             <label>{props.property}</label>
+        </div>
+        <div className="create">
+            <SchemaComponent 
+                property=""
+                schema={props.schema.items}
+                value={Defaults.resolve(props.schema.items)}
+                onChange={() =>{}}
+                />
         </div>
         <div className='elements'>
             {props.value.map((value, index) => {

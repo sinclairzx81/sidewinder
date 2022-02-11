@@ -1,7 +1,7 @@
 import { TSchema, Type } from '@sidewinder/contract'
 import * as React from 'react'
 import * as ReactDOM from 'react-dom'
-import { SchemaComponent } from '@sidewinder/react'
+import { SchemaComponent, Defaults } from '@sidewinder/react'
 
 export interface AppProperties<T extends TSchema = TSchema> {
     schema: T
@@ -16,8 +16,8 @@ export function App(props: AppProperties) {
     return <div className="app">
         <div className='left'>
             <SchemaComponent 
-                property='' 
-                schema={Schema} 
+                property='new' 
+                schema={props.schema} 
                 value={value} 
                 onChange={onChange} 
                 />
@@ -28,32 +28,21 @@ export function App(props: AppProperties) {
     </div>
 }
 
-
-const T = Type.Object({
-    'a': Type.String(),
-    'b': Type.String(),
-    'c': Type.String()
+const Vector = Type.Object({
+    x: Type.Number(),
+    y: Type.Number(),
+    z: Type.Number()
 })
 
-const Schema = Type.Array(T)
+const Schema = Type.Array(Vector, { minItems: 2 })
 
-const Value = [
-    {
-        "a": 'valueA',
-        "b": 'valueB',
-        "c": 'valueC'
-    },
-    {
-        "a": 'valueA',
-        "b": 'valueB',
-        "c": 'valueC'
-    },
-    {
-        "a": 'valueA',
-        "b": 'valueB',
-        "c": 'valueC'
-    },
-] as const
+// const Value = [
+//     {x: 1, y: 2, z: 3},
+//     {x: 1, y: 2, z: 3},
+//     {x: 1, y: 2, z: 3},
+// ] as const
+
+const Value = Defaults.resolve(Schema)
 
 ReactDOM.render(<App schema={Schema} value={Value} />, document.getElementById('react'))
 

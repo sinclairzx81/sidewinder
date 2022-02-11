@@ -15,7 +15,7 @@ export async function clean() {
 export async function start(example = 'basic') {
     await Promise.all([
         shell(`hammer run example/${example}/server/index.ts --dist target/example/${example}/server`),
-        shell(`hammer serve example/${example}/client/index.html --dist target/example/${example}/client --minify`)
+        shell(`hammer serve example/${example}/client/index.html --dist target/example/${example}/client`)
     ])
 }
 
