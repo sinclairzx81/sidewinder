@@ -5,12 +5,12 @@
 <p>Web Service Framework for Node and Browsers</p>
 
 
-<img src="https://github.com/sinclairzx81/sidewinder/blob/master/build/assets/sidewinder.png?raw=true" />
+<img src='https://github.com/sinclairzx81/sidewinder/blob/master/build/assets/sidewinder.png?raw=true' />
 
 <br />
 <br />
 
-[<img src="https://img.shields.io/npm/v/@sidewinder/contract?label=%40sidewinder%2Fcontract">](https://www.npmjs.com/package/@sidewinder/contract) [<img src="https://img.shields.io/npm/v/@sidewinder/server?label=%40sidewinder%2Fserver">](https://www.npmjs.com/package/@sidewinder/server) [<img src="https://img.shields.io/npm/v/@sidewinder/client?label=%40sidewinder%2Fclient">](https://www.npmjs.com/package/@sidewinder/client)
+[<img src='https://img.shields.io/npm/v/@sidewinder/contract?label=%40sidewinder%2Fcontract'>](https://www.npmjs.com/package/@sidewinder/contract) [<img src='https://img.shields.io/npm/v/@sidewinder/server?label=%40sidewinder%2Fserver'>](https://www.npmjs.com/package/@sidewinder/server) [<img src='https://img.shields.io/npm/v/@sidewinder/client?label=%40sidewinder%2Fclient'>](https://www.npmjs.com/package/@sidewinder/client)
 
 
 
@@ -30,6 +30,7 @@ License MIT
 - [Install](#Install)
 - [Example](#Example)
 - [Type Safety](#Type-Safety)
+- [Metadata](#Metadata)
 - [Contract](libs/contract/readme.md)
 - [Server](libs/server/readme.md)
 - [Client](libs/client/readme.md)
@@ -115,18 +116,27 @@ const div = await client.call('div', 1, 2)
 console.log([add, sub, mul, div]) // [3, -1, 2, 0.5]
 ```
 
-<a name="Type-Safety"></a>
+<a name='Type-Safety'></a>
 
 ## Type Safety
 
 Sidewinder offers both runtime and static type safety derived from Contract definitions. Client and Service methods are statically inferred from Contract definitions, with the Contract also used to validate data received over the wire.
 
 ```typescript
+
+// ---------------------------------------------------------------------------
+// Contract
+// ---------------------------------------------------------------------------
+
 const Contract = Type.Contract({
     server: {
         'add': Type.Function([Type.Number(), Type.Number()], Type.Number())
     }
 })
+
+// ---------------------------------------------------------------------------
+// Service
+// ---------------------------------------------------------------------------
 
 const service = new WebService(Contract)
 
@@ -144,6 +154,10 @@ server.method('add', (clientId, a, b) => {
     return a + b 
 })
 
+// ---------------------------------------------------------------------------
+// Client
+// ---------------------------------------------------------------------------
+
 const client = new WebClient(Contract, 'http://....')
 
 const result = await client.call('add', 1, 1)
@@ -153,4 +167,68 @@ const result = await client.call('add', 1, 1)
 //    |                          +--- method name inferred from contract
 //    |
 //    +--- result is `number`
+```
+
+## Metadata
+
+Sidewinder Contracts are JSON serializable definitions with embedded JSON schema used to represent parameter and return types. Contracts can be used for machine readable schematics published to remote systems, or used to generate human readable documentation.
+
+```typescript
+
+// ---------------------------------------------------------------------------
+// This contract definition ...
+// ---------------------------------------------------------------------------
+
+const Contract = Type.Contract({
+    format: 'json',
+    server: {
+        'add': Type.Function([Type.Number(), Type.Number()], Type.Number()),
+        'sub': Type.Function([Type.Number(), Type.Number()], Type.Number()),
+        'mul': Type.Function([Type.Number(), Type.Number()], Type.Number()),
+        'div': Type.Function([Type.Number(), Type.Number()], Type.Number()),
+    }
+})
+
+// ---------------------------------------------------------------------------
+// is equivalent to ...
+// ---------------------------------------------------------------------------
+
+const Contract = {
+  type: 'contract',
+  format: 'json',
+  server: {
+    'add': {
+      type: 'function',
+      returns: { type: 'number' },
+      parameters: [
+        { type: 'number' },
+        { type: 'number' }
+      ]
+    },
+    'sub': {
+      type: 'function',
+      returns: { type: 'number' },
+      parameters: [
+        { type: 'number' },
+        { type: 'number' }
+      ]
+    },
+    'mul': {
+      type: 'function',
+      returns: { type: 'number' },
+      parameters: [
+        { type: 'number' },
+        { type: 'number' }
+      ]
+    },
+    'div': {
+      type: 'function',
+      returns: { type: 'number' },
+      parameters: [
+        { type: 'number' },
+        { type: 'number' }
+      ]
+    }
+  }
+}
 ```

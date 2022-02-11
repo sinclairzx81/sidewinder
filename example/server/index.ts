@@ -3,6 +3,8 @@ import { WebClient } from '@sidewinder/client'
 import { Contract } from '../shared/index'
 import cors from 'cors'
 
+console.log(JSON.stringify(Contract, null, 2))
+
 const service = new WebService(Contract)
 service.method('add', (clientId, a, b) => a + b)
 service.method('sub', (clientId, a, b) => a - b)
