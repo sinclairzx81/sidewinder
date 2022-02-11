@@ -29,6 +29,7 @@ License MIT
 - [Overview](#Overview)
 - [Install](#Install)
 - [Example](#Example)
+- [Type Safety](#Type-Safety)
 - [Contract](libs/contract/readme.md)
 - [Server](libs/server/readme.md)
 - [Client](libs/client/readme.md)
@@ -112,4 +113,44 @@ const sub = await client.call('sub', 1, 2)
 const mul = await client.call('mul', 1, 2)
 const div = await client.call('div', 1, 2)
 console.log([add, sub, mul, div]) // [3, -1, 2, 0.5]
+```
+
+<a name="Type-Safety"></a>
+
+## Type Safety
+
+Sidewinder offers both runtime and static type safety derived from Contract definitions. Client and Service methods are statically inferred from Contract definitions, with the Contract also used to validate data received over the wire.
+
+```typescript
+const Contract = Type.Contract({
+    server: {
+        'add': Type.Function([Type.Number(), Type.Number()], Type.Number())
+    }
+})
+
+const service = new WebService(Contract)
+
+server.method('add', (clientId, a, b) => {
+    //        |           |      |
+    //        |           |      +--- params (a: number, b: number)
+    //        |           |
+    //        |           +--- unique client identifier
+    //        |
+    //        +--- method name inferred from contract
+    //
+    //
+    //     +--- return inferred as `number`
+    //     |
+    return a + b 
+})
+
+const client = new WebClient(Contract, 'http://....')
+
+const result = await client.call('add', 1, 1)
+//    |                          |        |
+//    |                          |        +--- arguments as (method: string, a: number, b: number)
+//    |                          |
+//    |                          +--- method name inferred from contract
+//    |
+//    +--- result is `number`
 ```
