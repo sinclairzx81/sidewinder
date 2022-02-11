@@ -509,6 +509,15 @@ export interface TUnknown extends TSchema {
 }
 
 // --------------------------------------------------------------------------
+// TUnsafe
+// --------------------------------------------------------------------------
+
+export interface TUnsafe<T> extends TSchema {
+    $static: T,
+    kind: 'Any'
+}
+
+// --------------------------------------------------------------------------
 // TVoid
 // --------------------------------------------------------------------------
 
@@ -803,7 +812,12 @@ export class TypeBuilder {
     public Unknown(options: SchemaOptions = {}): TUnknown {
         return this.Create({ ...options, kind: 'Unknown' })
     }
-    
+
+    /** An unsafe type is the same as `any` but infers as the generic argument T. */
+    public Unsafe<T>(options: SchemaOptions = {}): TUnsafe<T> {
+        return this.Create({ ...options, kind: 'Any' })
+    }
+
     /** Creates a void type. This type creates a `null` schema but infers as void */
     public Void(options: SchemaOptions = {}): TVoid {
         return this.Create({ ...options, kind: 'Void', type: 'null' })
