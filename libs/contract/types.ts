@@ -77,7 +77,7 @@ export interface ArrayOptions extends SchemaOptions {
     maxItems?: number
 }
 
-export interface TArray<T extends TSchema> extends TSchema, ArrayOptions {
+export interface TArray<T extends TSchema = TSchema> extends TSchema, ArrayOptions {
     $static: T['$static'][],
     kind: 'Array',
     type: 'array',
