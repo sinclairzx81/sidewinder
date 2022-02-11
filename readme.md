@@ -169,12 +169,12 @@ const result = await client.call('add', 1, 1)
 
 ## Metadata
 
-Sidewinder Contracts are JSON serializable definitions with embedded JSON schema used to represent parameter and return types. Contracts can be used for machine readable schematics published to remote systems, or used to generate human readable documentation.
+Sidewinder Contracts are expressed as serializable JavaScript objects with embedded JSON schema used to represent method parameter and return types. Contracts can be used for machine readable schematics and published to remote systems, or used to generate human readable documentation.
 
 ```typescript
 
 // ---------------------------------------------------------------------------
-// This contract definition ...
+// This definition ...
 // ---------------------------------------------------------------------------
 
 const Contract = Type.Contract({
