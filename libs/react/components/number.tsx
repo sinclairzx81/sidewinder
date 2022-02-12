@@ -16,17 +16,12 @@ export function NumberComponent<T extends TNumber>(props: NumberComponentPropert
         setState(() => parseFloat(e.target.value))
     }
     return <div className='type-number'>
-        <div className='label'>
-            <label>{props.property}</label>
-        </div>
-        <div className='input'>
-            <input type='number' 
-                placeholder={props.schema.placeholder} 
-                name={props.property} 
-                value={state}
-                onChange={onChange}
-            ></input>
-        </div>
+        <input type='number' 
+            placeholder={props.schema.placeholder} 
+            name={props.property} 
+            value={state}
+            onChange={onChange}
+        ></input>
     </div>
 }
 

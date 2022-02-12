@@ -15,7 +15,6 @@ export function StringComponent<T extends TString>(props: StringComponentPropert
         setState(() => e.target.value)
     }
     return <div className='type-string'>
-        <label>{props.property}</label>
         <input type='string' 
             placeholder={props.schema.placeholder} 
             name={props.property} 

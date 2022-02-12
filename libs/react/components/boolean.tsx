@@ -15,9 +15,6 @@ export function BooleanComponent<T extends TBoolean>(props: BooleanComponentProp
         setState(() => e.target.checked)
     }
     return <div className='type-boolean'>
-        <div className='label'>
-        <label>{props.property}</label>
-        </div>
         <div className='input'>
             <input type='checkbox' 
                 placeholder={props.schema.placeholder} 

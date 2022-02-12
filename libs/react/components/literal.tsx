@@ -11,12 +11,7 @@ export interface LiteralComponentProperties<T extends TLiteral> extends SchemaCo
 
 export function LiteralComponent<T extends TLiteral>(props: LiteralComponentProperties<T>) {
     return <div className='type-literal'>
-        <div className='label'>
-            <label>{props.property}</label>
-        </div>
-        <div className='input'>
-            <span>{props.value}</span>
-        </div>
+        <span>{props.value}</span>
     </div>
 }
 

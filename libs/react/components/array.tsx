@@ -18,27 +18,31 @@ export function ArrayComponent<T extends TArray = TArray>(props: ArrayComponentP
         setState(next)
     }
     return <div className='type-array'>
-        <div className='label'>
-            <label>{props.property}</label>
-        </div>
         <div className="create">
-            <SchemaComponent 
+            <SchemaComponent
                 property=""
                 schema={props.schema.items}
                 value={Default.Create(props.schema.items)}
-                onChange={() =>{}}
-                />
+                onChange={() => { }}
+            />
         </div>
         <div className='elements'>
             {props.value.map((value, index) => {
-                return <SchemaComponent 
-                    key={index} 
-                    property={index.toString()} 
-                    schema={props.schema.items} 
-                    value={value}
-                    onChange={onChange} 
-                />
+                return <div key={index} className='element'>
+                    <div className='index'>
+                        <span>[{index}]</span>
+                    </div>
+                    <div className='value'>
+                    <SchemaComponent
+                        property={index.toString()}
+                        schema={props.schema.items}
+                        value={value}
+                        onChange={onChange}
+                    />
+                    </div>
+                </div>
             })}
+
         </div>
     </div>
 }
