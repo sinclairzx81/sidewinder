@@ -30,43 +30,130 @@ import * as React from 'react'
 import { TArray } from '@sidewinder/contract'
 import { SchemaComponent, SchemaComponentProperties } from './schema'
 import { Default } from './default'
+
+let ordinal = 0
+function nextOrdinal() { return ordinal++ }
+
 export interface ArrayComponentProperties<T extends TArray> extends SchemaComponentProperties {
     schema: T
     property: string
     value: Array<T['$static']>
 }
-
+interface Element {
+    key: number
+    value: unknown
+}
 export function ArrayComponent<T extends TArray = TArray>(props: ArrayComponentProperties<T>) {
-    const [state, setState] = React.useState(props.value)
-    function onChange(property: string, value: any) {
-        const index = parseInt(property)
+    const [state, setState] = React.useState<Element[]>(props.value.map(value => ({ value, key: nextOrdinal() })))
+    const [store, setStore] = React.useState(Default.Create(props.schema.items))
+    
+    function reduceState(elements: Element[]) {
+        return elements.map(element => element.value)
+    }
+
+    function onDelete(index: number) {
         const next = [...state]
-        next[index] = value
-        props.onChange(property, next)
+        next.splice(index, 1)
+        props.onChange(props.property, reduceState(next))
         setState(next)
     }
+
+    function onMoveUp(index: number) {
+        if (state.length < 2 || index === 0) return
+        const next = [...state]
+        const temp = next[index]
+        next[index] = next[index - 1]
+        next[index - 1] = temp
+        props.onChange(props.property, reduceState(next))
+        setState(next)
+    }
+
+    function onMoveDown(index: number) {
+        if (state.length < 2 && !(index >= 0 && index < state.length - 1)) return console.log('return')
+        const next = [...state]
+        const temp = next[index]
+        next[index] = next[index + 1]
+        next[index + 1] = temp
+        props.onChange(props.property, reduceState(next))
+        setState(next)
+    }
+    function onPush() {
+        const next: Element[] = [...state, {key: nextOrdinal(), value: store }]
+        props.onChange(props.property, reduceState(next))
+        setStore(Default.Create(props.schema))
+        setState(next)
+    }
+
+    function onUnshift() {
+        const next: Element[] = [{key: nextOrdinal(), value: store }, ...state]
+        props.onChange(props.property, reduceState(next))
+        setStore(Default.Create(props.schema))
+        setState(next)
+        
+    }
+
+    function onPop() {
+        const next: Element[] = [...state]
+        next.pop()
+        props.onChange(props.property, reduceState(next))
+        setState(next)
+    }
+    
+    function onShift() {
+        const next: Element[] = [...state]
+        next.shift()
+        props.onChange(props.property, reduceState(next))
+        setState(next)
+    }
+    function onStoreChange(property: string, value: unknown) {
+        setStore(value)
+    }
+    function onChange(property: string, value: unknown) {
+        const index = parseInt(property)
+        const next = [...state]
+        next[index].value = value
+        props.onChange(props.property, reduceState(next))
+        setState(next)
+    }
+
     return <div className='type-array'>
-        <div className="create">
-            <SchemaComponent
-                property=""
-                schema={props.schema.items}
-                value={Default.Create(props.schema.items)}
-                onChange={() => { }}
-            />
+        <div className="edit">
+            <div className='header'>
+                <span>Edit</span>
+            </div>
+            <div className='body'>
+                <div className='controls'>
+                    <span className='push' onClick={() => onPush()}>push</span>
+                    <span className='unshift' onClick={() => onUnshift()}>unshift</span>
+                    <span className='pop' onClick={() => onPop()}>pop</span>
+                    <span className='shift' onClick={() => onShift()}>shift</span>
+                </div>
+                <div className='value'>
+                    <SchemaComponent
+                        property=""
+                        schema={props.schema.items}
+                        value={store}
+                        onChange={onStoreChange}
+                    />
+                </div>
+
+            </div>
         </div>
         <div className='elements'>
-            {props.value.map((value, index) => {
-                return <div key={index} className='element'>
+            {state.map((element, index) => {
+                return <div key={element.key} className='element'>
                     <div className='index'>
-                        <span>[{index}]</span>
+                        <span className='delete' onClick={() => onDelete(index)}>remove</span>
+                        <span className='up' onClick={() => onMoveUp(index)}>up</span>
+                        <span className='down' onClick={() => onMoveDown(index)}>down</span>
                     </div>
                     <div className='value'>
-                    <SchemaComponent
-                        property={index.toString()}
-                        schema={props.schema.items}
-                        value={value}
-                        onChange={onChange}
-                    />
+                        <SchemaComponent
+                            property={index.toString()}
+                            schema={props.schema.items}
+                            value={element.value}
+                            onChange={onChange}
+                        />
                     </div>
                 </div>
             })}

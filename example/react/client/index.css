@@ -1,3 +1,4 @@
+@import '../../../libs/react/css/index.css';
 
 body, html {
     font-family: monospace;
@@ -31,7 +32,7 @@ body, html {
     flex-direction: row;
 }
 .app > .left {
-    width: 40%;
+    width: 90%;
     height: 100%;
 }
 .app > .right {

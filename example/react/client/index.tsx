@@ -5,8 +5,6 @@ import { TSchema, Type } from '@sidewinder/contract'
 import { Form, Default } from '@sidewinder/react'
 
 
-
-
 export interface AppProperties<T extends TSchema = TSchema> {
     schema: T
     value: T['$static']
@@ -73,11 +71,7 @@ const User = Type.Object({
         Type.Literal('B'),
         Type.Literal('C'),
     ]),
-    extra: DerivedClass,
-    enabled: Type.Boolean({}),
-    position: Position,
-    color: Type.String(),
-    emoji: Type.String()
+    items: Type.Array(DerivedClass, {minItems: 10 }),
 })
 
 const Schema = User

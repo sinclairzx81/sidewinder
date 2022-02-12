@@ -39,8 +39,9 @@ export interface StringComponentProperties<T extends TString> extends SchemaComp
 export function StringComponent<T extends TString>(props: StringComponentProperties<T>) {
     const [state, setState] = React.useState(props.value)
     function onChange(e: React.ChangeEvent<HTMLInputElement>) {
-        props.onChange(props.property, e.target.value)
-        setState(() => e.target.value)
+        const next = e.target.value
+        props.onChange(props.property, next)
+        setState(next)
     }
     return <div className='type-string'>
         <input type='string' 
