@@ -61,6 +61,7 @@ const Position = Type.Tuple([
     Type.Number(),
     Type.Number(),
     Type.Number(),
+    Type.Integer(),
 ])
 
 const User = Type.Object({

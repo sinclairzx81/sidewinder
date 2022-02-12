@@ -230,6 +230,7 @@ export class DefaultBuilder {
             case 'Contract': return this.Contract(schema as TContract)
             case 'Enum': return this.Enum(schema as TEnum<any>)
             case 'Function': return this.Function(schema as TFunction)
+            case 'Integer': return this.Integer(schema as TInteger)
             case 'Intersect': return this.Intersect(schema as TIntersect)
             case 'KeyOf': return this.KeyOf(schema as TKeyOf<any>)
             case 'Literal': return this.Literal(schema as TLiteral)
