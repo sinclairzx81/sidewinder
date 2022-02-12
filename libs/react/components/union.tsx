@@ -14,14 +14,19 @@ export interface UnionComponentProperties<T extends TUnion> extends SchemaCompon
 }
 
 export function UnionComponent<T extends TUnion>(props: UnionComponentProperties<T>) {
-
+    const [state, setState] = React.useState(props.value)
+    
     async function onChange(e: React.ChangeEvent<HTMLSelectElement>) {
-        console.log('here')
+        props.onChange(props.property, e.target.value)
+        setState(e.target.value) 
     }
+    
     if(isRenderable(props.schema)) {
         return <div className='type-union'>
-            <select onChange={onChange}>
-                {props.schema.anyOf.map(schema => Default.Create(schema))}
+            <select onChange={onChange} value={state as any}>
+                {props.schema.anyOf.map((schema, index) => {
+                    return <option key={index}>{Default.Create(schema) as any}</option>
+                })}
             </select>
         </div>
     } else {
