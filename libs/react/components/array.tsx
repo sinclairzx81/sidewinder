@@ -1,7 +1,7 @@
 import * as React from 'react'
 import { TArray } from '@sidewinder/contract'
 import { SchemaComponent, SchemaComponentProperties } from './schema'
-import { Defaults } from './defaults'
+import { Default } from './default'
 export interface ArrayComponentProperties<T extends TArray> extends SchemaComponentProperties {
     schema: T
     property: string
@@ -25,7 +25,7 @@ export function ArrayComponent<T extends TArray = TArray>(props: ArrayComponentP
             <SchemaComponent 
                 property=""
                 schema={props.schema.items}
-                value={Defaults.from(props.schema.items)}
+                value={Default.Create(props.schema.items)}
                 onChange={() =>{}}
                 />
         </div>

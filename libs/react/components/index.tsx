@@ -1,6 +1,6 @@
 export * from './array'
 export * from './boolean'
-export * from './defaults'
+export * from './default'
 export * from './number'
 export * from './object'
 export * from './string'
