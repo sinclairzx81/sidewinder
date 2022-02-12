@@ -1,9 +1,23 @@
 .type-array {
     width: 100%;
 }
-.type-array .create {
-    width: 100%;
+
+.type-array > .create {
+    width:          100%;
+    display:        flex;
+    flex-direction: row;
 }
+.type-array > .create > .index {
+    width:  64px;
+}
+.type-array > .create > .index > .action {
+    width:         100%;
+    display:       inline-block;
+    color:       #00F;
+    cursor:       pointer;
+    margin-right: 4px;
+}
+
 .type-array > .elements {
     width: 100%;
 }
@@ -15,71 +29,16 @@
 .type-array > .elements > .element > .index {
     width:  64px;
 }
-.type-array > .elements > .element > .index .ordinal {
-    width:  100%;
-    cursor: pointer;
-}
-.type-array > .elements > .element > .index .up {
-    width: 100%;
-    display: inline-block;
-    color: #00F;
-    cursor: pointer;
+
+.type-array > .elements > .element > .index > .action {
+    width:         100%;
+    display:       inline-block;
+    color:       #00F;
+    cursor:       pointer;
     margin-right: 4px;
 }
-.type-array > .elements > .element > .index .down {
-    color: #00F;
-    cursor: pointer;
-    margin-right: 4px;
-}
-.type-array > .elements > .element > .index .delete {
-    color: #00F;
-    cursor: pointer;
-    margin-right: 4px;
-}
+
 .type-array > .elements > .element > .value {
     width: calc(100% - 64px);
 }
 
-/** Edit */
-.type-array > .edit {
-    width:          100%;
-    display:        flex;
-    flex-direction: row;
-}
-.type-array > .edit > .header {
-    width:  64px;
-}
-.type-array > .edit > .body {
-    width:  calc(100% - 64px);
-}
-.type-array > .edit > .body > .value {
-    width:  100%;
-}
-
-.type-array > .edit > .body > .controls {
-    width:  100%;
-}
-
-.type-array > .edit > .body > .controls > .push {
-    color: #00F;
-    cursor: pointer;
-    margin-right: 4px;
-}
-
-.type-array > .edit > .body  > .controls > .unshift {
-    color: #00F;
-    cursor: pointer;
-    margin-right: 4px;
-}
-
-.type-array > .edit > .body  > .controls > .pop {
-    color: #00F;
-    cursor: pointer;
-    margin-right: 4px;
-}
-
-.type-array > .edit > .body  > .controls > .shift {
-    color: #00F;
-    cursor: pointer;
-    margin-right: 4px;
-}

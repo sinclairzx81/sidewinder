@@ -71,7 +71,7 @@ const User = Type.Object({
         Type.Literal('B'),
         Type.Literal('C'),
     ]),
-    items: Type.Array(DerivedClass, {minItems: 10 }),
+    items: Type.Array(DerivedClass, {minItems: 3, editable: false }),
 })
 
 const Schema = User

@@ -46,7 +46,6 @@ interface Element {
 export function ArrayComponent<T extends TArray = TArray>(props: ArrayComponentProperties<T>) {
     const [state, setState] = React.useState<Element[]>(props.value.map(value => ({ value, key: nextOrdinal() })))
     const [store, setStore] = React.useState(Default.Create(props.schema.items))
-    
     function reduceState(elements: Element[]) {
         return elements.map(element => element.value)
     }
@@ -69,7 +68,8 @@ export function ArrayComponent<T extends TArray = TArray>(props: ArrayComponentP
     }
 
     function onMoveDown(index: number) {
-        if (state.length < 2 && !(index >= 0 && index < state.length - 1)) return console.log('return')
+        if (state.length < 2) return
+        if(index > state.length - 2) return
         const next = [...state]
         const temp = next[index]
         next[index] = next[index + 1]
@@ -80,16 +80,13 @@ export function ArrayComponent<T extends TArray = TArray>(props: ArrayComponentP
     function onPush() {
         const next: Element[] = [...state, {key: nextOrdinal(), value: store }]
         props.onChange(props.property, reduceState(next))
-        setStore(Default.Create(props.schema))
         setState(next)
     }
 
     function onUnshift() {
         const next: Element[] = [{key: nextOrdinal(), value: store }, ...state]
         props.onChange(props.property, reduceState(next))
-        setStore(Default.Create(props.schema))
         setState(next)
-        
     }
 
     function onPop() {
@@ -98,16 +95,18 @@ export function ArrayComponent<T extends TArray = TArray>(props: ArrayComponentP
         props.onChange(props.property, reduceState(next))
         setState(next)
     }
-    
+
     function onShift() {
         const next: Element[] = [...state]
         next.shift()
         props.onChange(props.property, reduceState(next))
         setState(next)
     }
+
     function onStoreChange(property: string, value: unknown) {
         setStore(value)
     }
+
     function onChange(property: string, value: unknown) {
         const index = parseInt(property)
         const next = [...state]
@@ -117,16 +116,13 @@ export function ArrayComponent<T extends TArray = TArray>(props: ArrayComponentP
     }
 
     return <div className='type-array'>
-        <div className="edit">
-            <div className='header'>
-                <span>Edit</span>
-            </div>
-            <div className='body'>
-                <div className='controls'>
-                    <span className='push' onClick={() => onPush()}>push</span>
-                    <span className='unshift' onClick={() => onUnshift()}>unshift</span>
-                    <span className='pop' onClick={() => onPop()}>pop</span>
-                    <span className='shift' onClick={() => onShift()}>shift</span>
+        {props.schema.editable &&
+            <div className="create">
+                <div className='index'>
+                    <span className='action push' onClick={() => onPush()}>push</span>
+                    <span className='action unshift' onClick={() => onUnshift()}>unshift</span>
+                    <span className='action pop' onClick={() => onPop()}>pop</span>
+                    <span className='action shift' onClick={() => onShift()}>shift</span>
                 </div>
                 <div className='value'>
                     <SchemaComponent
@@ -136,17 +132,18 @@ export function ArrayComponent<T extends TArray = TArray>(props: ArrayComponentP
                         onChange={onStoreChange}
                     />
                 </div>
-
             </div>
-        </div>
+        }
         <div className='elements'>
             {state.map((element, index) => {
                 return <div key={element.key} className='element'>
-                    <div className='index'>
-                        <span className='delete' onClick={() => onDelete(index)}>remove</span>
-                        <span className='up' onClick={() => onMoveUp(index)}>up</span>
-                        <span className='down' onClick={() => onMoveDown(index)}>down</span>
-                    </div>
+                    {props.schema.editable &&
+                        <div className='index'>
+                            <span className='action delete' onClick={() => onDelete(index)}>remove</span>
+                            <span className='action up' onClick={() => onMoveUp(index)}>up</span>
+                            <span className='action down' onClick={() => onMoveDown(index)}>down</span>
+                        </div>
+                    }
                     <div className='value'>
                         <SchemaComponent
                             property={index.toString()}
@@ -157,7 +154,6 @@ export function ArrayComponent<T extends TArray = TArray>(props: ArrayComponentP
                     </div>
                 </div>
             })}
-
         </div>
     </div>
 }
