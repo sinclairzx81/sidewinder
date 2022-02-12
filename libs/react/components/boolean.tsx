@@ -11,8 +11,9 @@ export interface BooleanComponentProperties<T extends TBoolean> extends SchemaCo
 export function BooleanComponent<T extends TBoolean>(props: BooleanComponentProperties<T>) {
     const [state, setState] = React.useState(props.value)
     function onChange(e: React.ChangeEvent<HTMLInputElement>) {
-        props.onChange(props.property, e.target.value)
-        setState(() => e.target.checked)
+        const enabled =  e.target.checked
+        props.onChange(props.property, enabled)
+        setState(() => enabled)
     }
     return <div className='type-boolean'>
         <div className='input'>
