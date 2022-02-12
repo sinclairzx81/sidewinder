@@ -34,6 +34,7 @@ const Vector = Type.Object({
     type: Type.Union([
         Type.Literal('A'),
         Type.Literal('B'),
+        Type.Literal('C'),
     ]),
     x: Type.Number(),
     y: Type.Number(),
@@ -42,9 +43,9 @@ const Vector = Type.Object({
 
 const Schema = Type.Array(Vector, { minItems: 2 })
 
-
-
 const Value = Default.Create(Schema)
+
+console.log(Value)
 
 ReactDOM.render(<App schema={Schema} value={Value} />, document.getElementById('react'))
 

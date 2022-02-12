@@ -1,7 +1,6 @@
 import { TSchema, TArray, TBoolean, TNumber, TObject, TString, Type, TAny, TConstructor, TContract, TEnum, TFunction, TInteger, TIntersect, TKeyOf, TLiteral, TNamespace, TNull, TRecord, TRec, TTuple, TUndefined, TUnion, TUint8Array, TUnknown, TVoid, TPromise, TRef, TRegEx } from '@sidewinder/contract'
 
 export class DefaultBuilder {
-
     private Any(schema: TAny): unknown {
         if(schema.default !== undefined) {
             return schema.default
@@ -222,8 +221,6 @@ export class DefaultBuilder {
 
     /** Creates a default object that conforms to the given schema */
     public Create<T extends TSchema>(schema: any): T['$static'] {
-        console.log('----------------------')
-        console.log(schema)
         switch(schema.kind) {
             case 'Any': return this.Any(schema as TAny)
             case 'Array': return this.Array(schema as TArray)
