@@ -3,9 +3,9 @@ import { SchemaComponentProperties } from './schema'
 import * as React from 'react'
 
 export interface BooleanComponentProperties<T extends TBoolean> extends SchemaComponentProperties {
-    schema: T
+    schema:   T
     property: string
-    value: T['$static']
+    value:    T['$static']
 }
 
 export function BooleanComponent<T extends TBoolean>(props: BooleanComponentProperties<T>) {

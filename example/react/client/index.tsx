@@ -41,10 +41,26 @@ const A = Type.Object({
     w: B
 })
 
+const BaseClass = Type.Object({
+    a: Type.String(),
+    b: Type.String(),
+    c: Type.String()
+})
+
+const DerivedClass = Type.Intersect([BaseClass, Type.Object({
+    e: Type.String(),
+    f: Type.String(),
+    g: Type.String(),
+    option: Type.Union([
+        Type.Literal(1),
+        Type.Literal(2),
+    ], { default: 2 })
+})])
+
 const Position = Type.Tuple([
     Type.Number(),
     Type.Number(),
-    A
+    Type.Number(),
 ])
 
 const User = Type.Object({
@@ -53,13 +69,14 @@ const User = Type.Object({
         Type.Literal('B'),
         Type.Literal('C'),
     ]),
+    extra: DerivedClass,
     enabled: Type.Boolean({}),
     position: Position,
     color: Type.String(),
     emoji: Type.String()
 })
 
-const Schema = Type.Array(User, { minItems: 1 })
+const Schema = User
 
 const Value = Default.Create(Schema)
 
