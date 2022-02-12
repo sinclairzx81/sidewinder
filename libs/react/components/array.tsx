@@ -116,7 +116,7 @@ export function ArrayComponent<T extends TArray = TArray>(props: ArrayComponentP
     }
 
     return <div className='type-array'>
-        {props.schema.editable &&
+        {props.schema.controls &&
             <div className="create">
                 <div className='index'>
                     <span className='action push' onClick={() => onPush()}>push</span>
@@ -137,7 +137,7 @@ export function ArrayComponent<T extends TArray = TArray>(props: ArrayComponentP
         <div className='elements'>
             {state.map((element, index) => {
                 return <div key={element.key} className='element'>
-                    {props.schema.editable &&
+                    {props.schema.controls &&
                         <div className='index'>
                             <span className='action delete' onClick={() => onDelete(index)}>remove</span>
                             <span className='action up' onClick={() => onMoveUp(index)}>up</span>

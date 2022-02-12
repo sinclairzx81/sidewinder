@@ -29,26 +29,8 @@ export function App(props: AppProperties) {
     </div>
 }
 
-const B = Type.Object({
-    x: Type.Number(),
-    y: Type.Number(),
-    z: Type.Number(),
-})
 
-const A = Type.Object({
-    x: Type.Number(),
-    y: Type.Number(),
-    z: Type.Number(),
-    w: B
-})
-
-const BaseClass = Type.Object({
-    a: Type.String(),
-    b: Type.String(),
-    c: Type.String()
-})
-
-const DerivedClass = Type.Intersect([BaseClass, Type.Object({
+const DerivedClass = Type.Object({
     e: Type.String(),
     f: Type.String(),
     g: Type.String(),
@@ -56,22 +38,20 @@ const DerivedClass = Type.Intersect([BaseClass, Type.Object({
         Type.Literal(1),
         Type.Literal(2),
     ], { default: 2 })
-})])
+})
 
 const Position = Type.Tuple([
     Type.Number(),
     Type.Number(),
     Type.Number(),
-    Type.Integer(),
 ])
 
 const User = Type.Object({
-    type: Type.Union([
-        Type.Literal('A'),
-        Type.Literal('B'),
-        Type.Literal('C'),
-    ]),
-    items: Type.Array(DerivedClass, {minItems: 3, editable: false }),
+    email:     Type.String({}),
+    firstName: Type.String({ label: 'first' }),
+    lastName:  Type.String(),
+    position:  Position,
+    orders:    Type.Array( Type.String(), { minItems: 3 }),
 })
 
 const Schema = User
@@ -80,6 +60,6 @@ const Value = Default.Create(Schema)
 
 console.log(Value)
 
-ReactDOM.render(<App schema={Schema} value={Value} />, document.getElementById('react'))
+ReactDOM.render(<App schema={Schema}  />, document.getElementById('react'))
 
 

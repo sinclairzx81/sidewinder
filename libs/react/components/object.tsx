@@ -46,9 +46,10 @@ export function ObjectComponent<T extends TObject = TObject>(props: ObjectCompon
     return <div className='type-object'>
         <div className='properties'>
             {Object.entries(props.schema.properties).map(([property, schema], index) => {
+                const label = schema.label || property
                 return <div key={index} className='property'>
                     <div className='key'>
-                        <label>{property}</label>
+                        <label>{label}</label>
                     </div>
                     <div className='value'>
                         <SchemaComponent
