@@ -60,6 +60,6 @@ const Value = Default.Create(Schema)
 
 console.log(Value)
 
-ReactDOM.render(<App schema={Schema}  />, document.getElementById('react'))
+ReactDOM.render(<App schema={Schema} value={Value} />, document.getElementById('react'))
 
 
