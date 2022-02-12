@@ -1,0 +1,21 @@
+.type-array {
+    width: 100%;
+    border: 1px solid;
+}
+.type-array .create {
+    width: 100%;
+}
+.type-array > .elements {
+    width: 100%;
+}
+.type-array > .elements > .element {
+    width:          100%;
+    display:        flex;
+    flex-direction: row;
+}
+.type-array > .elements > .element > .index {
+    width:  64px;
+}
+.type-array > .elements > .element > .value {
+    width: calc(100% - 64px);
+}

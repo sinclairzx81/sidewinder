@@ -174,12 +174,12 @@ export class DefaultBuilder {
             return ''
         }
     }
-
+    
     private Tuple(schema: TTuple<any[]>): unknown[] {
         if(schema.default !== undefined) {
             return schema.default
         } else {
-            return Array.from({ length: schema.minItems }).map(schema => this.Create(schema as TSchema))
+            return Array.from({ length: schema.minItems }).map((_, index) => this.Create((schema.items as any[])[index]))
         }
     }
 
@@ -221,6 +221,7 @@ export class DefaultBuilder {
 
     /** Creates a default object that conforms to the given schema */
     public Create<T extends TSchema>(schema: any): T['$static'] {
+
         switch(schema.kind) {
             case 'Any': return this.Any(schema as TAny)
             case 'Array': return this.Array(schema as TArray)

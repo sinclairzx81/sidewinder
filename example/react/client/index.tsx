@@ -28,20 +28,38 @@ export function App(props: AppProperties) {
     </div>
 }
 
+const B = Type.Object({
+    x: Type.Number(),
+    y: Type.Number(),
+    z: Type.Number(),
+})
 
+const A = Type.Object({
+    x: Type.Number(),
+    y: Type.Number(),
+    z: Type.Number(),
+    w: B
+})
 
-const Vector = Type.Object({
+const Position = Type.Tuple([
+    Type.Number(),
+    Type.Number(),
+    A
+])
+
+const User = Type.Object({
     type: Type.Union([
         Type.Literal('A'),
         Type.Literal('B'),
         Type.Literal('C'),
     ]),
-    x: Type.Number(),
-    y: Type.Number(),
-    z: Type.Number()
+    enabled: Type.Boolean({}),
+    position: Position,
+    color: Type.String(),
+    emoji: Type.String()
 })
 
-const Schema = Type.Array(Vector, { minItems: 2 })
+const Schema = Type.Array(User, { minItems: 1 })
 
 const Value = Default.Create(Schema)
 

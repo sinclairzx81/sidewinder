@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { TObject, TString, TBoolean, TNumber, TArray, TLiteral, TUnion } from '@sidewinder/contract'
+import { TObject, TString, TBoolean, TNumber, TArray, TLiteral, TUnion, TTuple } from '@sidewinder/contract'
 import { TSchema }          from '@sidewinder/contract'
 import { ArrayComponent }   from './array'
 import { ObjectComponent }  from './object'
@@ -8,6 +8,7 @@ import { StringComponent }  from './string'
 import { NumberComponent }  from './number'
 import { LiteralComponent } from './literal'
 import { UnionComponent }   from './union'
+import { TupleComponent }   from './tuple'
 
 export interface SchemaComponentProperties {
     schema:   TSchema
@@ -25,6 +26,7 @@ export function SchemaComponent(props: SchemaComponentProperties) {
         case 'String':   return <StringComponent    property={props.property} schema={props.schema as TString} value={props.value} onChange={props.onChange} />
         case 'Number':   return <NumberComponent    property={props.property} schema={props.schema as TNumber} value={props.value} onChange={props.onChange} />
         case 'Union':    return <UnionComponent    property={props.property} schema={props.schema as TUnion} value={props.value} onChange={props.onChange} />
+        case 'Tuple':    return <TupleComponent    property={props.property} schema={props.schema as TTuple} value={props.value} onChange={props.onChange} />
         default: throw Error(`unknown schema kind '${props.schema.kind}'`)
     }
 }

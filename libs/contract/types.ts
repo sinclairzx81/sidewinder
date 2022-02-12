@@ -452,7 +452,7 @@ export interface TString extends TSchema, StringOptions<string> {
 // TTuple
 // --------------------------------------------------------------------------
 
-export interface TTuple<T extends TSchema[]> extends TSchema {
+export interface TTuple<T extends TSchema[] = TSchema[]> extends TSchema {
     $static: [...{ [K in keyof T]: T[K] extends TSchema ? T[K]['$static'] : never }],
     kind: 'Tuple',
     type: 'array',

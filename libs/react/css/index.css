@@ -1,0 +1,8 @@
+@import './array.css';
+@import './boolean.css';
+@import './literal.css';
+@import './number.css';
+@import './object.css';
+@import './string.css';
+@import './tuple.css';
+@import './union.css';
