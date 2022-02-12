@@ -29,17 +29,6 @@ export function App(props: AppProperties) {
     </div>
 }
 
-
-const DerivedClass = Type.Object({
-    e: Type.String(),
-    f: Type.String(),
-    g: Type.String(),
-    option: Type.Union([
-        Type.Literal(1),
-        Type.Literal(2),
-    ], { default: 2 })
-})
-
 const Position = Type.Tuple([
     Type.Number(),
     Type.Number(),
@@ -47,18 +36,17 @@ const Position = Type.Tuple([
 ])
 
 const User = Type.Object({
-    email:     Type.String({}),
-    firstName: Type.String({ label: 'first' }),
+    email:     Type.String(),
+    firstName: Type.String(),
     lastName:  Type.String(),
     position:  Position,
-    orders:    Type.Array( Type.String(), { minItems: 3 }),
+    orders:    Type.Array( Position, { minItems: 3 }),
 })
 
 const Schema = User
 
 const Value = Default.Create(Schema)
 
-console.log(Value)
 
 ReactDOM.render(<App schema={Schema} value={Value} />, document.getElementById('react'))
 

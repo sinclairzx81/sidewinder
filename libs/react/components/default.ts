@@ -26,7 +26,7 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-import { TSchema, TArray, TBoolean, TNumber, TObject, TString, Type, TAny, TConstructor, TContract, TEnum, TFunction, TInteger, TIntersect, TKeyOf, TLiteral, TNamespace, TNull, TRecord, TRec, TTuple, TUndefined, TUnion, TUint8Array, TUnknown, TVoid, TPromise, TRef, TRegEx } from '@sidewinder/contract'
+import { Static, TSchema, TArray, TBoolean, TNumber, TObject, TString, Type, TAny, TConstructor, TContract, TEnum, TFunction, TInteger, TIntersect, TKeyOf, TLiteral, TNamespace, TNull, TRecord, TRec, TTuple, TUndefined, TUnion, TUint8Array, TUnknown, TVoid, TPromise, TRef, TRegEx } from '@sidewinder/contract'
 
 export class DefaultBuilder {
     private Any(schema: TAny): unknown {
@@ -248,36 +248,35 @@ export class DefaultBuilder {
     }
 
     /** Creates a default object that conforms to the given schema */
-    public Create<T extends TSchema>(schema: any): T['$static'] {
-
+    public Create<T extends TSchema>(schema: T): Static<T> {
         switch(schema.kind) {
-            case 'Any': return this.Any(schema as TAny)
-            case 'Array': return this.Array(schema as TArray)
-            case 'Boolean': return this.Boolean(schema as TBoolean)
-            case 'Constructor': return this.Constructor(schema as TConstructor)
-            case 'Contract': return this.Contract(schema as TContract)
-            case 'Enum': return this.Enum(schema as TEnum<any>)
-            case 'Function': return this.Function(schema as TFunction)
-            case 'Integer': return this.Integer(schema as TInteger)
-            case 'Intersect': return this.Intersect(schema as TIntersect)
-            case 'KeyOf': return this.KeyOf(schema as TKeyOf<any>)
-            case 'Literal': return this.Literal(schema as TLiteral)
-            case 'Namespace': return this.Namespace(schema as TNamespace)
-            case 'Null': return this.Null(schema as TNull)
-            case 'Number': return this.Number(schema as TNumber)
-            case 'Object': return this.Object(schema as TObject)
-            case 'Promise': return this.Promise(schema as TPromise<any>)
-            case 'Record': return this.Record(schema as TRecord<any, any>)
-            case 'Rec': return this.Rec(schema as TRec<any>)
-            case 'Ref': return this.Ref(schema as TRef<any>)
-            case 'RegEx': return this.RegEx(schema as TRegEx)
-            case 'String': return this.String(schema as TString)
-            case 'Tuple': return this.Tuple(schema as TTuple<any[]>)
-            case 'Undefined': return this.Undefined(schema as TUndefined)
-            case 'Union': return this.Union(schema as TUnion<any[]>)
-            case 'Uint8Array': return this.Uint8Array(schema as TUint8Array)
-            case 'Unknown': return this.Unknown(schema as TUnknown)
-            case 'Void': return this.Void(schema as TVoid)
+            case 'Any': return this.Any(schema as any)
+            case 'Array': return this.Array(schema as any)
+            case 'Boolean': return this.Boolean(schema as any)
+            case 'Constructor': return this.Constructor(schema as any)
+            case 'Contract': return this.Contract(schema as any)
+            case 'Enum': return this.Enum(schema as any)
+            case 'Function': return this.Function(schema as any)
+            case 'Integer': return this.Integer(schema as any)
+            case 'Intersect': return this.Intersect(schema as any)
+            case 'KeyOf': return this.KeyOf(schema as any)
+            case 'Literal': return this.Literal(schema as any)
+            case 'Namespace': return this.Namespace(schema as any)
+            case 'Null': return this.Null(schema as any)
+            case 'Number': return this.Number(schema as any)
+            case 'Object': return this.Object(schema as any)
+            case 'Promise': return this.Promise(schema as any)
+            case 'Record': return this.Record(schema as any)
+            case 'Rec': return this.Rec(schema as any)
+            case 'Ref': return this.Ref(schema as any)
+            case 'RegEx': return this.RegEx(schema as any)
+            case 'String': return this.String(schema as any)
+            case 'Tuple': return this.Tuple(schema as any)
+            case 'Undefined': return this.Undefined(schema as any)
+            case 'Union': return this.Union(schema as any)
+            case 'Uint8Array': return this.Uint8Array(schema as any)
+            case 'Unknown': return this.Unknown(schema as any)
+            case 'Void': return this.Void(schema as any)
             default: throw Error(`Unknown schema kind '${schema.kind}'`)
         }
     }
