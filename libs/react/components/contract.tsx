@@ -27,8 +27,9 @@ THE SOFTWARE.
 ---------------------------------------------------------------------------*/
 
 import * as React from 'react'
-import { SchemaComponent, SchemaComponentProperties } from './schema'
+import { SchemaComponentProperties } from './schema'
 import { TContract } from '@sidewinder/contract'
+import { FunctionComponent } from './function'
 
 
 let ordinal = 0
@@ -48,18 +49,19 @@ export function ContractComponent<T extends TContract>(props: ContractComponentP
         props.onChange(props.property, {
             jsonrpc: 2.0,
             id: nextOrdinal().toString(),
+            method: property,
             params: value
         })
     }
     return <div className='type-contract'>
         <div className='server'>
             {Object.entries(props.schema.server).map(([property, schema], index) => {
-                return <div key={index} className='property'>
-                    <div className='key'>
+                return <div key={index} className='methods'>
+                    <div className='method'>
                         <label>{property}</label>
                     </div>
-                    <div className='value'>
-                        <SchemaComponent
+                    <div className='function'>
+                        <FunctionComponent
                             property={property}
                             schema={schema as any}
                             value={props.value[property]}

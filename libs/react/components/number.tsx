@@ -40,7 +40,8 @@ export interface NumberComponentProperties<T extends TNumber> extends SchemaComp
 export function NumberComponent<T extends TNumber>(props: NumberComponentProperties<T>) {
     const [state, setState] = React.useState(props.value)
     function onChange(e: React.ChangeEvent<HTMLInputElement>) {
-        const next = parseFloat(e.target.value)
+        const value = (e.target.value === '' || e.target.value === null) ? '0' : e.target.value
+        const next = parseFloat(value)
         props.onChange(props.property, next)
         setState(next)
     }

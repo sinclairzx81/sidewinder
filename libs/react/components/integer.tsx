@@ -40,7 +40,8 @@ export interface IntegerComponentProperties<T extends TInteger> extends SchemaCo
 export function IntegerComponent<T extends TInteger>(props: IntegerComponentProperties<T>) {
     const [state, setState] = React.useState(props.value)
     function onChange(e: React.ChangeEvent<HTMLInputElement>) {
-        const next = parseInt(e.target.value)
+        const value = (e.target.value === '' || e.target.value === null) ? '0' : e.target.value
+        const next = parseInt(value)
         props.onChange(props.property, next)
         setState(next)
     }
