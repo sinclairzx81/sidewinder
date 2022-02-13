@@ -38,12 +38,14 @@ export async function build(target = 'target/build') {
     await Promise.all([
         compilePackage(target, 'client',   VERSION, 'Sidewinder Client'),
         compilePackage(target, 'contract', VERSION, 'Sidewinder Contract'),
+        compilePackage(target, 'debug',    VERSION, 'Sidewinder Debug'),
         compilePackage(target, 'react',    VERSION, 'Sidewinder React'),
         compilePackage(target, 'server',   VERSION, 'Sidewinder Server'),
         compilePackage(target, 'shared',   VERSION, 'Sidewinder Shared'),
     ])
     await packPackage(target, 'client')
     await packPackage(target, 'contract')
+    await packPackage(target, 'debug')
     await packPackage(target, 'react')
     await packPackage(target, 'server')
     await packPackage(target, 'shared')    

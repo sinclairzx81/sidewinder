@@ -10,6 +10,7 @@
         "paths": {
             "@sidewinder/client":   ["libs/client/index.ts"],
             "@sidewinder/contract": ["libs/contract/index.ts"],
+            "@sidewinder/debug":    ["libs/debug/index.ts"],
             "@sidewinder/react":    ["libs/react/index.tsx"],
             "@sidewinder/server":   ["libs/server/index.ts"],
             "@sidewinder/shared":   ["libs/shared/index.ts"]
