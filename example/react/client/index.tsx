@@ -47,7 +47,6 @@ const Schema = User
 
 const Value = Default.Create(Schema)
 
-
 ReactDOM.render(<App schema={Schema} value={Value} />, document.getElementById('react'))
 
 

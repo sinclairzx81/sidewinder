@@ -43,8 +43,9 @@ export function StringComponent<T extends TString>(props: StringComponentPropert
         props.onChange(props.property, next)
         setState(next)
     }
+    const type = props.schema.password ? 'password': 'text'
     return <div className='type-string'>
-        <input type='string' 
+        <input type={type} 
             placeholder={props.schema.placeholder} 
             name={props.property} 
             value={state}
