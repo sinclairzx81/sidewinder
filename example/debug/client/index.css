@@ -1,0 +1,49 @@
+@import '../../../libs/react/css/index.css';
+
+body, html {
+    font-family: monospace;
+    width: 100%;
+    height: 100%;
+    border: 0px;
+    padding: 0px;
+}
+#container {
+    width: 100%;
+    height: 100%;
+}
+#container > .header {
+    width: 100%;
+    height: 64px;
+    background-color: blue;
+}
+#container > .body {
+    width: 100%;
+    height: calc(100% - 64px);
+   
+}
+#react {
+    width: 100%;
+    height: 100%;
+}
+.app {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: row;
+}
+.app > .left {
+    width: 90%;
+    height: 100%;
+}
+.app > .right {
+    width:  50%;
+    height: 100%;
+}
+#container > .body > .left {
+    width:  50%;
+    height: 100%;
+}
+
+.label { 
+    float: left;
+}
