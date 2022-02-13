@@ -68,7 +68,11 @@ export class DefaultBuilder {
         if(schema.default !== undefined) {
             return schema.default
         } else {
-            throw new Error('Contract types require a default value')
+            return {
+                format: 'json',
+                server: {},
+                client: {}
+            }
         }
     }
 
@@ -86,7 +90,7 @@ export class DefaultBuilder {
         if(schema.default !== undefined) {
             return schema.default
         } else {
-            throw new Error('Function types require a default value')
+            return () => {}
         }
     }
 

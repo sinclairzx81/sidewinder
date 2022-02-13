@@ -27,7 +27,7 @@ THE SOFTWARE.
 ---------------------------------------------------------------------------*/
 
 import * as React from 'react'
-import { TObject, TString, TBoolean, TNumber, TArray, TLiteral, TUnion, TTuple, TIntersect, TInteger } from '@sidewinder/contract'
+import { TObject, TString, TBoolean, TNumber, TArray, TLiteral, TUnion, TTuple, TIntersect, TInteger, TContract, TFunction } from '@sidewinder/contract'
 import { TSchema }            from '@sidewinder/contract'
 import { ArrayComponent }     from './array'
 import { ObjectComponent }    from './object'
@@ -39,6 +39,8 @@ import { UnionComponent }     from './union'
 import { TupleComponent }     from './tuple'
 import { IntersectComponent } from './intersect'
 import { IntegerComponent }   from './integer'
+import { ContractComponent }  from './contract'
+import { FunctionComponent }  from './function'
 
 export interface SchemaComponentProperties {
     schema:   TSchema
@@ -51,8 +53,10 @@ export function SchemaComponent(props: SchemaComponentProperties) {
     switch(props.schema.kind) {
         case 'Array':    return <ArrayComponent     property={props.property} schema={props.schema as TArray}  value={props.value}  onChange={props.onChange} />
         case 'Boolean':  return <BooleanComponent  property={props.property} schema={props.schema as TBoolean} value={props.value} onChange={props.onChange} />
+        case 'Contract': return <ContractComponent property={props.property} schema={props.schema as TContract} value={props.value} onChange={props.onChange} />
         case 'Integer':  return <IntegerComponent  property={props.property} schema={props.schema as TInteger} value={props.value} onChange={props.onChange} />
         case 'Intersect':return <IntersectComponent  property={props.property} schema={props.schema as TIntersect} value={props.value} onChange={props.onChange} />
+        case 'Function': return <FunctionComponent property={props.property} schema={props.schema as TFunction} value={props.value} onChange={props.onChange} />
         case 'Literal':  return <LiteralComponent   property={props.property} schema={props.schema as TLiteral} value={props.value} onChange={props.onChange} />
         case 'Object':   return <ObjectComponent    property={props.property} schema={props.schema as TObject} value={props.value} onChange={props.onChange} />
         case 'String':   return <StringComponent    property={props.property} schema={props.schema as TString} value={props.value} onChange={props.onChange} />

@@ -28,8 +28,10 @@ THE SOFTWARE.
 
 export * from './array'
 export * from './boolean'
+export * from './contract'
 export * from './default'
 export * from './form'
+export * from './function'
 export * from './integer'
 export * from './number'
 export * from './object'
