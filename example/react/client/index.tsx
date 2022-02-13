@@ -17,11 +17,9 @@ export function App(props: AppProperties) {
     }
     return <div className="app">
         <div className='left'>
-            <Form
-                schema={props.schema}
-                value={value as any}
-                onChange={onChange}
-            />
+            <Form schema={props.schema}
+                  value={value as any}
+                  onChange={onChange} />
         </div>
         <div className="right">
             <pre>{JSON.stringify(value, null, 2)}</pre>
@@ -29,18 +27,24 @@ export function App(props: AppProperties) {
     </div>
 }
 
+const Vector = Type.Object({
+    x: Type.Number(),
+    y: Type.Number(),
+    z: Type.Number()
+})
 const C = Type.Contract({
     format: 'json',
     server: {
-        add: Type.Function([Type.Number(), Type.Number()], Type.Number()),
+        add: Type.Function([Vector, Vector], Vector),
         sub: Type.Function([Type.Number(), Type.Number()], Type.Number()),
         mul: Type.Function([Type.Number(), Type.Number()], Type.Number()),
         div: Type.Function([Type.Number(), Type.Number()], Type.Number())
     }
 })
 
-const F = Type.Function([Type.String(), Type.Number()], Type.String())
-// const F = Type.String()
+const F = Type.Function([Type.Number(), Type.Number()], Type.Number())
+const S = Type.String()
+const V = Vector
 const Schema = C
 
 ReactDOM.render(<App schema={Schema} />, document.getElementById('react'))

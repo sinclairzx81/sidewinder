@@ -39,8 +39,17 @@ export interface FunctionComponentProperties<T extends TFunction> extends Schema
 }
 
 export function FunctionComponent<T extends TFunction>(props: FunctionComponentProperties<T>) {
+    const [state, setState] = React.useState(
+        props.value === undefined
+            ? props.schema.parameters.map(schema => Default.Create(schema))
+            : props.value
+    )
     function onChange(property: string, value: unknown) {
-        console.log(property, value)
+        const index = parseInt(property)
+        const next = [...state]
+        next[index] =  value
+        props.onChange(props.property, next)
+        setState(next)
     }
     return <div className='type-function'>
         <div className='parameters'>

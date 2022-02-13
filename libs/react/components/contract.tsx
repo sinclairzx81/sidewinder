@@ -31,6 +31,11 @@ import { SchemaComponent, SchemaComponentProperties } from './schema'
 import { TContract } from '@sidewinder/contract'
 
 
+let ordinal = 0
+export function nextOrdinal() {
+    return ordinal++
+}
+
 export interface ContractComponentProperties<T extends TContract> extends SchemaComponentProperties {
     schema: T
     property: string
@@ -40,7 +45,11 @@ export interface ContractComponentProperties<T extends TContract> extends Schema
 
 export function ContractComponent<T extends TContract>(props: ContractComponentProperties<T>) {
     function onChange(property: string, value: unknown) {
-
+        props.onChange(props.property, {
+            jsonrpc: 2.0,
+            id: nextOrdinal().toString(),
+            params: value
+        })
     }
     return <div className='type-contract'>
         <div className='server'>
