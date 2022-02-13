@@ -29,9 +29,19 @@ export function App(props: AppProperties) {
     </div>
 }
 
+const C = Type.Contract({
+    format: 'json',
+    server: {
+        add: Type.Function([Type.Number(), Type.Number()], Type.Number()),
+        sub: Type.Function([Type.Number(), Type.Number()], Type.Number()),
+        mul: Type.Function([Type.Number(), Type.Number()], Type.Number()),
+        div: Type.Function([Type.Number(), Type.Number()], Type.Number())
+    }
+})
+
 const F = Type.Function([Type.String(), Type.Number()], Type.String())
 // const F = Type.String()
-const Schema = F
+const Schema = C
 
 ReactDOM.render(<App schema={Schema} />, document.getElementById('react'))
 
