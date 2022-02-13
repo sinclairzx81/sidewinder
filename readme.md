@@ -49,7 +49,7 @@ $ npm install @sidewinder/client     # Http and Web Socket Clients
 
 Sidewinder services consist of three main components, a [Contract](libs/contract/readme.md), [Service](libs/server/readme.md) and [Client](libs/client/readme.md). A Contract defines a set of callable RPC methods and is shared between both Client and Server. A Service provides an implementation for a Contract; and a Client calls methods implemented on the Service. Contracts are used to infer type safe functions on Services and Clients, well as validate method calls made over the network.
 
-The following demonstrates general usage.
+The following shows general usage.
 
 ```typescript
 import { Type }             from '@sidewinder/contract'
@@ -118,10 +118,11 @@ console.log([add, sub, mul, div]) // [3, -1, 2, 0.5]
 
 ## TypeScript
 
+[TypeScript Example Link](https://www.typescriptlang.org/play?#code/JYWwDg9gTgLgBAbzgFQJ5gKZwL5wGZQQhwDkAAgM7AAmGA7sAHa1QD0AxhIzFAIbswSAKFCRYiOAHUMAIwDKGKADdg7LLgJFSlGvSYtWFRUsXDR0eEmkyAwgBtgGbjnyFi5KrQbNFHB08EhIVZWOABaCMio6JjYuPiExPjg0JsuHn4YFPCk3Lz8gqigzkYKeDTuPgE4AF4UdAwAOgqMgQAKBCE4brgjZUUALkQuntGSXmpqEiG0TEaAMQBXRgFgLjaAbVmmgDlFkBlFNoBKABp6ub2Do+OAXXPtxqvDqBPjke7sIWx37ML-gGAsLZBTKVQYP5AqHQuLFLhlXrGcG1OCMehSWSglRqNotKowX59bFNEAYGAACwg1Da40mJHObXY-m4AElqOdeOcZMdagA+YajEKjUYAH2F4rFwpFHzgQvFcEl8u6ip6AGpInAwLw+CAKHA2rwhox9i8uUaTYp3oLQvKVbaZXKJUq1RrlsAAI6LLBMxzOXTcYB4RxQB02iWhpXqiJwUkUqmo3ikuBMPCKKAYaiuLQlVpZa2hiOjKNhODpmCLKCMZOMVNQdOZ3h6gAGxuuUCbhZ60tGZYrVd4cFVcBkcG+vyFMMnU+y9l9WQnU8XQLhpXgPoCKLRdAxtmZMFx6Xx5xI5JgMDAAxCjWvjRIvxKCPTFEWdngdV4dF4wDXe8a7F4dh2DSExTOcACM4HvI6CrOrBTpKtK0F2nBzrIS60bagA5vsAR6o2+qxpS1BDGUUBMJhHLmm2ZqohaUBQWGMEoShYrZF2zEocWMZkkRCZJimaYZlmxA5vibHKuJg4ak+L7wMAzati8TZAA)
+
 Sidewinder offers both runtime and static type safety derived from Contract definitions. Client and Service methods are statically inferred from Contract definitions, with the Contract also used to validate data received over the wire.
 
 ```typescript
-
 // ---------------------------------------------------------------------------
 // Contract
 // ---------------------------------------------------------------------------
@@ -138,7 +139,7 @@ const Contract = Type.Contract({
 
 const service = new WebService(Contract)
 
-server.method('add', (clientId, a, b) => {
+service.method('add', (clientId, a, b) => {
     //        |           |      |
     //        |           |      +--- params (a: number, b: number)
     //        |           |
@@ -159,10 +160,10 @@ server.method('add', (clientId, a, b) => {
 const client = new WebClient(Contract, 'http://....')
 
 const result = await client.call('add', 1, 1)
-//    |                          |        |
-//    |                          |        +--- arguments as (method: string, a: number, b: number)
-//    |                          |
-//    |                          +--- method name inferred from contract
+//    |                         |         |
+//    |                         |         +--- arguments as (method: string, a: number, b: number)
+//    |                         | 
+//    |                         +--- method name inferred from contract
 //    |
 //    +--- result is `number`
 ```
