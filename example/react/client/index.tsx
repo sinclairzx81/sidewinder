@@ -1,3 +1,4 @@
+
 import * as React from 'react'
 import * as ReactDOM from 'react-dom'
 
@@ -29,7 +30,7 @@ export function App(props: AppProperties) {
 }
 
 const F = Type.Function([Type.String(), Type.Number()], Type.String())
-
+// const F = Type.String()
 const Schema = F
 
 ReactDOM.render(<App schema={Schema} />, document.getElementById('react'))

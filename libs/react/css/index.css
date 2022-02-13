@@ -1,5 +1,7 @@
 @import './array.css';
 @import './boolean.css';
+@import './contract.css';
+@import './function.css';
 @import './integer.css';
 @import './intersect.css';
 @import './literal.css';
