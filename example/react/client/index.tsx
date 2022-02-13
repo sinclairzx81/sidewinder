@@ -39,13 +39,21 @@ const User = Type.Object({
     email:     Type.String(),
     firstName: Type.String(),
     lastName:  Type.String(),
+    mode: Type.Union([
+        Type.Literal('enabled'),
+        Type.Literal('disabled')
+    ]),
     position:  Position,
-    orders:    Type.Array( Position, { minItems: 3 }),
+
+    orders:    Type.Array( Position, { minItems: 3, controls: true }),
 })
 
-const Schema = User
+const Schema = JSON.parse(JSON.stringify(User))
 
 const Value = Default.Create(Schema)
+Value.mode = 'disabled'
+Value.position = [3, 3, 3]
+Value.orders.unshift([1, 2, 3])
 
 ReactDOM.render(<App schema={Schema} value={Value} />, document.getElementById('react'))
 
