@@ -45,9 +45,6 @@ export function UnionComponent<T extends TUnion>(props: UnionComponentProperties
     const [state, setState] = React.useState(props.value)
     
     async function onChange(e: React.ChangeEvent<HTMLSelectElement>) {
-        const schema = (props.schema.anyOf as any).find((schema: TLiteral) => {
-            
-        })
         props.onChange(props.property, e.target.value)
         setState(e.target.value) 
     }
