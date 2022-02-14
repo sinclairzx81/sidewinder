@@ -31,32 +31,29 @@ import { SchemaComponent, SchemaComponentProperties } from './schema'
 import { TFunction } from '@sidewinder/contract'
 import { Default } from './default'
 
-export interface FunctionComponentProperties<T extends TFunction> extends SchemaComponentProperties {
+export interface FunctionComponentProperties<T extends TFunction> {
     schema:   T
-    property: string
-    value?:   any
-    onChange: (property: string, value: any) => void    
+    method: string
+    onCall: (method: string, params: unknown[]) => void    
 }
 
 export function FunctionComponent<T extends TFunction>(props: FunctionComponentProperties<T>) {
-    const [state, setState] = React.useState(
-        props.value === undefined
-            ? props.schema.parameters.map(schema => Default.Create(schema))
-            : props.value
-    )
+    const [state, setState] = React.useState(props.schema.parameters.map(schema => Default.Create(schema)))
     function onChange(property: string, value: unknown) {
         const index = parseInt(property)
-        const next = [...state]
-        next[index] =  value
-        props.onChange(props.property, next)
-        setState(next)
+        const params = [...state]
+        params[index] =  value
+        setState(params)
+    }
+    function onCall() {
+        props.onCall(props.method, state)
     }
     return <div className='type-function'>
         <div className='parameters'>
             {props.schema.parameters.map((schema, index) => {
                 return <div key={index} className='parameter'>
                     <div className='name'>
-                        params_{index}
+                        arg{index}
                     </div>
                     <div className='value'>
                     <SchemaComponent
@@ -70,7 +67,7 @@ export function FunctionComponent<T extends TFunction>(props: FunctionComponentP
             })}
         </div>
         <div className='returns'>
-
+            <span className='action call' onClick={onCall}>call</span>
         </div>
     </div>
 }

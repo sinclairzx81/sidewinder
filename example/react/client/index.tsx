@@ -2,8 +2,8 @@
 import * as React from 'react'
 import * as ReactDOM from 'react-dom'
 
-import { TSchema, Type } from '@sidewinder/contract'
-import { Form, Default } from '@sidewinder/react'
+import { TContract, TSchema, Type } from '@sidewinder/contract'
+import { SchemaComponent, ContractComponent, Default } from '@sidewinder/react'
 
 export interface AppProperties<T extends TSchema = TSchema> {
     schema: T
@@ -12,14 +12,12 @@ export interface AppProperties<T extends TSchema = TSchema> {
 
 export function App(props: AppProperties) {
     const [value, setValue] = React.useState(props.value)
-    function onChange(value: any) {
-        setValue(value)
+    function onCall(method: string, params: unknown[]) {
+        console.log(method, params)
     }
     return <div className="app">
         <div className='left'>
-            <Form schema={props.schema}
-                  value={value as any}
-                  onChange={onChange} />
+            <ContractComponent schema={props.schema as TContract} onCall={onCall} />
         </div>
         <div className="right">
             <pre>{JSON.stringify(value, null, 2)}</pre>
@@ -35,14 +33,13 @@ const Vector = Type.Object({
 const C = Type.Contract({
     format: 'json',
     server: {
-        add: Type.Function([Vector, Vector], Vector),
-        sub: Type.Function([Type.Number(), Type.Number()], Type.Number()),
+        sub: Type.Function([Vector, Type.Number()], Type.Number()),
         mul: Type.Function([Type.Number(), Type.Number()], Type.Number()),
         div: Type.Function([Type.Number(), Type.Number()], Type.Number())
     }
 })
 
-const F = Type.Function([Type.Number(), Type.Number()], Type.Number())
+const F = Type.Function([Vector, Type.Number()], Type.Number())
 const S = Type.String()
 const V = Vector
 const Schema = C

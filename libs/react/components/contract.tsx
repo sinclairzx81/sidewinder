@@ -27,31 +27,17 @@ THE SOFTWARE.
 ---------------------------------------------------------------------------*/
 
 import * as React from 'react'
-import { SchemaComponentProperties } from './schema'
-import { TContract } from '@sidewinder/contract'
+import { TContract, TFunction } from '@sidewinder/contract'
 import { FunctionComponent } from './function'
 
-
-let ordinal = 0
-export function nextOrdinal() {
-    return ordinal++
-}
-
-export interface ContractComponentProperties<T extends TContract> extends SchemaComponentProperties {
+export interface ContractComponentProperties<T extends TContract> {
     schema: T
-    property: string
-    value?: any
-    onChange: (property: string, value: any) => void
+    onCall: (method: string, params: unknown[]) => void
 }
 
 export function ContractComponent<T extends TContract>(props: ContractComponentProperties<T>) {
-    function onChange(property: string, value: unknown) {
-        props.onChange(props.property, {
-            jsonrpc: 2.0,
-            id: nextOrdinal().toString(),
-            method: property,
-            params: value
-        })
+    function onCall(method: string, params: unknown[]) {
+        props.onCall(method, params)
     }
     return <div className='type-contract'>
         <div className='server'>
@@ -62,10 +48,9 @@ export function ContractComponent<T extends TContract>(props: ContractComponentP
                     </div>
                     <div className='function'>
                         <FunctionComponent
-                            property={property}
-                            schema={schema as any}
-                            value={props.value[property]}
-                            onChange={onChange}
+                            method={property}
+                            schema={schema as TFunction}
+                            onCall={onCall}
                         />
                     </div>
                 </div>
