@@ -33,7 +33,7 @@ const Vector = Type.Object({
 const C = Type.Contract({
     format: 'json',
     server: {
-        sub: Type.Function([Vector, Type.Number()], Type.Number()),
+        sub: Type.Function([Type.Array(Vector, { controls: true }), Type.Number()], Type.Number()),
         mul: Type.Function([Type.Number(), Type.Number()], Type.Number()),
         div: Type.Function([Type.Number(), Type.Number()], Type.Number())
     }
