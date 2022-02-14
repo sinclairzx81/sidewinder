@@ -35,7 +35,7 @@ export interface ObjectComponentProperties<T extends TObject> extends SchemaComp
     property: string
     value: T['$static']
 }
-
+/** Renders a form for object schemas */
 export function ObjectComponent<T extends TObject = TObject>(props: ObjectComponentProperties<T>) {
     const [state, setState] = React.useState(props.value)
     function onChange(property: string, value: any) {

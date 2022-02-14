@@ -36,6 +36,7 @@ export interface BooleanComponentProperties<T extends TBoolean> extends SchemaCo
     value:    T['$static']
 }
 
+/** Renders a form for boolean schemas */
 export function BooleanComponent<T extends TBoolean>(props: BooleanComponentProperties<T>) {
     const [state, setState] = React.useState(props.value)
     function onChange(e: React.ChangeEvent<HTMLInputElement>) {

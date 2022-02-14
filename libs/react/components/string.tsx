@@ -35,7 +35,7 @@ export interface StringComponentProperties<T extends TString> extends SchemaComp
     property: string
     value:    T['$static']
 }
-
+/** Renders a form for string schemas */
 export function StringComponent<T extends TString>(props: StringComponentProperties<T>) {
     const [state, setState] = React.useState(props.value)
     function onChange(e: React.ChangeEvent<HTMLInputElement>) {

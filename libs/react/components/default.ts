@@ -286,4 +286,5 @@ export class DefaultBuilder {
     }
 }
 
+/** Generates default values for each type. */
 export const Default = new DefaultBuilder()

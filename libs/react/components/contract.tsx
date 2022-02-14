@@ -34,7 +34,7 @@ export interface ContractComponentProperties<T extends TContract> {
     schema: T
     onCall: (method: string, params: unknown[]) => void
 }
-
+/** Renders a form for contract schemas. Provides a onCall() callback to receive method and parameters. */
 export function ContractComponent<T extends TContract>(props: ContractComponentProperties<T>) {
     function onCall(method: string, params: unknown[]) {
         props.onCall(method, params)

@@ -36,7 +36,7 @@ export interface NumberComponentProperties<T extends TNumber> extends SchemaComp
     property: string
     value: T['$static']
 }
-
+/** Renders a form for number schemas */
 export function NumberComponent<T extends TNumber>(props: NumberComponentProperties<T>) {
     const [state, setState] = React.useState(props.value)
     function onChange(e: React.ChangeEvent<HTMLInputElement>) {

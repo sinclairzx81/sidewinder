@@ -40,9 +40,11 @@ export interface ArrayComponentProperties<T extends TArray> extends SchemaCompon
     value: Array<T['$static']>
 }
 interface Element {
-    key: number
+    key:   number
     value: unknown
 }
+
+/** Renders a form for array schemas */
 export function ArrayComponent<T extends TArray = TArray>(props: ArrayComponentProperties<T>) {
     const [state, setState] = React.useState<Element[]>(props.value.map(value => ({ value, key: nextOrdinal() })))
     const [store, setStore] = React.useState(Default.Create(props.schema.items))

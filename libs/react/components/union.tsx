@@ -40,7 +40,7 @@ export interface UnionComponentProperties<T extends TUnion> extends SchemaCompon
     property: string
     value: T['$static']
 }
-
+/** Renders a form for union schemas */
 export function UnionComponent<T extends TUnion>(props: UnionComponentProperties<T>) {
     const [state, setState] = React.useState(props.value)
     

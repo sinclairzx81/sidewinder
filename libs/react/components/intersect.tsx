@@ -35,7 +35,7 @@ export interface IntersectComponentProperties<T extends TIntersect> extends Sche
     property: string
     value: T['$static']
 }
-
+/** Renders a form for intersect schemas */
 export function IntersectComponent<T extends TIntersect = TIntersect>(props: IntersectComponentProperties<T>) {
     const [state, setState] = React.useState(props.value)
     function onChange(property: string, value: any) {

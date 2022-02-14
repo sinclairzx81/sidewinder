@@ -46,7 +46,7 @@ export interface SchemaComponentProperties {
     value?:   any
     onChange: (property: string, value: any) => void
 }
-
+/** Conditionally renders a JSON schema based on it's kind. Renderable schemas must extend SchemaComponentProperties. */
 export function SchemaComponent(props: SchemaComponentProperties) {
     switch(props.schema.kind) {
         case 'Array':    return <ArrayComponent     property={props.property} schema={props.schema as TArray}  value={props.value}  onChange={props.onChange} />

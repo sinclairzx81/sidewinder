@@ -36,7 +36,7 @@ export interface LiteralComponentProperties<T extends TLiteral> extends SchemaCo
     property: string
     value: T['$static']
 }
-
+/** Renders a form for literal schemas */
 export function LiteralComponent<T extends TLiteral>(props: LiteralComponentProperties<T>) {
     return <div className='type-literal'>
         <span>{props.value}</span>

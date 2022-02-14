@@ -36,7 +36,7 @@ export interface TupleComponentProperties<T extends TTuple<any[]>> extends Schem
     property: string
     value: T['$static']
 }
-
+/** Renders a form for tuple schemas */
 export function TupleComponent<T extends TTuple<any[]>>(props: TupleComponentProperties<T>) {
     const [state, setState] = React.useState(props.value)
     

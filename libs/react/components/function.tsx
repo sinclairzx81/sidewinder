@@ -27,7 +27,7 @@ THE SOFTWARE.
 ---------------------------------------------------------------------------*/
 
 import * as React from 'react'
-import { SchemaComponent, SchemaComponentProperties } from './schema'
+import { SchemaComponent } from './schema'
 import { TFunction } from '@sidewinder/contract'
 import { Default } from './default'
 
@@ -37,6 +37,7 @@ export interface FunctionComponentProperties<T extends TFunction> {
     onCall: (method: string, params: unknown[]) => void    
 }
 
+/** Renders a form for function schemas. Provides a onCall() callback to receive method and parameters. */
 export function FunctionComponent<T extends TFunction>(props: FunctionComponentProperties<T>) {
     const [state, setState] = React.useState(props.schema.parameters.map(schema => Default.Create(schema)))
     function onChange(property: string, value: unknown) {
