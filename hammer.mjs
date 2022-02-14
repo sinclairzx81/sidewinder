@@ -27,6 +27,7 @@ export async function test() {
     await shell(`hammer build ./tests/index.ts --dist target/tests --platform node`)
     await shell(`mocha target/tests/index.js`)
 }
+
 // -------------------------------------------------------------
 // Build
 // -------------------------------------------------------------
@@ -38,13 +39,11 @@ export async function build(target = 'target/build') {
     await Promise.all([
         compilePackage(target, 'client',   VERSION, 'Sidewinder Client'),
         compilePackage(target, 'contract', VERSION, 'Sidewinder Contract'),
-        compilePackage(target, 'react',    VERSION, 'Sidewinder React'),
         compilePackage(target, 'server',   VERSION, 'Sidewinder Server'),
         compilePackage(target, 'shared',   VERSION, 'Sidewinder Shared'),
     ])
     await packPackage(target, 'client')
     await packPackage(target, 'contract')
-    await packPackage(target, 'react')
     await packPackage(target, 'server')
     await packPackage(target, 'shared')    
 }
@@ -55,8 +54,7 @@ export async function build(target = 'target/build') {
 
 export async function publish(target = 'target/build') {
     await shell(`cd target/build/shared && npm publish sidewinder-shared-${VERSION}.tgz --access=public`)
-    await shell(`cd target/build/react && npm publish sidewinder-react-${VERSION}.tgz --access=public`)
+    await shell(`cd target/build/contract && npm publish sidewinder-contract-${VERSION}.tgz --access=public`)
     await shell(`cd target/build/server && npm publish sidewinder-server-${VERSION}.tgz --access=public`)
     await shell(`cd target/build/client && npm publish sidewinder-client-${VERSION}.tgz --access=public`)
-    // await shell(`cd target/build/react && npm publish sidewinder-react-${VERSION}.tgz --access=public`)
 }
