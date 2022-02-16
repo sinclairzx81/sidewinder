@@ -39,3 +39,13 @@ export async function throwsAsync(callback: Function) {
     try { await callback() } catch { return }
     throw Error('Expected throw')
 }
+
+export function isTypeOf(value: any, type: any) {
+    if(typeof value === type) return
+    throw Error(`Value is not typeof ${type}`)
+}
+
+export function isInstanceOf(value: any, constructor: any) {
+    if(value instanceof constructor) return
+    throw Error(`Value is not instance of ${constructor}`)
+}

@@ -34,6 +34,7 @@ License MIT
 - [Contract](libs/contract/readme.md)
 - [Server](libs/server/readme.md)
 - [Client](libs/client/readme.md)
+- [Mongo](libs/mongo/readme.md)
 
 ## Install
 

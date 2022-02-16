@@ -10,6 +10,7 @@
         "paths": {
             "@sidewinder/client":   ["libs/client/index.ts"],
             "@sidewinder/contract": ["libs/contract/index.ts"],
+            "@sidewinder/mongo":    ["libs/mongo/index.ts"],
             "@sidewinder/server":   ["libs/server/index.ts"],
             "@sidewinder/shared":   ["libs/shared/index.ts"]
         }
