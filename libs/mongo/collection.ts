@@ -39,12 +39,6 @@ export class Collection<T extends TObject<TProperties> = TObject<TProperties>> {
         this.encoder = new Encoder(schema)
     }
 
-    /** Execute an aggregation framework pipeline against the collection, needs MongoDB >= 2.2 */
-    public aggregate(pipeline: Static<T>[], options: Mongo.AggregateOptions = {}) {
-        const _pipeline = pipeline.map(element => this.encoder.decode(element))
-        this.collection.aggregate(_pipeline, options)
-    }
-
     /** Counts the number of documents in this collection. Internally uses countDocuments() */
     public count(filter: Mongo.Filter<Static<T>>, options: Mongo.CountDocumentsOptions): Promise<number>
     /** Counts the number of documents in this collection. Internally uses countDocuments() */

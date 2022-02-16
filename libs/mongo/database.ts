@@ -32,7 +32,7 @@ import { Collection } from './collection'
 
 /** TypeSafe database with JSON Schema validation built in */
 export class Database<Schema extends TDatabase = TDatabase> {
-    constructor(private readonly schema: Schema, public readonly database: Db) {}
+    constructor(private readonly schema: Schema, public readonly db: Db) {}
 
     /** Generates a new 24 character mongo identifier string */
     public id(): string {
@@ -44,7 +44,7 @@ export class Database<Schema extends TDatabase = TDatabase> {
     public collection<Name extends keyof Schema['collections']>(name: Name): Collection<Schema['collections'][Name]> {
         if(this.schema['collections'][name as string] === undefined) throw new Error(`Collection name '${name}' not defined in schema`)
         const schema = this.schema['collections'][name as string]
-        const collection = this.database.collection(name as string)
+        const collection = this.db.collection(name as string)
         return new Collection<Schema['collections'][Name]>(schema as any, collection) 
     }
     
