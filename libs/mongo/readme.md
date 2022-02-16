@@ -2,15 +2,15 @@
 
 <h1>Sidewinder Mongo</h1>
 
-<p>Sidewinder Mongo Client Library</p>
+<p>Provides a Type Safe interface for interacting with the NodeJS Mongo Driver</p>
 
-[<img src="https://img.shields.io/npm/v/@sidewinder/client?label=%40sidewinder%2Fclient">](https://www.npmjs.com/package/@sidewinder/client)
+[<img src="https://img.shields.io/npm/v/@sidewinder/mongo?label=%40sidewinder%2Fmongo">](https://www.npmjs.com/package/@sidewinder/mongo)
 
 </div>
 
 ## Overview
 
-This package provides a type safe layer over the [official mongodb driver](https://www.npmjs.com/package/mongodb) package for NodeJS. It enables models to be created with Sidewinder Contract types with each model strictly data checked via JSON schema prior to writing to MongoDB. In addition, this package provides automatic `ObjectId` and binary data encode and decode to and from MongoDB. This allows applications to treat Mongo identifiers as validated hex strings and Mongo `Binary` objects as `Uint8Array`.
+This package provides a type safe layer over the [official mongodb driver](https://www.npmjs.com/package/mongodb) package for NodeJS. It enables document models to be created with Sidewinder Contract types with each document strictly data checked via JSON schema prior to writing to MongoDB. In addition, this package provides automatic `ObjectId` and binary data encode and decode to and from MongoDB. This allows applications to treat Mongo identifiers as validated hex strings and Mongo `Binary` objects as `Uint8Array`.
 
 License MIT
 
@@ -21,7 +21,7 @@ License MIT
 
 ## Example
 
-Sidewinder Mongo provides a strict validation layer directly over the Mongo `Db` object. It provides a subset Db functions that can safely be type checked and runtime validated. Users will first need to establish a connection to MongoDB then pass an instance of `client.db()` to the Database constructor along with associated schema.
+Sidewinder Mongo provides a strict validation layer directly over the Mongo `Db` object. It provides a subset the drivers `Db` functions that can safely checked and runtime validated. To use, users will first need to establish a connection to MongoDB via the driver then pass an instance of `client.db()` to the Database constructor along with associated schema.
 
 ```typescript
 import { Database, Type } from '@sidewinder/mongo'
@@ -68,12 +68,8 @@ await database.collection('users').insertOne({
 // -------------------------------------------------------
  
 await database.collection('users').updateOne({ _id: '...' }, {
-    _id:       database.id(),
-    created:   Date.now(),
     updated:   Date.now(),
-    username: 'dave',
-    password: 'password',
-    email:    'dave@domain.com'
+    email:    'dave@other-domain.com'
 })
  
 // -------------------------------------------------------
