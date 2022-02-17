@@ -263,6 +263,8 @@ export interface TProperties { [key: string]: TSchema }
 
 export interface ObjectOptions extends SchemaOptions {
     additionalProperties?: boolean
+    minProperties?: number
+    maxProperties?: number
 }
 
 export interface TObject<T extends TProperties = TProperties> extends TSchema, ObjectOptions {
