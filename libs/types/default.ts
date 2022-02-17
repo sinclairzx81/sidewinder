@@ -274,4 +274,4 @@ export class DefaultBuilder {
 }
 
 /** Generates default values for each type. */
-export const Defaults = new DefaultBuilder()
+export const Default = new DefaultBuilder()
