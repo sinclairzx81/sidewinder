@@ -2,7 +2,7 @@ import * as resolve from './resolve'
 import * as assert from '../assert/index'
 import { Database, Collection } from '@sidewinder/mongo'
 
-describe('Cursor', () => {
+describe('mongo/Cursor', () => {
 
     async function createTestData(database: Database, collection: Collection<any>) {
         await collection.insertMany([
