@@ -27,8 +27,8 @@ THE SOFTWARE.
 ---------------------------------------------------------------------------*/
 
 import * as Mongo from 'mongodb'
-import { Type, TObject } from '@sidewinder/contract'
-import { Schema, ValidateFunction } from './schema'
+import { Validation, ValidateFunction } from '@sidewinder/validation'
+import { Type, TObject }                from '@sidewinder/contract'
 
 export class EncoderValidationError extends Error {
     constructor(public readonly errors?: any) {
@@ -41,8 +41,8 @@ export class Encoder {
     private readonly validatePartialFunction: ValidateFunction
 
     constructor(private readonly schema: TObject) {
-        this.validateFunction = Schema.compile(this.schema)
-        this.validatePartialFunction = Schema.compile(Type.Partial(this.schema))
+        this.validateFunction = Validation.compile(this.schema)
+        this.validatePartialFunction = Validation.compile(Type.Partial(this.schema))
     }
     
     /** Validates the given JavaScript data against the schema associated with this encoder. */

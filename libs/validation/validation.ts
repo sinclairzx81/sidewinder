@@ -1,6 +1,6 @@
 /*--------------------------------------------------------------------------
 
-@sidewinder/mongo
+@sidewinder/validate
 
 The MIT License (MIT)
 
@@ -31,7 +31,8 @@ import addFormats                       from 'ajv-formats'
 import Ajv, { ValidateFunction }        from 'ajv'
 export { ValidateFunction }             from 'ajv'
 
-export namespace Schema {
+export namespace Validation {
+
     /** Validates for Uint8Array. This is only possible for binary encoded formats */
     function validateUint8Array(data: any, parentSchema: any) {
         const schema = parentSchema       as TUint8Array
@@ -66,18 +67,19 @@ export namespace Schema {
             default: return false
         }
     }
-    const validator = addFormats(new Ajv({}), [ 
-        'date-time', 'time', 'date', 'email', 'hostname', 'ipv4', 
-        'ipv6', 'uri', 'uri-reference', 'uuid', 'uri-template', 
-        'json-pointer', 'relative-json-pointer', 'regex'
-    ])
-    .addKeyword({ keyword: 'specialized', type: 'object', validate: validateSpecialized })
-    .addKeyword('maxByteLength')
-    .addKeyword('minByteLength')
-    .addKeyword('modifier')
-    .addKeyword('kind')
-    
-    export function compile<T extends TSchema>(schema: T): ValidateFunction<Static<T>> {
+
+    export function compile<T extends TSchema>(schema: T, additionalSchema: TSchema[] = []): ValidateFunction<Static<T>> {
+        const validator = addFormats(new Ajv({}), [ 
+            'date-time', 'time', 'date', 'email', 'hostname', 'ipv4', 
+            'ipv6', 'uri', 'uri-reference', 'uuid', 'uri-template', 
+            'json-pointer', 'relative-json-pointer', 'regex'
+        ])
+        .addKeyword({ keyword: 'specialized', type: 'object', validate: validateSpecialized })
+        .addKeyword('maxByteLength')
+        .addKeyword('minByteLength')
+        .addKeyword('modifier')
+        .addKeyword('kind')
+        .addSchema(additionalSchema)
         return validator.compile(schema)
     }
 }

@@ -27,8 +27,9 @@ THE SOFTWARE.
 ---------------------------------------------------------------------------*/
 
 import { Exception, Type, TFunction } from '@sidewinder/contract'
+import { Validation, ValidateFunction } from '@sidewinder/validation'
 import { RpcProtocol, RpcErrorCode, RpcRequest, RpcResponse } from './protocol'
-import { Schema, ValidateFunction } from './schema'
+
 
 export interface ExecuteResultWithResponse {
     type: 'result-with-response'
@@ -84,8 +85,8 @@ export class ServiceMethods {
     }
 
     public register(method: MethodName, schema: TFunction<any[], any>, mapping: (clientId: string) => any, callback: Function) {
-        const paramsValidator = Schema.compile(Type.Tuple(schema.parameters))
-        const returnValidator = Schema.compile(schema.returns)
+        const paramsValidator = Validation.compile(Type.Tuple(schema.parameters))
+        const returnValidator = Validation.compile(schema.returns)
         this.methods.set(method, { paramsValidator, returnValidator, mapping, callback })
     }
     

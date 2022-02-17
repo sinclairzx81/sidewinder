@@ -27,7 +27,7 @@ THE SOFTWARE.
 ---------------------------------------------------------------------------*/
 
 import { Static, TSchema, Type } from '@sidewinder/contract'
-import { Schema }                from './schema'
+import { Validation }            from '@sidewinder/validation'
 
 // -------------------------------------------------------------------------
 // Protocol Types
@@ -88,7 +88,7 @@ export interface DecodedRpcResponse {
 export type DecodeAnyResult = DecodedRpcRequest | DecodedRpcResponse
 
 export namespace RpcProtocol {
-    const validateRequestOrResponse = Schema.compile(RpcRequestOrResponse)
+    const validateRequestOrResponse = Validation.compile(RpcRequestOrResponse)
 
     export function encodeRequest(id: string | undefined, method: string, params: unknown[]): any {
         return { id, jsonrpc: '2.0', method, params }

@@ -1,6 +1,6 @@
 /*--------------------------------------------------------------------------
 
-@sidewinder/server
+@sidewinder/validate
 
 The MIT License (MIT)
 
@@ -26,5 +26,4 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-export * from './methods'
-export * from './protocol'
+export * from './validation'
