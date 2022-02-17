@@ -1,5 +1,5 @@
 import { Type } from '@sidewinder/types'
-import { ok, fail } from './validate'
+import { ok } from './validate'
 
 describe("types/Any", () => {
     it('Should validate number', () => {
