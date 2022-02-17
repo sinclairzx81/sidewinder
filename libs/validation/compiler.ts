@@ -1,6 +1,6 @@
 /*--------------------------------------------------------------------------
 
-@sidewinder/validate
+@sidewinder/validation
 
 The MIT License (MIT)
 
@@ -26,14 +26,15 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-import { TSchema, Static, TUint8Array } from '@sidewinder/contract'
+import { TSchema, Static, TUint8Array } from '@sidewinder/types'
 import addFormats                       from 'ajv-formats'
 import Ajv, { ValidateFunction }        from 'ajv'
 export { ValidateFunction }             from 'ajv'
 
-export namespace Validation {
+/** Compiles TSchema types into a Ajv ValidateFunction */
+export namespace Compiler {
 
-    /** Validates for Uint8Array. This is only possible for binary encoded formats */
+    /** Validates for UInt8Array types. */
     function validateUint8Array(data: any, parentSchema: any) {
         const schema = parentSchema       as TUint8Array
         const facade = validateUint8Array as any
@@ -55,7 +56,7 @@ export namespace Validation {
         return true
     }
 
-    /** Validates for undefined. This validation cannot work across network calls. */
+    /** Validates for undefined. */
     function validateUndefined(data: any, parentSchema: any) {
         return data === undefined
     }
@@ -77,7 +78,8 @@ export namespace Validation {
     .addKeyword('minByteLength')
     .addKeyword('modifier')
     .addKeyword('kind')
-
+    
+    /** Compiles the given schema and returns a validate function. */
     export function compile<T extends TSchema>(schema: T, additionalSchema: TSchema[] = []): ValidateFunction<Static<T>> {
         const context = validator.addSchema(additionalSchema)
         return context.compile(schema)

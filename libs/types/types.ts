@@ -538,8 +538,6 @@ export class TypeBuilder {
         return this.Create({ ...options, kind: 'Constructor', type: 'constructor', parameters, returns })
     }
 
-
-
     /** Creates an enum type from a TypeScript enum */
     public Enum<T extends Record<string, string | number>>(item: T, options: SchemaOptions = {}): TEnum<T> {
         const values = Object.keys(item).filter(key => isNaN(key as any)).map(key => item[key]) as T[keyof T][]

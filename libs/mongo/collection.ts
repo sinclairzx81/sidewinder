@@ -26,17 +26,24 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-import { TObject, TProperties, Static } from './types'
+import * as Mongo from 'mongodb'
+import { Validator } from '@sidewinder/validation'
+import { Type, TObject, TPartial, TProperties, Static } from './types'
 import { Cursor } from './cursor'
 import { Encoder } from './encoder'
 import { matchArguments } from './arguments'
-import * as Mongo from 'mongodb'
 
 export class Collection<T extends TObject<TProperties> = TObject<TProperties>> {
+    private readonly validatePartial: Validator<TPartial<T>>
+    private readonly validate: Validator<T>
     private readonly encoder: Encoder
+    
+    
 
     constructor(public readonly schema: T, public readonly collection: Mongo.Collection) {
-        this.encoder = new Encoder(schema)
+        this.validatePartial = new Validator(Type.Partial(schema))
+        this.validate = new Validator(schema)
+        this.encoder = new Encoder()
     }
 
     /** Counts the number of documents in this collection. Internally uses countDocuments() */
@@ -217,13 +224,13 @@ export class Collection<T extends TObject<TProperties> = TObject<TProperties>> {
     public insertMany(...args: any[]): any {
         return matchArguments(args, {
             2: async (documents, options) => {
-                documents.forEach((document: any) => this.encoder.validate(document))
+                documents.forEach((document: any) => this.validate.assert(document))
                 const inserts = documents.map((doc: unknown) => this.encoder.encode(doc))
                 const result = await this.collection.insertMany(inserts, options)
                 return this.encoder.decode(result)
             },
             1: async (documents) => {
-                documents.forEach((document: any) => this.encoder.validate(document))
+                documents.forEach((document: any) => this.validate.assert(document))
                 const inserts = documents.map((doc: unknown) => this.encoder.encode(doc))
                 const result = await this.collection.insertMany(inserts)
                 return this.encoder.decode(result)
@@ -242,12 +249,12 @@ export class Collection<T extends TObject<TProperties> = TObject<TProperties>> {
     public insertOne(...args: any[]): any {
         return matchArguments(args, {
             2: async (document, options) => {
-                this.encoder.validate(document)
+                this.validate.assert(document)
                 const result = await this.collection.insertOne(this.encoder.encode(document), options)
                 return this.encoder.decode(result)
             },
             1: async (document) => {
-                this.encoder.validate(document)
+                this.validate.assert(document)
                 const result = await this.collection.insertOne(this.encoder.encode(document))
                 return this.encoder.decode(result)
             },
@@ -317,9 +324,9 @@ export class Collection<T extends TObject<TProperties> = TObject<TProperties>> {
         for (const update of Object.values(updateFilter)) {
             if (options.upsert === true) {
                 // Note: Must validate against filter and update on upsert to ensure complete document.
-                this.encoder.validate({ ...filter, ...update })
+                this.validate.assert({ ...filter, ...update })
             } else {
-                this.encoder.validatePartial(update)
+                this.validatePartial.assert(update)
             }
         }
     }
