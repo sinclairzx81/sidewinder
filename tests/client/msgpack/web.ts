@@ -87,7 +87,7 @@ describe('client/WebClient:MsgPack', () => {
     // ------------------------------------------------------------------
     
     it('should store and fetch with send()',context(async (host, service, client) => {
-        const value = assert.random()
+        const value = assert.randomUUID()
         client.send('send:store', value)
         await assert.delay(5) // http requirement
         const result = await client.call('send:fetch')

@@ -67,7 +67,8 @@ export namespace Compiler {
             default: return false
         }
     }
-    const validator = addFormats(new Ajv({}), [ 
+
+    const ajv = addFormats(new Ajv({}), [ 
         'date-time', 'time', 'date', 'email', 'hostname', 'ipv4', 
         'ipv6', 'uri', 'uri-reference', 'uuid', 'uri-template', 
         'json-pointer', 'relative-json-pointer', 'regex'
@@ -80,12 +81,16 @@ export namespace Compiler {
     
     /** Formats errors given by the ValidateFunction on validation fail. */
     export function errorsText(errors: ErrorObject[]) {
-        return validator.errorsText(errors)
+        return ajv.errorsText(errors)
     }
-    
+
+    /** Adds the given schemas to the compiler */
+    export function addSchema(schemas: TSchema[]) {
+        ajv.addSchema(schemas)
+    }
+
     /** Compiles the given schema and returns a validate function. */
-    export function compile<T extends TSchema>(schema: T, additionalSchema: TSchema[] = []): [Ajv, ValidateFunction<Static<T>>] {
-        const context = validator.addSchema(additionalSchema)
-        return [context, context.compile(schema)]
+    export function compile<T extends TSchema>(schema: T): ValidateFunction<Static<T>> {
+        return ajv.compile(schema)
     }
 }

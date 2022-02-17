@@ -1,5 +1,6 @@
 import { Type }     from '@sidewinder/types'
-import { id, ok, fail } from './validate'
+import { ok, fail } from './validate'
+import * as assert from '../../assert/index'
 
 describe('types/Ref', () => {
 
@@ -8,7 +9,7 @@ describe('types/Ref', () => {
             x: Type.Number(),
             y: Type.Number(),
             z: Type.Number()
-        }, { $id: id() })
+        }, { $id: assert.randomUUID() })
         const R = Type.Ref(T)
         ok(R, { 
             x: 1, 
@@ -22,7 +23,7 @@ describe('types/Ref', () => {
             x: Type.Number(),
             y: Type.Number(),
             z: Type.Number()
-        }, { $id: id() })
+        }, { $id: assert.randomUUID() })
         const R = Type.Ref(T)
         fail(R, { 
             x: 1, 
@@ -49,11 +50,11 @@ describe('types/Ref', () => {
             x: Type.Number(),
             y: Type.Number(),
             z: Type.Number()
-        }, { $id: id() })
+        }, { $id: assert.randomUUID() })
         
         const Namespace = Type.Namespace({ 
             Vertex 
-        }, { $id: id() })
+        }, { $id: assert.randomUUID() })
         
         const R1 = Type.Ref(Vertex)
 
@@ -69,11 +70,11 @@ describe('types/Ref', () => {
             x: Type.Number(),
             y: Type.Number(),
             z: Type.Number()
-        }, { $id: id() })
+        }, { $id: assert.randomUUID() })
         
         const Namespace = Type.Namespace({ 
             Vertex 
-        }, { $id: id() })
+        }, { $id: assert.randomUUID() })
         
         const R2 = Type.Ref(Namespace, 'Vertex')
 

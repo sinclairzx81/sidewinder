@@ -1,5 +1,6 @@
 import { Type } from '@sidewinder/types'
-import { id, ok, fail } from './validate'
+import { ok, fail } from './validate'
+import * as assert from '../../assert/index'
 
 describe("types/Namespace", () => {
 
@@ -7,7 +8,7 @@ describe("types/Namespace", () => {
         const Vector2 = Type.Object({ x: Type.Number(), y: Type.Number() })
         const Vector3 = Type.Object({ x: Type.Number(), y: Type.Number(), z: Type.Number() })
         const Vector4 = Type.Object({ x: Type.Number(), y: Type.Number(), z: Type.Number(), w: Type.Number() })
-        const Math3D = Type.Namespace({ Vector2, Vector3, Vector4 }, { $id: id() })
+        const Math3D = Type.Namespace({ Vector2, Vector3, Vector4 }, { $id: assert.randomUUID() })
         const Vertex = Type.Object({
             position: Type.Ref(Math3D, 'Vector4'),
             normal: Type.Ref(Math3D, 'Vector3'),
@@ -25,7 +26,7 @@ describe("types/Namespace", () => {
         const Vector2 = Type.Object({ x: Type.Number(), y: Type.Number() })
         const Vector3 = Type.Object({ x: Type.Number(), y: Type.Number(), z: Type.Number() })
         const Vector4 = Type.Object({ x: Type.Number(), y: Type.Number(), z: Type.Number(), w: Type.Number() })
-        const Math3D = Type.Namespace({ Vector2, Vector3, Vector4 }, { $id: id() })
+        const Math3D = Type.Namespace({ Vector2, Vector3, Vector4 }, { $id: assert.randomUUID() })
         const Vertex = Type.Object({
             position: Type.Ref(Math3D, 'Vector4'),
             normal: Type.Ref(Math3D, 'Vector3'),
@@ -42,7 +43,7 @@ describe("types/Namespace", () => {
         const Vector2 = Type.Object({ x: Type.Number(), y: Type.Number() })
         const Vector3 = Type.Object({ x: Type.Number(), y: Type.Number(), z: Type.Number() })
         const Vector4 = Type.Object({ x: Type.Number(), y: Type.Number(), z: Type.Number(), w: Type.Number() })
-        const Math3D = Type.Namespace({ Vector2, Vector3, Vector4 }, { $id: id() })
+        const Math3D = Type.Namespace({ Vector2, Vector3, Vector4 }, { $id: assert.randomUUID() })
         const Vertex = Type.Object({
             position: Type.Ref(Math3D, 'Vector4'),
             normal:  Type.Ref(Math3D, 'Vector3'),

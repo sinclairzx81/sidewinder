@@ -98,7 +98,7 @@ describe('client/WebSocketClient:Json', () => {
     // Send()
     // ------------------------------------------------------------------
     it('should store and fetch with send()',context(async (host, service, client) => {
-        const value = assert.random()
+        const value = assert.randomUUID()
         client.send('send:store', value)
         const result = await client.call('send:fetch')
         assert.equal(value, result)
