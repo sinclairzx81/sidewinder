@@ -13,6 +13,7 @@
             "@sidewinder/mongo":      ["libs/mongo/index.ts"],
             "@sidewinder/server":     ["libs/server/index.ts"],
             "@sidewinder/shared":     ["libs/shared/index.ts"],
+            "@sidewinder/types":      ["libs/types/index.ts"],
             "@sidewinder/validation": ["libs/validation/index.ts"]
         }
     }

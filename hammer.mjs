@@ -42,6 +42,7 @@ export async function build(target = 'target/build') {
         compilePackage(target, 'mongo',      VERSION, 'Sidewinder Mongo'),
         compilePackage(target, 'server',     VERSION, 'Sidewinder Server'),
         compilePackage(target, 'shared',     VERSION, 'Sidewinder Shared'),
+        compilePackage(target, 'types',      VERSION, 'Sidewinder Types'),
         compilePackage(target, 'validation', VERSION, 'Sidewinder Validation'),
     ])
     await packPackage(target, 'client')
@@ -49,6 +50,7 @@ export async function build(target = 'target/build') {
     await packPackage(target, 'mongo')
     await packPackage(target, 'server')
     await packPackage(target, 'shared')
+    await packPackage(target, 'types')
     await packPackage(target, 'validation')   
 }
 
@@ -62,5 +64,6 @@ export async function publish(target = 'target/build') {
     await shell(`cd target/build/mongo && npm publish sidewinder-mongo-${VERSION}.tgz --access=public`)
     await shell(`cd target/build/server && npm publish sidewinder-server-${VERSION}.tgz --access=public`)
     await shell(`cd target/build/client && npm publish sidewinder-client-${VERSION}.tgz --access=public`)
+    await shell(`cd target/build/types && npm publish sidewinder-types-${VERSION}.tgz --access=public`)
     await shell(`cd target/build/validation && npm publish sidewinder-validation-${VERSION}.tgz --access=public`)
 }

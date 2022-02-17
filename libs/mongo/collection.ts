@@ -26,7 +26,7 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-import { TObject, TProperties, Static } from '@sidewinder/contract'
+import { TObject, TProperties, Static } from './types'
 import { Cursor } from './cursor'
 import { Encoder } from './encoder'
 import { matchArguments } from './arguments'

@@ -28,7 +28,7 @@ THE SOFTWARE.
 
 import * as Mongo from 'mongodb'
 import { Validation, ValidateFunction } from '@sidewinder/validation'
-import { Type, TObject }                from '@sidewinder/contract'
+import { Type, TObject }                from '@sidewinder/types'
 
 export class EncoderValidationError extends Error {
     constructor(public readonly errors?: any) {
