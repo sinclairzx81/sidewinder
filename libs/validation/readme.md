@@ -1,10 +1,10 @@
 <div align='center'>
 
-<h1>Sidewinder Validate</h1>
+<h1>Sidewinder Validation</h1>
 
-<p>JSON schema validation</p>
+<p>Provides validation of Sidewinder Types</p>
 
-[<img src="https://img.shields.io/npm/v/@sidewinder/mongo?label=%40sidewinder%2Fmongo">](https://www.npmjs.com/package/@sidewinder/mongo)
+[<img src="https://img.shields.io/npm/v/@sidewinder/validation?label=%40sidewinder%2Fvalidation">](https://www.npmjs.com/package/@sidewinder/validation)
 
 </div>
 

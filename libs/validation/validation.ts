@@ -67,19 +67,19 @@ export namespace Validation {
             default: return false
         }
     }
+    const validator = addFormats(new Ajv({}), [ 
+        'date-time', 'time', 'date', 'email', 'hostname', 'ipv4', 
+        'ipv6', 'uri', 'uri-reference', 'uuid', 'uri-template', 
+        'json-pointer', 'relative-json-pointer', 'regex'
+    ])
+    .addKeyword({ keyword: 'specialized', type: 'object', validate: validateSpecialized })
+    .addKeyword('maxByteLength')
+    .addKeyword('minByteLength')
+    .addKeyword('modifier')
+    .addKeyword('kind')
 
     export function compile<T extends TSchema>(schema: T, additionalSchema: TSchema[] = []): ValidateFunction<Static<T>> {
-        const validator = addFormats(new Ajv({}), [ 
-            'date-time', 'time', 'date', 'email', 'hostname', 'ipv4', 
-            'ipv6', 'uri', 'uri-reference', 'uuid', 'uri-template', 
-            'json-pointer', 'relative-json-pointer', 'regex'
-        ])
-        .addKeyword({ keyword: 'specialized', type: 'object', validate: validateSpecialized })
-        .addKeyword('maxByteLength')
-        .addKeyword('minByteLength')
-        .addKeyword('modifier')
-        .addKeyword('kind')
-        .addSchema(additionalSchema)
-        return validator.compile(schema)
+        const context = validator.addSchema(additionalSchema)
+        return context.compile(schema)
     }
 }
