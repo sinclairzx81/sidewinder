@@ -56,13 +56,21 @@ export class Validator<T extends TSchema> {
 
     /** Check if the given data conforms to this validators schema. */
     public check(data: unknown): ValidateResult {
-        const result = this.validateFunction(data)
-        if(!result) {
-            const errors = this.validateFunction.errors ? this.validateFunction.errors : []
-            const errorText = this.context.errorsText(errors)
-            return { success: false, errors, errorText }
-        } else {
-            return { success: true, errors: [], errorText: '' }
+        try {
+            const result = this.validateFunction(data)
+            if(!result) {
+                const errors = this.validateFunction.errors ? this.validateFunction.errors : []
+                const errorText = this.context.errorsText(errors)
+                return { success: false, errors, errorText }
+            } else {
+                return { success: true, errors: [], errorText: '' }
+            }
+        } catch(error) {
+            if(error instanceof Error) {
+                return { success: false, errors: [error], errorText: error.message }
+            } else {
+                return { success: false, errors: [], errorText: 'Unknown error validating schema'}
+            }
         }
     }
 

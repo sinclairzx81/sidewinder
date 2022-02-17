@@ -1,5 +1,5 @@
 import { Type } from '@sidewinder/types'
-import { ok, fail } from './validate'
+import { id, ok, fail } from './validate'
 
 describe("types/Namespace", () => {
 
@@ -7,7 +7,7 @@ describe("types/Namespace", () => {
         const Vector2 = Type.Object({ x: Type.Number(), y: Type.Number() })
         const Vector3 = Type.Object({ x: Type.Number(), y: Type.Number(), z: Type.Number() })
         const Vector4 = Type.Object({ x: Type.Number(), y: Type.Number(), z: Type.Number(), w: Type.Number() })
-        const Math3D = Type.Namespace({ Vector2, Vector3, Vector4 }, { $id: 'Math3D' })
+        const Math3D = Type.Namespace({ Vector2, Vector3, Vector4 }, { $id: id() })
         const Vertex = Type.Object({
             position: Type.Ref(Math3D, 'Vector4'),
             normal: Type.Ref(Math3D, 'Vector3'),
@@ -25,7 +25,7 @@ describe("types/Namespace", () => {
         const Vector2 = Type.Object({ x: Type.Number(), y: Type.Number() })
         const Vector3 = Type.Object({ x: Type.Number(), y: Type.Number(), z: Type.Number() })
         const Vector4 = Type.Object({ x: Type.Number(), y: Type.Number(), z: Type.Number(), w: Type.Number() })
-        const Math3D = Type.Namespace({ Vector2, Vector3, Vector4 }, { $id: 'Math3D' })
+        const Math3D = Type.Namespace({ Vector2, Vector3, Vector4 }, { $id: id() })
         const Vertex = Type.Object({
             position: Type.Ref(Math3D, 'Vector4'),
             normal: Type.Ref(Math3D, 'Vector3'),
@@ -42,7 +42,7 @@ describe("types/Namespace", () => {
         const Vector2 = Type.Object({ x: Type.Number(), y: Type.Number() })
         const Vector3 = Type.Object({ x: Type.Number(), y: Type.Number(), z: Type.Number() })
         const Vector4 = Type.Object({ x: Type.Number(), y: Type.Number(), z: Type.Number(), w: Type.Number() })
-        const Math3D = Type.Namespace({ Vector2, Vector3, Vector4 }, { $id: 'Math3D' })
+        const Math3D = Type.Namespace({ Vector2, Vector3, Vector4 }, { $id: id() })
         const Vertex = Type.Object({
             position: Type.Ref(Math3D, 'Vector4'),
             normal:  Type.Ref(Math3D, 'Vector3'),
@@ -53,22 +53,5 @@ describe("types/Namespace", () => {
             normal:   { x: 1, y: 1, z: 1 },
             uv:       { x: 1, y: 'not a number'},
         }, [Math3D])
-    })
-
-    it('Should not validate when Box has not been registered with validator (AJV)', () => {
-        const Vector2 = Type.Object({ x: Type.Number(), y: Type.Number() })
-        const Vector3 = Type.Object({ x: Type.Number(), y: Type.Number(), z: Type.Number() })
-        const Vector4 = Type.Object({ x: Type.Number(), y: Type.Number(), z: Type.Number(), w: Type.Number() })
-        const Math3D = Type.Namespace({ Vector2, Vector3, Vector4 }, { $id: 'Math3D' })
-        const Vertex = Type.Object({
-            position: Type.Ref(Math3D, 'Vector4'),
-            normal:   Type.Ref(Math3D, 'Vector3'),
-            uv:       Type.Ref(Math3D, 'Vector2'),
-        })
-        fail(Vertex, {
-            position: { x: 1, y: 1, z: 1, w: 1 },
-            normal:   { x: 1, y: 1, z: 1 },
-            uv:       { x: 1, y: 1},
-        }, [])
     })
 })

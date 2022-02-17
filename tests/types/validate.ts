@@ -1,5 +1,10 @@
 import { Validator } from '@sidewinder/validation'
 import { TSchema } from '@sidewinder/types'
+import { v4 } from 'uuid'
+
+export function id() {
+    return v4()
+}
 
 export function ok<T extends TSchema>(type: T, data: unknown, additional: any[] = []) {
     const validator = new Validator(type, additional as any[])

@@ -82,7 +82,7 @@ export namespace Compiler {
     export function errorsText(errors: ErrorObject[]) {
         return validator.errorsText(errors)
     }
-
+    
     /** Compiles the given schema and returns a validate function. */
     export function compile<T extends TSchema>(schema: T, additionalSchema: TSchema[] = []): [Ajv, ValidateFunction<Static<T>>] {
         const context = validator.addSchema(additionalSchema)

@@ -1,5 +1,5 @@
 import { Type }     from '@sidewinder/types'
-import { ok, fail } from './validate'
+import { id, ok, fail } from './validate'
 
 describe('types/Ref', () => {
 
@@ -8,7 +8,7 @@ describe('types/Ref', () => {
             x: Type.Number(),
             y: Type.Number(),
             z: Type.Number()
-        }, { $id: 'T' })
+        }, { $id: id() })
         const R = Type.Ref(T)
         ok(R, { 
             x: 1, 
@@ -22,7 +22,7 @@ describe('types/Ref', () => {
             x: Type.Number(),
             y: Type.Number(),
             z: Type.Number()
-        }, { $id: 'T' })
+        }, { $id: id() })
         const R = Type.Ref(T)
         fail(R, { 
             x: 1, 
@@ -43,45 +43,44 @@ describe('types/Ref', () => {
         }
         throw Error('Expected throw')
     })
-
-    it('Should not validate when not adding additional schema', () => {
-        const T = Type.Object({
-            x: Type.Number(),
-            y: Type.Number(),
-            z: Type.Number()
-        }, { $id: 'T' })
-        const R = Type.Ref(T)
-        fail(R, { 
-            x: 1, 
-            y: 2, 
-            z: 3 
-        }, [])
-    })
-
-    it('Should validate as a Box, and as a Ref', () => {
+    
+    it('Should validate as a Namespace, and as a Ref (R1)', () => {
         const Vertex = Type.Object({
             x: Type.Number(),
             y: Type.Number(),
             z: Type.Number()
-        }, { $id: 'Vertex' })
+        }, { $id: id() })
         
-        const Box = Type.Namespace({ 
+        const Namespace = Type.Namespace({ 
             Vertex 
-        }, { $id: 'Box' })
+        }, { $id: id() })
         
         const R1 = Type.Ref(Vertex)
-        
-        const R2 = Type.Ref(Box, 'Vertex')
 
         ok(R1, { 
             x: 1, 
             y: 2, 
             z: 3 
-        }, [Box])
+        }, [Namespace])
+    })
+
+    it('Should validate as a Namespace, and as a Ref (R2)', () => {
+        const Vertex = Type.Object({
+            x: Type.Number(),
+            y: Type.Number(),
+            z: Type.Number()
+        }, { $id: id() })
+        
+        const Namespace = Type.Namespace({ 
+            Vertex 
+        }, { $id: id() })
+        
+        const R2 = Type.Ref(Namespace, 'Vertex')
+
         ok(R2, { 
             x: 1, 
             y: 2, 
             z: 3 
-        }, [Box])
+        }, [Namespace])
     })
 })
