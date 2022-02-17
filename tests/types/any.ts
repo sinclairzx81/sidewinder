@@ -1,7 +1,7 @@
 import { Type } from '@sidewinder/types'
 import { ok, fail } from './validate'
 
-describe("Any", () => {
+describe("types/Any", () => {
     it('Should validate number', () => {
         const T = Type.Any()
         ok(T, 1)

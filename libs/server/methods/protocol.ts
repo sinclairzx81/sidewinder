@@ -27,7 +27,7 @@ THE SOFTWARE.
 ---------------------------------------------------------------------------*/
 
 import { Static, TSchema, Type } from '@sidewinder/contract'
-import { Compiler }            from '@sidewinder/validation'
+import { Validator }             from '@sidewinder/validation'
 
 // -------------------------------------------------------------------------
 // Protocol Types
@@ -88,7 +88,7 @@ export interface DecodedRpcResponse {
 export type DecodeAnyResult = DecodedRpcRequest | DecodedRpcResponse
 
 export namespace RpcProtocol {
-    const validateRequestOrResponse = Compiler.compile(RpcRequestOrResponse)
+    const validateRequestOrResponse = new Validator(RpcRequestOrResponse)
 
     export function encodeRequest(id: string | undefined, method: string, params: unknown[]): any {
         return { id, jsonrpc: '2.0', method, params }
@@ -104,8 +104,8 @@ export namespace RpcProtocol {
     
     export function decodeAny(request: unknown): DecodeAnyResult | undefined {
         const object = request as RpcRequestOrResponse
-        const result = validateRequestOrResponse(object)
-        if(!result) return undefined
+        const result = validateRequestOrResponse.check(object)
+        if(!result.success) return undefined
         return ((<any>object)['method'])
             ? { type: 'request',  data: object as RpcRequest }
             : { type: 'response', data: object as RpcResponse }

@@ -1,7 +1,7 @@
 import { Type }     from '@sidewinder/types'
 import { ok, fail } from './validate'
 
-describe('Record', () => {
+describe('types/Record', () => {
 
     it('Should validate when all property values are numbers', () => {
         const T = Type.Record(Type.String(), Type.Number())

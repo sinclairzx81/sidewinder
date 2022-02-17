@@ -2,7 +2,7 @@ import { Type }     from '@sidewinder/types'
 import { ok, fail } from './validate'
 import { strictEqual } from 'assert'
 
-describe('Pick', () => {
+describe('types/Pick', () => {
     it('Should pick properties from the source schema', () => {
         const Vector3 = Type.Object({
             x: Type.Number(),

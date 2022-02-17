@@ -1,7 +1,7 @@
 import { Type } from '@sidewinder/types'
 import { ok, fail } from './validate'
 
-describe('Intersect', () => {
+describe('types/Intersect', () => {
 
     it('Should intersect two objects', () => {
         const A = Type.Object({ a: Type.String() })

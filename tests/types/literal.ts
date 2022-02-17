@@ -1,7 +1,7 @@
 import { Type }     from '@sidewinder/types'
 import { ok, fail } from './validate'
 
-describe("Literal", () => {
+describe("types/Literal", () => {
     it('Should validate literal number', () => {
         const T = Type.Literal(42)
         ok(T, 42)

@@ -1,8 +1,8 @@
-import { deepStrictEqual, strictEqual } from 'assert'
+import { strictEqual } from 'assert'
 import { Type }     from '@sidewinder/types'
-import { ok, fail } from './validate'
+import { ok } from './validate'
 
-describe('Optional', () => {
+describe('types/Optional', () => {
     it('Should validate object with optional', () => {
         const T = Type.Object({
             a: Type.Optional(Type.String()),

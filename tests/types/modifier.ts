@@ -1,7 +1,7 @@
 import { Type }    from '@sidewinder/types'
 import * as assert from 'assert'
 
-describe('Modifier', () => {
+describe('types/Modifier', () => {
     it('Omit modifier', () => {
         const T = Type.Object({
             a: Type.Readonly(Type.String()),

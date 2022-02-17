@@ -2,7 +2,7 @@ import { Type }     from '@sidewinder/types'
 import { ok, fail } from './validate'
 import { strictEqual } from 'assert'
 
-describe('Required', () => {
+describe('types/Required', () => {
 
     it('Should convert a partial object into a required object', () => {
         const A = Type.Object({

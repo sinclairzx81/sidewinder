@@ -1,8 +1,7 @@
 import { Type }     from '@sidewinder/types'
-import { isRegExp } from 'util'
 import { ok, fail } from './validate'
 
-describe('Tuple', () => {
+describe('types/Tuple', () => {
 
     it('Should validate tuple of [string, number]', () => {
         const A = Type.String()

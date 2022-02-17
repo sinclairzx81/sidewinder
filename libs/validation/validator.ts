@@ -26,8 +26,10 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
+import Ajv from 'ajv'
 import { TSchema } from '@sidewinder/types'
 import { Compiler, ValidateFunction } from './compiler'
+
 
 /** The Error type thrown on validator assert. */
 export class ValidateError extends Error {
@@ -39,13 +41,17 @@ export class ValidateError extends Error {
 export interface ValidateResult {
     success: boolean
     errors: any[]
+    errorText: string
 }
 
 /** Provides runtime validation for Sidewinder Types */
 export class Validator<T extends TSchema> {
+    private readonly context: Ajv
     private readonly validateFunction: ValidateFunction<unknown>
-    constructor(private readonly schema: T, private readonly additionalSchema: TSchema[] = []) { 
-        this.validateFunction = Compiler.compile(this.schema, this.additionalSchema)
+    constructor(private readonly schema: T, private readonly additionalSchema: TSchema[] = []) {
+        const [context, validateFunction] = Compiler.compile(this.schema, this.additionalSchema)
+        this.validateFunction = validateFunction
+        this.context = context
     }
 
     /** Check if the given data conforms to this validators schema. */
@@ -53,9 +59,10 @@ export class Validator<T extends TSchema> {
         const result = this.validateFunction(data)
         if(!result) {
             const errors = this.validateFunction.errors ? this.validateFunction.errors : []
-            return { success: false, errors }
+            const errorText = this.context.errorsText(errors)
+            return { success: false, errors, errorText }
         } else {
-            return { success: true, errors: [] }
+            return { success: true, errors: [], errorText: '' }
         }
     }
 

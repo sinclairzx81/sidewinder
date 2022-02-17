@@ -2,7 +2,7 @@ import { Type }        from '@sidewinder/types'
 import { ok, fail }    from './validate'
 import { strictEqual } from 'assert'
 
-describe("KeyOf", () => {
+describe("types/KeyOf", () => {
     it('Should validate with all object keys as a kind of union', () => {
         const T = Type.KeyOf(Type.Object({
             x: Type.Number(),

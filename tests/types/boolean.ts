@@ -1,7 +1,7 @@
 import { Type } from '@sidewinder/types'
 import { ok, fail } from './validate'
 
-describe("Boolean", () => {
+describe("types/Boolean", () => {
 
     it('Should validate a boolean', () => {
         const T = Type.Boolean()

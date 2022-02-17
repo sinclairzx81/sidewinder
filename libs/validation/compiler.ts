@@ -25,13 +25,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
+import Ajv, { ErrorObject, ValidateFunction } from 'ajv/dist/2019'
+import { TSchema, Static, TUint8Array }       from '@sidewinder/types'
+import addFormats                             from 'ajv-formats'
+export { ValidateFunction }                   from 'ajv'
 
-import { TSchema, Static, TUint8Array } from '@sidewinder/types'
-import addFormats                       from 'ajv-formats'
-import Ajv, { ValidateFunction }        from 'ajv'
-export { ValidateFunction }             from 'ajv'
-
-/** Compiles TSchema types into a Ajv ValidateFunction */
+/** Sidewinder Schema Compiler */
 export namespace Compiler {
 
     /** Validates for UInt8Array types. */
@@ -79,9 +78,14 @@ export namespace Compiler {
     .addKeyword('modifier')
     .addKeyword('kind')
     
+    /** Formats errors given by the ValidateFunction on validation fail. */
+    export function errorsText(errors: ErrorObject[]) {
+        return validator.errorsText(errors)
+    }
+
     /** Compiles the given schema and returns a validate function. */
-    export function compile<T extends TSchema>(schema: T, additionalSchema: TSchema[] = []): ValidateFunction<Static<T>> {
+    export function compile<T extends TSchema>(schema: T, additionalSchema: TSchema[] = []): [Ajv, ValidateFunction<Static<T>>] {
         const context = validator.addSchema(additionalSchema)
-        return context.compile(schema)
+        return [context, context.compile(schema)]
     }
 }

@@ -1,7 +1,7 @@
 import { Type }     from '@sidewinder/types'
 import { ok, fail } from './validate'
 
-describe('RegEx', () => {
+describe('types/RegEx', () => {
 
     it('Should validate numeric value', () => {
         const T = Type.RegEx(/[012345]/)

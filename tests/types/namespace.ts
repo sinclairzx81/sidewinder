@@ -1,7 +1,7 @@
 import { Type } from '@sidewinder/types'
 import { ok, fail } from './validate'
 
-describe("Namespace", () => {
+describe("types/Namespace", () => {
 
     it('Should should validate Vertex structure', () => {
         const Vector2 = Type.Object({ x: Type.Number(), y: Type.Number() })

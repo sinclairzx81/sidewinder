@@ -2,7 +2,7 @@ import { Type }     from '@sidewinder/types'
 import { ok, fail } from './validate'
 import { strictEqual } from 'assert'
 
-describe('ReadonlyOptional', () => {
+describe('types/ReadonlyOptional', () => {
     it('Should validate object with optional', () => {
         const T = Type.Object({
             a: Type.ReadonlyOptional(Type.String()),

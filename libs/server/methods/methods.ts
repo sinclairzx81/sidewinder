@@ -30,7 +30,6 @@ import { Exception, Type, TFunction } from '@sidewinder/contract'
 import { Validator } from '@sidewinder/validation'
 import { RpcProtocol, RpcErrorCode, RpcRequest, RpcResponse } from './protocol'
 
-
 export interface ExecuteResultWithResponse {
     type: 'result-with-response'
     result: unknown
