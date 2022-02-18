@@ -3,7 +3,7 @@ import { Type }     from '@sidewinder/types'
 import * as assert from '../assert/index'
 
 describe('validation/Validator', () => {
-
+    
     it('should validate data with assert', () => {
         const T = Type.String()
         const V = new Validator(T)

@@ -2,7 +2,7 @@
 
 <h1>Sidewinder Validation</h1>
 
-<p>Provides validation of Sidewinder Types</p>
+<p>Validation of Sidewinder Types</p>
 
 [<img src="https://img.shields.io/npm/v/@sidewinder/validation?label=%40sidewinder%2Fvalidation">](https://www.npmjs.com/package/@sidewinder/validation)
 
@@ -10,6 +10,6 @@
 
 ## Overview
 
-This package is a shared JSON schema validation package for 
+This package is a JSON schema validator 
 
 License MIT
