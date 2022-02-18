@@ -18,7 +18,7 @@
 
 ## Overview
 
-Sidewinder is a strict and fully typed Micro Service framework developed for Node. It is designed for architectures where many backend services need to communicate using a strict set of protocols as well as maintain a strict contractual agreement on how they communicate. It provides this functionality by offering a runtime type system based on JSON schema. It uses these schemas to statically assert the correctness of Client Server interactions in TypeScript as well as to runtime assert data exchanged between systems over the wire.
+Sidewinder is a strict and fully typed Micro Service framework developed for Node. It is designed for architectures where many backend services need to communicate using a strict set of protocols as well as maintain a strict contractual agreement on how they should communicate. It provides this functionality by offering a runtime type system based on JSON schema. It uses these schemas to statically assert the correctness of Client Server interactions in TypeScript as well as to runtime assert data exchanged between systems over the wire.
 
 License MIT
 
