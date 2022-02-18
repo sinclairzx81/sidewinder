@@ -27,7 +27,7 @@ THE SOFTWARE.
 ---------------------------------------------------------------------------*/
 
 import { Exception, Type, TFunction } from '@sidewinder/contract'
-import { Validator } from '@sidewinder/validation'
+import { Validator } from '@sidewinder/validator'
 import { RpcProtocol, RpcErrorCode, RpcRequest, RpcResponse } from './protocol'
 
 export interface ExecuteResultWithResponse {

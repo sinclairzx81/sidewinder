@@ -26,9 +26,9 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-import { Static, SchemaOptions, TObject, TypeBuilder } from '@sidewinder/types'
+import { Static, SchemaOptions, TObject, TypeBuilder } from '@sidewinder/type'
 import { matchArguments } from './arguments'
-export * from '@sidewinder/types'
+export * from '@sidewinder/type'
 
 export type TCollections = Record<string, TObject>
 export type TIndices = Record<string, any>

@@ -15,9 +15,16 @@ Sidewinder Contracts are JSON Schema interface schematics that describe callable
 Licence MIT
 
 ## Contents
-
+- [Overview](#Overview)
+- [Install](#Install)
 - [Contracts](#Contracts)
 - [Formats](#Formats)
+
+## Install
+
+```bash
+$ npm install @sidewinder/contract
+```
 
 ## Contracts
 

@@ -27,7 +27,7 @@ THE SOFTWARE.
 ---------------------------------------------------------------------------*/
 
 import * as Mongo from 'mongodb'
-import { TObject } from '@sidewinder/types'
+import { TObject } from '@sidewinder/type'
 
 export class Encoder {
     

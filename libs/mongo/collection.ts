@@ -27,7 +27,7 @@ THE SOFTWARE.
 ---------------------------------------------------------------------------*/
 
 import * as Mongo from 'mongodb'
-import { Validator } from '@sidewinder/validation'
+import { Validator } from '@sidewinder/validator'
 import { Type, TObject, TPartial, TProperties, Static } from './types'
 import { Cursor } from './cursor'
 import { Encoder } from './encoder'

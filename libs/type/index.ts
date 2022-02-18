@@ -1,6 +1,6 @@
 /*--------------------------------------------------------------------------
 
-@sidewinder/contract
+@sidewinder/type
 
 The MIT License (MIT)
 
@@ -26,5 +26,5 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-export * from './exception'
-export * from './type'
+export * from './default'
+export * from './types'

@@ -21,7 +21,7 @@ async function clientTest() {
 }
 clientTest()
 
-import { Type } from '@sidewinder/types'
+import { Type } from '@sidewinder/type'
 
 const Z = Type.Uint8Array()
 

@@ -27,7 +27,7 @@ THE SOFTWARE.
 ---------------------------------------------------------------------------*/
 
 import { Static, TSchema, Type } from '@sidewinder/contract'
-import { Validator }             from '@sidewinder/validation'
+import { Validator }             from '@sidewinder/validator'
 
 // -------------------------------------------------------------------------
 // Protocol Types
