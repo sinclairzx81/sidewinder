@@ -1,4 +1,4 @@
-import { Validator } from '@sidewinder/validation'
+import { Validator } from '@sidewinder/validator'
 import { Type }     from '@sidewinder/type'
 import * as assert from '../assert/index'
 
