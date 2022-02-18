@@ -106,7 +106,7 @@ export class Host {
     public use(path: string, service: WebSocketService<any>): void
 
     /** Uses a WebService to the specified path  */
-    public use(path: string, service: WebService<any>): void
+    public use(path: string, service: WebService<any, any>): void
 
     /** Uses express middleware on the specified path  */
     public use(path: string, service: RequestHandler): void
