@@ -36,6 +36,8 @@ License MIT
 
 ## Install
 
+Sidewinder consists of several distinct packages
+
 ```bash
 $ npm install @sidewinder/type       # JSON Schema type system
 $ npm install @sidewinder/validate   # Runtime validation for types.
