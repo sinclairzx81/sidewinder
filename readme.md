@@ -28,7 +28,7 @@ License MIT
 - [Install](#Install)
 - [Example](#Example)
 - [Types](libs/type/readme.md)
-- [Validation](libs/validation/readme.md)
+- [Validation](libs/validate/readme.md)
 - [Contracts](libs/contract/readme.md)
 - [Servers](libs/server/readme.md)
 - [Clients](libs/client/readme.md)
