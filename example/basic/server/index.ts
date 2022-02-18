@@ -20,3 +20,9 @@ async function clientTest() {
     console.log(result)
 }
 clientTest()
+
+import { Type } from '@sidewinder/types'
+
+const Z = Type.Uint8Array()
+
+console.log(JSON.stringify(Z, null, 2))
