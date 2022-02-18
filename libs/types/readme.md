@@ -33,7 +33,7 @@ License MIT
 
 ## Usage
 
-The following demonstrates TypeBox's general usage.
+The following demonstrates general usage.
 
 ```typescript
 
@@ -108,11 +108,11 @@ function receive(value: T) {         // ... as a Type
 
 ## Types
 
-The following table outlines the TypeBox mappings between TypeScript and JSON schema.
+The following table outlines the Sidewinder Type mappings between TypeScript and JSON schema.
 
 ```typescript
 ┌────────────────────────────────┬─────────────────────────────┬────────────────────────────────┐
-│ TypeBox                        │ TypeScript                  │ JSON Schema                    │
+│ Sidewinder Type                │ TypeScript                  │ JSON Schema                    │
 │                                │                             │                                │
 ├────────────────────────────────┼─────────────────────────────┼────────────────────────────────┤
 │ const T = Type.Any()           │ type T = any                │ const T = { }                  │
@@ -308,11 +308,11 @@ The following table outlines the TypeBox mappings between TypeScript and JSON sc
 
 ### Modifiers
 
-TypeBox provides modifiers that can be applied to an objects properties. This allows for `optional` and `readonly` to be applied to that property. The following table illustates how they map between TypeScript and JSON Schema.
+Sidewinder Types provides modifiers that can be applied to an objects properties. This allows for `optional` and `readonly` to be applied to that property. The following table illustates how they map between TypeScript and JSON Schema.
 
 ```typescript
 ┌────────────────────────────────┬─────────────────────────────┬────────────────────────────────┐
-│ TypeBox                        │ TypeScript                  │ JSON Schema                    │
+│ Sidewinder Type                │ TypeScript                  │ JSON Schema                    │
 │                                │                             │                                │
 ├────────────────────────────────┼─────────────────────────────┼────────────────────────────────┤
 │ const T = Type.Object({        │ type T = {                  │ const T = {                    │
@@ -466,7 +466,7 @@ const Vertex = Type.Object({                    //  const Vertex = {
 
 ### Recursive Types
 
-Recursive types can be created with the `Type.Rec(...)` function. The following creates a `Node` type that contains an array of inner Nodes. Note that due to current restrictions on TypeScript inference, it is not possible for TypeBox to statically infer for recursive types. TypeBox will infer the inner recursive type as `any`.
+Recursive types can be created with the `Type.Rec(...)` function. The following creates a `Node` type that contains an array of inner Nodes. Note that due to current restrictions on TypeScript inference, it is not possible for Sidewinder Types to statically infer for recursive types. Sidewinder Types will infer the inner recursive type as `any`.
 
 ```typescript
 const Node = Type.Rec(Self => Type.Object({    // const Node = {
@@ -505,11 +505,11 @@ function visit(node: Node) {
 
 ### Extended Types
 
-In addition to JSON schema types, TypeBox provides several extended types that allow for `function` and `constructor` types to be composed. These additional types are not valid JSON Schema and will not validate using typical JSON Schema validation. However, these types can be used to frame JSON schema and describe callable interfaces that may receive JSON validated data. These types are as follows.
+In addition to JSON schema types, Sidewinder Types provides several extended types that allow for `function` and `constructor` types to be composed. These additional types are not valid JSON Schema and will not validate using typical JSON Schema validation. However, these types can be used to frame JSON schema and describe callable interfaces that may receive JSON validated data. These types are as follows.
 
 ```typescript
 ┌────────────────────────────────┬─────────────────────────────┬────────────────────────────────┐
-│ TypeBox                        │ TypeScript                  │ Extended Schema                │
+│ Sidewinder Type                │ TypeScript                  │ Extended Schema                │
 │                                │                             │                                │
 ├────────────────────────────────┼─────────────────────────────┼────────────────────────────────┤
 │ const T = Type.Constructor([   │ type T = new (              │ const T = {                    │
