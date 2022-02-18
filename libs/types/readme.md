@@ -13,9 +13,7 @@
 
 ## Overview
 
-Sidewinder Types is an extended version of the TypeBox type library with extended built in support for `Uint8Array` and `void`. It is both JSON Schema type builder and static type inference library TypeScript. For additional information on TypeBox see the official documentation located [here](https://github.com/sinclairzx81/typebox). 
-
-For validation of the schemas built with this library, refer to the Sidewinder Validation package located [here](../validation/readme.md)
+Sidewinder Types is an extended version of the TypeBox type library. It provides built in support for `Uint8Array`. It also encodes serializable runtime reflection data allowing remote systems to introspect and reconstruct associative types when schemas are exchanged over the wire. For additional information on TypeBox see the official documentation located [here](https://github.com/sinclairzx81/typebox). For validation of the schemas built with this library, refer to the Sidewinder Validation package located [here](../validation/readme.md)
 
 License MIT
 
