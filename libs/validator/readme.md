@@ -1,10 +1,10 @@
 <div align='center'>
 
-<h1>Sidewinder Validation</h1>
+<h1>Sidewinder Validator</h1>
 
 <p>Validation of Sidewinder Types</p>
 
-[<img src="https://img.shields.io/npm/v/@sidewinder/validation?label=%40sidewinder%2Fvalidation">](https://www.npmjs.com/package/@sidewinder/validation)
+[<img src="https://img.shields.io/npm/v/@sidewinder/validator?label=%40sidewinder%2Fvalidator">](https://www.npmjs.com/package/@sidewinder/validator)
 
 </div>
 
