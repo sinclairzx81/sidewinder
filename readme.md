@@ -27,12 +27,14 @@ License MIT
 - [Overview](#Overview)
 - [Install](#Install)
 - [Example](#Example)
+- [Types](libs/types/readme.md)
+- [Validation](libs/validation/readme.md)
+- [Contracts](libs/contract/readme.md)
+- [Servers](libs/server/readme.md)
+- [Clients](libs/client/readme.md)
+- [Mongo](libs/mongo/readme.md)
 - [TypeScript](#TypeScript)
 - [Reflection](#Reflection)
-- [Contract](libs/contract/readme.md)
-- [Server](libs/server/readme.md)
-- [Client](libs/client/readme.md)
-- [Mongo](libs/mongo/readme.md)
 
 ## Install
 
