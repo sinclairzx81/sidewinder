@@ -2,7 +2,7 @@
 
 <h1>Sidewinder</h1>
 
-<p>Web Service Framework for Node and Browsers</p>
+<p>Micro Service Framework for Node</p>
 
 
 <img src='https://github.com/sinclairzx81/sidewinder/blob/master/build/assets/sidewinder.png?raw=true' />
@@ -10,7 +10,7 @@
 <br />
 <br />
 
-[<img src='https://img.shields.io/npm/v/@sidewinder/contract?label=%40sidewinder%2Fcontract'>](https://www.npmjs.com/package/@sidewinder/contract) [<img src='https://img.shields.io/npm/v/@sidewinder/server?label=%40sidewinder%2Fserver'>](https://www.npmjs.com/package/@sidewinder/server) [<img src='https://img.shields.io/npm/v/@sidewinder/client?label=%40sidewinder%2Fclient'>](https://www.npmjs.com/package/@sidewinder/client)
+[<img src="https://img.shields.io/npm/v/@sidewinder/type?label=%40sidewinder%2Ftype">](https://www.npmjs.com/package/@sidewinder/type) [<img src="https://img.shields.io/npm/v/@sidewinder/validator?label=%40sidewinder%2Fvalidator">](https://www.npmjs.com/package/@sidewinder/validator) [<img src='https://img.shields.io/npm/v/@sidewinder/contract?label=%40sidewinder%2Fcontract'>](https://www.npmjs.com/package/@sidewinder/contract) [<img src='https://img.shields.io/npm/v/@sidewinder/server?label=%40sidewinder%2Fserver'>](https://www.npmjs.com/package/@sidewinder/server) [<img src='https://img.shields.io/npm/v/@sidewinder/client?label=%40sidewinder%2Fclient'>](https://www.npmjs.com/package/@sidewinder/client) [<img src="https://img.shields.io/npm/v/@sidewinder/mongo?label=%40sidewinder%2Fmongo">](https://www.npmjs.com/package/@sidewinder/mongo)
 
 
 
@@ -18,9 +18,7 @@
 
 ## Overview
 
-Sidewinder is a strict and fully typed NodeJS Web Service framework built for micro service architectures. It enables one to create schema validated RPC methods that can be trivially called over a network. It offers functionality for both unidirectional (http) and bidirectional (web socket) method calls; and provides this functionality under a unified service programming model.
-
-Sidewinder offers functionality similar to gRPC but uses [JSON RPC 2.0](https://www.jsonrpc.org/specification) for the wire protocol, [JSON Schema](https://json-schema.org/specification.html) for message validation and offers optional binary message encoding using [MessagePack](https://msgpack.org/index.html). It also provides excellent type inference support for TypeScript as well as JavaScript.
+Sidewinder is a strict and fully typed Micro Service framework developed for Node. It is designed for architectures where many backend services need to communicate using a strict set of protocols as well as maintain a strict contractual agreement on how they should communicate. It provides this functionality by offering a runtime type system based on JSON schema. It uses these schemas to statically assert the correctness of Client Server interactions in TypeScript as well as to runtime assert data exchanged between systems over the wire.
 
 License MIT
 
@@ -38,10 +36,15 @@ License MIT
 
 ## Install
 
+Sidewinder consists of several distinct packages
+
 ```bash
+$ npm install @sidewinder/type       # JSON Schema type system
+$ npm install @sidewinder/validate   # Runtime validation for types.
 $ npm install @sidewinder/contract   # Json Schema + Service Descriptions
 $ npm install @sidewinder/server     # Http and Web Socket Services
 $ npm install @sidewinder/client     # Http and Web Socket Clients
+$ npm install @sidewinder/mongo      # Mongo Driver typed with JSON Schema
 ```
 
 ## Example

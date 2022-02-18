@@ -2,7 +2,7 @@ import * as resolve from './resolve'
 import * as assert from '../assert/index'
 import { Collection } from '@sidewinder/mongo'
 
-describe('Database', () => {
+describe('mongo/Database', () => {
     it('should return an identifier as 24 character hexstring', resolve.database(database => {
         const id = database.id()
         assert.equal(typeof id, 'string')

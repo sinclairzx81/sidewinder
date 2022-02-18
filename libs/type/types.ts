@@ -1,6 +1,6 @@
 /*--------------------------------------------------------------------------
 
-@sidewinder/contract
+@sidewinder/type
 
 The MIT License (MIT)
 
@@ -106,58 +106,6 @@ export interface TConstructor<T extends TSchema[] = TSchema[], U extends TSchema
     type: 'constructor',
     parameters: T,
     returns: U
-}
-
-// --------------------------------------------------------------------------
-// TContract
-// --------------------------------------------------------------------------
-
-export type ContextMapping<T> = (clientId: string) => T
-
-export type ResolveContextMapping<T> = T extends ContextMapping<infer Context> ? Context : never
-
-export type ResolveContractFormat<T> = T extends 'json' | 'msgpack' ? T : 'json'
-
-export type ResolveContractInterface<T, R> = keyof T extends never ? R : T
-
-export type ResolveContractMethodParameters<T> = T extends (...args: any) => any ? Parameters<T> extends infer P ? P extends any[] ? P : [] : [] : []
-
-export type ResolveContractMethodReturnType<T> = T extends (...args: any) => any ? ReturnType<T> extends infer P ? P : unknown : unknown
-
-export interface TInterface {
-    [name: string]: TFunction<any[], any>
-}
-
-export interface ContractOptions {
-    /** The encoding format for this contract. The default is 'json' */
-    format?: 'json' | 'msgpack'
-    /** The server interface methods */
-    server?: TInterface
-    /** The client interface methods */
-    client?: TInterface
-}
-
-export interface TContract<Options extends ContractOptions = ContractOptions> extends TSchema {
-    $static: {
-        /** The encoding format for this contract. The default is 'json' */
-        format: ResolveContractFormat<Options['format']>
-        /** The server interface methods */
-        server: ResolveContractInterface<Options['server'], {}> extends infer Interface ? {
-            [K in keyof Interface]: Interface[K] extends TFunction<any[], any> ? Interface[K]['$static'] : never
-        } : {},
-        /** The client interface methods */
-        client: ResolveContractInterface<Options['client'], {}> extends infer Interface ? {
-            [K in keyof Interface]: Interface[K] extends TFunction<any[], any> ? Interface[K]['$static'] : never
-        }: {}
-    },
-    type: 'contract',
-    kind: 'Contract',
-    /** The encoding format for this contract. The default is 'json' */
-    format: ResolveContractFormat<Options['format']>,
-    /** The server interface methods */
-    server: ResolveContractInterface<Options['server'], {}>,
-    /** The client interface methods */
-    client: ResolveContractInterface<Options['client'], {}>,
 }
 
 // --------------------------------------------------------------------------
@@ -315,6 +263,8 @@ export interface TProperties { [key: string]: TSchema }
 
 export interface ObjectOptions extends SchemaOptions {
     additionalProperties?: boolean
+    minProperties?: number
+    maxProperties?: number
 }
 
 export interface TObject<T extends TProperties = TProperties> extends TSchema, ObjectOptions {
@@ -588,14 +538,6 @@ export class TypeBuilder {
     /** Creates a constructor type */
     public Constructor<T extends TSchema[], U extends TSchema>(parameters: [...T], returns: U, options: SchemaOptions = {}): TConstructor<T, U> {
         return this.Create({ ...options, kind: 'Constructor', type: 'constructor', parameters, returns })
-    }
-
-    /** Creates a contract type */
-    public Contract<Options extends ContractOptions>(options: Options): TContract<Options> {
-        const format = options.format || 'json'
-        const server = options.server || {}
-        const client = options.client || {}
-        return this.Create({ type: 'contract', kind: 'Contract', format, server, client })
     }
 
     /** Creates an enum type from a TypeScript enum */

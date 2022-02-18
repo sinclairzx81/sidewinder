@@ -37,17 +37,21 @@ const VERSION = '0.8.29'
 export async function build(target = 'target/build') {
     await clean()
     await Promise.all([
-        compilePackage(target, 'client',   VERSION, 'Sidewinder Client'),
-        compilePackage(target, 'contract', VERSION, 'Sidewinder Contract'),
-        compilePackage(target, 'mongo',    VERSION, 'Sidewinder Mongo'),
-        compilePackage(target, 'server',   VERSION, 'Sidewinder Server'),
-        compilePackage(target, 'shared',   VERSION, 'Sidewinder Shared'),
+        compilePackage(target, 'client',     VERSION, 'Sidewinder Client'),
+        compilePackage(target, 'contract',   VERSION, 'Sidewinder Contract'),
+        compilePackage(target, 'mongo',      VERSION, 'Sidewinder Mongo'),
+        compilePackage(target, 'server',     VERSION, 'Sidewinder Server'),
+        compilePackage(target, 'shared',     VERSION, 'Sidewinder Shared'),
+        compilePackage(target, 'type',       VERSION, 'Sidewinder Type'),
+        compilePackage(target, 'validator',  VERSION, 'Sidewinder Validator'),
     ])
     await packPackage(target, 'client')
     await packPackage(target, 'contract')
     await packPackage(target, 'mongo')
     await packPackage(target, 'server')
-    await packPackage(target, 'shared')    
+    await packPackage(target, 'shared')
+    await packPackage(target, 'type')
+    await packPackage(target, 'validator')   
 }
 
 // -------------------------------------------------------------
@@ -60,4 +64,6 @@ export async function publish(target = 'target/build') {
     await shell(`cd target/build/mongo && npm publish sidewinder-mongo-${VERSION}.tgz --access=public`)
     await shell(`cd target/build/server && npm publish sidewinder-server-${VERSION}.tgz --access=public`)
     await shell(`cd target/build/client && npm publish sidewinder-client-${VERSION}.tgz --access=public`)
+    await shell(`cd target/build/type && npm publish sidewinder-type-${VERSION}.tgz --access=public`)
+    await shell(`cd target/build/validator && npm publish sidewinder-validator-${VERSION}.tgz --access=public`)
 }

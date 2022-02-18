@@ -1,6 +1,6 @@
 /*--------------------------------------------------------------------------
 
-@sidewinder/mongo
+@sidewinder/validation
 
 The MIT License (MIT)
 
@@ -25,14 +25,15 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
+import Ajv, { ErrorObject, ValidateFunction } from 'ajv/dist/2019'
+import { TSchema, Static, TUint8Array }       from '@sidewinder/type'
+import addFormats                             from 'ajv-formats'
+export { ValidateFunction }                   from 'ajv'
 
-import { TSchema, Static, TUint8Array } from '@sidewinder/contract'
-import addFormats                       from 'ajv-formats'
-import Ajv, { ValidateFunction }        from 'ajv'
-export { ValidateFunction }             from 'ajv'
+/** Sidewinder Schema Compiler */
+export namespace Compiler {
 
-export namespace Schema {
-    /** Validates for Uint8Array. This is only possible for binary encoded formats */
+    /** Validates for UInt8Array types. */
     function validateUint8Array(data: any, parentSchema: any) {
         const schema = parentSchema       as TUint8Array
         const facade = validateUint8Array as any
@@ -54,7 +55,7 @@ export namespace Schema {
         return true
     }
 
-    /** Validates for undefined. This validation cannot work across network calls. */
+    /** Validates for undefined. */
     function validateUndefined(data: any, parentSchema: any) {
         return data === undefined
     }
@@ -66,7 +67,8 @@ export namespace Schema {
             default: return false
         }
     }
-    const validator = addFormats(new Ajv({}), [ 
+
+    const ajv = addFormats(new Ajv({}), [ 
         'date-time', 'time', 'date', 'email', 'hostname', 'ipv4', 
         'ipv6', 'uri', 'uri-reference', 'uuid', 'uri-template', 
         'json-pointer', 'relative-json-pointer', 'regex'
@@ -77,7 +79,18 @@ export namespace Schema {
     .addKeyword('modifier')
     .addKeyword('kind')
     
+    /** Formats errors given by the ValidateFunction on validation fail. */
+    export function errorsText(errors: ErrorObject[]) {
+        return ajv.errorsText(errors)
+    }
+
+    /** Adds the given schemas to the compiler */
+    export function addSchema(schemas: TSchema[]) {
+        ajv.addSchema(schemas)
+    }
+
+    /** Compiles the given schema and returns a validate function. */
     export function compile<T extends TSchema>(schema: T): ValidateFunction<Static<T>> {
-        return validator.compile(schema)
+        return ajv.compile(schema)
     }
 }

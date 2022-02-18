@@ -27,4 +27,4 @@ THE SOFTWARE.
 ---------------------------------------------------------------------------*/
 
 export * from './exception'
-export * from './types'
+export * from './type'

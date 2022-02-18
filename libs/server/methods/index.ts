@@ -27,5 +27,4 @@ THE SOFTWARE.
 ---------------------------------------------------------------------------*/
 
 export * from './methods'
-export * from './schema'
 export * from './protocol'

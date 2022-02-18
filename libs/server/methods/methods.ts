@@ -27,8 +27,8 @@ THE SOFTWARE.
 ---------------------------------------------------------------------------*/
 
 import { Exception, Type, TFunction } from '@sidewinder/contract'
+import { Validator } from '@sidewinder/validator'
 import { RpcProtocol, RpcErrorCode, RpcRequest, RpcResponse } from './protocol'
-import { Schema, ValidateFunction } from './schema'
 
 export interface ExecuteResultWithResponse {
     type: 'result-with-response'
@@ -60,9 +60,9 @@ export type ExecuteResponse =
 
 export interface RegisteredServerMethod {
     /** The parameter validator */
-    paramsValidator: ValidateFunction
+    paramsValidator: Validator<any>
     /** The return type validator */
-    returnValidator: ValidateFunction
+    returnValidator: Validator<any>
     /** The context mapping function */
     mapping: (clientId: string) => any
     /** The callback function */
@@ -84,8 +84,8 @@ export class ServiceMethods {
     }
 
     public register(method: MethodName, schema: TFunction<any[], any>, mapping: (clientId: string) => any, callback: Function) {
-        const paramsValidator = Schema.compile(Type.Tuple(schema.parameters))
-        const returnValidator = Schema.compile(schema.returns)
+        const paramsValidator = new Validator(Type.Tuple(schema.parameters))
+        const returnValidator = new Validator(schema.returns)
         this.methods.set(method, { paramsValidator, returnValidator, mapping, callback })
     }
     
@@ -155,13 +155,15 @@ export class ServiceMethods {
     }
 
     private validateMethodParameters(entry: RegisteredServerMethod, method: string, params: unknown[]) {
-        if (!entry.paramsValidator(params)) {
-            throw new Exception(`Parameters for method '${method}' are invalid`, RpcErrorCode.InvalidParams, entry.paramsValidator.errors)
+        const check = entry.paramsValidator.check(params)
+        if (!check.success) {
+            throw new Exception(`Parameters for method '${method}' are invalid`, RpcErrorCode.InvalidParams, check.success)
         }
     }
 
     private validateMethodReturnType(entry: RegisteredServerMethod, method: string, result: unknown) {
-        if (!entry.returnValidator(result)) {
+        const check = entry.returnValidator.check(result)
+        if (!check.success) {
             throw new Exception(`Method '${method}' returned an invalid result`, RpcErrorCode.InternalServerError, {})
         }
     }

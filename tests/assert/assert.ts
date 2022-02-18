@@ -14,7 +14,7 @@ export function delay(ms: number) {
 }
 
 /** Creates a random string value for read/write assertion tests */
-export function random(): string {
+export function randomUUID(): string {
     return uuid.v4()
 }
 
