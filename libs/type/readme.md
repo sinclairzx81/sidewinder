@@ -4,7 +4,7 @@
 
 <p>Runtime Type System based on JSON Schema</p>
 
-[<img src="https://img.shields.io/npm/v/@sidewinder/type?label=%40sidewinder%2Ftypes">](https://www.npmjs.com/package/@sidewinder/type)
+[<img src="https://img.shields.io/npm/v/@sidewinder/type?label=%40sidewinder%2Ftype">](https://www.npmjs.com/package/@sidewinder/type)
 
 </div>
 
