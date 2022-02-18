@@ -1,6 +1,6 @@
 /*--------------------------------------------------------------------------
 
-@sidewinder/validation
+@sidewinder/validator
 
 The MIT License (MIT)
 
