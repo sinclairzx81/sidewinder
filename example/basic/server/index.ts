@@ -1,16 +1,16 @@
 import { Delay } from '@sidewinder/async'
-import { SyncChannel } from '@sidewinder/channel'
+import { SyncChannel, Channel } from '@sidewinder/channel'
 
-const channel = new SyncChannel(12)
+const channel = new SyncChannel()
 
 let index = 0
 async function sender() {
     for(let i = 0; i < 20; i++) {
         const next = index++
-        await channel.send(next)
+        channel.send(next)
         console.log('sent', next)
     }
-    await channel.end()
+    channel.end()
 
 
 }

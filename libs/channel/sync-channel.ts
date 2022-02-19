@@ -46,7 +46,11 @@ interface EndMessage {
     type: MessageType.End
 }
 
-
+/** 
+ * An bounded synchronous channel. Values sent into this channel are buffered
+ * update to a given bound limit with the sender able to await for the receiver
+ * to process records in the buffer.
+ */
 export class SyncChannel<T = any> implements SyncSender<T>, Receiver<T> {
     private readonly interval: NodeJS.Timer
     private readonly barrier: Barrier

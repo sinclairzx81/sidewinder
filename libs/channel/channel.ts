@@ -47,7 +47,10 @@ interface EndMessage {
 }
 
 
-/** An sender and receiver channel */
+/** 
+ * An unbounded asynchronous channel. Values sent into this channel are buffered
+ * with no upper limit with senders unaware of the receivers throughput.
+ */
 export class Channel<T = any> implements Sender<T>, Receiver<T> {
     private readonly queue: Queue<Message<T>>
     private ended: boolean
