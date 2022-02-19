@@ -27,5 +27,5 @@ THE SOFTWARE.
 ---------------------------------------------------------------------------*/
 
 export * from './decoder'
-export * from './generate'
 export * from './encoder'
+export * from './generate'
