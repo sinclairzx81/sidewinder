@@ -1,73 +1,37 @@
-import { Generate, TokenEncoder, TokenDecoder } from '@sidewinder/token'
+import { Host, WebSocketService } from '@sidewinder/server'
+import { WebSocketClient } from '@sidewinder/client'
+import { Contract } from '../shared/index'
 import { Type } from '@sidewinder/type'
+import cors from 'cors'
 
-const Claims = Type.Object({
-    username: Type.String(),
+const service = new WebSocketService(Contract, Type.Object({
+    clientId: Type.String(),
+    name:     Type.String(),
     roles:    Type.Array(Type.String())
-})
+}))
 
-const publicKey = `
------BEGIN PUBLIC KEY-----
-MIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEAyM04n8MYx1Xm0VxvM3o2
-fRztCQKIUFZ8Apr8vYs3oiTqk8W+r5YbpV7wfB/uzwuz+YoXvYKaV/q+0bXvFfGM
-mnxHzx9UIIknhSMHKaHzvpnXlwfWSiZ1AeqTCoNVG8iygZmPasiUNe1C+a8+CobO
-xiMW48bo0Uq7Qwpg7z6qnNfADGwCNtbaBr4PZ/5ptfQKC4fhJCy8/Q5cJZQkQMn4
-8nGC5xzIMrmlRyadQFIEMjvv+mri2CQK6V2I6buaVlWbb6pj8xTVBYZftfR/Sbg4
-z6ETQ/K4nQrRvYD3VkjSKIwqdfAg1ccsnMrZgrI9eJI0As4KyzSvkqbPrIIRt5AX
-wQLEh3k61Mhh5CleGnuMk0HgFCPtLWwlWrhR7Qryl+UUaJqPsc38dNcjv72FL4OV
-ZHEVvuFyNNMisrwn7RhEL+xeQQdJy4djKJRpxJGy6P7wUrryxYdc/EYaU3qmnJD2
-9sCQ9q8jAYK3nDRtPLMAigHJ+sX50GiktQD1L+fUN+ldVN73gErt2WcR8iwswgu3
-WstF5gpzJKHY2k8K4stnu+uaogL5g9ZcX0JpunnpNRx/ssOeFFsHgA/PVYHMmhc6
-VlAQf6CAq1JSai7X+p6qBMDwTDy0Ej079308IYfb2Ndyod8e2F6uY4jcT96HVQ9/
-wvXG47bfJehUXIjuv9BRUUsCAwEAAQ==
------END PUBLIC KEY-----
-`
-const privateKey = `
------BEGIN RSA PRIVATE KEY-----
-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
+service.event('authorize', (clientId, request) => ({ clientId, name: 'dave', roles: ['admin'] }))
+service.event('connect',   (context) => console.log('server:connect', context))
+service.event('close',     (context) => console.log('server:close',   context))
 
-` 
-const encoder = new TokenEncoder(Claims, privateKey)
-const decoder = new TokenDecoder(Claims, publicKey)
+service.method('add',    (context, a, b) => a + b)
+service.method('sub',    (context, a, b) => a - b)
+service.method('mul',    (context, a, b) => a * b)
+service.method('div',    (context, a, b) => a / b)
 
-console.log(privateKey)
-console.log(publicKey)
 
-const token = encoder.encode({
-    username: 'dave',
-    roles:   ['admin', 'moderator']
-})
+const host = new Host()
+host.use(cors())
+host.use('/math', service)
 
-console.log(token)
-
+host.listen(5001).then(() => console.log('service running on port 5001'))
+async function clientTest() {
+    const client = new WebSocketClient(Contract, 'ws://localhost:5001/math')
+    const result = await client.call('add', 1, 2)
+    await client.call('add', 1, 2)
+    await client.call('add', 1, 2)
+    await client.call('add', 1, 2)
+    client.close()
+    console.log('RESULT', result)
+}
+clientTest().catch(error => console.log(error))
