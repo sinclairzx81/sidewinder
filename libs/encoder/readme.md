@@ -1,9 +1,9 @@
 <div align='center'>
 
-<h1>Sidewinder Encoding</h1>
+<h1>Sidewinder Encoder</h1>
 
-<p>Sidewinder Encoding Types</p>
+<p>Data Serialization for JSON and MessagePack</p>
 
-[<img src="https://img.shields.io/npm/v/@sidewinder/encoder?label=%40sidewinder%2Fencoding">](https://www.npmjs.com/package/@sidewinder/encoder)
+[<img src="https://img.shields.io/npm/v/@sidewinder/encoder?label=%40sidewinder%2Fencoder">](https://www.npmjs.com/package/@sidewinder/encoder)
 
 </div>
