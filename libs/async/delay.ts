@@ -28,7 +28,7 @@ THE SOFTWARE.
 
 export namespace Delay {
     /** Returns a promise that resolves after the given milliseconds have elapsed */
-    export function run(ms: number): Promise<void> {
+    export function wait(ms: number): Promise<void> {
         return new Promise<void>(resolve => setTimeout(resolve, ms))
     }
 }

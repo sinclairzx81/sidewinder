@@ -26,7 +26,7 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-import { Deferred, Barrier } from '@sidewinder/async'
+import { Deferred, Barrier, Delay } from '@sidewinder/async'
 import { SyncSender } from './sync-sender'
 import { Receiver } from './receiver'
 
@@ -48,18 +48,22 @@ interface EndMessage {
 
 
 export class SyncChannel<T = any> implements SyncSender<T>, Receiver<T> {
+    private readonly interval: NodeJS.Timer
     private readonly barrier: Barrier
     private readonly queue: Message<T> []
     private readonly recvs: Deferred<Message<T>>[]
     private ended: boolean
     
+    /** Creates this channel with the given bound. The default is 1. */
     constructor(private bounds: number = 1) { 
+        this.interval = setInterval(() => {}, 60_000)
         this.barrier = new Barrier(false)
         this.queue = []
         this.recvs = []
         this.ended = false
     }
 
+    /** Async iterator for this channel */
     public async *[Symbol.asyncIterator]() {
         while (true) {
             const next = await this.next()
@@ -103,18 +107,8 @@ export class SyncChannel<T = any> implements SyncSender<T>, Receiver<T> {
         }
     }
 
-    private async dequeueMessage(message: Message<T>) {
-        if(!this.atCapacity()) this.barrier.resume()
-        if(message.type === MessageType.Next) {
-            return Promise.resolve(message.value)
-        } else if(message.type === MessageType.Error) {
-            return Promise.reject(message.error)
-        } else {
-            return Promise.resolve(null)
-        }
-    }
-
     private async enqueueMessage(message: Message<T>) {
+        await this.barrier.wait()
         if(this.recvs.length > 0) {
             const recv = this.recvs.shift()!
             recv.resolve(message)
@@ -123,9 +117,22 @@ export class SyncChannel<T = any> implements SyncSender<T>, Receiver<T> {
         }
         if(this.atCapacity()) {
             this.barrier.pause()
-            await this.barrier.wait()
         }
     }
+
+    private async dequeueMessage(message: Message<T>) {
+        if(!this.atCapacity()) this.barrier.resume()
+        if(message.type === MessageType.Next) {
+            return Promise.resolve(message.value)
+        } else if(message.type === MessageType.Error) {
+            return Promise.reject(message.error)
+        } else {
+            clearInterval(this.interval)
+            return Promise.resolve(null)
+        }
+    }
+
+
 
     private atCapacity() { 
         return (this.queue.length >= this.bounds)  

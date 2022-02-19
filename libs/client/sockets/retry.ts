@@ -149,7 +149,7 @@ export class RetryWebSocket {
         while (true) {
             if (this.explicitClosed) return
             if (this.socket !== null) {
-                await Delay.run(this.options.autoReconnectTimeout)
+                await Delay.wait(this.options.autoReconnectTimeout)
                 continue
             }
             try {
@@ -169,7 +169,7 @@ export class RetryWebSocket {
                 this.barrier.resume()
             } catch (error) {
                 this.events.send('error', error)
-                await Delay.run(this.options.autoReconnectTimeout)
+                await Delay.wait(this.options.autoReconnectTimeout)
             }
         }
     }
