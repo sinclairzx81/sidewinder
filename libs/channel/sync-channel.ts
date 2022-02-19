@@ -26,7 +26,7 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-import { Deferred, Barrier, Delay } from '@sidewinder/async'
+import { Deferred, Barrier } from '@sidewinder/async'
 import { SyncSender } from './sync-sender'
 import { Receiver } from './receiver'
 
@@ -60,7 +60,7 @@ export class SyncChannel<T = any> implements SyncSender<T>, Receiver<T> {
     
     /** Creates this channel with the given bound. The default is 1. */
     constructor(private bounds: number = 1) { 
-        this.interval = setInterval(() => {}, 60_000)
+        this.interval = setInterval(() => {}, 1)
         this.barrier = new Barrier(false)
         this.queue = []
         this.recvs = []
@@ -111,6 +111,10 @@ export class SyncChannel<T = any> implements SyncSender<T>, Receiver<T> {
         }
     }
 
+    private atCapacity() { 
+        return (this.queue.length >= this.bounds)  
+    }
+
     private async enqueueMessage(message: Message<T>) {
         await this.barrier.wait()
         if(this.recvs.length > 0) {
@@ -134,11 +138,5 @@ export class SyncChannel<T = any> implements SyncSender<T>, Receiver<T> {
             clearInterval(this.interval)
             return Promise.resolve(null)
         }
-    }
-
-
-
-    private atCapacity() { 
-        return (this.queue.length >= this.bounds)  
     }
 }

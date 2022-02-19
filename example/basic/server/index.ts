@@ -1,28 +1,27 @@
 import { Delay } from '@sidewinder/async'
-import { SyncChannel, Channel } from '@sidewinder/channel'
+import { SyncChannel, Channel, SyncSender, Receiver } from '@sidewinder/channel'
 
 const channel = new SyncChannel()
 
 let index = 0
-async function sender() {
+async function sender(sender: SyncSender<any>) {
     for(let i = 0; i < 20; i++) {
         const next = index++
-        channel.send(next)
+        await sender.send(next)
         console.log('sent', next)
     }
-    channel.end()
-
-
+    await sender.end()
 }
 
-async function receiver() {
-    for await(const value of channel) {
+async function receiver(receiver: Receiver<any>) {
+    for await(const value of receiver) {
         console.log('        recv', value)
-        await Delay.wait(1000)
+        
     }
 }
 
-sender().then(() => console.log('sender:done'))
-receiver().then(() => console.log('receiver:done'))
+
+sender(channel).then(() => console.log('sender:done'))
+receiver(channel).then(() => console.log('receiver:done'))
 
 

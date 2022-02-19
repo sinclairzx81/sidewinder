@@ -52,10 +52,12 @@ interface EndMessage {
  * with no upper limit with senders unaware of the receivers throughput.
  */
 export class Channel<T = any> implements Sender<T>, Receiver<T> {
+    private readonly interval: NodeJS.Timer
     private readonly queue: Queue<Message<T>>
     private ended: boolean
 
     constructor() {
+        this.interval = setInterval(() => {}, 60_000)
         this.queue = new Queue<Message<T>>()
         this.ended = false
     }
@@ -68,20 +70,23 @@ export class Channel<T = any> implements Sender<T>, Receiver<T> {
             yield next
         }
     }
+
     /** Returns the next value from this channel or null if EOF. */
     public async next(): Promise<T | null> {
         if (this.ended) {
+            console.log('clearing 1')
+            clearInterval(this.interval)
             const kind = MessageType.End
             this.queue.enqueue({ type: kind })
         }
         const next = await this.queue.dequeue()
-        switch (next.type) {
-            case MessageType.Next:
-                return next.value
-            case MessageType.Error:
-                throw next.error
-            case MessageType.End:
-                return null
+        if(next.type === MessageType.Next) {
+            return next.value
+        } else if(next.type === MessageType.Error) {
+            throw next.error
+        } else {
+            clearInterval(this.interval)
+            return null
         }
     }
 
