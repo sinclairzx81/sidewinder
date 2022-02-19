@@ -65,7 +65,7 @@ export class Channel<T = any> implements Sender<T>, Receiver<T> {
             yield next
         }
     }
-    /** Receives the next value from this channel or null. */
+    /** Returns the next value from this channel or null if EOF. */
     public async next(): Promise<T | null> {
         if (this.ended) {
             const kind = MessageType.End
@@ -105,3 +105,7 @@ export class Channel<T = any> implements Sender<T>, Receiver<T> {
         this.ended = true
     }
 }
+
+const channel = new Channel()
+
+const x = channel[Symbol.asyncIterator]

@@ -1,0 +1,122 @@
+/*--------------------------------------------------------------------------
+
+@sidewinder/channel
+
+The MIT License (MIT)
+
+Copyright (c) 2022 Haydn Paterson (sinclair) <haydn.developer@gmail.com>
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+
+---------------------------------------------------------------------------*/
+
+import { Deferred, Barrier } from '@sidewinder/async'
+import { SyncSender } from './sync-sender'
+import { Receiver } from './receiver'
+
+type Message<T> = NextMessage<T> | ErrorMessage | EndMessage
+
+enum MessageType { Next, Error, End }
+
+interface NextMessage<T> {
+    type: MessageType.Next
+    value: T
+}
+interface ErrorMessage {
+    type: MessageType.Error
+    error: Error
+}
+interface EndMessage {
+    type: MessageType.End
+}
+
+
+export class SyncChannel<T = any> implements SyncSender<T>, Receiver<T> {
+    private readonly barrier: Barrier
+    private readonly queue: Message<T> []
+    private readonly recvs: Deferred<Message<T>>[]
+
+    constructor(private bounds: number = 1) { 
+        this.barrier = new Barrier(false)
+        this.queue = []
+        this.recvs = []
+    }
+
+    public async *[Symbol.asyncIterator]() {
+        while (true) {
+            const next = await this.next()
+            if (next === null) return
+            yield next
+        }
+    }
+
+    public get buffered() {
+        return this.queue.length
+    }
+
+    public async send(value: T): Promise<void> {
+        await this.enqueueMessage({ type: MessageType.Next, value })
+    }
+
+    public async error(error: Error): Promise<void> {
+        await this.enqueueMessage({ type: MessageType.Error, error })
+    }
+
+    public async end(): Promise<void> {
+        await this.enqueueMessage({ type: MessageType.End })
+    }
+
+    public async next(): Promise<T | null> {
+        if(this.queue.length > 0) {
+            return await this.dequeueMessage(this.queue.shift()!)
+        } else {
+            const recv = new Deferred<Message<T>>()
+            this.recvs.push(recv)
+            return await this.dequeueMessage(await recv.promise())
+        }
+    }
+
+    private async dequeueMessage(message: Message<T>) {
+        if(!this.atCapacity()) this.barrier.resume()
+        if(message.type === MessageType.Next) {
+            return Promise.resolve(message.value)
+        } else if(message.type === MessageType.Error) {
+            return Promise.reject(message.error)
+        } else {
+            return Promise.resolve(null)
+        }
+    }
+
+    private async enqueueMessage(message: Message<T>) {
+        if(this.recvs.length > 0) {
+            const recv = this.recvs.shift()!
+            recv.resolve(message)
+        } else {
+            this.queue.push(message)
+        }
+        if(this.atCapacity()) {
+            this.barrier.pause()
+            await this.barrier.wait()
+        }
+    }
+
+    private atCapacity() { 
+        return (this.queue.length >= this.bounds)  
+    }
+}

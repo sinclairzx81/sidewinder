@@ -1,37 +1,35 @@
-import { Host, WebSocketService } from '@sidewinder/server'
-import { WebSocketClient } from '@sidewinder/client'
-import { Contract } from '../shared/index'
-import { Type } from '@sidewinder/type'
-import cors from 'cors'
+import { Delay } from '@sidewinder/async'
+import { SyncChannel } from '@sidewinder/channel'
 
-const service = new WebSocketService(Contract, Type.Object({
-    clientId: Type.String(),
-    name:     Type.String(),
-    roles:    Type.Array(Type.String())
-}))
+const channel = new SyncChannel(10)
 
-service.event('authorize', (clientId, request) => ({ clientId, name: 'dave', roles: ['admin'] }))
-service.event('connect',   (context) => console.log('server:connect', context))
-service.event('close',     (context) => console.log('server:close',   context))
-
-service.method('add',    (context, a, b) => a + b)
-service.method('sub',    (context, a, b) => a - b)
-service.method('mul',    (context, a, b) => a * b)
-service.method('div',    (context, a, b) => a / b)
-
-
-const host = new Host()
-host.use(cors())
-host.use('/math', service)
-
-host.listen(5001).then(() => console.log('service running on port 5001'))
-async function clientTest() {
-    const client = new WebSocketClient(Contract, 'ws://localhost:5001/math')
-    const result = await client.call('add', 1, 2)
-    await client.call('add', 1, 2)
-    await client.call('add', 1, 2)
-    await client.call('add', 1, 2)
-    client.close()
-    console.log('RESULT', result)
+let index = 0
+async function sender() {
+    for(let i = 0; i < 23; i++) {
+        const next = index++
+        await channel.send(next)
+        console.log('sent', next)
+    }
+    // await channel.error(new Error('Oh Shit'))
+    // await channel.end()
+    console.log('done')
+    // await Delay.run(4000)
+    // for(let i = 0; i < 100; i++) {
+    //     const next = index++
+    //     await channel.send(next)
+    //     console.log('sent', next)
+    // }
 }
-clientTest().catch(error => console.log(error))
+
+async function receiver() {
+    for await(const value of channel) {
+        await Delay.run(100)
+        console.log('        recv', value, channel.buffered)
+    }
+    console.log('DONE')
+}
+
+sender()
+receiver()
+
+

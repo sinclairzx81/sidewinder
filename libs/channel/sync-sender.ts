@@ -26,8 +26,11 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-export * from './channel'
-export * from './queue'
-export * from './receiver'
-export * from './sender'
-export * from './sync-channel'
+export interface SyncSender<T> {
+    /** Sends the given value to this channel. If channel has ended no action. */
+    send(value: T): Promise<void>
+    /** Sends the given error to this channel causing the receiver to throw on next(). If channel has ended no action. */
+    error(error: Error): Promise<void>
+    /** Ends this channel. */
+    end(): Promise<void>
+}
