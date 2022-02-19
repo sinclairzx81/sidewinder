@@ -201,13 +201,11 @@ import { Contract }         from '../shared/contract'
 const service = new WebSocketService(Contract)
 
 service.method('render', async (context, request) => {
-    /** Simulate Progress Events */
     for(let percent = 0; percent <= 100; percent++) {
         service.send(clientId, 'progress', { method: 'render', percent })
     }
-    return { 
-        imageUrl: 'https://domain.com/model/model.png' 
-    }
+    const imageUrl = 'https://domain.com/model/model.png' 
+    return { imageUrl }
 })
 ```
 ## Authorization
