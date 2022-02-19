@@ -1,6 +1,6 @@
 /*--------------------------------------------------------------------------
 
-@sidewinder/shared
+@sidewinder/encoder
 
 The MIT License (MIT)
 
