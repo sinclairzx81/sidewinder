@@ -87,7 +87,7 @@ export class ServiceMethods {
         this.methods.set(method, { paramsValidator, returnValidator, callback })
     }
     
-    public async executeServerMethod(context: unknown, method: MethodName, params: unknown[]) {
+    public async execute(context: unknown, method: MethodName, params: unknown[]) {
         this.validateMethodExists(method)
         const entry = this.methods.get(method)!
         this.validateMethodParameters(entry, method as string, params)

@@ -29,7 +29,7 @@ THE SOFTWARE.
 import { Exception, Type, TSchema, TString, TContract, TFunction, ResolveContractMethodParameters, ResolveContractMethodReturnType } from '@sidewinder/contract'
 import { Responder, Encoder, JsonEncoder, MsgPackEncoder } from '@sidewinder/shared'
 import { Validator } from '@sidewinder/validator'
-import { ServiceMethods, RpcErrorCode, RpcProtocol } from './methods/index'
+import { ServiceMethods, RpcErrorCode, RpcProtocol, RpcRequest, RpcResponse } from './methods/index'
 import { WebSocket, MessageEvent, CloseEvent, ErrorEvent } from 'ws'
 import { IncomingMessage } from 'http'
 
@@ -123,12 +123,12 @@ export class WebSocketService<Contract extends TContract, Context extends TSchem
         ReturnType extends ResolveContractMethodReturnType<Contract['$static']['server'][Method]>
     >(
         method: Method,
-        callback: (clientId: string, ...params: Parameters) => Promise<ReturnType> | ReturnType
-    ): (clientId: string, ...params: Parameters) => Promise<ReturnType> {
+        callback: (context: Context['$static'], ...params: Parameters) => Promise<ReturnType> | ReturnType
+    ): (context: Context['$static'], ...params: Parameters) => Promise<ReturnType> {
         const target = (this.contract.server as any)[method] as TFunction | undefined
         if (target === undefined) throw Error(`Cannot define method '${method}' as it does not exist in contract`)
         this.methods.register(method as string, target, callback)
-        return async (context: unknown, ...params: any[]) => await this.methods.executeServerMethod(context, method, params)
+        return async (context: Context['$static'], ...params: any[]) => await this.methods.execute(context, method, params)
     }
 
     /** Calls a remote client method */
@@ -165,15 +165,14 @@ export class WebSocketService<Contract extends TContract, Context extends TSchem
         socket.close()
     }
 
-    /** 
-     * Accepts a clientId and IncomingMessage and returns a boolean indicating
-     * if the socket should be accepted for ws upgrade. Internally this function
-     * raises the services `authorize` callback event. This function is called
-     * automatically by the Host to determine if a socket should be accepted.
-     */
+    // -------------------------------------------------------------------------------------------
+    // Host
+    // -------------------------------------------------------------------------------------------
+
     public async upgrade(clientId: string, request: IncomingMessage): Promise<boolean> {
         try {
             const context = await this.onAuthorizeCallback(clientId, request)
+            this.contextValidator.assert(context)
             this.contexts.set(clientId, context)
             return true
         } catch {
@@ -181,11 +180,7 @@ export class WebSocketService<Contract extends TContract, Context extends TSchem
         }
     }
 
-    /** 
-     * Accepts an incoming WebSocket. This function is called automatically by the
-     * Host following a successful upgrade. If calling manually, the clientId MUST 
-     * match the clientId passed on the upgrade() call.
-     */
+
     public async accept(clientId: string, socket: WebSocket) {
         this.sockets.set(clientId, socket)
         socket.binaryType = 'arraybuffer'
@@ -195,24 +190,65 @@ export class WebSocketService<Contract extends TContract, Context extends TSchem
         await this.onConnectCallback(clientId)
     }
 
+    // -------------------------------------------------------------------------------------------
+    // Request
+    // -------------------------------------------------------------------------------------------
+
+    private async sendResponseWithResult(socket: WebSocket, rpcRequest: RpcRequest, result: unknown) {
+        if (rpcRequest.id === undefined || rpcRequest.id === null) return
+        const response = RpcProtocol.encodeResult(rpcRequest.id, result)
+        const buffer = this.encoder.encode(response)
+        socket.send(buffer)
+    }
+
+    private async sendResponseWithError(socket: WebSocket, rpcRequest: RpcRequest, error: Error) {
+        if (rpcRequest.id === undefined || rpcRequest.id === null) return
+        if (error instanceof Exception) {
+            const response = RpcProtocol.encodeError(rpcRequest.id, { code: error.code, message: error.message, data: error.data })
+            const buffer = this.encoder.encode(response)
+            socket.send(buffer)
+        } else {
+            const code = RpcErrorCode.InternalServerError
+            const message = 'Internal Server Error'
+            const data = {}
+            const response = RpcProtocol.encodeError(rpcRequest.id, { code, message, data })
+            const buffer = this.encoder.encode(response)
+            socket.send(buffer)
+        }
+    }
+
+    private async executeRequest(clientId: string, socket: WebSocket, rpcRequest: RpcRequest) {
+        if(!this.contexts.has(clientId)) return this.sendResponseWithError(socket, rpcRequest, new Error(`Cannot find context for clientId ${clientId}`))
+        const context = this.contexts.get(clientId)!
+        try {
+            const result = await this.methods.execute(context, rpcRequest.method, rpcRequest.params)
+            await this.sendResponseWithResult(socket, rpcRequest, result)
+        } catch (error) {
+            await this.sendResponseWithError(socket, rpcRequest, error as Error)
+        }
+    }
+
+    // -------------------------------------------------------------------------------------------
+    // Response
+    // -------------------------------------------------------------------------------------------
+
+    private executeResponse(rpcResponse: RpcResponse) {
+        if (rpcResponse.result !== undefined) {
+            this.responder.resolve(rpcResponse.id, rpcResponse.result)
+        } else if (rpcResponse.error) {
+            const { message, code, data } = rpcResponse.error
+            this.responder.reject(rpcResponse.id, new Exception(message, code, data))
+        }
+    }
+
     private async onMessage(clientId: string, socket: WebSocket, event: MessageEvent) {
         try {
             const message = RpcProtocol.decodeAny(this.encoder.decode(event.data as Uint8Array))
             if (message === undefined) return
             if (message.type === 'request') {
-                const request = message.data
-                const result = await this.methods.executeServerProtocol(clientId, request)
-                if (result.type === 'result-with-response' || result.type === 'error-with-response') {
-                    socket.send(this.encoder.encode(result.response))
-                }
+                await this.executeRequest(clientId, socket, message.data)
             } else if (message.type === 'response') {
-                const response = message.data
-                if (response.result !== undefined) {
-                    this.responder.resolve(response.id, response.result)
-                } else if (response.error) {
-                    const { message, code, data } = response.error
-                    this.responder.reject(response.id, new Exception(message, code, data))
-                }
+                await this.executeResponse(message.data)
             } else { }
         } catch (error) {
             this.onErrorCallback(clientId, error)

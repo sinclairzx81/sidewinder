@@ -103,7 +103,7 @@ export class Host {
     }
 
     /** Uses a WebSocketService to the specified path  */
-    public use(path: string, service: WebSocketService<any>): void
+    public use(path: string, service: WebSocketService<any, any>): void
 
     /** Uses a WebService to the specified path  */
     public use(path: string, service: WebService<any, any>): void
