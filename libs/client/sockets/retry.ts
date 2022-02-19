@@ -26,7 +26,7 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-import { Events, EventHandler, EventListener } from '@sidewinder/shared'
+import { Events, EventHandler, EventListener } from '@sidewinder/events'
 import { Barrier, Delay } from '@sidewinder/async'
 import { UnifiedWebSocket } from './socket'
 

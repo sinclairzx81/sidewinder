@@ -1,6 +1,6 @@
 /*--------------------------------------------------------------------------
 
-@sidewinder/shared
+@sidewinder/platform
 
 The MIT License (MIT)
 
@@ -26,5 +26,4 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-export * from './environment'
-export * from './events'
+export * from './platform'

@@ -1,6 +1,6 @@
 /*--------------------------------------------------------------------------
 
-@sidewinder/shared
+@sidewinder/events
 
 The MIT License (MIT)
 
