@@ -262,6 +262,7 @@ export const Contract = Type.Contract({
 })
 
 ```
+</details>
 
 ```typescript
 // ---------------------------------------------------------------------------
@@ -309,7 +310,7 @@ service.event('authorize', (clientId, request) => {
 // ---------------------------------------------------------------------------
 service.method('echo', ({ clientId, name, roles }, message) => message)
 ```
-</details>
+
 
 ## Events
 
