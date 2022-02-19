@@ -29,7 +29,7 @@ THE SOFTWARE.
 import * as crypto from 'crypto'
 
 export namespace Generate {
-    /** Generates a Private and Public Key pair */
+    /** Generates a Private and Public Key pair. The default modulusLength is 2048 */
     export function KeyPair(modulusLength: 2048 | 4096 = 2048): [privateKey: string, publicKey: string] {
         const { publicKey, privateKey } = crypto.generateKeyPairSync('rsa', {
             modulusLength,
