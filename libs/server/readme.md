@@ -20,7 +20,7 @@ This package contains the WebService (Http), WebSocketService (Ws) and Host type
 - [Express](#Express)
 - [WebService](#WebService)
 - [WebSocketService](#WebSocketService)
-- [Authorization](#Authorization)
+- [Authorize](#Authorize)
 - [Context](#Context)
 - [Events](#Events)
 - [Exceptions](#Exceptions)
@@ -154,10 +154,6 @@ import { WebService } from '@sidewinder/server'
 const service = new WebService(Contract)
 
 service.method('echo', (context, message) => message)
-
-host.use('/service', service)
-
-host.listen(5000)
 ```
 
 ## WebSocketService
@@ -208,7 +204,7 @@ service.method('render', async (context, request) => {
     return { imageUrl }
 })
 ```
-## Authorization
+## Authorize
 
 Both WebService and WebSocketService provide a `authorize` event that can be used to allow or disallow calls for all methods defined on a given service. The role of the `authorize` event is to either resolve a valid context for the connecting user, or to throw if the user has no access. For more information on contexts, see the [Context](#Context) section below.
 
