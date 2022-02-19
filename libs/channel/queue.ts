@@ -1,6 +1,6 @@
 /*--------------------------------------------------------------------------
 
-@sidewinder/async
+@sidewinder/channel
 
 The MIT License (MIT)
 
@@ -26,8 +26,33 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-export * from './barrier'
-export * from './deferred'
-export * from './delay'
-export * from './responder'
-export * from './timeout'
+import { Deferred } from '@sidewinder/async'
+
+export class Queue<T> {
+    private readonly promises:  Promise<T>[] = []
+    private readonly deferreds: Deferred<T>[] = []
+    
+    /** Dequeues the next value from this queue or waits for a value to arrive. */
+    public dequeue(): Promise<T> {
+        if (this.promises.length > 0) {
+            const promise = this.promises.shift()!
+            return promise
+        } else {
+            const deferred = new Deferred<T>()
+            this.deferreds.push(deferred)
+            return deferred.promise()
+        }
+    }
+
+    /** Enqueues the next value in this queue. */
+    public enqueue(value: T) {
+        if (this.deferreds.length > 0) {
+            const deferred = this.deferreds.shift()!
+            deferred.resolve(value)
+        } else {
+            const deferred = new Deferred<T>()
+            deferred.resolve(value)
+            this.promises.push(deferred.promise())
+        }
+    }
+}

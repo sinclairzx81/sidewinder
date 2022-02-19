@@ -38,6 +38,7 @@ export async function build(target = 'target/build') {
     await clean()
     await Promise.all([
         compilePackage(target, 'async',      VERSION, 'Sidewinder Async'),
+        compilePackage(target, 'channel',    VERSION, 'Sidewinder Channel'),
         compilePackage(target, 'client',     VERSION, 'Sidewinder Client'),
         compilePackage(target, 'contract',   VERSION, 'Sidewinder Contract'),
         compilePackage(target, 'encoder',    VERSION, 'Sidewinder Encoder'),
@@ -50,6 +51,7 @@ export async function build(target = 'target/build') {
         compilePackage(target, 'validator',  VERSION, 'Sidewinder Validator'),
     ])
     await packPackage(target, 'async')
+    await packPackage(target, 'channel')
     await packPackage(target, 'client')
     await packPackage(target, 'contract')
     await packPackage(target, 'encoder')
@@ -72,6 +74,7 @@ export async function publishPackage(name) {
 
 export async function publish(target = 'target/build') {
     await publishPackage('async')
+    await publishPackage('channel')
     await publishPackage('client')
     await publishPackage('contract')
     await publishPackage('encoder')
