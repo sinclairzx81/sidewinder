@@ -9,5 +9,5 @@ describe('token/Generate', () => {
 
     it('should generate private and public key pair (4096)', () => {
         const [privateKey, publicKey] = Generate.KeyPair(4096)
-    })
+    }).timeout(20000)
 })
