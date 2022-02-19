@@ -155,7 +155,7 @@ const service = new WebService(Contract)
 
 service.method('echo', (context, message) => message)
 
-host.use('/v1/service', service)
+host.use('/service', service)
 
 host.listen(5000)
 ```
