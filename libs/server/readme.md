@@ -219,35 +219,37 @@ Both WebService and WebSocketService expose transport lifecycle events which are
   <summary>WebService Lifecycle Events</summary>
 
 ```typescript
-export type WebServiceAuthorizeCallback = (clientId: string, request: IncomingMessage) => Promise<boolean> | boolean
-export type WebServiceConnectCallback = (clientId: string) => Promise<void> | void
-export type WebServiceErrorCallback = (clientId: string, error: unknown) => Promise<void> | void
-export type WebServiceCloseCallback = (clientId: string) => Promise<void> | void
+export type WebServiceAuthorizeCallback<Context> = (clientId: string, request: IncomingMessage) => Promise<Context> | Context
+export type WebServiceConnectCallback<Context> = (context: Context) => Promise<unknown> | unknown
+export type WebServiceCloseCallback<Context> = (clientId: Context) => Promise<unknown> | unknown
+export type WebServiceErrorCallback = (clientId: string, error: unknown) => Promise<unknown> | unknown
 
 /**
-* Subscribes to authorize events. This event is raised each time a http rpc request is made. Callers
-* can use this event to setup any associated state for the request
-*/
-public event(event: 'authorize', callback: WebServiceAuthorizeCallback): WebServiceAuthorizeCallback
+ * Subscribes to authorize events. This event is raised for every incoming Http Rpc request. Subscribing to 
+ * this event is mandatory if the service provides a context schema. The authorize event must return a value
+ * that conforms to the services context or throw if the user is not authorized.
+ */
+public event(event: 'authorize', callback: WebServiceAuthorizeCallback<Context>): WebServiceAuthorizeCallback<Context>
 
 /**
-* Subscribes to connect events. This event is raised immediately following a successful authorization.
-* Callers can use this event to initialize any additional associated state for the clientId.
-*/
-public event(event: 'connect', callback: WebServiceConnectCallback): WebServiceConnectCallback
+ * Subscribes to connect events. This event is raised immediately following a successful 'authorize' event only.
+ * This event receives the context returned from a successful authorization.
+ */
+public event(event: 'connect', callback: WebServiceConnectCallback<Context>): WebServiceConnectCallback<Context>
 
 /**
-* Subscribes to error events. This event is raised if there are any http transport errors. This event
-* is usually immediately followed by a close event.
-*/
-public event(event: 'error', callback: WebServiceErrorCallback): WebServiceErrorCallback
+ * Subscribes to close events. This event is raised whenever the remote Http request is about to close.
+ * Callers should use this event to clean up any associated state created for the request. This event receives 
+ * the context returned from a successful authorization.
+ */
+public event(event: 'close', callback: WebServiceCloseCallback<Context>): WebServiceCloseCallback<Context>
 
 /**
-* Subscribes to close events. This event is raised once the http rpc method has executed and the
-* http / tcp transport is about to terminate. Callers can use this event to clean up any associated
-* state for the clientId.
-*/
-public event(event: 'close', callback: WebServiceCloseCallback): WebServiceCloseCallback
+ * Subscribes to error events. This event is raised if there are any http transport errors. This event
+ * is usually immediately followed by a close event.
+ */
+public event(event: 'error', callback: WebServiceErrorCallback<Context>): WebServiceErrorCallback<Context>
+
 ```
 </details>
 
@@ -255,37 +257,38 @@ public event(event: 'close', callback: WebServiceCloseCallback): WebServiceClose
   <summary>WebSocketService Lifecycle Events</summary>
 
 ```typescript
-export type WebSocketServiceAuthorizeCallback = (clientId: string, request: IncomingMessage) => Promise<boolean> | boolean
-export type WebSocketServiceConnectCallback = (clientId: string) => Promise<void> | void
-export type WebSocketServiceErrorCallback = (clientId: string, error: unknown) => Promise<void> | void
-export type WebSocketServiceCloseCallback = (clientId: string) => Promise<void> | void
-
-/** 
- * Subscribes to authorize events. This event is raised for each connection and is used to
- * reject connections before socket upgrade. Callers should use this event to initialize any
- * associated state for the clientId.
- */
-public event(event: 'authorize', callback: WebSocketServiceAuthorizeCallback): WebSocketServiceAuthorizeCallback
+export type WebSocketServiceAuthorizeCallback<Context> = (clientId: string, request: IncomingMessage) => Promise<Context> | Context
+export type WebSocketServiceConnectCallback<Context> = (context: Context) => Promise<unknown> | unknown
+export type WebSocketServiceCloseCallback<Context> = (context: Context) => Promise<unknown> | unknown
+export type WebSocketServiceErrorCallback = (context: string, error: unknown) => Promise<unknown> | unknown
 
 /**
- * Subscribes to connect events. This event is called immediately after a successful 'authorize' event.
- * Callers can use this event to transmit any provisional messages to clients, or initialize additional
- * state for the clientId.
+ * Subscribes to authorize events. This event is raised once for each incoming WebSocket request. Subscribing to 
+ * this event is mandatory if the service provides a context schema. The authorize event must return a value
+ * that conforms to the services context or throw if the user is not authorized. This context is reused for
+ * subsequence calls on this service.
  */
-public event(event: 'connect', callback: WebSocketServiceConnectCallback): WebSocketServiceConnectCallback
+public event(event: 'authorize', callback: WebSocketServiceAuthorizeCallback<Context>): WebSocketServiceAuthorizeCallback<Context>
 
 /**
- * Subcribes to error events. This event is typically raised for any socket transport errors. This
- * event is usually triggered immediately before a close event.
+ * Subscribes to connect events. This event is raised immediately following a successful 'authorize' event only.
+ * This event receives the context returned from a successful authorization.
  */
+public event(event: 'connect', callback: WebSocketServiceConnectCallback<Context>): WebSocketServiceConnectCallback<Context>
+
+
+/**
+ * Subscribes to close events. This event is raised whenever the remote WebSocket disconnects from the service.
+ * Callers should use this event to clean up any associated state created for the connection. This event receives 
+ * the context returned from a successful authorization.
+ */
+public event(event: 'close', callback: WebSocketServiceCloseCallback<Context>): WebSocketServiceCloseCallback<Context>
+
+/**
+* Subcribes to error events. This event is raised for any socket transport errors and is usually following
+* immediately by a close event. This event receives the initial clientId string value only.
+*/
 public event(event: 'error', callback: WebSocketServiceErrorCallback): WebSocketServiceErrorCallback
-
-/**
- * Subscribes to close events. This event is raises whenever a socket disconencts from
- * the service. Callers should use this event to delete any state associated with the
- * clientId.
- */
-public event(event: 'close', callback: WebSocketServiceCloseCallback): WebSocketServiceCloseCallback
 ```
 </details>
 

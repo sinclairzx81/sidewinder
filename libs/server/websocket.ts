@@ -59,6 +59,11 @@ export class WebSocketService<Contract extends TContract, Context extends TSchem
     private readonly responder: Responder
     private readonly methods: ServiceMethods
 
+    /**
+     * Creates a new WebSocketService
+     * @param contract The contract this service should use.
+     * @param context The context this service should use.
+     */
     constructor(private readonly contract: Contract, private readonly context: Context = (Type.String() as any)) {
         this.contextValidator = new Validator(this.context)
         this.onAuthorizeCallback = (clientId: string) => (clientId as unknown)
@@ -73,31 +78,31 @@ export class WebSocketService<Contract extends TContract, Context extends TSchem
         this.setupNotImplemented()
     }
 
-    /** 
-     * Subscribes to authorize events. This event is raised for each connection and is used to
-     * reject connections before socket upgrade. Callers should use this event to initialize any
-     * associated state for the clientId.
+    /**
+     * Subscribes to authorize events. This event is raised once for each incoming WebSocket request. Subscribing to 
+     * this event is mandatory if the service provides a context schema. The authorize event must return a value
+     * that conforms to the services context or throw if the user is not authorized. This context is reused for
+     * subsequence calls on this service.
      */
     public event(event: 'authorize', callback: WebSocketServiceAuthorizeCallback<Context['$static']>): WebSocketServiceAuthorizeCallback<Context['$static']>
 
     /**
-     * Subscribes to connect events. This event is called immediately after a successful 'authorize' event.
-     * Callers can use this event to transmit any provisional messages to clients, or initialize additional
-     * state for the clientId.
+     * Subscribes to connect events. This event is raised immediately following a successful 'authorize' event only.
+     * This event receives the context returned from a successful authorization.
      */
     public event(event: 'connect', callback: WebSocketServiceConnectCallback<Context['$static']>): WebSocketServiceConnectCallback<Context['$static']>
 
 
     /**
-     * Subscribes to close events. This event is raises whenever a socket disconencts from
-     * the service. Callers should use this event to delete any state associated with the
-     * clientId.
+     * Subscribes to close events. This event is raised whenever the remote WebSocket disconnects from the service.
+     * Callers should use this event to clean up any associated state created for the connection. This event receives 
+     * the context returned from a successful authorization.
      */
     public event(event: 'close', callback: WebSocketServiceCloseCallback<Context['$static']>): WebSocketServiceCloseCallback<Context['$static']>
 
     /**
-    * Subcribes to error events. This event is typically raised for any socket transport errors. This
-    * event is usually triggered immediately before a close event.
+    * Subcribes to error events. This event is raised for any socket transport errors and is usually following
+    * immediately by a close event. This event receives the initial clientId string value only.
     */
     public event(event: 'error', callback: WebSocketServiceErrorCallback): WebSocketServiceErrorCallback
 

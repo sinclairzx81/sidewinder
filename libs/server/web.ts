@@ -80,6 +80,11 @@ export class WebService<Contract extends TContract, Context extends TSchema = TS
     private readonly methods: ServiceMethods
     private readonly encoder: Encoder
 
+    /**
+     * Creates a new WebService
+     * @param contract The contract this service should use.
+     * @param context The context this service should use.
+     */
     constructor(private readonly contract: Contract, private readonly context: Context = (Type.String() as any)) {
         this.contextValidator = new Validator(this.context)
         this.onAuthorizeCallback = (clientId: string) => (clientId as unknown)
@@ -92,24 +97,22 @@ export class WebService<Contract extends TContract, Context extends TSchema = TS
     }
     
     /**
-     * Subscribes to authorize events. This event is raised for each HTTP RPC request. Subscribing to this
-     * event is mandatory if the service specifies a context schema. It should return the a context object
-     * matching the context schema or it should `throw` indicating authorization failure.
+     * Subscribes to authorize events. This event is raised for every incoming Http Rpc request. Subscribing to 
+     * this event is mandatory if the service provides a context schema. The authorize event must return a value
+     * that conforms to the services context or throw if the user is not authorized.
      */
     public event(event: 'authorize', callback: WebServiceAuthorizeCallback<Context['$static']>): WebServiceAuthorizeCallback<Context['$static']>
     
     /**
-     * Subscribes to connect events. This event is raised immediately following a successful authorization
-     * and is passed both clientId and the resolved context given by authorization. Callers can use this
-     * event to initialize any associative state required to fulfill the request. This event is raised
-     * on successful authorization only.
+     * Subscribes to connect events. This event is raised immediately following a successful 'authorize' event only.
+     * This event receives the context returned from a successful authorization.
      */
     public event(event: 'connect', callback: WebServiceConnectCallback<Context['$static']>): WebServiceConnectCallback<Context['$static']>
     
     /**
-     * Subscribes to close events. This event is raised when a connection is about to be terminated and is
-     * passed both clientId and resolved context given by authorization. Callers can use this event to clean
-     * up any associative state created for the request. This event is raised on successful authorization only.
+     * Subscribes to close events. This event is raised whenever the remote Http request is about to close.
+     * Callers should use this event to clean up any associated state created for the request. This event receives 
+     * the context returned from a successful authorization.
      */
     public event(event: 'close', callback: WebServiceCloseCallback<Context['$static']>): WebServiceCloseCallback<Context['$static']>
 
