@@ -1,42 +1,22 @@
-import { Host, WebSocketService } from '@sidewinder/server'
-import { WebSocketClient } from '@sidewinder/client'
-import { Contract } from '../shared/index'
+import { Generate, TokenEncoder, TokenDecoder } from '@sidewinder/token'
 import { Type } from '@sidewinder/type'
-import cors from 'cors'
 
-const service = new WebSocketService(Contract, Type.Object({
-    clientId: Type.String()
-}, { additionalProperties: false }))
-
-service.event('authorize', (clientId, request) => {
-    return { clientId, roles: ['dave'], name: '' }
+const Claims = Type.Object({
+    username: Type.String(),
+    roles:    Type.Array(Type.String())
 })
 
-service.event('connect', (context) => console.log('connect', context))
-service.event('close',   (context) => console.log('close', context))
-service.method('add',    (context, a, b) => {
-    console.log('add', context)
-    return 1
+const [privateKey, publicKey] = Generate.KeyPair()
+const encoder = new TokenEncoder(Claims, privateKey)
+const decoder = new TokenDecoder(Claims, publicKey)
+
+const token = encoder.encode({
+    username: 'dave',
+    roles:   ['admin', 'moderator']
 })
-service.method('sub',    (context, a, b) => a - b)
-service.method('mul',    (context, a, b) => a * b)
-service.method('div',    (context, a, b) => a / b)
 
+console.log(token)
 
+const claims = decoder.decode(token)
 
-
-const host = new Host()
-host.use(cors())
-host.use('/math', service)
-
-host.listen(5001).then(() => console.log('service running on port 5001'))
-async function clientTest() {
-    const client = new WebSocketClient(Contract, 'ws://localhost:5001/math')
-    const result = await client.call('add', 1, 2)
-    await client.call('add', 1, 2)
-    await client.call('add', 1, 2)
-    await client.call('add', 1, 2)
-    client.close()
-    console.log('RESULT', result)
-}
-clientTest().catch(error => console.log(error))
+console.log(claims)
