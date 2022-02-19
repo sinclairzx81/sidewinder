@@ -11,7 +11,7 @@
 
 ## Overview
 
-Sidewinder Token is a Type Safe Json Web Token library used to sign and verify claims exchanged between services over a network. This library is built upon the [jsonwebtoken](https://www.npmjs.com/package/jsonwebtoken) package and provides additional type checking for claims data for both signer and verifier. This package uses asymmetric (RS256) signing only. This library provides utility RSA 2048 key pair generation for dynamically creating new keys at runtime.
+Sidewinder Token is a type safe Json Web Token library used to sign and verify claims exchanged between services over a network. This library is built upon the [jsonwebtoken](https://www.npmjs.com/package/jsonwebtoken) package but provides additional type checking for claims data for both signer and verifier. This package supports asymmetric signing only.
 
 Licence MIT
 
@@ -21,7 +21,7 @@ Licence MIT
 - [Example](#Example)
 - [TokenEncoder](#TokenEncoder)
 - [TokenDecoder](#TokenDecoder)
-- [Generate](#Generate)
+- [Generate Keys](#Generate-Keys)
 
 ## Example
 
@@ -111,7 +111,9 @@ const token = decoder.decode(encoded)  // Note: The decode() function will throw
                                        //       of the configured schema.
 ``` 
 
-## Generate
+<a name="Generate-Keys"></a>
+
+## Generate Keys
 
 The Sidewinder Token library uses asymmetric RS256 exclusively for token sign and verify. You can generate private and public keys either via command line or programmatically.
 
