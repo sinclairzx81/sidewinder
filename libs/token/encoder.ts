@@ -1,6 +1,6 @@
 /*--------------------------------------------------------------------------
 
-@sidewinder/encoder
+@sidewinder/token
 
 The MIT License (MIT)
 
@@ -26,7 +26,37 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-export interface Encoder {
-    encode<T = any>(data: T): Uint8Array
-    decode<T = any>(data: Uint8Array): T
+import { sign }      from 'jsonwebtoken'
+import { TObject }   from '@sidewinder/type'
+import { Validator } from '@sidewinder/validator'
+import { Format }    from './format'
+
+export class TokenEncoderTypeError extends Error {
+    constructor(public readonly errors: any[], errorText: string) {
+        super(`TokenEncoder failed to type check. ${errorText}`)
+    }
+}
+
+export class TokenEncoder<Claims extends TObject> {
+    private readonly tokenValidator: Validator<Claims>
+
+    constructor(private readonly schema: Claims, private readonly privateKey: string) {
+        this.privateKey = Format.key(this.privateKey)
+        this.tokenValidator = new Validator(this.schema)
+    }
+
+    private validateType(token: Claims['$static']) {
+        const check = this.tokenValidator.check(token)
+        if(!check.success) {
+            throw new TokenEncoderTypeError(check.errors, check.errorText)
+        } else {
+            return token as Claims['$static'] & { iat: number }
+        }
+    }
+
+    /** Encodes the given claims and returns a string token */
+    public encode(claims: Claims['$static']): string {
+        const checked = this.validateType(claims)
+        return sign(checked, this.privateKey, { algorithm: 'RS256' })
+    }
 }

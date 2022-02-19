@@ -1,6 +1,6 @@
 /*--------------------------------------------------------------------------
 
-@sidewinder/encoder
+@sidewinder/token
 
 The MIT License (MIT)
 
@@ -26,7 +26,12 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-export interface Encoder {
-    encode<T = any>(data: T): Uint8Array
-    decode<T = any>(data: Uint8Array): T
+export namespace Format {
+    /** Formats the given private or public key ensure there are no trailing spaces */
+    export function key(key: string) {
+        return key.split('\n')
+            .map((line) => line.trim())
+            .filter(line => line.length > 0)
+            .join('\n')
+    }
 }

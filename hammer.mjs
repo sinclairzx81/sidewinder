@@ -45,6 +45,7 @@ export async function build(target = 'target/build') {
         compilePackage(target, 'mongo',      VERSION, 'Sidewinder Mongo'),
         compilePackage(target, 'platform',   VERSION, 'Sidewinder Platform'),
         compilePackage(target, 'server',     VERSION, 'Sidewinder Server'),
+        compilePackage(target, 'token',      VERSION, 'Sidewinder Token'),
         compilePackage(target, 'type',       VERSION, 'Sidewinder Type'),
         compilePackage(target, 'validator',  VERSION, 'Sidewinder Validator'),
     ])
@@ -56,6 +57,7 @@ export async function build(target = 'target/build') {
     await packPackage(target, 'mongo')
     await packPackage(target, 'platform')
     await packPackage(target, 'server')
+    await packPackage(target, 'token')
     await packPackage(target, 'type')
     await packPackage(target, 'validator')   
 }
@@ -77,6 +79,7 @@ export async function publish(target = 'target/build') {
     await publishPackage('mongo')
     await publishPackage('platform')
     await publishPackage('server')
+    await publishPackage('token')
     await publishPackage('type')
     await publishPackage('validator')
 }

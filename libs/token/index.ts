@@ -1,6 +1,6 @@
 /*--------------------------------------------------------------------------
 
-@sidewinder/encoder
+@sidewinder/token
 
 The MIT License (MIT)
 
@@ -26,7 +26,6 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-export interface Encoder {
-    encode<T = any>(data: T): Uint8Array
-    decode<T = any>(data: Uint8Array): T
-}
+export * from './decoder'
+export * from './encoder'
+export * from './generate'
