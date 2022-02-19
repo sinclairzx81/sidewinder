@@ -1,6 +1,6 @@
 /*--------------------------------------------------------------------------
 
-@sidewinder/shared
+@sidewinder/async
 
 The MIT License (MIT)
 
@@ -26,5 +26,7 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-export * from './environment'
-export * from './events'
+export * from './barrier'
+export * from './delay'
+export * from './responder'
+export * from './timeout'

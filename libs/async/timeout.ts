@@ -1,6 +1,6 @@
 /*--------------------------------------------------------------------------
 
-@sidewinder/shared
+@sidewinder/async
 
 The MIT License (MIT)
 
@@ -26,9 +26,15 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-export namespace Delay {
-    /** Returns a promise that resolves after the given milliseconds have elapsed */
-    export function run(ms: number): Promise<void> {
-        return new Promise<void>(resolve => setTimeout(resolve, ms))
+export class Timeout {
+    constructor(private readonly milliseconds: number) {}
+
+    private timeout<T>(error: Error): Promise<T> {
+        return new Promise<T>((_, reject) => setTimeout(() => reject(error), this.milliseconds))
+    }
+
+    /** Runs the given function and throws if it does not completed within the configured milliseconds. */
+    public async run<T>(func: () => Promise<T> | T, error: Error = new Error('Timeout')): Promise<T> {
+        return await Promise.race([func(), this.timeout(error)]) as T
     }
 }

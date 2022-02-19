@@ -1,5 +1,5 @@
 import { expect } from 'chai'
 
-describe('Shared/Delay', () => {
+describe('async/Delay', () => {
 
 })

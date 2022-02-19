@@ -27,7 +27,8 @@ THE SOFTWARE.
 ---------------------------------------------------------------------------*/
 
 import { Exception, Type, TSchema, TString, TContract, TFunction, ResolveContractMethodParameters, ResolveContractMethodReturnType } from '@sidewinder/contract'
-import { Environment, Encoder, JsonEncoder, MsgPackEncoder } from '@sidewinder/shared'
+import { Encoder, JsonEncoder, MsgPackEncoder } from '@sidewinder/encoder'
+import { Environment } from '@sidewinder/shared'
 import { Validator } from '@sidewinder/validator'
 import { ServiceMethods, RpcErrorCode, RpcProtocol, DecodeAnyResult, RpcRequest, RpcResponse } from './methods/index'
 import { IncomingMessage, ServerResponse } from 'http'

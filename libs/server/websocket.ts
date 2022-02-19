@@ -27,7 +27,8 @@ THE SOFTWARE.
 ---------------------------------------------------------------------------*/
 
 import { Exception, Type, TSchema, TString, TContract, TFunction, ResolveContractMethodParameters, ResolveContractMethodReturnType } from '@sidewinder/contract'
-import { Responder, Encoder, JsonEncoder, MsgPackEncoder } from '@sidewinder/shared'
+import { Encoder, JsonEncoder, MsgPackEncoder } from '@sidewinder/encoder'
+import { Responder } from '@sidewinder/async'
 import { Validator } from '@sidewinder/validator'
 import { ServiceMethods, RpcErrorCode, RpcProtocol, RpcRequest, RpcResponse } from './methods/index'
 import { WebSocket, MessageEvent, CloseEvent, ErrorEvent } from 'ws'

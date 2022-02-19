@@ -1,7 +1,7 @@
 import { Environment } from '@sidewinder/shared'
-import * as assert from '../../assert/index'
+import * as assert from '../assert/index'
 
-describe('shared/environment/Environment', () => {
+describe('platform/Environment', () => {
     it('should resolve the JavaScript environment', () => {
         const environment = Environment.platform()
         assert.equal(environment, 'node')

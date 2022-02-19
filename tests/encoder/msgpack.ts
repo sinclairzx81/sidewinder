@@ -1,5 +1,5 @@
-import { MsgPackEncoder } from '@sidewinder/shared'
-import * as assert from '../../assert/index'
+import { MsgPackEncoder } from '@sidewinder/encoder'
+import * as assert from '../assert/index'
 
 describe('shared/encoder/MsgPack', () => {
     it('should encode and decode msgpack', () => {

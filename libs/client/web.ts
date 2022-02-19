@@ -27,7 +27,7 @@ THE SOFTWARE.
 ---------------------------------------------------------------------------*/
 
 import { Exception, TContract, ResolveContractMethodParameters, ResolveContractMethodReturnType } from '@sidewinder/contract'
-import { Encoder, MsgPackEncoder, JsonEncoder } from '@sidewinder/shared'
+import { Encoder, MsgPackEncoder, JsonEncoder } from '@sidewinder/encoder'
 import { RpcProtocol } from './methods/index'
 import { Request } from './request/index'
 
@@ -38,7 +38,7 @@ export class WebClient<Contract extends TContract> {
     constructor(public readonly contract: Contract, public readonly endpoint: string) { 
         this.encoder = contract.format === 'json' ? new JsonEncoder() : new MsgPackEncoder()
     }
-    
+
     /** Calls a remote service method */
     public async call<
         Method extends keyof Contract['$static']['server'] extends infer R ? R extends string ? R : never : never,

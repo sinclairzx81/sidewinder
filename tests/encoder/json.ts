@@ -1,5 +1,5 @@
-import { JsonEncoder } from '@sidewinder/shared'
-import * as assert from '../../assert/index'
+import { JsonEncoder } from '@sidewinder/encoder'
+import * as assert from '../assert/index'
 
 describe('shared/encoder/JsonEncoder', () => {
     it('should encode and decode json', () => {
