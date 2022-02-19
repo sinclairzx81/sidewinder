@@ -51,11 +51,13 @@ export class SyncChannel<T = any> implements SyncSender<T>, Receiver<T> {
     private readonly barrier: Barrier
     private readonly queue: Message<T> []
     private readonly recvs: Deferred<Message<T>>[]
-
+    private ended: boolean
+    
     constructor(private bounds: number = 1) { 
         this.barrier = new Barrier(false)
         this.queue = []
         this.recvs = []
+        this.ended = false
     }
 
     public async *[Symbol.asyncIterator]() {
@@ -66,22 +68,31 @@ export class SyncChannel<T = any> implements SyncSender<T>, Receiver<T> {
         }
     }
 
+    /** Returns the number of values buffered in this channel */
     public get buffered() {
         return this.queue.length
     }
 
+    /** Sends the given value to this channel. If channel has ended no action. */
     public async send(value: T): Promise<void> {
+        if(this.ended) return
         await this.enqueueMessage({ type: MessageType.Next, value })
     }
-
+    
+    /** Sends the given error to this channel causing the receiver to throw on next(). If channel has ended no action. */
     public async error(error: Error): Promise<void> {
+        if(this.ended) return
         await this.enqueueMessage({ type: MessageType.Error, error })
     }
 
+    /** Ends this channel. */
     public async end(): Promise<void> {
+        if(this.ended) return
+        this.ended = true
         await this.enqueueMessage({ type: MessageType.End })
     }
-
+    
+    /** Returns the next value from this channel or null if EOF. */
     public async next(): Promise<T | null> {
         if(this.queue.length > 0) {
             return await this.dequeueMessage(this.queue.shift()!)
