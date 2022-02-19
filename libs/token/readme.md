@@ -15,6 +15,14 @@ Sidewinder Token is a Type Safe Json Web Token library used to sign and verify c
 
 Licence MIT
 
+## Contents
+
+- [Overview](#Overview)
+- [Example](#Example)
+- [TokenEncoder](#TokenEncoder)
+- [TokenDecoder](#TokenDecoder)
+- [Generate](#Generate)
+
 ## Example
 
 The following shows general usage
@@ -24,21 +32,22 @@ import { Generate, TokenEncoder, TokenDecoder } from '@sidewinder/token'
 import { Type }                                 from '@sidewinder/type'
 
 // ----------------------------------------------------------------------
-// Generate Private and Public Key Pair
+// Generate private and public key pair
 // ----------------------------------------------------------------------
 
 const [privateKey, publicKey] = Generate.KeyPair()
 
 // ----------------------------------------------------------------------
-// Create a Token Type
+// Create create a token type schematic
 // ----------------------------------------------------------------------
+
 const Token = Type.Object({
     username: Type.String(),
     roles:    Type.Array(Type.String())
 })
 
 // ----------------------------------------------------------------------
-// Create a TokenEncoder and Encode Claims
+// Create a TokenEncoder and encode token
 // ----------------------------------------------------------------------
 
 const encoder = new TokenEncoder(Token, privateKey)
@@ -46,7 +55,7 @@ const encoder = new TokenEncoder(Token, privateKey)
 const token = encoder.encode({ username: 'dave', roles: ['admin', 'moderator'] })
 
 // ----------------------------------------------------------------------
-// Create a TokenDecoder and Decode Claims
+// Create a TokenDecoder and decode token
 // ----------------------------------------------------------------------
 
 const decoder = new TokenDecoder(Token, public)
@@ -85,7 +94,6 @@ The TokenEncoder is responsible for decoding a claims object received from a rem
 import { TokenDecoder } from '@sidewinder/token'
 import { Type }         from '@sidewinder/type'
 
-
 const token     = '...'                // Note: Token is received via some network mechanism
 
 const publicKey = '...'                // Note: Public Keys are of type string.
@@ -104,3 +112,29 @@ const token = decoder.decode(encoded)  // Note: The decode() function will throw
 ``` 
 
 ## Generate
+
+The Sidewinder Token library uses asymmetric RS256 exclusively for token sign and verify. You can generate private and public keys either via command line or programmatically.
+
+
+<details>
+  <summary>Command Line</summary>
+
+```bash
+# Generate private and public keys
+$ ssh-keygen -t rsa -b 4096 -m PEM -f private.key
+
+# Convert public key to PEM format
+$ openssl rsa -in private.key -pubout -outform PEM -out public.key
+```
+</details>
+
+
+<details>
+  <summary>Programmatically</summary>
+
+```typescript
+import { Generate } from '@sidewinder/token'
+
+const [privateKey, publicKey] = Generate.KeyPair(4096)
+```
+</details>

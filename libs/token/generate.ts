@@ -30,9 +30,9 @@ import * as crypto from 'crypto'
 
 export namespace Generate {
     /** Generates a Private and Public Key pair */
-    export function KeyPair(): [privateKey: string, publicKey: string] {
+    export function KeyPair(modulusLength: 2048 | 4096 = 2048): [privateKey: string, publicKey: string] {
         const { publicKey, privateKey } = crypto.generateKeyPairSync('rsa', {
-            modulusLength: 2048,
+            modulusLength,
             publicKeyEncoding: {
                 type: 'spki',
                 format: 'pem'
@@ -40,8 +40,8 @@ export namespace Generate {
             privateKeyEncoding: {
                 type: 'pkcs8',
                 format: 'pem',
-                //cipher: 'aes-256-cbc',   // *optional*
-                //passphrase: 'top secret' // *optional*   
+                // cipher:     'aes-256-cbc', // *optional*
+                // passphrase: 'secret'       // *optional*   
             }
         })
         return [privateKey, publicKey]

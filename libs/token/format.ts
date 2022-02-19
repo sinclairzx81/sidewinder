@@ -27,9 +27,11 @@ THE SOFTWARE.
 ---------------------------------------------------------------------------*/
 
 export namespace Format {
-
     /** Formats the given private or public key ensure there are no trailing spaces */
     export function key(key: string) {
-        return key.split('\n').map((line) => line.trim()).join('\n')
+        return key.split('\n')
+            .map((line) => line.trim())
+            .filter(line => line.length > 0)
+            .join('\n')
     }
 }
