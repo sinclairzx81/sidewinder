@@ -198,7 +198,7 @@ const service = new WebSocketService(Contract)
 
 service.method('render', async (context, request) => {
     for(let percent = 0; percent <= 100; percent++) {
-        service.send(clientId, 'progress', { method: 'render', percent })
+        service.send(context, 'progress', { method: 'render', percent })
     }
     const imageUrl = 'https://domain.com/model/model.png' 
     return { imageUrl }
