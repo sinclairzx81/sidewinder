@@ -20,7 +20,9 @@ This package contains the WebService (Http), WebSocketService (Ws) and Host type
 - [Express](#Express)
 - [WebService](#WebService)
 - [WebSocketService](#WebSocketService)
-- [Lifecycle Events](#Lifecycle-Events)
+- [Authorization](#Authorization)
+- [Context](#Context)
+- [Events](#Events)
 - [Exceptions](#Exceptions)
 - [Testing](#Testing)
 - [Classes](#Classes)
@@ -208,10 +210,118 @@ service.method('render', async (clientId, request) => {
     }
 })
 ```
+## Authorization
 
-<a name="Lifecycle-Events"></a>
+Both WebService and WebSocketService provide an `authorize` event that can be used to allow or disallow calls for all methods defined on a given service. The role of the `authorize` event is to either resolve an context for the connecting user, or to throw if the user has no access. For more information on contexts, see the [Context](#Context) section below.
 
-## Lifecycle Events
+<details>
+  <summary>Contract</summary>
+
+```typescript
+import { Type } from '@sidewinder/contract'
+
+export const Contract = Type.Contract({
+    server: {
+        echo: Type.Function([Type.String()], Type.String())
+    }
+})
+
+```
+</details>
+
+```typescript
+
+const service = new WebService(Contract)
+
+// ---------------------------------------------------------------------------
+// Authorization
+//
+// The authorization event accepts a unique clientId string and incoming
+// http request. The authorization event MUST return either a valid context 
+// or throw if the user is not authorized. The returned context will be 
+// passed to service methods to identify the caller. The context is also
+// passed to the services `connect` and `close` events.
+// 
+// ---------------------------------------------------------------------------
+
+service.event('authorize', (clientId, request) => { 
+    const token = request.headers['Authorization']
+    if(isValid(token)) return clientId // Note: This event handler MUST return a valid
+    throw Error('Not authorized')      //       context value. If not specifying a context
+})                                     //       the default is string.
+
+```
+## Context
+
+Rpc method calls are executed under a context given by the `authorize` event. By default Sidewinder WebService and WebSocketService types will automatically implement a default `authorize` handler that returns the `clientId`. This can be overridden by developers by passing a `Context` schema to the service along with a `authorize` event handler to resolve that context. The context itself is schema type checked for correctness along with any request data passed by clients.
+
+<details>
+  <summary>Contract</summary>
+
+```typescript
+import { Type } from '@sidewinder/contract'
+
+export const Contract = Type.Contract({
+    server: {
+        echo: Type.Function([Type.String()], Type.String())
+    }
+})
+
+```
+
+```typescript
+
+// ---------------------------------------------------------------------------
+// Context
+//
+// The following schema defines the expected context that should be returned
+// for the services `authorize` event. This schema is internally type checked 
+// for correctness such that if the `authorize` event returns data that fails
+// to match the given schema, the service will terminate the request. Clients
+// will see this as a kind of authorization failure.
+// 
+// ---------------------------------------------------------------------------
+const Context = Type.Object({
+    clientId: Type.String(),
+    name:     Type.String(),
+    roles:    Type.Array(Type.String())
+})
+
+// ---------------------------------------------------------------------------
+// Context
+//
+// We pass the Context object as the second parameter on the services
+// constructor. By specifying a Context, the expectation is that the service
+// will implement an `authorize` event handler to resolve the context.
+// 
+// ---------------------------------------------------------------------------
+const service = new WebService(Contract, Context)
+
+// ---------------------------------------------------------------------------
+// Authorize
+//
+// The following implements pseudo code that resolves the name and roles for
+// the connecting user. The values return are returned as the context.
+// ---------------------------------------------------------------------------
+
+service.event('authorize', (clientId, request) => {
+    const { name, roles } = await resolveIdentityFromRequest(request)
+    return { clientId, name, roles }
+})
+
+// ---------------------------------------------------------------------------
+// Methods
+//
+// Methods receive the context as the first argument on the method handler
+// ---------------------------------------------------------------------------
+service.method('echo', ({clientId, name, roles}, message) => {
+
+    return message
+})
+```
+
+</details>
+## Events
 
 Both WebService and WebSocketService expose transport lifecycle events which are dispatched on changes to the underlying transport. Each event passes a unique `clientId` parameter than can be used to associate user state initialized for the connection. These events have slightly different behaviors between WebService and WebSocketService. The following describes their behaviours.
 
@@ -275,7 +385,6 @@ public event(event: 'authorize', callback: WebSocketServiceAuthorizeCallback<Con
  * This event receives the context returned from a successful authorization.
  */
 public event(event: 'connect', callback: WebSocketServiceConnectCallback<Context>): WebSocketServiceConnectCallback<Context>
-
 
 /**
  * Subscribes to close events. This event is raised whenever the remote WebSocket disconnects from the service.
