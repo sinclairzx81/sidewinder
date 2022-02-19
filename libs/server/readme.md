@@ -53,10 +53,10 @@ import { Host, WebService } from '@sidewinder/server'
 import { Contract } from '../shared/contract'
 
 const service = new WebService(Contract)
-service.method('add', (clientId, a, b) => a + b)
-service.method('sub', (clientId, a, b) => a - b)
-service.method('mul', (clientId, a, b) => a * b)
-service.method('div', (clientId, a, b) => a / b)
+service.method('add', (context, a, b) => a + b)
+service.method('sub', (context, a, b) => a - b)
+service.method('mul', (context, a, b) => a * b)
+service.method('div', (context, a, b) => a / b)
 
 const host = new Host()
 host.use(service)
@@ -120,9 +120,9 @@ import { Host } from '@sidewinder/server'
 import { Router } from 'express'
 
 const router = Router()
-router.get('/', (req, res) => res.send('home page'))
-router.get('/about', (req, res) => res.send('about page'))
 router.get('/contact', (req, res) => res.send('contact page'))
+router.get('/about',   (req, res) => res.send('about page'))
+router.get('/',        (req, res) => res.send('home page'))
 
 const host = new Host()
 host.use(router)
@@ -153,7 +153,7 @@ import { WebService } from '@sidewinder/server'
 
 const service = new WebService(Contract)
 
-service.method('echo', (clientId, message) => message)
+service.method('echo', (context, message) => message)
 
 host.use('/v1/service', service)
 
@@ -200,7 +200,7 @@ import { Contract }         from '../shared/contract'
 
 const service = new WebSocketService(Contract)
 
-service.method('render', async (clientId, request) => {
+service.method('render', async (context, request) => {
     /** Simulate Progress Events */
     for(let percent = 0; percent <= 100; percent++) {
         service.send(clientId, 'progress', { method: 'render', percent })
@@ -270,7 +270,6 @@ export const Contract = Type.Contract({
 ```
 
 ```typescript
-
 // ---------------------------------------------------------------------------
 // Context
 //
@@ -314,10 +313,7 @@ service.event('authorize', (clientId, request) => {
 //
 // Methods receive the context as the first argument on the method handler
 // ---------------------------------------------------------------------------
-service.method('echo', ({clientId, name, roles}, message) => {
-
-    return message
-})
+service.method('echo', ({ clientId, name, roles }, message) => message)
 ```
 
 </details>
@@ -330,9 +326,9 @@ Both WebService and WebSocketService expose transport lifecycle events which are
 
 ```typescript
 export type WebServiceAuthorizeCallback<Context> = (clientId: string, request: IncomingMessage) => Promise<Context> | Context
-export type WebServiceConnectCallback<Context> = (context: Context) => Promise<unknown> | unknown
-export type WebServiceCloseCallback<Context> = (clientId: Context) => Promise<unknown> | unknown
-export type WebServiceErrorCallback = (clientId: string, error: unknown) => Promise<unknown> | unknown
+export type WebServiceConnectCallback<Context>   = (context: Context) => Promise<unknown> | unknown
+export type WebServiceCloseCallback<Context>     = (context: Context) => Promise<unknown> | unknown
+export type WebServiceErrorCallback              = (clientId: string, error: unknown) => Promise<unknown> | unknown
 
 /**
  * Subscribes to authorize events. This event is raised for every incoming Http Rpc request. Subscribing to 
@@ -368,9 +364,9 @@ public event(event: 'error', callback: WebServiceErrorCallback<Context>): WebSer
 
 ```typescript
 export type WebSocketServiceAuthorizeCallback<Context> = (clientId: string, request: IncomingMessage) => Promise<Context> | Context
-export type WebSocketServiceConnectCallback<Context> = (context: Context) => Promise<unknown> | unknown
-export type WebSocketServiceCloseCallback<Context> = (context: Context) => Promise<unknown> | unknown
-export type WebSocketServiceErrorCallback = (context: string, error: unknown) => Promise<unknown> | unknown
+export type WebSocketServiceConnectCallback<Context>   = (context: Context) => Promise<unknown> | unknown
+export type WebSocketServiceCloseCallback<Context>     = (context: Context) => Promise<unknown> | unknown
+export type WebSocketServiceErrorCallback              = (context: string, error: unknown) => Promise<unknown> | unknown
 
 /**
  * Subscribes to authorize events. This event is raised once for each incoming WebSocket request. Subscribing to 
@@ -469,13 +465,13 @@ const Contract = Type.Contract({
 
 const service = new WebService(Contract)
 
-const addFunction = service.method('add', (clientId, a, b) => a + b)
+const addFunction = service.method('add', (context, a, b) => a + b)
 
 // ---------------------------------------------------------------------------
 // Test
 // ---------------------------------------------------------------------------
 
-const add = await addFunction('<clientId>', 1, 2)
+const add = await addFunction('<context>', 1, 2)
 
 if(add !== 3) throw Error('Unexpected result')
 ```
@@ -516,10 +512,10 @@ export class MathService extends WebService<typeof Contract> {
     constructor(private readonly logger: Logger) {
         super(Contract)
     }
-    public add = this.method('add', (clientId, a, b) => { this.logger.log('called add'); return a + b })
-    public sub = this.method('sub', (clientId, a, b) => { this.logger.log('called sub'); return a - b })
-    public mul = this.method('mul', (clientId, a, b) => { this.logger.log('called mul'); return a * b })
-    public div = this.method('div', (clientId, a, b) => { this.logger.log('called div'); return a / b })
+    public add = this.method('add', (context, a, b) => { this.logger.log('called add'); return a + b })
+    public sub = this.method('sub', (context, a, b) => { this.logger.log('called sub'); return a - b })
+    public mul = this.method('mul', (context, a, b) => { this.logger.log('called mul'); return a * b })
+    public div = this.method('div', (context, a, b) => { this.logger.log('called div'); return a / b })
 }
 
 const service = new MathService(new Logger())
