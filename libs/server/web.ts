@@ -142,7 +142,7 @@ export class WebService<Contract extends TContract, Context extends TSchema = TS
         const target = (this.contract.server as any)[method] as TFunction | undefined
         if(target === undefined) throw Error(`Cannot define method '${method}' as it does not exist in contract`)
         this.methods.register(method as string, target, callback)
-        return async (context: Context['$static'], ...params: any[]) => await this.methods.executeServerMethod(context, method, params)
+        return async (context: Context['$static'], ...params: any[]) => await this.methods.execute(context, method, params)
     }
 
     // ---------------------------------------------------------------------
@@ -276,7 +276,7 @@ export class WebService<Contract extends TContract, Context extends TSchema = TS
 
     private async executeRpcRequest(rpcContext: Context['$static'], rpcRequest: RpcRequest): Promise<PipelineResult<any>> {
         try {
-            const result = await this.methods.executeServerMethod(rpcContext, rpcRequest.method, rpcRequest.params)
+            const result = await this.methods.execute(rpcContext, rpcRequest.method, rpcRequest.params)
             return PipelineResult.ok(result)
         } catch(error) {
             return PipelineResult.error(error as Error)
