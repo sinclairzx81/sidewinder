@@ -41,12 +41,16 @@ License MIT
 Sidewinder consists of several distinct packages
 
 ```bash
-$ npm install @sidewinder/type       # JSON Schema type system
-$ npm install @sidewinder/validate   # Runtime validation for types.
-$ npm install @sidewinder/contract   # Json Schema + Service Descriptions
-$ npm install @sidewinder/server     # Http and Web Socket Services
+$ npm install @sidewinder/async      # Async utility library
 $ npm install @sidewinder/client     # Http and Web Socket Clients
-$ npm install @sidewinder/mongo      # Mongo Driver typed with JSON Schema
+$ npm install @sidewinder/contract   # Json Schema + Service Descriptions
+$ npm install @sidewinder/encoder    # Json and MessagePack encoding
+$ npm install @sidewinder/events     # Portable Event Emitter library
+$ npm install @sidewinder/mongo      # Mongo Driver with JSON Schema schematics
+$ npm install @sidewinder/platform   # Platform resolution
+$ npm install @sidewinder/server     # Http and Web Socket Services and Hosting
+$ npm install @sidewinder/type       # Json Schema Type Builder with Static Types
+$ npm install @sidewinder/validator  # Json Schema compiler and validator
 ```
 
 ## Services
