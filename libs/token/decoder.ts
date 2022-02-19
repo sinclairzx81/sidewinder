@@ -26,9 +26,10 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
+import { verify }        from 'jsonwebtoken'
 import { Type, TObject } from '@sidewinder/type'
 import { Validator }     from '@sidewinder/validator'
-import { verify }        from 'jsonwebtoken'
+import { Format }        from './format'
 
 export class TokenDecoderVerifyError extends Error {
     constructor() {
@@ -46,6 +47,7 @@ export class TokenDecoder<Claims extends TObject> {
     private readonly tokenValidator: Validator<Claims>
 
     constructor(private readonly schema: Claims, private readonly publicKey: string) {
+        this.publicKey = Format.key(this.publicKey)
         this.tokenValidator = new Validator(this.schema)
     }
 
