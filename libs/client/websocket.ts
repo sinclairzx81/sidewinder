@@ -28,12 +28,12 @@ THE SOFTWARE.
 
 import { Exception, TContract, ResolveContractMethodParameters, ResolveContractMethodReturnType, TFunction } from '@sidewinder/contract'
 import { Responder, Encoder, JsonEncoder, MsgPackEncoder, Barrier } from '@sidewinder/shared'
-import { ClientMethods, RpcErrorCode, RpcProtocol } from './methods/index'
+import { ClientMethods, RpcErrorCode, RpcProtocol, RpcRequest, RpcResponse } from './methods/index'
 import { RetryWebSocket, UnifiedWebSocket } from './sockets'
 
 export type WebSocketClientConnectCallback = () => void
-export type WebSocketClientErrorCallback   = (error: any) => void
-export type WebSocketClientCloseCallback   = () => void
+export type WebSocketClientErrorCallback = (error: any) => void
+export type WebSocketClientCloseCallback = () => void
 
 function defaultClientOptions(partial: Partial<WebSocketClientOptions>): WebSocketClientOptions {
     const options: WebSocketClientOptions = { autoReconnectEnabled: false, autoReconnectBuffer: false, autoReconnectTimeout: 4000 }
@@ -80,20 +80,19 @@ export class WebSocketClient<Contract extends TContract> {
     private onErrorCallback: WebSocketClientErrorCallback = () => { }
     private onCloseCallback: WebSocketClientCloseCallback = () => { }
 
-    private readonly encoder:   Encoder
-    private readonly methods:   ClientMethods
-    private readonly socket:    RetryWebSocket | UnifiedWebSocket
-    private readonly options:   WebSocketClientOptions
+    private readonly encoder: Encoder
+    private readonly methods: ClientMethods
+    private readonly socket: RetryWebSocket | UnifiedWebSocket
+    private readonly options: WebSocketClientOptions
     private readonly responder: Responder
-    private readonly barrier:   Barrier
-    private ready:  boolean
+    private readonly barrier: Barrier
     private closed: boolean
 
     constructor(private readonly contract: Contract, private readonly endpoint: string, options: Partial<WebSocketClientOptions> = {}) {
-        this.options           = defaultClientOptions(options)
+        this.options = defaultClientOptions(options)
         this.onConnectCallback = () => { }
-        this.onErrorCallback   = () => { }
-        this.onCloseCallback   = () => { }
+        this.onErrorCallback = () => { }
+        this.onCloseCallback = () => { }
         this.encoder = this.contract.format === 'json' ? new JsonEncoder() : new MsgPackEncoder()
         this.methods = new ClientMethods()
         this.barrier = new Barrier()
@@ -107,11 +106,10 @@ export class WebSocketClient<Contract extends TContract> {
             : new UnifiedWebSocket(this.endpoint, {
                 binaryType: 'arraybuffer'
             })
-        this.socket.on('open',    () => this.onOpen())
+        this.socket.on('open', () => this.onOpen())
         this.socket.on('message', event => this.onMessage(event))
-        this.socket.on('error',   event => this.onError(event))
-        this.socket.on('close',   () => this.onClose())
-        this.ready  = true
+        this.socket.on('error', event => this.onError(event))
+        this.socket.on('close', () => this.onClose())
         this.closed = false
         this.setupNotImplemented()
     }
@@ -135,27 +133,27 @@ export class WebSocketClient<Contract extends TContract> {
 
     /** Defines a client method implementation */
     public method<
-        Method extends keyof Contract['$static']['client'],
+        Method extends keyof Contract['$static']['client'] extends infer R ? R extends string ? R : never : never,
         Parameters extends ResolveContractMethodParameters<Contract['$static']['client'][Method]>,
         ReturnType extends ResolveContractMethodReturnType<Contract['$static']['client'][Method]>
     >(method: Method, callback: (...params: Parameters) => Promise<ReturnType> | ReturnType) {
         const target = (this.contract.client as any)[method] as TFunction | undefined
-        if(target === undefined) throw Error(`Cannot define method '${method}' as it does not exist in contract`)
+        if (target === undefined) throw Error(`Cannot define method '${method}' as it does not exist in contract`)
         this.methods.register(method as string, target, callback)
-        return async (...params: Parameters): Promise<ReturnType> => await this.methods.executeClientMethod(method as string, params)
+        return async (...params: Parameters): Promise<ReturnType> => await this.methods.execute(method as string, params)
     }
 
     /** Calls a remote service method */
     public async call<
-        Method extends keyof Contract['$static']['server'],
+        Method extends keyof Contract['$static']['server'] extends infer R ? R extends string ? R : never : never,
         Parameters extends ResolveContractMethodParameters<Contract['$static']['server'][Method]>,
         ReturnType extends ResolveContractMethodReturnType<Contract['$static']['server'][Method]>
     >(method: Method, ...params: Parameters): Promise<ReturnType> {
         await this.barrier.wait()
-        this.assertMethodExists(method as string)
+        this.assertMethodExists(method)
         this.assertCanSend()
-        const handle  = this.responder.register('client')
-        const request = RpcProtocol.encodeRequest(handle, method as string, params)
+        const handle = this.responder.register('client')
+        const request = RpcProtocol.encodeRequest(handle, method, params)
         const message = this.encoder.encode(request)
         this.socket.send(message)
         return await this.responder.wait(handle)
@@ -163,18 +161,18 @@ export class WebSocketClient<Contract extends TContract> {
 
     /** Sends a message to a remote service method and ignores the result */
     public send<
-        Method extends keyof Contract['$static']['server'],
+        Method extends keyof Contract['$static']['server'] extends infer R ? R extends string ? R : never : never,
         Parameters extends ResolveContractMethodParameters<Contract['$static']['server'][Method]>,
         >(method: Method, ...params: Parameters): void {
         this.assertMethodExists(method as string)
         into(async () => {
             try {
-                await this.barrier.wait()       
+                await this.barrier.wait()
                 this.assertCanSend()
                 const request = RpcProtocol.encodeRequest(undefined, method as string, params)
                 const message = this.encoder.encode(request)
                 this.socket.send(message)
-            } catch(error) {
+            } catch (error) {
                 this.onErrorCallback(error)
             }
         })
@@ -184,6 +182,58 @@ export class WebSocketClient<Contract extends TContract> {
     public close() {
         this.socket.close()
     }
+    // -------------------------------------------------------------------------------------------
+    // Request
+    // -------------------------------------------------------------------------------------------
+
+    private async sendResponseWithResult(rpcRequest: RpcRequest, result: unknown) {
+        if (rpcRequest.id === undefined || rpcRequest.id === null) return
+        const response = RpcProtocol.encodeResult(rpcRequest.id, result)
+        const buffer = this.encoder.encode(response)
+        this.socket.send(buffer)
+    }
+
+    private async sendResponseWithError(rpcRequest: RpcRequest, error: Error) {
+        if (rpcRequest.id === undefined || rpcRequest.id === null) return
+        if (error instanceof Exception) {
+            const response = RpcProtocol.encodeError(rpcRequest.id, { code: error.code, message: error.message, data: error.data })
+            const buffer = this.encoder.encode(response)
+            this.socket.send(buffer)
+        } else {
+            const code = RpcErrorCode.InternalServerError
+            const message = 'Internal Server Error'
+            const data = {}
+            const response = RpcProtocol.encodeError(rpcRequest.id, { code, message, data })
+            const buffer = this.encoder.encode(response)
+            this.socket.send(buffer)
+        }
+    }
+
+    private async executeRequest(rpcRequest: RpcRequest) {
+        try {
+            const result = await this.methods.execute(rpcRequest.method, rpcRequest.params)
+            await this.sendResponseWithResult(rpcRequest, result)
+        } catch (error) {
+            await this.sendResponseWithError(rpcRequest, error as Error)
+        }
+    }
+
+    // -------------------------------------------------------------------------------------------
+    // Response
+    // -------------------------------------------------------------------------------------------
+
+    private executeResponse(rpcResponse: RpcResponse) {
+        if (rpcResponse.result !== undefined) {
+            this.responder.resolve(rpcResponse.id, rpcResponse.result)
+        } else if (rpcResponse.error) {
+            const { message, code, data } = rpcResponse.error
+            this.responder.reject(rpcResponse.id, new Exception(message, code, data))
+        }
+    }
+
+    // -------------------------------------------------------------------------------------------
+    // Socket Events
+    // -------------------------------------------------------------------------------------------
 
     private onOpen() {
         this.onConnectCallback()
@@ -195,25 +245,15 @@ export class WebSocketClient<Contract extends TContract> {
             const message = RpcProtocol.decodeAny(this.encoder.decode(event.data as Uint8Array))
             if (message === undefined) return
             if (message.type === 'request') {
-                const request = message.data
-                const result = await this.methods.executeClientProtocol(request)
-                if (result.type === 'result-with-response' || result.type === 'error-with-response') {
-                    this.socket.send(this.encoder.encode(result.response))
-                }
+                await this.executeRequest(message.data)
             } else if (message.type === 'response') {
-                const response = message.data
-                if (response.result !== undefined) {
-                    this.responder.resolve(response.id, response.result)
-                } else if (response.error) {
-                    const { message, code, data } = response.error
-                    this.responder.reject(response.id, new Exception(message, code, data))
-                }
+                await this.executeResponse(message.data)
             } else { }
         } catch (error) {
             this.onErrorCallback(error)
         }
     }
-    
+
     private onError(event: Event) {
         this.onErrorCallback(event)
     }
@@ -226,7 +266,7 @@ export class WebSocketClient<Contract extends TContract> {
     }
 
     private assertMethodExists(method: string) {
-        if(!Object.keys(this.contract.server).includes(method)) throw new Error(`Method '${method}' not defined in contract`)
+        if (!Object.keys(this.contract.server).includes(method)) throw new Error(`Method '${method}' not defined in contract`)
     }
 
     private assertCanSend() {

@@ -242,6 +242,10 @@ export class WebSocketService<Contract extends TContract, Context extends TSchem
         }
     }
 
+    // -------------------------------------------------------------------------------------------
+    // Socket Events
+    // -------------------------------------------------------------------------------------------
+
     private async onMessage(clientId: string, socket: WebSocket, event: MessageEvent) {
         try {
             const message = RpcProtocol.decodeAny(this.encoder.decode(event.data as Uint8Array))

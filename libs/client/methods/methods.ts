@@ -26,43 +26,14 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-import { Exception, TFunction } from '@sidewinder/contract'
-import { RpcProtocol, RpcErrorCode, RpcRequest, RpcResponse } from './protocol'
-
-export interface ExecuteResultWithResponse {
-    type: 'result-with-response'
-    result: unknown
-    response: RpcResponse
-}
-
-export interface ExecuteErrorWithResponse {
-    type: 'error-with-response'
-    error: Error
-    response: RpcResponse
-}
-
-export interface ExecuteResult {
-    type: 'result'
-    result: unknown
-}
-
-export interface ExecuteError {
-    type: 'error'
-    error: Error
-}
-
-export type ExecuteResponse =
-    | ExecuteResultWithResponse
-    | ExecuteErrorWithResponse
-    | ExecuteResult
-    | ExecuteError
+import { Exception, TSchema, TFunction } from '@sidewinder/contract'
+import { RpcErrorCode } from './protocol'
 
 export interface RegisteredClientMethod {
     /** The callback function */
     callback: Function
+    schema: TSchema
 }
-
-type MethodName = string 
 
 /** 
  * A Client method container for a set of methods. This container provides an interface to allow
@@ -71,19 +42,19 @@ type MethodName = string
  * JSON Schema.
  */
 export class ClientMethods {
-    private readonly methods: Map<MethodName, RegisteredClientMethod>
+    private readonly methods: Map<string, RegisteredClientMethod>
     
     constructor() {
-        this.methods = new Map<MethodName, RegisteredClientMethod>()
+        this.methods = new Map<string, RegisteredClientMethod>()
     }
     
     /** Registers a client method. */
-    public register(method: MethodName, schema: TFunction<any[], any>, callback: Function) {
-        this.methods.set(method, { callback })
+    public register(method: string, schema: TFunction<any[], any>, callback: Function) {
+        this.methods.set(method, { callback, schema })
     }
     
     /** Executes a client method and returns its result. */
-    public async executeClientMethod(method: MethodName, params: unknown[]) {
+    public async execute(method: string, params: unknown[]) {
         this.validateMethodExists(method)
         const entry = this.methods.get(method)!
         this.validateMethodParameters(entry, method, params)
@@ -94,71 +65,17 @@ export class ClientMethods {
         return result
     }
 
-    /** Executes a client method via JSON RPC protocol. */
-    public async executeClientProtocol(request: RpcRequest): Promise<ExecuteResponse> {
-        try {
-            const result = await this.executeClientMethod(request.method, request.params)
-            return this.encodeResultExecuteResponse(request, result)
-        } catch (error) {
-            if(error instanceof Exception) {
-                return this.encodeErrorExecuteResponse(request, error)
-            } else {
-                const exception = new Exception('Internal Server Error', RpcErrorCode.InternalServerError, {})
-                return this.encodeErrorExecuteResponse(request, exception)
-            }
-        }
-    }
-
-    private encodeResultExecuteResponse(request: RpcRequest, result: unknown): ExecuteResponse {
-        if (request.id) {
-            const response = RpcProtocol.encodeResult(request.id, result)
-            return { type: 'result-with-response', result, response }
-        } else {
-            return { type: 'result', result }
-        }
-    }
-
-    private encodeErrorExecuteResponse(request: RpcRequest, error: unknown): ExecuteResponse {
-        if (request.id) {
-            if (error instanceof Exception) {
-                const { code, message, data } = error
-                const response = RpcProtocol.encodeError(request.id, { code, message, data })
-                return { type: 'error-with-response', error, response }
-            } else if (error instanceof Error) {
-                const code = RpcErrorCode.InternalServerError
-                const message = 'Internal Server Error'
-                const data = {}
-                const response = RpcProtocol.encodeError(request.id, { code, message, data })
-                return { type: 'error-with-response', error, response }
-            } else {
-                const code = RpcErrorCode.InternalServerError
-                const message = 'Internal Server Error'
-                const data = {}
-                const response = RpcProtocol.encodeError(request.id, { code, message, data })
-                return { type: 'error-with-response', error: Error(`Exception thrown: ${error}`), response }
-            }
-        } else {
-            if (error instanceof Exception) {
-                return { type: 'error', error }
-            } else if (error instanceof Error) {
-                return { type: 'error', error }
-            } else {
-                return { type: 'error', error: Error(`Exception thrown: ${error}`) }
-            }
-        }
-    }
-
-    private validateMethodExists(method: MethodName) {
+    private validateMethodExists(method: string) {
         if (!this.methods.has(method)) {
             throw new Exception(`Method not found`, RpcErrorCode.MethodNotFound, {})
         }
     }
 
     private validateMethodParameters(entry: RegisteredClientMethod, method: string, params: unknown[]) {
-        // note: Parameter validation not implemented on clients
+        // note: Validation not implemented on clients
     }
 
     private validateMethodReturnType(entry: RegisteredClientMethod, method: string, result: unknown) {
-        // note: Parameter validation not implemented on clients
+        // note: Validation not implemented on clients
     }
 }

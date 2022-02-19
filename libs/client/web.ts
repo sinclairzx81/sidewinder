@@ -38,10 +38,10 @@ export class WebClient<Contract extends TContract> {
     constructor(public readonly contract: Contract, public readonly endpoint: string) { 
         this.encoder = contract.format === 'json' ? new JsonEncoder() : new MsgPackEncoder()
     }
-
+    
     /** Calls a remote service method */
     public async call<
-        Method extends keyof Contract['$static']['server'],
+        Method extends keyof Contract['$static']['server'] extends infer R ? R extends string ? R : never : never,
         Parameters extends ResolveContractMethodParameters<Contract['$static']['server'][Method]>,
         ReturnType extends ResolveContractMethodReturnType<Contract['$static']['server'][Method]>
     >(method: Method, ...params: Parameters): Promise<ReturnType> {

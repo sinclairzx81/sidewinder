@@ -28,35 +28,7 @@ THE SOFTWARE.
 
 import { Exception, Type, TFunction } from '@sidewinder/contract'
 import { Validator } from '@sidewinder/validator'
-import { RpcProtocol, RpcErrorCode, RpcRequest, RpcResponse } from './protocol'
-
-export interface ExecuteResultWithResponse {
-    type: 'result-with-response'
-    result: unknown
-    response: RpcResponse
-}
-
-export interface ExecuteErrorWithResponse {
-    type: 'error-with-response'
-    error: Error
-    response: RpcResponse
-}
-
-export interface ExecuteResult {
-    type: 'result'
-    result: unknown
-}
-
-export interface ExecuteError {
-    type: 'error'
-    error: Error
-}
-
-export type ExecuteResponse =
-    | ExecuteResultWithResponse
-    | ExecuteErrorWithResponse
-    | ExecuteResult
-    | ExecuteError
+import { RpcErrorCode } from './protocol'
 
 export interface RegisteredServerMethod {
     /** The parameter validator */
@@ -67,7 +39,7 @@ export interface RegisteredServerMethod {
     callback: Function
 }
 
-type MethodName = string 
+type Method = string 
 
 /** 
  * A Service method container for a set of methods. This container provides an interface to allow
@@ -75,19 +47,19 @@ type MethodName = string
  * via JSON RPC 2.0 protocol.
  */
 export class ServiceMethods {
-    private readonly methods: Map<MethodName, RegisteredServerMethod>
+    private readonly methods: Map<Method, RegisteredServerMethod>
     
     constructor() {
-        this.methods = new Map<MethodName, RegisteredServerMethod>()
+        this.methods = new Map<Method, RegisteredServerMethod>()
     }
 
-    public register(method: MethodName, schema: TFunction<any[], any>, callback: Function) {
+    public register(method: Method, schema: TFunction<any[], any>, callback: Function) {
         const paramsValidator = new Validator(Type.Tuple(schema.parameters))
         const returnValidator = new Validator(schema.returns)
         this.methods.set(method, { paramsValidator, returnValidator, callback })
     }
     
-    public async execute(context: unknown, method: MethodName, params: unknown[]) {
+    public async execute(context: unknown, method: Method, params: unknown[]) {
         this.validateMethodExists(method)
         const entry = this.methods.get(method)!
         this.validateMethodParameters(entry, method as string, params)
@@ -98,7 +70,7 @@ export class ServiceMethods {
         return result
     }
 
-    private validateMethodExists(method: MethodName) {
+    private validateMethodExists(method: Method) {
         if (!this.methods.has(method)) {
             throw new Exception(`Method not found`, RpcErrorCode.MethodNotFound, {})
         }
