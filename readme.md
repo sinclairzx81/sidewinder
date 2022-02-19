@@ -86,18 +86,16 @@ const Contract = Type.Contract({
 // ---------------------------------------------------------------------------
 // Service
 //
-// Services provide concrete implementations for Contracts. Services receive
-// a unique clientId identifier for each new request. Implementations can 
-// use this identifier to link associated state for the request. The following 
-// code implements the server contract methods.
+// Services provide concrete implementations for Contracts. Service methods
+// receive a context and arguments defined the the method.
 //
 // ---------------------------------------------------------------------------
 
 const service = new WebService(Contract)
-service.method('add', (clientId, a, b) => a + b)
-service.method('sub', (clientId, a, b) => a - b)
-service.method('mul', (clientId, a, b) => a * b)
-service.method('div', (clientId, a, b) => a / b)
+service.method('add', (context, a, b) => a + b)
+service.method('sub', (context, a, b) => a - b)
+service.method('mul', (context, a, b) => a * b)
+service.method('div', (context, a, b) => a / b)
 
 const host = new Host()
 host.use(service)

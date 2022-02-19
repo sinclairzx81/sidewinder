@@ -6,16 +6,16 @@ import cors from 'cors'
 
 const service = new WebSocketService(Contract, Type.Object({
     clientId: Type.String()
-}))
+}, { additionalProperties: false }))
 
 service.event('authorize', (clientId, request) => {
-    return { clientId, roles: [], name: '' }
+    return { clientId, roles: ['dave'], name: '' }
 })
 
 service.event('connect', (context) => console.log('connect', context))
 service.event('close',   (context) => console.log('close', context))
 service.method('add',    (context, a, b) => {
-    console.log('add', context.clientId)
+    console.log('add', context)
     return 1
 })
 service.method('sub',    (context, a, b) => a - b)
