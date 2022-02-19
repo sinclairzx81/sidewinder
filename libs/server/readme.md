@@ -224,18 +224,13 @@ export const Contract = Type.Contract({
 </details>
 
 ```typescript
-
 const service = new WebService(Contract)
-
-// ---------------------------------------------------------------------------
-// Authorization
-// ---------------------------------------------------------------------------
 
 service.event('authorize', (clientId, request) => { 
     const bearer = request.headers['Authorization']
-    if(isValid(bearer)) return clientId // Note: This event handler MUST return a valid
-    throw Error('Not authorized')      //       context value. If not specifying a context
-})                                     //       the default is string.
+    if(isValid(bearer)) return clientId    // Note: This event handler MUST return a valid
+    throw Error('Not authorized')          //       context value. If not specifying a context
+})                                         //       the default is string.
 
 ```
 
