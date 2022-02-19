@@ -212,7 +212,7 @@ service.method('render', async (context, request) => {
 ```
 ## Authorization
 
-Both WebService and WebSocketService provide an `authorize` event that can be used to allow or disallow calls for all methods defined on a given service. The role of the `authorize` event is to either resolve an context for the connecting user, or to throw if the user has no access. For more information on contexts, see the [Context](#Context) section below.
+Both WebService and WebSocketService provide a `authorize` event that can be used to allow or disallow calls for all methods defined on a given service. The role of the `authorize` event is to either resolve a valid context for the connecting user, or to throw if the user has no access. For more information on contexts, see the [Context](#Context) section below.
 
 <details>
   <summary>Contract</summary>
@@ -235,22 +235,16 @@ const service = new WebService(Contract)
 
 // ---------------------------------------------------------------------------
 // Authorization
-//
-// The authorization event accepts a unique clientId string and incoming
-// http request. The authorization event MUST return either a valid context 
-// or throw if the user is not authorized. The returned context will be 
-// passed to service methods to identify the caller. The context is also
-// passed to the services `connect` and `close` events.
-// 
 // ---------------------------------------------------------------------------
 
 service.event('authorize', (clientId, request) => { 
-    const token = request.headers['Authorization']
-    if(isValid(token)) return clientId // Note: This event handler MUST return a valid
+    const bearer = request.headers['Authorization']
+    if(isValid(bearer)) return clientId // Note: This event handler MUST return a valid
     throw Error('Not authorized')      //       context value. If not specifying a context
 })                                     //       the default is string.
 
 ```
+
 ## Context
 
 Rpc method calls are executed under a context given by the `authorize` event. By default Sidewinder WebService and WebSocketService types will automatically implement a default `authorize` handler that returns the `clientId`. This can be overridden by developers by passing a `Context` schema to the service along with a `authorize` event handler to resolve that context. The context itself is schema type checked for correctness along with any request data passed by clients.
@@ -315,8 +309,8 @@ service.event('authorize', (clientId, request) => {
 // ---------------------------------------------------------------------------
 service.method('echo', ({ clientId, name, roles }, message) => message)
 ```
-
 </details>
+
 ## Events
 
 Both WebService and WebSocketService expose transport lifecycle events which are dispatched on changes to the underlying transport. Each event passes a unique `clientId` parameter than can be used to associate user state initialized for the connection. These events have slightly different behaviors between WebService and WebSocketService. The following describes their behaviours.
