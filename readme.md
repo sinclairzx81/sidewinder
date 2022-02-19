@@ -10,7 +10,7 @@
 <br />
 <br />
 
-[<img src="https://img.shields.io/npm/v/@sidewinder/type?label=%40sidewinder%2Ftype">](https://www.npmjs.com/package/@sidewinder/type) [<img src="https://img.shields.io/npm/v/@sidewinder/validator?label=%40sidewinder%2Fvalidator">](https://www.npmjs.com/package/@sidewinder/validator) [<img src='https://img.shields.io/npm/v/@sidewinder/contract?label=%40sidewinder%2Fcontract'>](https://www.npmjs.com/package/@sidewinder/contract) [<img src='https://img.shields.io/npm/v/@sidewinder/server?label=%40sidewinder%2Fserver'>](https://www.npmjs.com/package/@sidewinder/server) [<img src='https://img.shields.io/npm/v/@sidewinder/client?label=%40sidewinder%2Fclient'>](https://www.npmjs.com/package/@sidewinder/client) [<img src="https://img.shields.io/npm/v/@sidewinder/mongo?label=%40sidewinder%2Fmongo">](https://www.npmjs.com/package/@sidewinder/mongo)
+[<img src="https://img.shields.io/npm/v/@sidewinder/async?label=%40sidewinder%2Fasync">](https://www.npmjs.com/package/@sidewinder/async) [<img src="https://img.shields.io/npm/v/@sidewinder/client?label=%40sidewinder%2Fclient">](https://www.npmjs.com/package/@sidewinder/client) [<img src="https://img.shields.io/npm/v/@sidewinder/contract?label=%40sidewinder%2Fcontract">](https://www.npmjs.com/package/@sidewinder/contract) [<img src="https://img.shields.io/npm/v/@sidewinder/encoder?label=%40sidewinder%2Fencoder">](https://www.npmjs.com/package/@sidewinder/encoder) [<img src="https://img.shields.io/npm/v/@sidewinder/events?label=%40sidewinder%2Fevents">](https://www.npmjs.com/package/@sidewinder/events) [<img src="https://img.shields.io/npm/v/@sidewinder/mongo?label=%40sidewinder%2Fmongo">](https://www.npmjs.com/package/@sidewinder/mongo) [<img src="https://img.shields.io/npm/v/@sidewinder/platform?label=%40sidewinder%2Fplatform">](https://www.npmjs.com/package/@sidewinder/platform) [<img src="https://img.shields.io/npm/v/@sidewinder/server?label=%40sidewinder%2Fserver">](https://www.npmjs.com/package/@sidewinder/server) [<img src="https://img.shields.io/npm/v/@sidewinder/type?label=%40sidewinder%2Ftype">](https://www.npmjs.com/package/@sidewinder/type) [<img src="https://img.shields.io/npm/v/@sidewinder/validator?label=%40sidewinder%2Fvalidator">](https://www.npmjs.com/package/@sidewinder/validator)
 
 
 
@@ -18,7 +18,7 @@
 
 ## Overview
 
-Sidewinder is a strict and fully typed Micro Service framework developed for Node. It is designed for architectures where many backend services need to communicate using a strict set of protocols as well as maintain a strict contractual agreement on how they should communicate. It provides this functionality by offering a runtime type system based on JSON schema. It uses these schemas to statically assert the correctness of Client Server interactions in TypeScript as well as to runtime assert data exchanged between systems over the wire.
+Sidewinder is a strict and fully typed micro service framework built for Node and Browser environments. It is designed for architectures where many backend services need to communicate using a strict set of protocols as well as maintain a strict contractual agreement on how they should communicate. It is principally built for validated and type safe RPC over the network, but also provides a number of type safe packages that can be used for interacting with backend infrastructure in a type safe fashion.
 
 License MIT
 
@@ -26,7 +26,7 @@ License MIT
 
 - [Overview](#Overview)
 - [Install](#Install)
-- [Example](#Example)
+- [Services](#Services)
 - [Types](libs/type/readme.md)
 - [Validation](libs/validate/readme.md)
 - [Contracts](libs/contract/readme.md)
@@ -41,17 +41,21 @@ License MIT
 Sidewinder consists of several distinct packages
 
 ```bash
-$ npm install @sidewinder/type       # JSON Schema type system
-$ npm install @sidewinder/validate   # Runtime validation for types.
-$ npm install @sidewinder/contract   # Json Schema + Service Descriptions
-$ npm install @sidewinder/server     # Http and Web Socket Services
+$ npm install @sidewinder/async      # Async utility library
 $ npm install @sidewinder/client     # Http and Web Socket Clients
-$ npm install @sidewinder/mongo      # Mongo Driver typed with JSON Schema
+$ npm install @sidewinder/contract   # Json Schema + Service Descriptions
+$ npm install @sidewinder/encoder    # Json and MessagePack encoding
+$ npm install @sidewinder/events     # Portable Event Emitter library
+$ npm install @sidewinder/mongo      # Mongo Driver with JSON Schema schematics
+$ npm install @sidewinder/platform   # Platform resolution
+$ npm install @sidewinder/server     # Http and Web Socket Services and Hosting
+$ npm install @sidewinder/type       # Json Schema Type Builder with Static Types
+$ npm install @sidewinder/validator  # Json Schema compiler and validator
 ```
 
-## Example
+## Services
 
-[TypeScript Example Link](https://www.typescriptlang.org/play?#code/JYWwDg9gTgLgBAbzgFQJ5gKZwL5z-g-AMyghDgHIABAZ2ABMMB3YAO0agHoBjCVmKAENuMCgChQkWIjgAJCDRgAaOAHUMAIwDKGKADdg3LLhJlKtBszYdONXXt3jJ0eEnUaAwgBtgGfjkJiUnJqOkYWdl0eHz9RMTFOTjgAWlS09IzMrOyc3LychKSPPgFhGELCuGL+IREaOEEoLDt9Qyw2GF0iYSxGGm4oYDAYYD56mAALQXg+geANLEE4O3gIIjhuQS8vQQ0vDEqiAFdWEVHWesF2BtY4CGHzrbg-Xno2AHM4ImgQaYA6OBaSwRDhwI52erVUp1OAwCBwSp6LYMaa9aZLOz+CAOKANOCsDAwJjQADWDXqTAw23JsPhimmhi2XlQcDYRF0VRi-kqV3ogPsHJAhImEHo9TYKHQGC0c2GAOQUBZ3CmrHeH1hEywYEagiFnSgl2uTRgRygt0qMCl9W+uMmWGOpxGYzgCy8ECYtNZrCRPnoqM5vn8vP5+kFwtFND+FUSKXycfjCcT6XivAu8ChtXgAF5JZg-hmygAKBBiAg234wABclAAVjQ+BQlKX8C0cdWS4E8BRBPR6BRq2g8wAxE5nPiFgDag4wfwAckcQAsoIWAJQqadzhdL1cAXXXUs3i90q7XzcCFBoRw0-dzM5HjvOk4386Py7Xt8P25Xe4-L6-p87SgQCOLwbw3e8x1YJ8Dz-Y932fLc4J-BDXxPJtAIoN49DAg8IKdKCpxgxC333PNYLfZCiNQlcAPwbAxGwFd4hjJNWLY9jkkqHRWiMaMkm4gwjHqMBSAMRgNj4AZCXacB9iFfgGWdG0qhKTNIxDQSMHqJojGABweTBVhgAARyOLBuC5GAAEk+UsfhgCIXxcWUjBhAmfFmDgJpTK0mAASs2SMHkmBFIuDYrgRGNwSwSZgHFRh7Mcjk4TgHxWDJQQaHrbhgFRPl6U6L5oA1LBvLMxR5U1IrtnddVKleGSwDk2Jxiq1sOVTaF4D1EUxSjRJKg4obhoKMRU0UZZ7DaOAcwJD13AEtpCwLEQmNbNo-h60VC27XtGzgQsLMDaz6BUQQVA0FcZoAPjxABqF01qmoxNvDegdsva8VEOyybLOi6rqzW6lmSR6xHWl6tveihgNA76jtiP6GgBm68QAKjBiGZyhnasP2n7jqR87HtRpYkkulMxngEUJtmzz5EUVcxBpvzosLLGmJZv4fEUPxCwAVgABmFpjBpG8Xxcqbxjr4gMWok1gCRET1FqEgEgXCawORE7FLHGYkNks2ErUqrBDmAA14DivF3Gl2I4CYCZDHc1MlZgcZ4QW57GuahT8PqbEOUqWQYBgMAzuuO1JtTWzLjUTQtAgbgSUJO3-Ed52Fbdj34+0JOU5gVWzZjSRfZC-27hxG3NEBfPCVN6q3QiT4pNROPbaNlL6rGBcYra72Gg0QP+s4MWJfH9jKbTQ3jpmjz5s0NOYGW1SyhUCgJlDsBK0SN1Ni8FnKyF4XOAoJjxvgHs+RzQQmEEYB4AR-g-n3rwdqv-aAEYVAAJnPqnlhXjnrfe+j9LIvyZB9K8X9f7-2nrDYBd8H4z1iBA7YO1YYwLgH-MaACsKINASg5+r9cZ6SwTg8aEB9jcwgO8ScV8VCfRULDFQWEdxXRjBOAAzCoZI39sEqEFn8fmO4gA)
+[TypeScript Example Link](https://www.typescriptlang.org/play?#code/JYWwDg9gTgLgBAbzgFQJ5gKZwL5z-g-AMyghDgHIABAZ2ABMMB3YAO0agHoBjCVmKAENuMCgFgAUKEixEcABIQaMADRwA6hgBGAZQxQAbsG5ZcJMpVoNmbDpxr6D+8VPDR4STVoDCAG2AY-DiExKTk1HSMLOz6PP6BopKSnJxwALQZmVnZObl5+QWF+cmp3nwCwjAlJXBl-EIiNHCCUFgOhsZYbDD6RMJYjDTcUMBgMMB8TTAAFoLwg8PAWliCcA7wEERw3IK+voJavhg1RACurCITrE2C7M2scBBjV7twgbz0bADmcETQIHMAHRwHTWaIcOCnBxNOoVRpwGAQOA1Ay7BhzAZzVYOIIQJxQZpwVgYGBMaAAa2aTSYGD2VIRSOUc2Mu18qDgbCI+lq8SCNVu9BBjm5IBJ0wg9CabBQ6AwOkWY2ByCg7O4s1YX2+COmWDALUEop6UBud1aMFOUAeNRgsqafwJMywZwu40mcGWvggTAZHNYqP89AxPICQQFQsMIrFEpogOqEhS6SKSeTKdTWSSEl413gsIa8AAvDLMIDc5UABQISQEe0AmAALkoACsaHwKCoq-h2viG5WJCE8BRBPR6BQG2hiwAxc6XPhlgDa44wgIAcqcQMsoGWAJRqRcrtcb7cAXV3sv36-0253HZCFBopy0o6LS6nLqu873q4vm53z-Ph63E8-y-ADrz7fsKBAU5fCfPdXxnVgPzPEDL1-T8D1QoD0O-K923A29PgMWCz3g11EIXZCMJ-U9ixQn8sMonCtzAghsEkbAtwzBM0x43i+LSGo9A6Ew4wTISjBMJowFIIxGG2PhhhJLpwCOUV+GZN17Vqco8xjcMJKwQ1xUlGpWhMYAnEJLMegAD3gXY+B+FgZgRWVBT1IRDX0JpGCINgMEFR1tUMqN6CVHUaiZcZuFczBfRrDSHmAHz9AsgLfjCYLtPqSpY3jTgan4oriuKCRJCzZQ1kcTo4ELYlvS8cTOjLUsRE4iQu06QEjIlMtB2HNs4DLayMDstRBDULQt1qgA+QkAGp3XazqTG60K+vvR81GG8pRtUZpJum-M5tWNIlskFalx6+g+qgmDtpGsaDqW2bCQAKnOjrqtW66+sIwadv4PbxsO17VlSKaMwq+BxUqurmAUJQYG3SRYZgQEoQwMtLvatHAX8ZRAjLABWAAGcn2sKkrqepmo-BDKp8rp3kYCaLNiREH0msk4FQSiWxuWkvFrCmMlthZ2KMD05AdWRfLfmAY14GSwkvHphI4CYaZjGmeTWA51mfUa77lLAVSEkSpo8W5Gp5BgGAwHGu4gocLNBRV1ZGogbhyRJdWgi1nW9YNqYkS9n2SW5rAamkc31LIq38VV7QQW9330ZQWW-j2L0tUUjEbg0bR-fgRE5YTCq1ywF2TeaLRrbylIqZplu+KhyZ4G4CX4Ya4uWZanTKjUChpntsA6xST0dl8NG6zJ8nOAodroeaYdauaJhBGATuWcBaffD6ocRzUABGNQACZl47tYH3XwRN+38WGb31kNofQaz7gS-yuvu674fnez9963Wgh-C+V9sxwEIv-LegCEgvz2H9CyYCv4QJbEcfGEAvjziPmoTaag7pqEIkeaaCY5wAGY1BpE-ufNQpNATEyPEAA)
 
 Sidewinder services consist of three main components, a [Contract](libs/contract/readme.md), [Service](libs/server/readme.md) and [Client](libs/client/readme.md). A Contract defines a set of callable RPC methods and is shared between both Client and Server. A Service provides an implementation for a Contract; and a Client calls methods implemented on the Service. Contracts are used to infer type safe functions on Services and Clients, well as validate method calls made over the network.
 
@@ -86,18 +90,17 @@ const Contract = Type.Contract({
 // ---------------------------------------------------------------------------
 // Service
 //
-// Services provide concrete implementations for Contracts. Services receive
-// a unique clientId identifier for each new request. Implementations can 
-// use this identifier to link associated state for the request. The following 
-// code implements the server contract methods.
+// Services provide concrete implementations for Contracts. Service methods
+// receive a context along with typed parameters defined the the method. The
+// static type information is derived from the Contract.
 //
 // ---------------------------------------------------------------------------
 
 const service = new WebService(Contract)
-service.method('add', (clientId, a, b) => a + b)
-service.method('sub', (clientId, a, b) => a - b)
-service.method('mul', (clientId, a, b) => a * b)
-service.method('div', (clientId, a, b) => a / b)
+service.method('add', (context, a, b) => a + b)
+service.method('sub', (context, a, b) => a - b)
+service.method('mul', (context, a, b) => a * b)
+service.method('div', (context, a, b) => a / b)
 
 const host = new Host()
 host.use(service)

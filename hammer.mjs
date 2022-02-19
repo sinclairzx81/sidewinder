@@ -37,19 +37,25 @@ const VERSION = '0.8.30'
 export async function build(target = 'target/build') {
     await clean()
     await Promise.all([
+        compilePackage(target, 'async',      VERSION, 'Sidewinder Async'),
         compilePackage(target, 'client',     VERSION, 'Sidewinder Client'),
         compilePackage(target, 'contract',   VERSION, 'Sidewinder Contract'),
+        compilePackage(target, 'encoder',    VERSION, 'Sidewinder Encoder'),
+        compilePackage(target, 'events',     VERSION, 'Sidewinder Events'),
         compilePackage(target, 'mongo',      VERSION, 'Sidewinder Mongo'),
+        compilePackage(target, 'platform',   VERSION, 'Sidewinder Platform'),
         compilePackage(target, 'server',     VERSION, 'Sidewinder Server'),
-        compilePackage(target, 'shared',     VERSION, 'Sidewinder Shared'),
         compilePackage(target, 'type',       VERSION, 'Sidewinder Type'),
         compilePackage(target, 'validator',  VERSION, 'Sidewinder Validator'),
     ])
+    await packPackage(target, 'async')
     await packPackage(target, 'client')
     await packPackage(target, 'contract')
+    await packPackage(target, 'encoder')
+    await packPackage(target, 'events')
     await packPackage(target, 'mongo')
+    await packPackage(target, 'platform')
     await packPackage(target, 'server')
-    await packPackage(target, 'shared')
     await packPackage(target, 'type')
     await packPackage(target, 'validator')   
 }
@@ -58,12 +64,19 @@ export async function build(target = 'target/build') {
 // Publish
 // -------------------------------------------------------------
 
+export async function publishPackage(name) {
+    await shell(`cd target/build/${name} && npm publish sidewinder-${name}-${VERSION}.tgz --access=public`)
+}
+
 export async function publish(target = 'target/build') {
-    await shell(`cd target/build/shared && npm publish sidewinder-shared-${VERSION}.tgz --access=public`)
-    await shell(`cd target/build/contract && npm publish sidewinder-contract-${VERSION}.tgz --access=public`)
-    await shell(`cd target/build/mongo && npm publish sidewinder-mongo-${VERSION}.tgz --access=public`)
-    await shell(`cd target/build/server && npm publish sidewinder-server-${VERSION}.tgz --access=public`)
-    await shell(`cd target/build/client && npm publish sidewinder-client-${VERSION}.tgz --access=public`)
-    await shell(`cd target/build/type && npm publish sidewinder-type-${VERSION}.tgz --access=public`)
-    await shell(`cd target/build/validator && npm publish sidewinder-validator-${VERSION}.tgz --access=public`)
+    await publishPackage('async')
+    await publishPackage('client')
+    await publishPackage('contract')
+    await publishPackage('encoder')
+    await publishPackage('events')
+    await publishPackage('mongo')
+    await publishPackage('platform')
+    await publishPackage('server')
+    await publishPackage('type')
+    await publishPackage('validator')
 }

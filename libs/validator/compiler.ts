@@ -26,8 +26,6 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-// import types from 'ajv'  # Required for Auto Dependency Resolution in Build
-
 import Ajv, { ErrorObject, ValidateFunction } from 'ajv/dist/2019'
 import { TSchema, Static, TUint8Array }       from '@sidewinder/type'
 import addFormats                             from 'ajv-formats'

@@ -20,7 +20,9 @@ This package contains the WebService (Http), WebSocketService (Ws) and Host type
 - [Express](#Express)
 - [WebService](#WebService)
 - [WebSocketService](#WebSocketService)
-- [Lifecycle Events](#Lifecycle-Events)
+- [Authorize](#Authorize)
+- [Context](#Context)
+- [Events](#Events)
 - [Exceptions](#Exceptions)
 - [Testing](#Testing)
 - [Classes](#Classes)
@@ -51,10 +53,10 @@ import { Host, WebService } from '@sidewinder/server'
 import { Contract } from '../shared/contract'
 
 const service = new WebService(Contract)
-service.method('add', (clientId, a, b) => a + b)
-service.method('sub', (clientId, a, b) => a - b)
-service.method('mul', (clientId, a, b) => a * b)
-service.method('div', (clientId, a, b) => a / b)
+service.method('add', (context, a, b) => a + b)
+service.method('sub', (context, a, b) => a - b)
+service.method('mul', (context, a, b) => a * b)
+service.method('div', (context, a, b) => a / b)
 
 const host = new Host()
 host.use(service)
@@ -118,9 +120,9 @@ import { Host } from '@sidewinder/server'
 import { Router } from 'express'
 
 const router = Router()
-router.get('/', (req, res) => res.send('home page'))
-router.get('/about', (req, res) => res.send('about page'))
 router.get('/contact', (req, res) => res.send('contact page'))
+router.get('/about',   (req, res) => res.send('about page'))
+router.get('/',        (req, res) => res.send('home page'))
 
 const host = new Host()
 host.use(router)
@@ -151,11 +153,7 @@ import { WebService } from '@sidewinder/server'
 
 const service = new WebService(Contract)
 
-service.method('echo', (clientId, message) => message)
-
-host.use('/v1/service', service)
-
-host.listen(5000)
+service.method('echo', (context, message) => message)
 ```
 
 ## WebSocketService
@@ -198,20 +196,112 @@ import { Contract }         from '../shared/contract'
 
 const service = new WebSocketService(Contract)
 
-service.method('render', async (clientId, request) => {
-    /** Simulate Progress Events */
+service.method('render', async (context, request) => {
     for(let percent = 0; percent <= 100; percent++) {
-        service.send(clientId, 'progress', { method: 'render', percent })
+        service.send(context, 'progress', { method: 'render', percent })
     }
-    return { 
-        imageUrl: 'https://domain.com/model/model.png' 
-    }
+    const imageUrl = 'https://domain.com/model/model.png' 
+    return { imageUrl }
 })
 ```
+## Authorize
 
-<a name="Lifecycle-Events"></a>
+Both WebService and WebSocketService provide a `authorize` event that can be used to allow or disallow calls for all methods defined on a given service. The role of the `authorize` event is to either resolve a valid context for the connecting user, or to throw if the user has no access. For more information on contexts, see the [Context](#Context) section below.
 
-## Lifecycle Events
+<details>
+  <summary>Contract</summary>
+
+```typescript
+import { Type } from '@sidewinder/contract'
+
+export const Contract = Type.Contract({
+    server: {
+        echo: Type.Function([Type.String()], Type.String())
+    }
+})
+
+```
+</details>
+
+```typescript
+const service = new WebService(Contract)
+
+service.event('authorize', (clientId, request) => { 
+    const bearer = request.headers['Authorization']
+    if(isValid(bearer)) return clientId    // Note: This event handler MUST return a valid
+    throw Error('Not authorized')          //       context value. If not specifying a context
+})                                         //       the default is string.
+
+```
+
+## Context
+
+Rpc method calls are executed under a context given by the `authorize` event. By default Sidewinder WebService and WebSocketService types will automatically implement a default `authorize` handler that returns the `clientId`. This can be overridden by developers by passing a `Context` schema to the service along with a `authorize` event handler to resolve that context. The context itself is schema type checked for correctness along with any request data passed by clients.
+
+<details>
+  <summary>Contract</summary>
+
+```typescript
+import { Type } from '@sidewinder/contract'
+
+export const Contract = Type.Contract({
+    server: {
+        echo: Type.Function([Type.String()], Type.String())
+    }
+})
+
+```
+</details>
+
+```typescript
+// ---------------------------------------------------------------------------
+// Context
+//
+// The following schema defines the expected context that should be returned
+// for the services `authorize` event. This schema is internally type checked 
+// for correctness such that if the `authorize` event returns data that fails
+// to match the given schema, the service will terminate the request. Clients
+// will see this as a kind of authorization failure.
+// 
+// ---------------------------------------------------------------------------
+const Context = Type.Object({
+    clientId: Type.String(),
+    name:     Type.String(),
+    roles:    Type.Array(Type.String())
+})
+
+// ---------------------------------------------------------------------------
+// Context
+//
+// We pass the Context object as the second parameter on the services
+// constructor. By specifying a Context, the expectation is that the service
+// will implement an `authorize` event handler to resolve the context.
+// 
+// ---------------------------------------------------------------------------
+const service = new WebService(Contract, Context)
+
+// ---------------------------------------------------------------------------
+// Authorize
+//
+// The following implements pseudo code that resolves the name and roles for
+// the connecting user. The values return are returned as the context.
+// ---------------------------------------------------------------------------
+
+service.event('authorize', (clientId, request) => {
+    const { name, roles } = await resolveIdentityFromRequest(request)
+    return { clientId, name, roles }
+})
+
+// ---------------------------------------------------------------------------
+// Methods
+//
+// Methods receive the context as the first argument on the method handler
+// ---------------------------------------------------------------------------
+service.method('echo', ({ clientId, name, roles }, message) => message)
+```
+
+
+## Events
 
 Both WebService and WebSocketService expose transport lifecycle events which are dispatched on changes to the underlying transport. Each event passes a unique `clientId` parameter than can be used to associate user state initialized for the connection. These events have slightly different behaviors between WebService and WebSocketService. The following describes their behaviours.
 
@@ -219,35 +309,37 @@ Both WebService and WebSocketService expose transport lifecycle events which are
   <summary>WebService Lifecycle Events</summary>
 
 ```typescript
-export type WebServiceAuthorizeCallback = (clientId: string, request: IncomingMessage) => Promise<boolean> | boolean
-export type WebServiceConnectCallback = (clientId: string) => Promise<void> | void
-export type WebServiceErrorCallback = (clientId: string, error: unknown) => Promise<void> | void
-export type WebServiceCloseCallback = (clientId: string) => Promise<void> | void
+export type WebServiceAuthorizeCallback<Context> = (clientId: string, request: IncomingMessage) => Promise<Context> | Context
+export type WebServiceConnectCallback<Context>   = (context: Context) => Promise<unknown> | unknown
+export type WebServiceCloseCallback<Context>     = (context: Context) => Promise<unknown> | unknown
+export type WebServiceErrorCallback              = (clientId: string, error: unknown) => Promise<unknown> | unknown
 
 /**
-* Subscribes to authorize events. This event is raised each time a http rpc request is made. Callers
-* can use this event to setup any associated state for the request
-*/
-public event(event: 'authorize', callback: WebServiceAuthorizeCallback): WebServiceAuthorizeCallback
+ * Subscribes to authorize events. This event is raised for every incoming Http Rpc request. Subscribing to 
+ * this event is mandatory if the service provides a context schema. The authorize event must return a value
+ * that conforms to the services context or throw if the user is not authorized.
+ */
+public event(event: 'authorize', callback: WebServiceAuthorizeCallback<Context>): WebServiceAuthorizeCallback<Context>
 
 /**
-* Subscribes to connect events. This event is raised immediately following a successful authorization.
-* Callers can use this event to initialize any additional associated state for the clientId.
-*/
-public event(event: 'connect', callback: WebServiceConnectCallback): WebServiceConnectCallback
+ * Subscribes to connect events. This event is raised immediately following a successful 'authorize' event only.
+ * This event receives the context returned from a successful authorization.
+ */
+public event(event: 'connect', callback: WebServiceConnectCallback<Context>): WebServiceConnectCallback<Context>
 
 /**
-* Subscribes to error events. This event is raised if there are any http transport errors. This event
-* is usually immediately followed by a close event.
-*/
-public event(event: 'error', callback: WebServiceErrorCallback): WebServiceErrorCallback
+ * Subscribes to close events. This event is raised whenever the remote Http request is about to close.
+ * Callers should use this event to clean up any associated state created for the request. This event receives 
+ * the context returned from a successful authorization.
+ */
+public event(event: 'close', callback: WebServiceCloseCallback<Context>): WebServiceCloseCallback<Context>
 
 /**
-* Subscribes to close events. This event is raised once the http rpc method has executed and the
-* http / tcp transport is about to terminate. Callers can use this event to clean up any associated
-* state for the clientId.
-*/
-public event(event: 'close', callback: WebServiceCloseCallback): WebServiceCloseCallback
+ * Subscribes to error events. This event is raised if there are any http transport errors. This event
+ * is usually immediately followed by a close event.
+ */
+public event(event: 'error', callback: WebServiceErrorCallback<Context>): WebServiceErrorCallback<Context>
+
 ```
 </details>
 
@@ -255,37 +347,37 @@ public event(event: 'close', callback: WebServiceCloseCallback): WebServiceClose
   <summary>WebSocketService Lifecycle Events</summary>
 
 ```typescript
-export type WebSocketServiceAuthorizeCallback = (clientId: string, request: IncomingMessage) => Promise<boolean> | boolean
-export type WebSocketServiceConnectCallback = (clientId: string) => Promise<void> | void
-export type WebSocketServiceErrorCallback = (clientId: string, error: unknown) => Promise<void> | void
-export type WebSocketServiceCloseCallback = (clientId: string) => Promise<void> | void
-
-/** 
- * Subscribes to authorize events. This event is raised for each connection and is used to
- * reject connections before socket upgrade. Callers should use this event to initialize any
- * associated state for the clientId.
- */
-public event(event: 'authorize', callback: WebSocketServiceAuthorizeCallback): WebSocketServiceAuthorizeCallback
+export type WebSocketServiceAuthorizeCallback<Context> = (clientId: string, request: IncomingMessage) => Promise<Context> | Context
+export type WebSocketServiceConnectCallback<Context>   = (context: Context) => Promise<unknown> | unknown
+export type WebSocketServiceCloseCallback<Context>     = (context: Context) => Promise<unknown> | unknown
+export type WebSocketServiceErrorCallback              = (context: string, error: unknown) => Promise<unknown> | unknown
 
 /**
- * Subscribes to connect events. This event is called immediately after a successful 'authorize' event.
- * Callers can use this event to transmit any provisional messages to clients, or initialize additional
- * state for the clientId.
+ * Subscribes to authorize events. This event is raised once for each incoming WebSocket request. Subscribing to 
+ * this event is mandatory if the service provides a context schema. The authorize event must return a value
+ * that conforms to the services context or throw if the user is not authorized. This context is reused for
+ * subsequence calls on this service.
  */
-public event(event: 'connect', callback: WebSocketServiceConnectCallback): WebSocketServiceConnectCallback
+public event(event: 'authorize', callback: WebSocketServiceAuthorizeCallback<Context>): WebSocketServiceAuthorizeCallback<Context>
 
 /**
- * Subcribes to error events. This event is typically raised for any socket transport errors. This
- * event is usually triggered immediately before a close event.
+ * Subscribes to connect events. This event is raised immediately following a successful 'authorize' event only.
+ * This event receives the context returned from a successful authorization.
  */
+public event(event: 'connect', callback: WebSocketServiceConnectCallback<Context>): WebSocketServiceConnectCallback<Context>
+
+/**
+ * Subscribes to close events. This event is raised whenever the remote WebSocket disconnects from the service.
+ * Callers should use this event to clean up any associated state created for the connection. This event receives 
+ * the context returned from a successful authorization.
+ */
+public event(event: 'close', callback: WebSocketServiceCloseCallback<Context>): WebSocketServiceCloseCallback<Context>
+
+/**
+* Subcribes to error events. This event is raised for any socket transport errors and is usually following
+* immediately by a close event. This event receives the initial clientId string value only.
+*/
 public event(event: 'error', callback: WebSocketServiceErrorCallback): WebSocketServiceErrorCallback
-
-/**
- * Subscribes to close events. This event is raises whenever a socket disconencts from
- * the service. Callers should use this event to delete any state associated with the
- * clientId.
- */
-public event(event: 'close', callback: WebSocketServiceCloseCallback): WebSocketServiceCloseCallback
 ```
 </details>
 
@@ -357,13 +449,13 @@ const Contract = Type.Contract({
 
 const service = new WebService(Contract)
 
-const addFunction = service.method('add', (clientId, a, b) => a + b)
+const addFunction = service.method('add', (context, a, b) => a + b)
 
 // ---------------------------------------------------------------------------
 // Test
 // ---------------------------------------------------------------------------
 
-const add = await addFunction('<clientId>', 1, 2)
+const add = await addFunction('<context>', 1, 2)
 
 if(add !== 3) throw Error('Unexpected result')
 ```
@@ -404,10 +496,10 @@ export class MathService extends WebService<typeof Contract> {
     constructor(private readonly logger: Logger) {
         super(Contract)
     }
-    public add = this.method('add', (clientId, a, b) => { this.logger.log('called add'); return a + b })
-    public sub = this.method('sub', (clientId, a, b) => { this.logger.log('called sub'); return a - b })
-    public mul = this.method('mul', (clientId, a, b) => { this.logger.log('called mul'); return a * b })
-    public div = this.method('div', (clientId, a, b) => { this.logger.log('called div'); return a / b })
+    public add = this.method('add', (context, a, b) => { this.logger.log('called add'); return a + b })
+    public sub = this.method('sub', (context, a, b) => { this.logger.log('called sub'); return a - b })
+    public mul = this.method('mul', (context, a, b) => { this.logger.log('called mul'); return a * b })
+    public div = this.method('div', (context, a, b) => { this.logger.log('called div'); return a / b })
 }
 
 const service = new MathService(new Logger())

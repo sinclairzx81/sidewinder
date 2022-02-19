@@ -33,10 +33,6 @@ export * from '@sidewinder/type'
 // TContract
 // --------------------------------------------------------------------------
 
-export type ContextMapping<T> = (clientId: string) => T
-
-export type ResolveContextMapping<T> = T extends ContextMapping<infer Context> ? Context : never
-
 export type ResolveContractFormat<T> = T extends 'json' | 'msgpack' ? T : 'json'
 
 export type ResolveContractInterface<T, R> = keyof T extends never ? R : T

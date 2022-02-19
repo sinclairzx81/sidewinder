@@ -26,7 +26,8 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-import { Environment, Events, EventHandler, EventListener } from '@sidewinder/shared'
+import { Platform } from '@sidewinder/platform'
+import { Events, EventHandler, EventListener } from '@sidewinder/events'
 import type * as ws from 'ws'
 
 function dynamicImport<T = any>(name: string): T {
@@ -46,7 +47,7 @@ export class UnifiedWebSocket {
         binaryType: 'blob'
     }) {
         this.events = new Events()
-        if (Environment.platform() === 'browser') {
+        if (Platform.platform() === 'browser') {
             this.socket = new WebSocket(this.endpoint)
             this.socket.binaryType = this.options.binaryType
             this.socket.addEventListener('open',    ()    => this.onOpen())
@@ -93,12 +94,12 @@ export class UnifiedWebSocket {
         return this.events.once(event, func)
     }
     public ping(data?: any, mask?:boolean) {
-        if(Environment.platform() === 'browser') return 
+        if(Platform.platform() === 'browser') return 
         const socket = this.socket as ws.WebSocket
         socket.ping(data, mask)
     }
     public pong(data?: any, mask?:boolean) {
-        if(Environment.platform() === 'browser') return 
+        if(Platform.platform() === 'browser') return 
         const socket = this.socket as ws.WebSocket
         socket.pong(data, mask)
     }

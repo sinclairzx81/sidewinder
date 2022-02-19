@@ -26,7 +26,7 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-import { Environment } from '@sidewinder/shared'
+import { Platform } from '@sidewinder/platform'
 
 export namespace Request {
 
@@ -84,7 +84,7 @@ export namespace Request {
                 res.on('end', () => resolve(Buffer.concat(buffers)))
             })
             request.on('error', (error: Error) => reject(error))
-            const version = Environment.version()
+            const version = Platform.version()
             if(version.major < 16) { // Node 14: Fallback
                 request.end(Buffer.from(body))
             } else {
@@ -94,7 +94,7 @@ export namespace Request {
     }
 
     export async function call(endpoint: string, headers: Record<string, string>, body: Uint8Array): Promise<Uint8Array> {
-        return Environment.platform() === 'browser'
+        return Platform.platform() === 'browser'
             ? await browser(endpoint, headers, body)
             : await node(endpoint, headers, body)
     }

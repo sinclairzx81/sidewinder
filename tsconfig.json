@@ -8,13 +8,16 @@
         "jsx": "react",
         "baseUrl": ".",
         "paths": {
-            "@sidewinder/client":     ["libs/client/index.ts"],
-            "@sidewinder/contract":   ["libs/contract/index.ts"],
-            "@sidewinder/mongo":      ["libs/mongo/index.ts"],
-            "@sidewinder/server":     ["libs/server/index.ts"],
-            "@sidewinder/shared":     ["libs/shared/index.ts"],
-            "@sidewinder/type":       ["libs/type/index.ts"],
-            "@sidewinder/validator":  ["libs/validator/index.ts"]
+            "@sidewinder/async":     ["libs/async/index.ts"],
+            "@sidewinder/client":    ["libs/client/index.ts"],
+            "@sidewinder/contract":  ["libs/contract/index.ts"],
+            "@sidewinder/encoder":   ["libs/encoder/index.ts"],
+            "@sidewinder/events":    ["libs/events/index.ts"],
+            "@sidewinder/mongo":     ["libs/mongo/index.ts"],
+            "@sidewinder/platform":  ["libs/platform/index.ts"],
+            "@sidewinder/server":    ["libs/server/index.ts"],
+            "@sidewinder/type":      ["libs/type/index.ts"],
+            "@sidewinder/validator": ["libs/validator/index.ts"]
         }
     }
 }
