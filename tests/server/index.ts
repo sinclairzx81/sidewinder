@@ -1,2 +1,2 @@
-import './web'
+// import './web'
 import './websocket'

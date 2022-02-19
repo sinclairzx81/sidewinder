@@ -34,9 +34,9 @@ import { WebSocket, MessageEvent, CloseEvent, ErrorEvent } from 'ws'
 import { IncomingMessage } from 'http'
 
 export type WebSocketServiceAuthorizeCallback<Context> = (clientId: string, request: IncomingMessage) => Promise<Context> | Context
-export type WebSocketServiceConnectCallback<Context> = (context: Context) => Promise<void> | void
-export type WebSocketServiceCloseCallback<Context> = (context: Context) => Promise<void> | void
-export type WebSocketServiceErrorCallback = (context: string, error: unknown) => Promise<void> | void
+export type WebSocketServiceConnectCallback<Context> = (context: Context) => Promise<unknown> | unknown
+export type WebSocketServiceCloseCallback<Context> = (context: Context) => Promise<unknown> | unknown
+export type WebSocketServiceErrorCallback = (context: string, error: unknown) => Promise<unknown> | unknown
 
 
 /**
@@ -187,7 +187,9 @@ export class WebSocketService<Contract extends TContract, Context extends TSchem
         socket.addEventListener('message', event => this.onMessage(clientId, socket, event))
         socket.addEventListener('error', event => this.onError(clientId, event))
         socket.addEventListener('close', event => this.onClose(clientId, event))
-        await this.onConnectCallback(clientId)
+
+        const context = this.resolveContext(clientId)
+        await this.onConnectCallback(context)
     }
 
     // -------------------------------------------------------------------------------------------
@@ -218,8 +220,7 @@ export class WebSocketService<Contract extends TContract, Context extends TSchem
     }
 
     private async executeRequest(clientId: string, socket: WebSocket, rpcRequest: RpcRequest) {
-        if(!this.contexts.has(clientId)) return this.sendResponseWithError(socket, rpcRequest, new Error(`Cannot find context for clientId ${clientId}`))
-        const context = this.contexts.get(clientId)!
+        const context = this.resolveContext(clientId)
         try {
             const result = await this.methods.execute(context, rpcRequest.method, rpcRequest.params)
             await this.sendResponseWithResult(socket, rpcRequest, result)
@@ -261,9 +262,19 @@ export class WebSocketService<Contract extends TContract, Context extends TSchem
 
     private onClose(clientId: string, event: CloseEvent) {
         this.responder.rejectFor(clientId, new Error('Client disconnected'))
+        const context = this.resolveContext(clientId)
         this.contexts.delete(clientId)
         this.sockets.delete(clientId)
-        this.onCloseCallback(clientId)
+        this.onCloseCallback(context)
+    }
+
+    // -------------------------------------------------------------------------------------------
+    // Utility
+    // -------------------------------------------------------------------------------------------
+    
+    private resolveContext(clientId: string) {
+        if(!this.contexts.has(clientId)) throw Error(`Critical: Cannot locate associated context for clientId '${clientId}'`)
+        return this.contexts.get(clientId)!
     }
 
     private setupNotImplemented() {

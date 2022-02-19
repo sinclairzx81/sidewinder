@@ -18,7 +18,7 @@ describe('server/WebService', () => {
         const buffer  = [] as any[]
         const port    = assert.nextPort()
         const service = new WebService(Contract)
-        service.event('authorize', (clientId, request) => { buffer.push('authorize'); return true})
+        service.event('authorize', (clientId, request) => { buffer.push('authorize'); return clientId })
         service.event('connect', (clientId) => { buffer.push('connect') })
         service.method('test', (clientId) => { buffer.push('call') })
         service.event('close', (clientId) => { buffer.push('close') })
@@ -39,7 +39,7 @@ describe('server/WebService', () => {
         const buffer  = [] as any[]
         const port    = assert.nextPort()
         const service = new WebService(Contract)
-        service.event('authorize', (clientId, request) => { buffer.push('authorize'); return true})
+        service.event('authorize', (clientId, request) => { buffer.push('authorize'); return clientId })
         service.event('connect', (clientId) => { buffer.push('connect') })
         service.method('test', (clientId) => { buffer.push('call') })
         service.event('close', (clientId) => { buffer.push('close') })
@@ -59,11 +59,11 @@ describe('server/WebService', () => {
         ])
     })
 
-    it('should terminate on authorize false', async () => {
+    it('should terminate on failed authorize', async () => {
         const buffer  = [] as any[]
         const port    = assert.nextPort()
         const service = new WebService(Contract)
-        service.event('authorize', (clientId, request) => { buffer.push('authorize'); return false })
+        service.event('authorize', (clientId, request) => { buffer.push('authorize'); throw Error('No') })
         service.event('connect', (clientId) => { buffer.push('connect') })
         service.method('test', (clientId) => { buffer.push('call') })
         service.event('close', (clientId) => { buffer.push('close') })
@@ -77,7 +77,8 @@ describe('server/WebService', () => {
         await host.dispose()
         
         assert.deepEqual(buffer, [
-            'authorize', 'error'
+            'authorize', // server
+            'error'      // client
         ])
     })
     // ------------------------------------------------------------------
@@ -123,27 +124,6 @@ describe('server/WebService', () => {
         
         assert.deepEqual(buffer, [
             'error', 'error', 'error', 'error'
-        ])
-    })
-    // ------------------------------------------------------------------
-    // Context Mapping
-    // ------------------------------------------------------------------
-    it('should support context mapping the clientId', async () => {
-        const buffer  = [] as any[]
-        const port    = assert.nextPort()
-        const service = new WebService(Contract)
-        service.method('test', (clientId) => [1, 2, 3], async (data) => { buffer.push(data) })
-
-        const host = new Host()
-        host.use(service)
-        host.listen(port)
-
-        const client = new WebClient(Contract, `http://localhost:${port}`)
-        await client.call('test').catch(() => buffer.push('error'))
-        await host.dispose()
-        
-        assert.deepEqual(buffer, [
-            [1, 2, 3]
         ])
     })
 })

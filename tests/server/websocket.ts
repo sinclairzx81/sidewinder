@@ -15,13 +15,13 @@ describe('server/WebSocketService', () => {
     // Lifetimes
     // ------------------------------------------------------------------
     it('should dispatch lifetime events', async () => {
-        const buffer  = [] as any[]
-        const port    = assert.nextPort()
+        const buffer = [] as any[]
+        const port = assert.nextPort()
         const service = new WebSocketService(Contract)
-        service.event('authorize', (clientId, request) => { buffer.push('authorize'); return true})
-        service.event('connect', (clientId) => { buffer.push('connect') })
-        service.method('test', (clientId) => { buffer.push('call') })
-        service.event('close', (clientId) => { buffer.push('close') })
+        service.event('authorize', (clientId, request) => { buffer.push('server:authorize'); return clientId })
+        service.event('connect', (context) => { buffer.push('server:connect') })
+        service.method('test', (context) => { buffer.push('server:call') })
+        service.event('close', (context) => { buffer.push('server:close') })
 
         const host = new Host()
         host.use(service)
@@ -33,17 +33,20 @@ describe('server/WebSocketService', () => {
         await host.dispose()
 
         assert.deepEqual(buffer, [
-            'authorize', 'connect', 'call', 'close'
+            'server:authorize',
+            'server:connect',
+            'server:call',
+            'server:close'
         ])
     })
-    it('should dispatch lifetime events for subsequent requests', async () => {
-        const buffer  = [] as any[]
-        const port    = assert.nextPort()
+    it('should dispatch multiple lifetime events for subsequent calls', async () => {
+        const buffer = [] as any[]
+        const port = assert.nextPort()
         const service = new WebSocketService(Contract)
-        service.event('authorize', (clientId, request) => { buffer.push('authorize'); return true})
-        service.event('connect', (clientId) => { buffer.push('connect') })
-        service.method('test', (clientId) => { buffer.push('call') })
-        service.event('close', (clientId) => { buffer.push('close') })
+        service.event('authorize', (clientId, request) => { buffer.push('server:authorize'); return clientId })
+        service.event('connect', (context) => { buffer.push('server:connect') })
+        service.method('test', (context) => { buffer.push('server:call') })
+        service.event('close', (context) => { buffer.push('server:close') })
 
         const host = new Host()
         host.use(service)
@@ -52,103 +55,163 @@ describe('server/WebSocketService', () => {
         const client = new WebSocketClient(Contract, `ws://localhost:${port}`)
         await client.call('test')
         await client.call('test')
+        await client.call('test')
+        await client.call('test')
         client.close()
         await host.dispose()
 
         assert.deepEqual(buffer, [
-            'authorize', 'connect', 'call', 'call', 'close',
+            'server:authorize',
+            'server:connect',
+            'server:call',
+            'server:call',
+            'server:call',
+            'server:call',
+            'server:close',
         ])
     })
 
-    it('should terminate on authorize false', async () => {
-        const buffer  = [] as any[]
-        const port    = assert.nextPort()
+    it('should dispatch only authorize event on authorization fail', async () => {
+        const buffer = [] as any[]
+        const port = assert.nextPort()
         const service = new WebSocketService(Contract)
-        service.event('authorize', (clientId, request) => { buffer.push('authorize'); return false })
-        service.event('connect', (clientId) => { buffer.push('connect') })
-        service.method('test', (clientId) => { buffer.push('call') })
-        service.event('close', (clientId) => { buffer.push('close') })
+        service.event('authorize', (clientId, request) => { buffer.push('server:authorize'); throw 1 })
+        service.event('connect', (context) => { buffer.push('server:connect') })
+        service.method('test', (context) => { buffer.push('server:call') })
+        service.event('close', (context) => { buffer.push('server:close') })
 
         const host = new Host()
         host.use(service)
         host.listen(port)
 
         const client = new WebSocketClient(Contract, `ws://localhost:${port}`)
-        await client.call('test').catch(() => buffer.push('error'))
+        await client.call('test').catch(() => buffer.push('client:error'))
         client.close()
         await host.dispose()
-        
+
         assert.deepEqual(buffer, [
-            'authorize', 'error'
+            'server:authorize',
+            'client:error'
         ])
     })
+
     // ------------------------------------------------------------------
-    // Errors
+    // Error Handling
     // ------------------------------------------------------------------
-    it('should not crash on synchronous error', async () => {
-        const buffer  = [] as any[]
-        const port    = assert.nextPort()
+
+    it('should not crash service on synchronous error', async () => {
+        const buffer = [] as any[]
+        const port = assert.nextPort()
         const service = new WebSocketService(Contract)
-        service.method('test', (clientId) => { throw Error() })
+        service.method('test', (context) => { throw Error() })
+        const host = new Host()
+        host.use(service)
+        host.listen(port)
+
+        const client = new WebSocketClient(Contract, `ws://localhost:${port}`)
+        await client.call('test').catch(() => buffer.push('client:error'))
+        await client.call('test').catch(() => buffer.push('client:error'))
+        await client.call('test').catch(() => buffer.push('client:error'))
+        await client.call('test').catch(() => buffer.push('client:error'))
+        client.close()
+        await host.dispose()
+
+        assert.deepEqual(buffer, [
+            'client:error',
+            'client:error',
+            'client:error',
+            'client:error'
+        ])
+    })
+
+    it('should not crash on service asynchronous error', async () => {
+        const buffer = [] as any[]
+        const port = assert.nextPort()
+        const service = new WebSocketService(Contract)
+        service.method('test', async (context) => { throw Error() })
 
         const host = new Host()
         host.use(service)
         host.listen(port)
 
         const client = new WebSocketClient(Contract, `ws://localhost:${port}`)
-        await client.call('test').catch(() => buffer.push('error'))
-        await client.call('test').catch(() => buffer.push('error'))
-        await client.call('test').catch(() => buffer.push('error'))
-        await client.call('test').catch(() => buffer.push('error'))
+        await client.call('test').catch(() => buffer.push('client:error'))
+        await client.call('test').catch(() => buffer.push('client:error'))
+        await client.call('test').catch(() => buffer.push('client:error'))
+        await client.call('test').catch(() => buffer.push('client:error'))
         client.close()
         await host.dispose()
-        
         assert.deepEqual(buffer, [
-            'error', 'error', 'error', 'error'
+            'client:error', 
+            'client:error',
+            'client:error',
+            'client:error'
         ])
     })
-    it('should not crash on asynchronous error', async () => {
-        const buffer  = [] as any[]
-        const port    = assert.nextPort()
-        const service = new WebSocketService(Contract)
-        service.method('test', async (clientId) => { throw Error() })
+
+    // ------------------------------------------------------------------
+    // Context
+    // ------------------------------------------------------------------
+
+    it('should construct context on authorize and propagate to lifetime events', async () => {
+        const buffer = [] as any[]
+        const port = assert.nextPort()
+        const Context = Type.Object({ x: Type.Number(), y: Type.Number(), z: Type.Number() })
+        const service = new WebSocketService(Contract, Context)
+        service.event('authorize', () => { return { x: 1, y: 2, z: 3 } })
+        service.event('connect', (context) => buffer.push(['server:connect', context]))
+        service.event('close', (context) => buffer.push(['server:close', context]))
+        service.method('test', (context) => { buffer.push(['server:call', context]) })
 
         const host = new Host()
         host.use(service)
         host.listen(port)
 
         const client = new WebSocketClient(Contract, `ws://localhost:${port}`)
-        await client.call('test').catch(() => buffer.push('error'))
-        await client.call('test').catch(() => buffer.push('error'))
-        await client.call('test').catch(() => buffer.push('error'))
-        await client.call('test').catch(() => buffer.push('error'))
+        await client.call('test').catch(() => { })
+        await client.call('test').catch(() => { })
+        await client.call('test').catch(() => { })
+        await client.call('test').catch(() => { })
         client.close()
         await host.dispose()
-        
         assert.deepEqual(buffer, [
-            'error', 'error', 'error', 'error'
+            ['server:connect', { x: 1, y: 2, z: 3 }],
+            ['server:call', { x: 1, y: 2, z: 3 }],
+            ['server:call', { x: 1, y: 2, z: 3 }],
+            ['server:call', { x: 1, y: 2, z: 3 }],
+            ['server:call', { x: 1, y: 2, z: 3 }],
+            ['server:close', { x: 1, y: 2, z: 3 }],
         ])
     })
-    // ------------------------------------------------------------------
-    // Context Mapping
-    // ------------------------------------------------------------------
-    it('should support context mapping the clientId', async () => {
-        const buffer  = [] as any[]
-        const port    = assert.nextPort()
-        const service = new WebSocketService(Contract)
-        service.method('test', (clientId) => [1, 2, 3], async (data) => { buffer.push(data) })
+
+    it('should disconnect on service failure to construct context', async () => {
+        const buffer = [] as any[]
+        const port = assert.nextPort()
+        const Context = Type.Object({ x: Type.Number(), y: Type.Number(), z: Type.Number() })
+        const service = new WebSocketService(Contract, Context)
+        // @ts-ignore
+        service.event('authorize', () => { return { x: 1, y: 2 } })
+        service.event('connect', () => buffer.push('server:connect'))
+        service.event('close', () => buffer.push('server:close'))
+        service.method('test', (context) => { buffer.push('server:call') })
 
         const host = new Host()
         host.use(service)
         host.listen(port)
 
         const client = new WebSocketClient(Contract, `ws://localhost:${port}`)
-        await client.call('test').catch(() => buffer.push('error'))
+        await client.call('test').catch(() => buffer.push('client:error'))
+        await client.call('test').catch(() => buffer.push('client:error'))
+        await client.call('test').catch(() => buffer.push('client:error'))
+        await client.call('test').catch(() => buffer.push('client:error'))
+
         client.close()
         await host.dispose()
-        
         assert.deepEqual(buffer, [
-            [1, 2, 3]
+            'client:error',
+            'client:error',
+            'client:error',
+            'client:error',
         ])
     })
 })
