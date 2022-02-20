@@ -36,7 +36,7 @@ License MIT
 - [Async](libs/async/readme.md)
 - [Channels](libs/channel/readme.md)
 - [Clients](libs/client/readme.md)
-- [Contracts](libs/contact/readme.md)
+- [Contracts](libs/contract/readme.md)
 - [Encoding](libs/encoder/readme.md)
 - [Events](libs/events/readme.md)
 - [Mongo](libs/mongo/readme.md)
