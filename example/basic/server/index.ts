@@ -1,7 +1,7 @@
 import { Delay } from '@sidewinder/async'
 import { SyncChannel, Channel, SyncSender, Receiver } from '@sidewinder/channel'
 
-const channel = new SyncChannel()
+const channel = new SyncChannel(6)
 
 let index = 0
 async function sender(sender: SyncSender<any>) {
@@ -19,6 +19,8 @@ async function receiver(receiver: Receiver<any>) {
         
     }
 }
+
+
 
 
 sender(channel).then(() => console.log('sender:done'))

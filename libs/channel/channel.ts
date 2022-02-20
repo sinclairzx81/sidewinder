@@ -26,8 +26,9 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-import { Queue } from './queue'
-import { Sender } from './sender'
+import { Deferred } from '@sidewinder/async'
+import { Queue }    from './queue'
+import { Sender }   from './sender'
 import { Receiver } from './receiver'
 
 type Message<T> = NextMessage<T> | ErrorMessage | EndMessage
@@ -52,13 +53,14 @@ interface EndMessage {
  * with no upper limit with senders unaware of the receivers throughput.
  */
 export class Channel<T = any> implements Sender<T>, Receiver<T> {
-    private readonly interval: NodeJS.Timer
     private readonly queue: Queue<Message<T>>
+    private readonly sends: Deferred<void>[]
     private ended: boolean
 
-    constructor() {
-        this.interval = setInterval(() => {}, 60_000)
+    /** Creates this channel with the given bound. The default is 1. */
+    constructor(private bounds: number = 1) {
         this.queue = new Queue<Message<T>>()
+        this.sends = []
         this.ended = false
     }
 
@@ -66,54 +68,42 @@ export class Channel<T = any> implements Sender<T>, Receiver<T> {
     public async *[Symbol.asyncIterator]() {
         while (true) {
             const next = await this.next()
-            if (next === null) break
+            if (next === null) return
             yield next
         }
     }
 
-    /** Returns the next value from this channel or null if EOF. */
-    public async next(): Promise<T | null> {
-        if (this.ended) {
-            console.log('clearing 1')
-            clearInterval(this.interval)
-            const kind = MessageType.End
-            this.queue.enqueue({ type: kind })
-        }
-        const next = await this.queue.dequeue()
-        if(next.type === MessageType.Next) {
-            return next.value
-        } else if(next.type === MessageType.Error) {
-            throw next.error
-        } else {
-            clearInterval(this.interval)
-            return null
-        }
+    /** Returns the number of values buffered in this channel */
+    public get bufferedAmount() {
+        return this.queue.bufferedAmount
     }
 
     /** Sends the given value to this channel. If channel has ended no action. */
-    public send(value: T) {
-        if (this.ended) return
-        const kind = MessageType.Next
-        this.queue.enqueue({ type: kind, value })
+    public async send(value: T): Promise<void> {
+        if(this.ended) return
+        this.queue.enqueue({ type: MessageType.Next, value })
     }
 
     /** Sends the given error to this channel causing the receiver to throw on next(). If channel has ended no action. */
-    public error(error: Error) {
+    public async error(error: Error): Promise<void> {
         if (this.ended) return
-        const kind = MessageType.Error
-        this.queue.enqueue({ type: kind, error })
-        this.end()
+        this.queue.enqueue({ type: MessageType.Error, error })
     }
 
     /** Ends this channel. */
-    public end() {
+    public async end(): Promise<void> {
         if (this.ended) return
-        const kind = MessageType.End
-        this.queue.enqueue({ type: kind })
         this.ended = true
+        this.queue.enqueue({ type: MessageType.End })
+    }
+
+    /** Returns the next value from this channel or null if EOF. */
+    public async next(): Promise<T | null> {
+        const message = await this.queue.dequeue()
+        switch (message.type) {
+            case MessageType.Next: return message.value
+            case MessageType.Error: throw message.error
+            case MessageType.End: return null
+        }
     }
 }
-
-const channel = new Channel()
-
-const x = channel[Symbol.asyncIterator]

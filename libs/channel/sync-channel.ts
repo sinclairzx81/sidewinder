@@ -26,9 +26,10 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-import { Deferred, Barrier } from '@sidewinder/async'
+import { Deferred } from '@sidewinder/async'
 import { SyncSender } from './sync-sender'
 import { Receiver } from './receiver'
+import { Queue } from './queue'
 
 type Message<T> = NextMessage<T> | ErrorMessage | EndMessage
 
@@ -52,18 +53,14 @@ interface EndMessage {
  * capacity permits additional values.
  */
 export class SyncChannel<T = any> implements SyncSender<T>, Receiver<T> {
-    private readonly interval: NodeJS.Timer
-    private readonly barrier: Barrier
-    private readonly queue: Message<T> []
-    private readonly recvs: Deferred<Message<T>>[]
+    private readonly queue: Queue<Message<T>>
+    private readonly sends: Deferred<void>[]
     private ended: boolean
-    
+
     /** Creates this channel with the given bound. The default is 1. */
-    constructor(private bounds: number = 1) { 
-        this.interval = setInterval(() => {}, 1)
-        this.barrier = new Barrier(false)
-        this.queue = []
-        this.recvs = []
+    constructor(private bounds: number = 1) {
+        this.queue = new Queue<Message<T>>()
+        this.sends = []
         this.ended = false
     }
 
@@ -77,66 +74,64 @@ export class SyncChannel<T = any> implements SyncSender<T>, Receiver<T> {
     }
 
     /** Returns the number of values buffered in this channel */
-    public get buffered() {
-        return this.queue.length
+    public get bufferedAmount() {
+        return this.queue.bufferedAmount
     }
 
     /** Sends the given value to this channel. If channel has ended no action. */
     public async send(value: T): Promise<void> {
         if(this.ended) return
-        await this.enqueueMessage({ type: MessageType.Next, value })
+        await this.waitForQueue()
+        this.queue.enqueue({ type: MessageType.Next, value })
     }
-    
+
     /** Sends the given error to this channel causing the receiver to throw on next(). If channel has ended no action. */
     public async error(error: Error): Promise<void> {
-        if(this.ended) return
-        await this.enqueueMessage({ type: MessageType.Error, error })
+        if (this.ended) return
+        this.ended = true
+        await this.waitForQueue()
+        this.queue.enqueue({ type: MessageType.Error, error })
+        this.queue.enqueue({ type: MessageType.End })
     }
 
     /** Ends this channel. */
     public async end(): Promise<void> {
-        if(this.ended) return
+        if (this.ended) return
         this.ended = true
-        await this.enqueueMessage({ type: MessageType.End })
+        await this.waitForQueue()
+        this.queue.enqueue({ type: MessageType.End })
     }
-    
+
     /** Returns the next value from this channel or null if EOF. */
     public async next(): Promise<T | null> {
-        if(this.queue.length > 0) {
-            return await this.dequeueMessage(this.queue.shift()!)
-        } else {
-            const recv = new Deferred<Message<T>>()
-            this.recvs.push(recv)
-            return await this.dequeueMessage(await recv.promise())
+        const message = await this.queue.dequeue()
+        this.releaseQueue()
+        switch (message.type) {
+            case MessageType.Next: return message.value
+            case MessageType.Error: throw message.error
+            case MessageType.End: return null
         }
     }
 
-    private atCapacity() { 
-        return (this.queue.length >= this.bounds)  
+    /** Checks if the buffer is at capacity */
+    private atCapacity() {
+        return this.queue.bufferedAmount >= this.bounds
     }
 
-    private async enqueueMessage(message: Message<T>) {
-        await this.barrier.wait()
-        if(this.recvs.length > 0) {
-            const recv = this.recvs.shift()!
-            recv.resolve(message)
-        } else {
-            this.queue.push(message)
-        }
-        if(this.atCapacity()) {
-            this.barrier.pause()
+    /** Releases one send from the queue. */
+    private async releaseQueue() {
+        if (!this.atCapacity() && this.sends.length > 0) {
+            const send = this.sends.shift()!
+            send.resolve()
         }
     }
 
-    private async dequeueMessage(message: Message<T>) {
-        if(!this.atCapacity()) this.barrier.resume()
-        if(message.type === MessageType.Next) {
-            return Promise.resolve(message.value)
-        } else if(message.type === MessageType.Error) {
-            return Promise.reject(message.error)
-        } else {
-            clearInterval(this.interval)
-            return Promise.resolve(null)
+    /** Waits for the queue to become free */
+    private async waitForQueue() {
+        if (this.atCapacity()) {
+            const deferred = new Deferred<void>()
+            this.sends.push(deferred)
+            await deferred.promise()
         }
     }
 }

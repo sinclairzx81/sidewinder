@@ -29,30 +29,40 @@ THE SOFTWARE.
 import { Deferred } from '@sidewinder/async'
 
 export class Queue<T> {
-    private readonly promises:  Promise<T>[] = []
-    private readonly deferreds: Deferred<T>[] = []
+    private readonly enqueues: Deferred<T>[]
+    private readonly dequeues: Promise<T>[]
     
-    /** Dequeues the next value from this queue or waits for a value to arrive. */
-    public dequeue(): Promise<T> {
-        if (this.promises.length > 0) {
-            const promise = this.promises.shift()!
-            return promise
-        } else {
-            const deferred = new Deferred<T>()
-            this.deferreds.push(deferred)
-            return deferred.promise()
-        }
+    constructor(private readonly bounds: number = Infinity) {
+        this.enqueues = []
+        this.dequeues = []
+    }
+
+    /** Returns the number of values buffered in this queue */
+    public get bufferedAmount(): number {
+        return this.dequeues.length
     }
 
     /** Enqueues the next value in this queue. */
     public enqueue(value: T) {
-        if (this.deferreds.length > 0) {
-            const deferred = this.deferreds.shift()!
+        if (this.enqueues.length > 0) {
+            const deferred = this.enqueues.shift()!
             deferred.resolve(value)
         } else {
             const deferred = new Deferred<T>()
             deferred.resolve(value)
-            this.promises.push(deferred.promise())
+            this.dequeues.push(deferred.promise())
+        }
+    }
+
+    /** Dequeues the next value from this queue or waits for a value to arrive. */
+    public dequeue(): Promise<T> {
+        if (this.dequeues.length > 0) {
+            const promise = this.dequeues.shift()!
+            return promise
+        } else {
+            const deferred = new Deferred<T>()
+            this.enqueues.push(deferred)
+            return deferred.promise()
         }
     }
 }
