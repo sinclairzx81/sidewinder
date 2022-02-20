@@ -26,13 +26,7 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-/** 
- * A KeepAlive is a Node or Browser interval to prevent the JavaScript
- * process suddenly terminating on async iteration. This is typical in
- * Node processes but less relevant in Browser environments. The Channel
- * and SyncChannel types dispose() of the keepAlive once the last value
- * has been read.
- */
+/** Used to prevent the Node process from terminating with no actions scheduled on the JS event loop */
 export class KeepAlive {
     private timer: NodeJS.Timer
     constructor() {
