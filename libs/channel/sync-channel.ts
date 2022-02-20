@@ -45,7 +45,7 @@ export class SyncChannel<T = any> implements SyncSender<T>, Receiver<T> {
     private ended: boolean
 
     /** Creates this channel with the given bound. The default is 1. */
-    constructor(private bounds: number = 1, keepAlive: boolean = false) {
+    constructor(private readonly bounds: number = 1, keepAlive: boolean = false) {
         this.keepAlive = keepAlive ? new KeepAlive() : null
         this.queue = new Queue<Message<T>>()
         this.sends = []

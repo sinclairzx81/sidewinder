@@ -42,7 +42,7 @@ export class Channel<T = any> implements Sender<T>, Receiver<T> {
     private ended: boolean
 
     /** Creates this channel with the given bound. The default is 1. */
-    constructor(private bounds: number = 1, keepAlive: boolean = false) {
+    constructor(keepAlive: boolean = false) {
         this.keepAlive = keepAlive ? new KeepAlive() : null
         this.queue = new Queue<Message<T>>()
         this.ended = false
@@ -95,7 +95,7 @@ export class Channel<T = any> implements Sender<T>, Receiver<T> {
             }
         }
     }
-    
+
     /** Terminates the keepAlive */
     private terminateKeepAlive() {
         if(this.keepAlive === null) return
