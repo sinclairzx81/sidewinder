@@ -18,7 +18,9 @@
 
 ## Overview
 
-Sidewinder is a strict and fully typed micro service framework built for Node and Browser environments. It is designed for architectures where many backend services need to communicate using a strict set of protocols as well as maintain a strict contractual agreement on how they should communicate. It is principally built for validated and type safe RPC over the network, but also provides a number of type safe packages that can be used for interacting with backend infrastructure in a type safe fashion.
+Sidewinder is a strict and fully typed micro service framework built for Node and Browser environments. It is designed for scalable web service architectures where multiple services need to communicate with one another in complex ways and where challenges arise asserting that each service is correctly adhering to strict service description contracts that describe the communication protocols between each service. This framework helps ease some of these challenges by encoding a runtime type system into JavaScript then using the TypeScript compiler inference to statically assert the correctness of each Service and Client. 
+
+Sidewinder is designed primarily with a focus on strict validated RPC calls made over the network, but also includes a number of auxiliary packages that provide similar assurances when communicating with database and queuing infrastructure.
 
 License MIT
 
@@ -38,16 +40,17 @@ License MIT
 
 ## Install
 
-Sidewinder consists of several distinct packages
+Sidewinder consists of several distinct packages that target various aspects common to micro service development. These packages can be taken individually or as a whole.
 
 ```bash
-$ npm install @sidewinder/async      # Async utility library
+$ npm install @sidewinder/async      # Asynchronous Primitives
+$ npm install @sidewinder/channel    # Asynchronous Channels
 $ npm install @sidewinder/client     # Http and Web Socket Clients
-$ npm install @sidewinder/contract   # Json Schema + Service Descriptions
-$ npm install @sidewinder/encoder    # Json and MessagePack encoding
-$ npm install @sidewinder/events     # Portable Event Emitter library
-$ npm install @sidewinder/mongo      # Mongo Driver with JSON Schema schematics
-$ npm install @sidewinder/platform   # Platform resolution
+$ npm install @sidewinder/contract   # Service Descriptions Contracts
+$ npm install @sidewinder/encoder    # Json and MessagePack Encoding
+$ npm install @sidewinder/events     # Portable Event Emitter
+$ npm install @sidewinder/mongo      # Type Safe Mongo Driver
+$ npm install @sidewinder/platform   # JavaScript Environment Checks
 $ npm install @sidewinder/server     # Http and Web Socket Services and Hosting
 $ npm install @sidewinder/token      # Type Safe Json Web Token
 $ npm install @sidewinder/type       # Json Schema Type Builder with Static Types
