@@ -26,41 +26,25 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-import { Deferred } from '@sidewinder/async'
-import { Queue }    from './queue'
-import { Sender }   from './sender'
-import { Receiver } from './receiver'
-
-type Message<T> = NextMessage<T> | ErrorMessage | EndMessage
-
-enum MessageType { Next, Error, End }
-
-interface NextMessage<T> {
-    type: MessageType.Next
-    value: T
-}
-interface ErrorMessage {
-    type: MessageType.Error
-    error: Error
-}
-interface EndMessage {
-    type: MessageType.End
-}
-
+import { Queue }                from './queue'
+import { KeepAlive }            from './keepalive'
+import { Message, MessageType } from './message'
+import { Sender }               from './sender'
+import { Receiver }             from './receiver'
 
 /** 
  * An unbounded asynchronous channel. Values sent into this channel are buffered
  * with no upper limit with senders unaware of the receivers throughput.
  */
 export class Channel<T = any> implements Sender<T>, Receiver<T> {
+    private readonly keepAlive: KeepAlive | null
     private readonly queue: Queue<Message<T>>
-    private readonly sends: Deferred<void>[]
     private ended: boolean
 
     /** Creates this channel with the given bound. The default is 1. */
-    constructor(private bounds: number = 1) {
+    constructor(private bounds: number = 1, keepAlive: boolean = false) {
+        this.keepAlive = keepAlive ? new KeepAlive() : null
         this.queue = new Queue<Message<T>>()
-        this.sends = []
         this.ended = false
     }
 
@@ -87,7 +71,9 @@ export class Channel<T = any> implements Sender<T>, Receiver<T> {
     /** Sends the given error to this channel causing the receiver to throw on next(). If channel has ended no action. */
     public async error(error: Error): Promise<void> {
         if (this.ended) return
+        this.ended = true
         this.queue.enqueue({ type: MessageType.Error, error })
+        this.queue.enqueue({ type: MessageType.End })
     }
 
     /** Ends this channel. */
@@ -103,7 +89,16 @@ export class Channel<T = any> implements Sender<T>, Receiver<T> {
         switch (message.type) {
             case MessageType.Next: return message.value
             case MessageType.Error: throw message.error
-            case MessageType.End: return null
+            case MessageType.End: {
+                this.terminateKeepAlive()
+                return null
+            }
         }
+    }
+    
+    /** Terminates the keepAlive */
+    private terminateKeepAlive() {
+        if(this.keepAlive === null) return
+        this.keepAlive.dispose()
     }
 }

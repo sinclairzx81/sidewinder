@@ -26,26 +26,12 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-import { Deferred } from '@sidewinder/async'
-import { SyncSender } from './sync-sender'
-import { Receiver } from './receiver'
-import { Queue } from './queue'
-
-type Message<T> = NextMessage<T> | ErrorMessage | EndMessage
-
-enum MessageType { Next, Error, End }
-
-interface NextMessage<T> {
-    type: MessageType.Next
-    value: T
-}
-interface ErrorMessage {
-    type: MessageType.Error
-    error: Error
-}
-interface EndMessage {
-    type: MessageType.End
-}
+import { Deferred }             from '@sidewinder/async'
+import { KeepAlive }            from './keepalive'
+import { Message, MessageType } from './message'
+import { SyncSender }           from './sync-sender'
+import { Receiver }             from './receiver'
+import { Queue }                from './queue'
 
 /** 
  * An bounded synchronous channel. Values sent into this channel are queued
@@ -53,12 +39,14 @@ interface EndMessage {
  * capacity permits additional values.
  */
 export class SyncChannel<T = any> implements SyncSender<T>, Receiver<T> {
+    private readonly keepAlive: KeepAlive | null
     private readonly queue: Queue<Message<T>>
     private readonly sends: Deferred<void>[]
     private ended: boolean
 
     /** Creates this channel with the given bound. The default is 1. */
-    constructor(private bounds: number = 1) {
+    constructor(private bounds: number = 1, keepAlive: boolean = false) {
+        this.keepAlive = keepAlive ? new KeepAlive() : null
         this.queue = new Queue<Message<T>>()
         this.sends = []
         this.ended = false
@@ -109,7 +97,10 @@ export class SyncChannel<T = any> implements SyncSender<T>, Receiver<T> {
         switch (message.type) {
             case MessageType.Next: return message.value
             case MessageType.Error: throw message.error
-            case MessageType.End: return null
+            case MessageType.End: {
+                this.terminateKeepAlive()
+                return null
+            }
         }
     }
 
@@ -133,5 +124,11 @@ export class SyncChannel<T = any> implements SyncSender<T>, Receiver<T> {
             this.sends.push(deferred)
             await deferred.promise()
         }
+    }
+
+    /** Terminates the keepAlive */
+    private terminateKeepAlive() {
+        if(this.keepAlive === null) return
+        this.keepAlive.dispose()
     }
 }
