@@ -26,6 +26,7 @@ async function strings() {
     }
     await channel2.end()
 }
+
 async function receiver() {
     for await(const value of Select([channel0, channel1, channel2])) {
         console.log('        recv', value)

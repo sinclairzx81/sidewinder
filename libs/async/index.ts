@@ -29,5 +29,5 @@ THE SOFTWARE.
 export * from './barrier'
 export * from './deferred'
 export * from './delay'
-export * from './responder'
+export * from './semaphore'
 export * from './timeout'
