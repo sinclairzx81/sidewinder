@@ -26,6 +26,23 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-export function Select() {
-    
+import { SyncChannel }  from './sync-channel'
+import { Receiver } from './receiver'
+
+type ReceiverValues<T extends readonly Receiver<any>[]> = { 
+    [K in keyof T]: T[K] extends Receiver<infer U> ? U : never
+}[number]
+
+/** Selects from one or many async iterables and returns a receiver to receive values from each. */
+export function Select<I extends readonly Receiver<any>[]>(receivers: [...I]): Receiver<ReceiverValues<I>> {
+    async function receive(sender: SyncChannel<any>, iterator: AsyncIterable<any>) {
+        for await(const value of iterator) {
+            await sender.send(value)
+        }
+    }
+
+    const channel  = new SyncChannel<any>(1)
+    const promises = receivers.map(receiver => receive(channel, receiver))
+    Promise.all(promises).then(() => channel.end())
+    return channel
 }

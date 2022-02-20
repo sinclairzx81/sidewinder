@@ -1,29 +1,43 @@
 import { Delay } from '@sidewinder/async'
-import { SyncChannel, Channel, SyncSender, Receiver } from '@sidewinder/channel'
+import { Channel, Select, SyncChannel, SyncSender, Receiver } from '@sidewinder/channel'
 
-const channel = new SyncChannel(6, true)
+const channel0 = new SyncChannel<number>(1, true)
+const channel1 = new SyncChannel<boolean>(1, true)
+const channel2 = new SyncChannel<string>(1, true)
 
-let index = 0
-async function sender(sender: SyncSender<any>) {
+async function numbers() {
     for(let i = 0; i < 20; i++) {
-        const next = index++
-        await sender.send(next)
-        console.log('sent', next)
+        await channel0.send(i)
+        console.log('sent:number')
     }
-    // await sender.end()
+    await channel0.end()
 }
-
-async function receiver(receiver: Receiver<any>) {
-    for await(const value of receiver) {
+async function booleans() {
+    for(let i = 0; i < 20; i++) {
+        await channel1.send(true)
+        console.log('sent:boolean')
+    }
+    await channel1.end()
+}
+async function strings() {
+    for(let i = 0; i < 20; i++) {
+        await channel2.send('hello world')
+        console.log('sent:string')
+    }
+    await channel2.end()
+}
+async function receiver() {
+    for await(const value of Select([channel0, channel1, channel2])) {
         console.log('        recv', value)
-        
+        await Delay.wait(1000)
     }
 }
 
+strings()
+numbers()
+booleans()
 
 
-
-sender(channel).then(() => console.log('sender:done'))
-receiver(channel).then(() => console.log('receiver:done'))
+receiver().then(() => console.log('receiver:done'))
 
 
