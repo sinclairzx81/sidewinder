@@ -2,7 +2,6 @@ import { Queue } from '@sidewinder/channel'
 import * as assert from '../assert/index'
 
 describe('channel/Queue', () => {
-
     it('should enqueue value', () => {
         const queue = new Queue()
         queue.enqueue(0)
@@ -58,6 +57,7 @@ describe('channel/Queue', () => {
         queue.enqueue(3)
         assert.equal(queue.bufferedAmount, 4)
     })
+
     it('should report accurate bufferAmount on dequeue', async () => {
         const queue = new Queue()
         queue.enqueue(0)
