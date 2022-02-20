@@ -32,9 +32,7 @@ import { Message, MessageType } from './message'
 import { Sender }               from './sender'
 import { Receiver }             from './receiver'
 
-/** 
- * An unbounded asynchronous channel.
- */
+/** An unbounded asynchronous channel. */
 export class Channel<T = any> implements Sender<T>, Receiver<T> {
     private readonly keepAlive: KeepAlive | null
     private readonly queue: Queue<Message<T>>
@@ -42,7 +40,7 @@ export class Channel<T = any> implements Sender<T>, Receiver<T> {
 
     /** 
      * Creates a new Channel
-     * @param keepAlive (optional) If true, the channel will prevent the JavaScript process from terminating when awaiting on receiver values (default is false)
+     * @param keepAlive If true, will prevent the process from exiting if there are no values being received. Default is false.
      */
     constructor(keepAlive: boolean = false) {
         this.keepAlive = keepAlive ? new KeepAlive() : null

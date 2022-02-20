@@ -1,9 +1,9 @@
 import { Delay } from '@sidewinder/async'
 import { Channel, Select, SyncChannel, SyncSender, Receiver } from '@sidewinder/channel'
 
-const channel0 = new SyncChannel<number>(1, true)
-const channel1 = new SyncChannel<boolean>(1, true)
-const channel2 = new SyncChannel<string>(1, true)
+const channel0 = new SyncChannel<number>()
+const channel1 = new SyncChannel<boolean>()
+const channel2 = new SyncChannel<string>()
 
 async function numbers() {
     for(let i = 0; i < 20; i++) {

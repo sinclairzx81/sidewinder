@@ -46,8 +46,8 @@ export class SyncChannel<T = any> implements SyncSender<T>, Receiver<T> {
 
     /** 
      * Creates a new SyncChannel
-     * @param bounds The maximum number of buffered values before the sender will await (default is 1)
-     * @param keepAlive (optional) If true, the channel will prevent the JavaScript process from terminating when awaiting on the receiver (default is false)
+     * @param bounds The number of buffered values before senders will await. Default is 1.
+     * @param keepAlive If true, will prevent the process from exiting if there are no values being received. Default is false.
      */
     constructor(private readonly bounds: number = 1, keepAlive: boolean = false) {
         this.keepAlive = keepAlive ? new KeepAlive() : null
