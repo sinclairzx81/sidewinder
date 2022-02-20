@@ -23,9 +23,9 @@ export async function start(example = 'basic') {
 // Test
 // -------------------------------------------------------------
 
-export async function test() {
+export async function test(filter = '') {
     await shell(`hammer build ./tests/index.ts --dist target/tests --platform node`)
-    await shell(`mocha target/tests/index.js`)
+    await shell(`mocha target/tests/index.js -g "${filter}"`)
 }
 
 // -------------------------------------------------------------
