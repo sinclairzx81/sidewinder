@@ -85,6 +85,7 @@ export class Channel<T = any> implements Sender<T>, Receiver<T> {
 
     /** Returns the next value from this channel or null if EOF. */
     public async next(): Promise<T | null> {
+        if(this.ended && this.queue.bufferedAmount === 0) return null
         const message = await this.queue.dequeue()
         switch (message.type) {
             case MessageType.Next: return message.value

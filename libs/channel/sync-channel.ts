@@ -96,6 +96,7 @@ export class SyncChannel<T = any> implements SyncSender<T>, Receiver<T> {
 
     /** Returns the next value from this channel or null if EOF. */
     public async next(): Promise<T | null> {
+        if(this.ended && this.queue.bufferedAmount === 0) return null
         const message = await this.queue.dequeue()
         this.releaseQueue()
         switch (message.type) {
