@@ -75,6 +75,7 @@ describe('channel/Channel', () => {
         assert.isInstanceOf(value2, Error)
         assert.equal(eof, null)
     })
+
     it('should receive eof for all subsequent reads on an ended channel', async () => {
         const channel = new Channel()
         channel.send(0)
@@ -89,5 +90,22 @@ describe('channel/Channel', () => {
         assert.equal(value1, 1)
         assert.equal(eof0, null)
         assert.equal(eof1, null)
+    })
+
+    it('should report accurate bufferedAmount on send', async () => {
+        const channel = new Channel()
+        channel.send(0)
+        channel.send(1)
+        channel.send(2)
+        channel.end()
+        assert.equal(channel.bufferedAmount, 4)
+    })
+
+    it('should report accurate bufferedAmount on error', async () => {
+        const channel = new Channel()
+        channel.send(0)
+        channel.send(1)
+        channel.error(new Error('error'))
+        assert.equal(channel.bufferedAmount, 4)
     })
 })

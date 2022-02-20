@@ -42,6 +42,7 @@ export class SyncChannel<T = any> implements SyncSender<T>, Receiver<T> {
     private readonly keepAlive: KeepAlive | null
     private readonly queue: Queue<Message<T>>
     private readonly sends: Deferred<void>[]
+    private endedAsync: boolean
     private ended: boolean
 
     /** 
@@ -53,6 +54,7 @@ export class SyncChannel<T = any> implements SyncSender<T>, Receiver<T> {
         this.keepAlive = keepAlive ? new KeepAlive() : null
         this.queue = new Queue<Message<T>>()
         this.sends = []
+        this.endedAsync = false
         this.ended = false
     }
 
@@ -82,6 +84,7 @@ export class SyncChannel<T = any> implements SyncSender<T>, Receiver<T> {
         if (this.ended) return
         this.ended = true
         await this.waitForQueue()
+        this.endedAsync = true
         this.queue.enqueue({ type: MessageType.Error, error })
         this.queue.enqueue({ type: MessageType.End })
     }
@@ -91,12 +94,13 @@ export class SyncChannel<T = any> implements SyncSender<T>, Receiver<T> {
         if (this.ended) return
         this.ended = true
         await this.waitForQueue()
+        this.endedAsync = true
         this.queue.enqueue({ type: MessageType.End })
     }
 
     /** Returns the next value from this channel or null if EOF. */
     public async next(): Promise<T | null> {
-        if(this.ended && this.queue.bufferedAmount === 0) return null
+        if(this.endedAsync && this.queue.bufferedAmount === 0) return null
         const message = await this.queue.dequeue()
         this.releaseQueue()
         switch (message.type) {
