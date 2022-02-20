@@ -28,11 +28,12 @@ THE SOFTWARE.
 
 import { Deferred } from '@sidewinder/async'
 
+/** Asynchronous queue that enables callers to asynchronously await values */
 export class Queue<T> {
     private readonly enqueues: Deferred<T>[]
     private readonly dequeues: Promise<T>[]
     
-    constructor(private readonly bounds: number = Infinity) {
+    constructor() {
         this.enqueues = []
         this.dequeues = []
     }
