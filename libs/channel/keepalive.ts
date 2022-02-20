@@ -1,6 +1,6 @@
 /*--------------------------------------------------------------------------
 
-@sidewinder/async
+@sidewinder/channel
 
 The MIT License (MIT)
 
@@ -26,8 +26,13 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-export * from './barrier'
-export * from './deferred'
-export * from './delay'
-export * from './semaphore'
-export * from './timeout'
+/** Used to prevent the Node process from terminating with no actions scheduled on the JS event loop */
+export class KeepAlive {
+    private timer: NodeJS.Timer
+    constructor() {
+        this.timer = setInterval(() => {}, 60_000)
+    }
+    public dispose() {
+        clearInterval(this.timer)
+    }
+}

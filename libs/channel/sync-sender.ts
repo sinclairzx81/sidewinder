@@ -1,6 +1,6 @@
 /*--------------------------------------------------------------------------
 
-@sidewinder/async
+@sidewinder/channel
 
 The MIT License (MIT)
 
@@ -26,8 +26,11 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-export * from './barrier'
-export * from './deferred'
-export * from './delay'
-export * from './semaphore'
-export * from './timeout'
+export interface SyncSender<T> {
+    /** Sends the given value to this channel. If channel has ended no action. */
+    send(value: T): Promise<void>
+    /** Sends the given error to this channel causing the receiver to throw on next(). If channel has ended no action. */
+    error(error: Error): Promise<void>
+    /** Ends this channel. */
+    end(): Promise<void>
+}

@@ -1,6 +1,6 @@
 /*--------------------------------------------------------------------------
 
-@sidewinder/async
+@sidewinder/channel
 
 The MIT License (MIT)
 
@@ -26,8 +26,20 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-export * from './barrier'
-export * from './deferred'
-export * from './delay'
-export * from './semaphore'
-export * from './timeout'
+export type Message<T> = NextMessage<T> | ErrorMessage | EndMessage
+
+export enum MessageType { Next, Error, End }
+
+export interface NextMessage<T> {
+    type: MessageType.Next
+    value: T
+}
+
+export interface ErrorMessage {
+    type: MessageType.Error
+    error: Error
+}
+
+export interface EndMessage {
+    type: MessageType.End
+}

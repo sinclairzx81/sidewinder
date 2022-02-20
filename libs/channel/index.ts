@@ -1,6 +1,6 @@
 /*--------------------------------------------------------------------------
 
-@sidewinder/async
+@sidewinder/channel
 
 The MIT License (MIT)
 
@@ -26,8 +26,10 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-export * from './barrier'
-export * from './deferred'
-export * from './delay'
-export * from './semaphore'
-export * from './timeout'
+export * from './channel'
+export * from './queue'
+export * from './receiver'
+export * from './select'
+export * from './sender'
+export * from './sync-channel'
+export * from './sync-sender'

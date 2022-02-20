@@ -28,8 +28,8 @@ THE SOFTWARE.
 
 import { Exception, TContract, ResolveContractMethodParameters, ResolveContractMethodReturnType, TFunction } from '@sidewinder/contract'
 import { Encoder, JsonEncoder, MsgPackEncoder } from '@sidewinder/encoder'
-import { ClientMethods, RpcErrorCode, RpcProtocol, RpcRequest, RpcResponse } from './methods/index'
-import { Responder, Barrier } from '@sidewinder/async'
+import { ClientMethods, Responder, RpcErrorCode, RpcProtocol, RpcRequest, RpcResponse } from './methods/index'
+import { Barrier } from '@sidewinder/async'
 import { RetryWebSocket, UnifiedWebSocket } from './sockets'
 
 export type WebSocketClientConnectCallback = () => void

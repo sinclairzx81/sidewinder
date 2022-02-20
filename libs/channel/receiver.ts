@@ -1,6 +1,6 @@
 /*--------------------------------------------------------------------------
 
-@sidewinder/async
+@sidewinder/channel
 
 The MIT License (MIT)
 
@@ -26,8 +26,11 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-export * from './barrier'
-export * from './deferred'
-export * from './delay'
-export * from './semaphore'
-export * from './timeout'
+export interface Receiver<T> {
+
+    /** Async iterator for this receiver */
+    [Symbol.asyncIterator](): AsyncGenerator<T, void, unknown>
+    
+    /** Returns the next value from this channel or null if EOF. */
+    next(): Promise<T | null>
+}

@@ -28,3 +28,4 @@ THE SOFTWARE.
 
 export * from './methods'
 export * from './protocol'
+export * from './responder'
