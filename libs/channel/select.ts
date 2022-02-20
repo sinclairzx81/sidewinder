@@ -35,7 +35,7 @@ type ReceiverValues<T extends readonly Receiver<any>[]> = {
 
 /** 
  * Selects from many Receivers and produces a single Receiver taking the union type of each. The Select
- * Receiver ends once all Receivers given receivers have ended.
+ * Receiver ends once all Receivers given receivers have
  * @param receivers The receivers to select from.
  * @param bounds Internal buffer bounds for the select receive buffer. Default is 1.
  * @param keepAlive If true, will prevent the process from exiting if there are no values being received. Default is false.
@@ -49,6 +49,6 @@ export function Select<I extends readonly Receiver<any>[]>(receivers: [...I], bo
 
     const channel  = new SyncChannel<any>(bound, keepAlive)
     const promises = receivers.map(receiver => receive(channel, receiver))
-    Promise.all(promises).then(() => channel.end())
+    Promise.all(promises).then(() => channel.end()).catch(error => channel.send(error))
     return channel
 }
