@@ -33,18 +33,18 @@ License MIT
 - [Type Reflection and Metadata](#TypeReflection)
 
 ### Packages
-- [Async](libs/async/readme.md)
-- [Channels](libs/channel/readme.md)
-- [Clients](libs/client/readme.md)
-- [Contracts](libs/contract/readme.md)
-- [Encoding](libs/encoder/readme.md)
-- [Events](libs/events/readme.md)
-- [Mongo](libs/mongo/readme.md)
-- [Platforms](libs/platform/readme.md)
-- [Servers](libs/server/readme.md)
-- [Tokens](libs/token/readme.md)
-- [Types](libs/type/readme.md)
-- [Validation](libs/validator/readme.md)
+- [Async](libs/async)
+- [Channels](libs/channel)
+- [Clients](libs/client)
+- [Contracts](libs/contract)
+- [Encoding](libs/encoder)
+- [Events](libs/events)
+- [Mongo](libs/mongo)
+- [Platforms](libs/platform)
+- [Servers](libs/server)
+- [Tokens](libs/token)
+- [Types](libs/type)
+- [Validation](libs/validator)
 
 
 
