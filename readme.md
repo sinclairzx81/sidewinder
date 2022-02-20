@@ -18,7 +18,9 @@
 
 ## Overview
 
-Sidewinder is a strict micro service framework built for Node and Browser environments. It is designed for scalable service orientated architectures where multiple services need to communicate with one another in complex ways and where challenges can arise verifying that each service is communicating with every other service using strict communication contracts. This framework aims to ease some of these challenges by encoding a runtime type information into JavaScript directly then using TypeScript compiler inference to statically assert correctness. This approach allows distributed services to be both runtime and statically checked through the TypeScript compiler only.
+Sidewinder is a strict micro service framework built for Node and Browser environments. It is designed for scalable service orientated architectures where multiple services need to communicate with one another in complex ways and where challenges can arise verifying that each service is communicating with every other service using strict communication contracts. 
+
+This framework seeks to ease some of these challenges by encoding a runtime type system into JavaScript directly then using TypeScript compiler inference to statically assert software correctness. This approach allows distributed services to be both runtime and statically checked through the TypeScript compiler only with no additional tooling required.
 
 Sidewinder is designed primarily with a focus on strict validated RPC calls made over the network, but also includes a number of auxiliary packages that provide similar assurances when communicating with database and queuing infrastructure.
 
