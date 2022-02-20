@@ -31,6 +31,7 @@ License MIT
 - [Services](#Services)
 - [Static and Runtime Type Safety](#TypeSafety)
 - [Type Reflection and Metadata](#TypeReflection)
+- [Building Locally](#BuildLocal)
 
 ### Packages
 - [Async](libs/async)
@@ -139,8 +140,7 @@ const div = await client.call('div', 1, 2)
 console.log([add, sub, mul, div]) // [3, -1, 2, 0.5]
 ```
 
-
-<a href="TypeSafety"></a>
+<a name="TypeSafety"></a>
 
 ## Static and Runtime Type Safety
 
@@ -194,7 +194,8 @@ const result = await client.call('add', 1, 1)
 //    +--- result is `number`
 ```
 
-<a href="TypeReflection"></a>
+
+<a name="TypeReflection"></a>
 
 ## Type Reflection and Metadata
 
@@ -258,4 +259,24 @@ const Contract = {
     }
   }
 }
+```
+
+<a name="BuildLocal"></a>
+
+## Building Locally
+
+Sidewinder is built as a mono repository with each publishable package located under the libs directory. Sidewinder uses the [Hammer](https://github.com/sinclairzx81/hammer) build tooling for automated tests, builds and publishing. Sidewinder requires Node 14 LTS. The following shell commands clone the project and outline the commands provide through npm scripts.
+
+```bash
+# clone
+$ git clone git@github.com:sinclairzx81/sidewinder.git
+$ cd sidewinder
+$ npm install
+
+# tasks
+$ npm start         # starts the example project
+$ npm test          # runs the full sidewinder test suite
+$ npm test channel  # runs the sidewinder channel test suite only
+$ npm run build     # builds all packages to target/build
+$ npm run clean     # cleans all build artifacts
 ```
