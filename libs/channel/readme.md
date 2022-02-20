@@ -10,7 +10,7 @@
 
 ## Overview
 
-Sidewinder Channels are asynchronous channels that are somewhat modelled on Rust mpsc Channel and SyncChannel types. They are built upon JavaScript async iterators and allow values to be lazily emitted into the channel and received via `for-await` iteration. 
+Sidewinder Channels are asynchronous channels that are loosely modelled on Rust mpsc Channel and SyncChannel types. They are built upon JavaScript async iterators and allow values to be lazily emitted into the channel and received via `for-await` iteration. 
 
 License MIT
 
