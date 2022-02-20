@@ -29,14 +29,24 @@ License MIT
 - [Overview](#Overview)
 - [Install](#Install)
 - [Services](#Services)
-- [Types](libs/type/readme.md)
-- [Validation](libs/validate/readme.md)
-- [Contracts](libs/contract/readme.md)
-- [Servers](libs/server/readme.md)
+- [Static and Runtime Type Safety](#TypeSafety)
+- [Type Reflection and Metadata](#TypeReflection)
+
+### Packages
+- [Async](libs/async/readme.md)
+- [Channels](libs/channel/readme.md)
 - [Clients](libs/client/readme.md)
+- [Contracts](libs/contact/readme.md)
+- [Encoding](libs/encoder/readme.md)
+- [Events](libs/events/readme.md)
 - [Mongo](libs/mongo/readme.md)
-- [TypeScript](#TypeScript)
-- [Reflection](#Reflection)
+- [Platforms](libs/platform/readme.md)
+- [Servers](libs/server/readme.md)
+- [Tokens](libs/token/readme.md)
+- [Types](libs/type/readme.md)
+- [Validation](libs/validator/readme.md)
+
+
 
 ## Install
 
@@ -129,7 +139,10 @@ const div = await client.call('div', 1, 2)
 console.log([add, sub, mul, div]) // [3, -1, 2, 0.5]
 ```
 
-## TypeScript
+
+<a href="TypeSafety"></a>
+
+## Static and Runtime Type Safety
 
 [TypeScript Example Link](https://www.typescriptlang.org/play?#code/JYWwDg9gTgLgBAbzgFQJ5gKZwL5wGZQQhwDkAAgM7AAmGA7sAHa1QD0AxhIzFAIbswSAKFCRYiOAHUMAIwDKGKADdg7LLgJFSlGvSYtWFRUsXDR0eEmkyAwgBtgGbjnyFi5KrQbNFHB08EhIVZWOABaCMio6JjYuPiExPjg0JsuHn4YFPCk3Lz8gqigzkYKeDTuPgE4AF4UdAwAOgqMgQAKBCE4brgjZUUALkQuntGSXmpqEiG0TEaAMQBXRgFgLjaAbVmmgDlFkBlFNoBKABp6ub2Do+OAXXPtxqvDqBPjke7sIWx37ML-gGAsLZBTKVQYP5AqHQuLFLhlXrGcG1OCMehSWSglRqNotKowX59bFNEAYGAACwg1Da40mJHObXY-m4AElqOdeOcZMdagA+YajEKjUYAH2F4rFwpFHzgQvFcEl8u6ip6AGpInAwLw+CAKHA2rwhox9i8uUaTYp3oLQvKVbaZXKJUq1RrlsAAI6LLBMxzOXTcYB4RxQB02iWhpXqiJwUkUqmo3ikuBMPCKKAYaiuLQlVpZa2hiOjKNhODpmCLKCMZOMVNQdOZ3h6gAGxuuUCbhZ60tGZYrVd4cFVcBkcG+vyFMMnU+y9l9WQnU8XQLhpXgPoCKLRdAxtmZMFx6Xx5xI5JgMDAAxCjWvjRIvxKCPTFEWdngdV4dF4wDXe8a7F4dh2DSExTOcACM4HvI6CrOrBTpKtK0F2nBzrIS60bagA5vsAR6o2+qxpS1BDGUUBMJhHLmm2ZqohaUBQWGMEoShYrZF2zEocWMZkkRCZJimaYZlmxA5vibHKuJg4ak+L7wMAzati8TZAA)
 
@@ -181,7 +194,9 @@ const result = await client.call('add', 1, 1)
 //    +--- result is `number`
 ```
 
-## Reflection
+<a href="TypeReflection"></a>
+
+## Type Reflection and Metadata
 
 Sidewinder Contracts are expressed as serializable JavaScript objects with embedded JSON schema used to represent method parameter and return types. Contracts can be used for machine readable schematics and published to remote systems, or used to generate human readable documentation.
 
