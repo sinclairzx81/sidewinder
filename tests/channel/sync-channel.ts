@@ -17,9 +17,11 @@ describe('channel/SyncChannel', () => {
 
     it('should receive next value then end', async () => {
         const channel = new SyncChannel()
-        channel.send(0)
-        channel.end()
-
+        assert.intoAsync(async () => {
+            await channel.send(0)
+            await channel.end()
+        })
+        
         const value = await channel.next()
         const eof = await channel.end()
         assert.equal(value, 0)
@@ -28,12 +30,14 @@ describe('channel/SyncChannel', () => {
 
     it('should receive next values then end', async () => {
         const channel = new SyncChannel()
-        channel.send(0)
-        channel.send(1)
-        channel.send(2)
-        channel.send(3)
-        channel.end()
-        
+        assert.intoAsync(async () => {
+            await channel.send(0)
+            await channel.send(1)
+            await channel.send(2)
+            await channel.send(3)
+            await channel.end()
+        })
+
         const value0 = await channel.next()
         const value1 = await channel.next()
         const value2 = await channel.next()
@@ -48,10 +52,12 @@ describe('channel/SyncChannel', () => {
 
     it('should throw on receive if send error', async () => {
         const channel = new SyncChannel()
-        channel.send(0)
-        channel.send(1)
-        channel.error(new Error())
-        
+        assert.intoAsync(async () => {
+            await channel.send(0)
+            await channel.send(1)
+            await channel.error(new Error())
+        })
+
         const value0 = await channel.next()
         const value1 = await channel.next()
         const value2 = await channel.next().catch(error => error)
@@ -62,9 +68,11 @@ describe('channel/SyncChannel', () => {
 
     it('should end on receiver immediately following an error', async () => {
         const channel = new SyncChannel()
-        channel.send(0)
-        channel.send(1)
-        channel.error(new Error())
+        assert.intoAsync(async () => {
+            await channel.send(0)
+            await channel.send(1)
+            await channel.error(new Error())
+        })
         
         const value0 = await channel.next()
         const value1 = await channel.next()
@@ -78,10 +86,11 @@ describe('channel/SyncChannel', () => {
 
     it('should receive eof for all subsequent reads on an ended channel', async () => {
         const channel = new SyncChannel()
-        channel.send(0)
-        channel.send(1)
-        channel.end()
-        
+        assert.intoAsync(async () => {
+            await channel.send(0)
+            await channel.send(1)
+            await channel.end()
+        })
         const value0 = await channel.next()
         const value1 = await channel.next()
         const eof0 = await channel.next()
@@ -95,13 +104,13 @@ describe('channel/SyncChannel', () => {
     // -----------------------------------------------------------------
     // Specialized
     // -----------------------------------------------------------------
-
+    
     it('should timeout on send if there are no receivers', async () => {
         const channel = new SyncChannel(1)
         await channel.send(0)
         await assert.timeout(() => channel.send(1))
     }).timeout(1000)
-    
+
     it('should timeout on receive if there are no senders', async () => {
         const channel = new SyncChannel(1)
         await assert.timeout(() => channel.next())

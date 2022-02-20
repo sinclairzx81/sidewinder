@@ -30,6 +30,10 @@ export function deepEqual(actual: unknown, expect: unknown) {
     return assert.deepEqual(actual, expect)
 }
 
+export function intoAsync(callback: Function, timeout: number = 1) {
+    setTimeout(() => callback(), timeout)
+}
+
 export function timeout(callback: Function, timeout: number = 200) {
     return new Promise<void>(async (resolve, reject) => {
         setTimeout(() => resolve(), timeout)

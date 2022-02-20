@@ -67,11 +67,6 @@ export class SyncChannel<T = any> implements SyncSender<T>, Receiver<T> {
         }
     }
 
-    /** Returns the number of values buffered in this channel */
-    public get bufferedAmount() {
-        return this.queue.bufferedAmount
-    }
-
     /** Sends the given value to this channel. If channel has ended no action. */
     public async send(value: T): Promise<void> {
         if(this.ended) return
