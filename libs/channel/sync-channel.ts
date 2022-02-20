@@ -44,7 +44,11 @@ export class SyncChannel<T = any> implements SyncSender<T>, Receiver<T> {
     private readonly sends: Deferred<void>[]
     private ended: boolean
 
-    /** Creates this channel with the given bound. The default is 1. */
+    /** 
+     * Creates a new SyncChannel
+     * @param bounds The maximum number of buffered values before the sender will await (default is 1)
+     * @param keepAlive (optional) If true, the channel will prevent the JavaScript process from terminating when awaiting on the receiver (default is false)
+     */
     constructor(private readonly bounds: number = 1, keepAlive: boolean = false) {
         this.keepAlive = keepAlive ? new KeepAlive() : null
         this.queue = new Queue<Message<T>>()

@@ -33,15 +33,17 @@ import { Sender }               from './sender'
 import { Receiver }             from './receiver'
 
 /** 
- * An unbounded asynchronous channel. Values sent into this channel are buffered
- * with no upper limit with senders unaware of the receivers throughput.
+ * An unbounded asynchronous channel.
  */
 export class Channel<T = any> implements Sender<T>, Receiver<T> {
     private readonly keepAlive: KeepAlive | null
     private readonly queue: Queue<Message<T>>
     private ended: boolean
 
-    /** Creates this channel with the given bound. The default is 1. */
+    /** 
+     * Creates a new Channel
+     * @param keepAlive (optional) If true, the channel will prevent the JavaScript process from terminating when awaiting on receiver values (default is false)
+     */
     constructor(keepAlive: boolean = false) {
         this.keepAlive = keepAlive ? new KeepAlive() : null
         this.queue = new Queue<Message<T>>()
