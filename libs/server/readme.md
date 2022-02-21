@@ -48,6 +48,9 @@ export const Contract = Type.Contract({
 ```
 </details>
 
+<details>
+  <summary>Example</summary>
+
 ```typescript
 import { Host, WebService } from '@sidewinder/server'
 import { Contract } from '../shared/contract'
@@ -63,13 +66,17 @@ host.use(service)
 host.listen(5000)
 ```
 
+</details>
+
 ## Host
 
 A Sidewinder Host is a specialized Http server that supports mounting Sidewinder and Express services and middleware. The host can be thought of as combination of the [express](https://expressjs.com/) and [ws](https://github.com/websockets/ws) which provides some additional configuration options for running Web Sockets in load balanced environments.
 
+<details>
+  <summary>Host Options</summary>
+
 ```typescript
-import { Host }   from '@sidewinder/service'
-import { Router } from 'express'
+import { Host } from '@sidewinder/service'
 
 const host = new Host({
     /** 
@@ -101,19 +108,31 @@ const host = new Host({
      maxSocketCount: number 
 })
 
-// Mount express middleware on the host.
-host.use(Router().get('/', (req, res) => res.send({ message: 'hello' })))
-
-// Listen on port 5000 across all interfaces
-host.listen(5000, '0.0.0.0')
-
-// Disposes of the host and terminates all connections.
-host.dispose()
 ```
+
+</details>
+
+<details>
+  <summary>Example</summary>
+
+```typescript
+import { Host }   from '@sidewinder/service'
+import { Router } from 'express'
+
+const host = new Host()
+host.use(Router().get('/', (req, res) => res.send({ message: 'hello' })))
+host.listen(5000)
+host.dispose()   // (optional) dispose
+```
+
+</details>
 
 ## Express
 
 Sidewinder Hosts are run on top express and support hosting any compatiable express middleware. Hosts only expose the express `use(...)` function, so applications needing to handle verbs such as `get`, `post`, `put` and `delete` will need to write these handlers via express `Router`.
+
+<details>
+  <summary>Example</summary>
 
 ```typescript
 import { Host } from '@sidewinder/server'
@@ -129,9 +148,11 @@ host.use(router)
 host.listen(5000)
 ```
 
+</details>
+
 ## WebService
 
-A WebService is JSON RPC 2.0 based HTTP service that accepts requests on singular route. The WebService type accepts a Contract on its constructor and is responsible for implementing the methods of that Contract. Method implementations can be either `sync` or `async` and accept a `clientId` for the first parameter followed by additional parameters defined in the Contract. The following implements a `echo` method on a `WebService` and hosts it on the `/v1/service` route.
+A WebService is JSON RPC 2.0 based HTTP service that accepts requests on singular route. The WebService type accepts a Contract on its constructor and is responsible for implementing the methods of that Contract. Method implementations can be either `sync` or `async` and accept a `context` for the first parameter followed by additional parameters defined in the Contract.
 
 <details>
   <summary>Contract</summary>
@@ -148,6 +169,9 @@ export const Contract = Type.Contract({
 ```
 </details>
 
+<details>
+  <summary>Example</summary>
+
 ```typescript
 import { WebService } from '@sidewinder/server'
 
@@ -155,6 +179,8 @@ const service = new WebService(Contract)
 
 service.method('echo', (context, message) => message)
 ```
+</details>
+
 
 ## WebSocketService
 
@@ -190,6 +216,9 @@ export const Contract = Type.Contract({
 ```
 </details>
 
+<details>
+  <summary>Example</summary>
+
 ```typescript
 import { WebSocketService } from '@sidewinder/service'
 import { Contract }         from '../shared/contract'
@@ -204,6 +233,9 @@ service.method('render', async (context, request) => {
     return { imageUrl }
 })
 ```
+
+</details>
+
 ## Authorize
 
 Both WebService and WebSocketService provide a `authorize` event that can be used to allow or disallow calls for all methods defined on a given service. The role of the `authorize` event is to either resolve a valid context for the connecting user, or to throw if the user has no access. For more information on contexts, see the [Context](#Context) section below.
@@ -223,6 +255,10 @@ export const Contract = Type.Contract({
 ```
 </details>
 
+
+<details>
+  <summary>Example</summary>
+
 ```typescript
 const service = new WebService(Contract)
 
@@ -233,6 +269,8 @@ service.event('authorize', (clientId, request) => {
 })                                         //       the default is string.
 
 ```
+
+</details>
 
 ## Context
 
@@ -252,6 +290,9 @@ export const Contract = Type.Contract({
 
 ```
 </details>
+
+<details>
+  <summary>Example</summary>
 
 ```typescript
 // ---------------------------------------------------------------------------
@@ -299,6 +340,8 @@ service.event('authorize', (clientId, request) => {
 // ---------------------------------------------------------------------------
 service.method('echo', ({ clientId, name, roles }, message) => message)
 ```
+
+</details>
 
 
 ## Events
@@ -387,6 +430,9 @@ Sidewinder services will respond to clients using default error codes defined in
 
 The following creates some custom error types that report meaningful information to the caller.
 
+<details>
+  <summary>WebSocketService Lifecycle Events</summary>
+
 ```typescript
 import { Exception } from '@sidewinder/contract'
 
@@ -421,12 +467,16 @@ server.method('user:create', (clientId, request) => {
 })
 ```
 
+</details>
 
 ## Testing
 
 [TypeScript Example Link](https://www.typescriptlang.org/play?#code/JYWwDg9gTgLgBAbzgFQJ5gKZwL5z-uAMyghDgHIABAZ2ABMMB3YAOwagHoBjCFmKAIZcY5AFChIsRHADqGAEYBlDFABuwLllzFSFGvSat2HaitUqxojhzgBaew8dPnL12-ce3VmwGFe-IRhvO09QsPCIx1FRHhZqeD8+QWE4AF4UdAwAOkSA4QAKBFECQmgQARgALgoAK2pecgAaYvxTNRVqooICcgE6OnJqtEwsgDEAVxZhYF58gG1h7IA5cZB5FXyASkaMkZW1jc2AXR3FrP31qC3tlrxsUWxN6OsQyLf39+DlNQ0MYI+AYDPNFYvE4G11Jo0nAWExZApvpCMPlcskYE8YrwwX06BMpjAZixoRDflkQBgYAALCB0fK9fpNOD5LgAG2AGD4AEk6DsBDt5Js0gA+OACOAAajgAueNiBcvlDmCyAw8X+CvVAJBWPgOOhAkYAmAOv6eOms3IAB5WeyuXQhYyAIw7ABMGOAhHyuoAhKl0gBmQVUkiMOAAUSgJCu5AAqrCAB6YYQYOhwKAq8YskSbIA)
 
 Sidewinder service methods can be tested directly without implicating the network. The `method(...)` provided on each service returns an awaitable function that when called; will execute the body of the function. The returned function implements the same schema validation checks that are used to validate data received via RPC.
+
+<details>
+  <summary>Example</summary>
 
 ```typescript
 import { Type }       from '@sidewinder/contract'
@@ -460,11 +510,16 @@ const add = await addFunction('<context>', 1, 2)
 if(add !== 3) throw Error('Unexpected result')
 ```
 
+</details>
+
 ## Classes
 
 [TypeScript Example Link](https://www.typescriptlang.org/play?#code/JYWwDg9gTgLgBAbzgFQJ5gKZwL5z-g-AMyghDgHIABAZ2ABMMB3YAO0agHoBjCVmKAENuMCgChQkWIjgAJCDRgAaOAHUMAIwDKGKADdg3LLhJlKtBszYdONXXt3ixnTnAC0Hz1+8-ff-wGB-s6uAMJ8AsIwIe5BcfEJiV5iYrysinDh-EIicAC8KOgYAHRZkSIAFAhiBETQIIIwAFyUAFY0fBRKNfh2+rot1YT4FIL09BQtaJjFAGIArqwiwHwVANrTJQBy8yAauhUAlCqbxTt7B4cAuidFZ7v7UEfHPcMUNPMak4UzC0swK1Y61O50eR1uM1BlxuP22D0uL2GeAoIHmABtvqc-stVhs7lCnsdYfcLoSYSD4YTEUiKPRgHpMXdsQDcRTSeDiQSjuT8ZTnt0CNgxNhDikXLEkpKpVKYgBZRoACx0+kMGBi0o1mqCKQwAA8pPBuGjBDQaHAADIQADmVt0MlecDR1oqxVdgigVpoLUErFQayuhxkaQ6aJKTqtLrdHpogaFQrEeoNcCNJrN8pgSvsqrgepgGHYZvU2izRgAPDAihAiJkIjkYAA+RAO4MCeYiaAVMBQemNLBQDBjPho1CO622qAtS023SBoZIj6YJ5lOuiwUOsCfNGGOBjej5OAZ4A0YogDAZiD0CqjcZdOAVI3AfMwACS9BUghUGkDeUbSEPx-DcdinDK9uEENFQz3XcKEOABuOB+xgeYoFYHc4AAajgDQcFXfANw0LduDgD5sIKf8TzPBULyvEjb3vLcn1fd9P2-X8DwVI9gLHXQuIjCgwIgjA91ouCELPZDUMEdwsJw9dN23VE0X3cjT3PS8UXROiH0Yt8dxY-I2PIwCeJA-jwMguBFJg+DEIktCACoZJFOSCO3Ok9GUjjj1Uqj1PcrSGP4Ji9Kw1iZCM7ioF40DzKEuB-NE2yULQ1xsOc+MW2IkssAKVhmDgdNMxVIwKjypgLUi54Yj6AwjGKXcr1LbSgvoetbwARhUAAmQ5igzfMKn7D40XgH9EFdYoRTgcUIDAFlWHAlJMqojJcvy+RFCOMQVpgYp5jsCoatVUUduAo88yBABWAAGW7DiAA)
 
 Sidewinder supports class based programming by allowing RPC service types to be extended. This allows services to define dependencies via constructors and provides a basis for dependency injection. Sidewinder does not support decorators, but instead reuses the `method(...)` function defined on the base class. This allows functions to infer parameter and return types without explicit annotation.
+
+<details>
+  <summary>Example</summary>
 
 ```typescript
 import { Type }             from '@sidewinder/contract'
@@ -509,3 +564,5 @@ const host = new Host()
 host.use(service)
 host.listen(5000)
 ```
+
+</details>
