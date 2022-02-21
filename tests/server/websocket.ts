@@ -1,4 +1,4 @@
-import { Type } from '@sidewinder/contract'
+import { Type, Exception } from '@sidewinder/contract'
 import { Host, WebSocketService } from '@sidewinder/server'
 import { WebSocketClient } from '@sidewinder/client'
 import * as assert from '../assert/index'
@@ -18,10 +18,10 @@ describe('server/WebSocketService', () => {
         const buffer = [] as any[]
         const port = assert.nextPort()
         const service = new WebSocketService(Contract)
-        service.event('authorize', (clientId, request) => { buffer.push('server:authorize'); return clientId })
-        service.event('connect', (context) => { buffer.push('server:connect') })
-        service.method('test', (context) => { buffer.push('server:call') })
-        service.event('close', (context) => { buffer.push('server:close') })
+        service.event('authorize', (clientId) => { buffer.push('server:authorize'); return clientId })
+        service.event('connect', () => { buffer.push('server:connect') })
+        service.method('test', () => { buffer.push('server:call') })
+        service.event('close', () => { buffer.push('server:close') })
 
         const host = new Host()
         host.use(service)
@@ -43,10 +43,10 @@ describe('server/WebSocketService', () => {
         const buffer = [] as any[]
         const port = assert.nextPort()
         const service = new WebSocketService(Contract)
-        service.event('authorize', (clientId, request) => { buffer.push('server:authorize'); return clientId })
-        service.event('connect', (context) => { buffer.push('server:connect') })
-        service.method('test', (context) => { buffer.push('server:call') })
-        service.event('close', (context) => { buffer.push('server:close') })
+        service.event('authorize', (clientId) => { buffer.push('server:authorize'); return clientId })
+        service.event('connect', () => { buffer.push('server:connect') })
+        service.method('test', () => { buffer.push('server:call') })
+        service.event('close', () => { buffer.push('server:close') })
 
         const host = new Host()
         host.use(service)
@@ -75,10 +75,10 @@ describe('server/WebSocketService', () => {
         const buffer = [] as any[]
         const port = assert.nextPort()
         const service = new WebSocketService(Contract)
-        service.event('authorize', (clientId, request) => { buffer.push('server:authorize'); throw 1 })
-        service.event('connect', (context) => { buffer.push('server:connect') })
-        service.method('test', (context) => { buffer.push('server:call') })
-        service.event('close', (context) => { buffer.push('server:close') })
+        service.event('authorize', () => { buffer.push('server:authorize'); throw 1 })
+        service.event('connect', () => { buffer.push('server:connect') })
+        service.method('test', () => { buffer.push('server:call') })
+        service.event('close', () => { buffer.push('server:close') })
 
         const host = new Host()
         host.use(service)
@@ -103,7 +103,7 @@ describe('server/WebSocketService', () => {
         const buffer = [] as any[]
         const port = assert.nextPort()
         const service = new WebSocketService(Contract)
-        service.method('test', (context) => { throw Error() })
+        service.method('test', () => { throw Error() })
         const host = new Host()
         host.use(service)
         host.listen(port)
@@ -128,7 +128,7 @@ describe('server/WebSocketService', () => {
         const buffer = [] as any[]
         const port = assert.nextPort()
         const service = new WebSocketService(Contract)
-        service.method('test', async (context) => { throw Error() })
+        service.method('test', async () => { throw Error() })
 
         const host = new Host()
         host.use(service)
@@ -193,7 +193,7 @@ describe('server/WebSocketService', () => {
         service.event('authorize', () => { return { x: 1, y: 2 } })
         service.event('connect', () => buffer.push('server:connect'))
         service.event('close', () => buffer.push('server:close'))
-        service.method('test', (context) => { buffer.push('server:call') })
+        service.method('test', () => { buffer.push('server:call') })
 
         const host = new Host()
         host.use(service)
@@ -213,5 +213,96 @@ describe('server/WebSocketService', () => {
             'client:error',
             'client:error',
         ])
+    })
+
+    // ------------------------------------------------------------------
+    // Contexts
+    // ------------------------------------------------------------------
+    
+    it('should forward service level context into method', async () => {
+        const buffer  = [] as any[]
+        const port    = assert.nextPort()
+        const context = Type.Tuple([Type.Number(), Type.Number(), Type.Number()])
+        const service = new WebSocketService(Contract, context)
+        service.event('authorize', () => [1, 2, 3])
+        service.method('test', (context) => { buffer.push(context) })
+
+        const host = new Host()
+        host.use(service)
+        host.listen(port)
+
+        const client = new WebSocketClient(Contract, `ws://localhost:${port}`)
+        await client.call('test')
+        await host.dispose()
+        assert.deepEqual(buffer[0], [1, 2, 3])
+    })
+
+    it('should forward method level context into method', async () => {
+        const buffer  = [] as any[]
+        const port    = assert.nextPort()
+        const service = new WebSocketService(Contract)
+        service.method('test', () => [1, 2, 3], (context) => { buffer.push(context) })
+
+        const host = new Host()
+        host.use(service)
+        host.listen(port)
+        
+        const client = new WebSocketClient(Contract, `ws://localhost:${port}`)
+        await client.call('test')
+        await host.dispose()
+        assert.deepEqual(buffer[0], [1, 2, 3])
+    })
+
+    it('should forward service and method level context into method', async () => {
+        const buffer  = [] as any[]
+        const port    = assert.nextPort()
+        const context = Type.Tuple([Type.Number(), Type.Number(), Type.Number()])
+        const service = new WebSocketService(Contract, context)
+        service.event('authorize', () => [1, 2, 3])
+        service.method('test', (context) => [...context, 4, 5, 6], (context) => { buffer.push(context) })
+
+        const host = new Host()
+        host.use(service)
+        host.listen(port)
+        
+        const client = new WebSocketClient(Contract, `ws://localhost:${port}`)
+        await client.call('test')
+        await host.dispose()
+        assert.deepEqual(buffer[0], [1, 2, 3, 4, 5, 6])
+    })
+
+    // ------------------------------------------------------------------
+    // Authorization
+    // ------------------------------------------------------------------
+
+    it('should reject failed authorization attempts at the service level', async () => {
+        const port    = assert.nextPort()
+        const service = new WebSocketService(Contract)
+        service.event('authorize', () => { throw 1 })
+        service.method('test', () => {})
+        const host = new Host()
+        host.use(service)
+        host.listen(port)
+        
+        const client = new WebSocketClient(Contract, `ws://localhost:${port}`)
+        const error = await client.call('test').catch((error: Error) => error) as Error
+        await host.dispose()
+        assert.isInstanceOf(error, Error)
+    })
+
+    it('should reject failed authorization attempts at the method level', async () => {
+        const port    = assert.nextPort()
+        const service = new WebSocketService(Contract)
+        service.method('test', () => { throw 1 }, () => {})
+
+        const host = new Host()
+        host.use(service)
+        host.listen(port)
+        
+        const client = new WebSocketClient(Contract, `ws://localhost:${port}`)
+        const error = await client.call('test').catch((error: Error) => error) as Error
+        await host.dispose()
+        assert.isInstanceOf(error, Exception)
+        assert.equal(error.message, 'Method Authorization Failed')
     })
 })

@@ -3,10 +3,10 @@ import { Host, WebService } from '@sidewinder/server'
 import { WebClient } from '@sidewinder/client'
 import * as assert from '../../assert/index'
 
-export type ContextCallback = (host: Host, service: WebService<typeof Contract>, client: WebClient<typeof Contract>) => Promise<void>
+export type ContextCallback = (host: Host, service: WebService<typeof Contract>, client: WebClient<typeof Contract>, port: number) => Promise<void>
 
 const Contract = Type.Contract({
-    format: 'msgpack',
+    format: 'json',
     server: {
         'errors:error':     Type.Function([], Type.Any()),
         'errors:exception': Type.Function([], Type.Any()),
@@ -42,7 +42,7 @@ function context(callback: ContextCallback) {
         await host.listen(port)
 
         const client = new WebClient(Contract, `http://localhost:${port}`)
-        await callback(host, service, client)
+        await callback(host, service, client, port)
         await host.dispose()
     }
 }
@@ -118,6 +118,21 @@ describe('client/WebClient:Json', () => {
     it('should not throw when send() is passed invalid parameters', context(async (host, service, client) => {
         // @ts-ignore
         client.send('basic:add', 'hello', 'world')
+    }))
+    // ------------------------------------------------------------------
+    // Content Type
+    // ------------------------------------------------------------------
+
+    it('should throw with invalid content type', context(async (host, service, _, port) => {
+        const Contract = Type.Contract({
+            format: 'msgpack',
+            server: {
+                'basic:add': Type.Function([Type.Number(), Type.Number()], Type.Number()),
+            }
+        })
+        const client = new WebClient(Contract, `http://localhost:${port}`)
+        const error = await client.call('basic:add', 1, 2).catch(error => error)
+        assert.isInstanceOf(error, Error)
     }))
 
     // ------------------------------------------------------------------

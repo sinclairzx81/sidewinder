@@ -35,11 +35,11 @@ export interface RegisteredServerMethod {
     paramsValidator: Validator<any>
     /** The return type validator */
     returnValidator: Validator<any>
+    /** The authorize function */
+    authorize: Function
     /** The callback function */
     callback: Function
 }
-
-type Method = string 
 
 /** 
  * A Service method container for a set of methods. This container provides an interface to allow
@@ -47,30 +47,39 @@ type Method = string
  * via JSON RPC 2.0 protocol.
  */
 export class ServiceMethods {
-    private readonly methods: Map<Method, RegisteredServerMethod>
+    private readonly methods: Map<string, RegisteredServerMethod>
     
     constructor() {
-        this.methods = new Map<Method, RegisteredServerMethod>()
+        this.methods = new Map<string, RegisteredServerMethod>()
     }
 
-    public register(method: Method, schema: TFunction<any[], any>, callback: Function) {
+    public register(method: string, schema: TFunction<any[], any>, authorize: Function, callback: Function) {
         const paramsValidator = new Validator(Type.Tuple(schema.parameters))
         const returnValidator = new Validator(schema.returns)
-        this.methods.set(method, { paramsValidator, returnValidator, callback })
+        this.methods.set(method, { paramsValidator, returnValidator, authorize, callback })
     }
     
-    public async execute(context: unknown, method: Method, params: unknown[]) {
+    public async execute(context: unknown, method: string, params: unknown[]) {
         this.validateMethodExists(method)
         const entry = this.methods.get(method)!
-        this.validateMethodParameters(entry, method as string, params)
-        const output = await entry.callback(context, ...params)
+        const authorizedContext = this.authorize(context, entry)
+        this.validateMethodParameters(entry, method, params)
+        const output = await entry.callback(authorizedContext, ...params)
         // Note: To support void, we remap a undefined result to null
         const result = output === undefined ? null : output
         this.validateMethodReturnType(entry, method as string, result)
         return result
     }
 
-    private validateMethodExists(method: Method) {
+    private authorize(context: unknown, entry: RegisteredServerMethod) {
+        try {
+            return entry.authorize(context)
+        } catch {
+            throw new Exception('Method Authorization Failed', RpcErrorCode.InvalidRequest, {})
+        }
+    }
+
+    private validateMethodExists(method: string) {
         if (!this.methods.has(method)) {
             throw new Exception(`Method not found`, RpcErrorCode.MethodNotFound, {})
         }

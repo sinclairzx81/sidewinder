@@ -64,5 +64,5 @@ export class DatabaseTypeBuilder extends TypeBuilder {
     }
 }
 
-
+/** Extended TypeBuilder with additional Mongo Types */
 export const Type = new DatabaseTypeBuilder()

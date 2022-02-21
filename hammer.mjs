@@ -1,6 +1,26 @@
 import { compilePackage, packPackage } from './build/index'
 
 // -------------------------------------------------------------
+// Packages
+// -------------------------------------------------------------
+
+const version = '0.8.35'
+const packages = [
+    ['async',     version, 'Sidewinder Async'],
+    ['channel',   version, 'Sidewinder Channel'],
+    ['client',    version, 'Sidewinder Client'],
+    ['contract',  version, 'Sidewinder Contract'],
+    ['encoder',   version, 'Sidewinder Encoder'],
+    ['events',    version, 'Sidewinder Events'],
+    ['mongo',     version, 'Sidewinder Mongo'],
+    ['platform',  version, 'Sidewinder Platform'],
+    ['server',    version, 'Sidewinder Server'],
+    ['token',     version, 'Sidewinder Token'],
+    ['type',      version, 'Sidewinder Type'],
+    ['validator', version, 'Sidewinder Validator']
+]
+
+// -------------------------------------------------------------
 // Clean
 // -------------------------------------------------------------
 
@@ -32,57 +52,16 @@ export async function test(filter = '') {
 // Build
 // -------------------------------------------------------------
 
-const VERSION = '0.8.35'
-
 export async function build(target = 'target/build') {
     await clean()
-    await Promise.all([
-        compilePackage(target, 'async',      VERSION, 'Sidewinder Async'),
-        compilePackage(target, 'channel',    VERSION, 'Sidewinder Channel'),
-        compilePackage(target, 'client',     VERSION, 'Sidewinder Client'),
-        compilePackage(target, 'contract',   VERSION, 'Sidewinder Contract'),
-        compilePackage(target, 'encoder',    VERSION, 'Sidewinder Encoder'),
-        compilePackage(target, 'events',     VERSION, 'Sidewinder Events'),
-        compilePackage(target, 'mongo',      VERSION, 'Sidewinder Mongo'),
-        compilePackage(target, 'platform',   VERSION, 'Sidewinder Platform'),
-        compilePackage(target, 'server',     VERSION, 'Sidewinder Server'),
-        compilePackage(target, 'token',      VERSION, 'Sidewinder Token'),
-        compilePackage(target, 'type',       VERSION, 'Sidewinder Type'),
-        compilePackage(target, 'validator',  VERSION, 'Sidewinder Validator'),
-    ])
-    await packPackage(target, 'async')
-    await packPackage(target, 'channel')
-    await packPackage(target, 'client')
-    await packPackage(target, 'contract')
-    await packPackage(target, 'encoder')
-    await packPackage(target, 'events')
-    await packPackage(target, 'mongo')
-    await packPackage(target, 'platform')
-    await packPackage(target, 'server')
-    await packPackage(target, 'token')
-    await packPackage(target, 'type')
-    await packPackage(target, 'validator')   
+    await Promise.all(packages.map(([ name, version, description]) => compilePackage(target, name, version, description)))
+    for(const [name] of packages) await packPackage(target, name)
 }
 
 // -------------------------------------------------------------
 // Publish
 // -------------------------------------------------------------
 
-export async function publishPackage(name) {
-    await shell(`cd target/build/${name} && npm publish sidewinder-${name}-${VERSION}.tgz --access=public`)
-}
-
 export async function publish(target = 'target/build') {
-    await publishPackage('async')
-    await publishPackage('channel')
-    await publishPackage('client')
-    await publishPackage('contract')
-    await publishPackage('encoder')
-    await publishPackage('events')
-    await publishPackage('mongo')
-    await publishPackage('platform')
-    await publishPackage('server')
-    await publishPackage('token')
-    await publishPackage('type')
-    await publishPackage('validator')
+    for(const [name, version] of packages) await shell(`cd ${target}/${name} && npm publish sidewinder-${name}-${version}.tgz --access=public`)
 }

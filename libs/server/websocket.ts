@@ -26,7 +26,7 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-import { Exception, Type, TSchema, TString, TContract, TFunction, ResolveContractMethodParameters, ResolveContractMethodReturnType } from '@sidewinder/contract'
+import { Exception, Type, TSchema, TString, TContract, TFunction, AuthorizeFunction, AuthorizeFunctionReturnType, ContractMethodParamters, ContractMethodReturnType } from '@sidewinder/contract'
 import { Encoder, JsonEncoder, MsgPackEncoder } from '@sidewinder/encoder'
 import { Validator } from '@sidewinder/validator'
 import { ServiceMethods, Responder, RpcErrorCode, RpcProtocol, RpcRequest, RpcResponse } from './methods/index'
@@ -121,26 +121,42 @@ export class WebSocketService<Contract extends TContract, Context extends TSchem
         return this.sockets.keys()
     }
 
+    /** Defines a server method implementation with method level authorization */
+    public method<
+        Method extends keyof Contract['$static']['server'] extends infer R ? R extends string ? R : never : never,
+        Parameters extends ContractMethodParamters<Contract['$static']['server'][Method]>,
+        ReturnType extends ContractMethodReturnType<Contract['$static']['server'][Method]>,
+        Authorize extends AuthorizeFunction<Context['$static'], any>
+    >(
+        method: Method,
+        authorize: Authorize,
+        callback: (context: AuthorizeFunctionReturnType<Authorize>, ...params: Parameters) => Promise<ReturnType> | ReturnType
+    ): (context: Context['$static'], ...params: Parameters) => Promise<ReturnType>
+
     /** Defines a server method implementation */
     public method<
         Method extends keyof Contract['$static']['server'] extends infer R ? R extends string ? R : never : never,
-        Parameters extends ResolveContractMethodParameters<Contract['$static']['server'][Method]>,
-        ReturnType extends ResolveContractMethodReturnType<Contract['$static']['server'][Method]>
+        Parameters extends ContractMethodParamters<Contract['$static']['server'][Method]>,
+        ReturnType extends ContractMethodReturnType<Contract['$static']['server'][Method]>
     >(
         method: Method,
         callback: (context: Context['$static'], ...params: Parameters) => Promise<ReturnType> | ReturnType
-    ): (context: Context['$static'], ...params: Parameters) => Promise<ReturnType> {
+    ): (context: Context['$static'], ...params: Parameters) => Promise<ReturnType>
+
+    /** Defines a server method implementation */
+    public method(...args: any[]): any {
+        const [method, authorize, callback] = (args.length === 3) ? [args[0], args[1], args[2]] : [args[0], (context: any) => context, args[1]]
         const target = (this.contract.server as any)[method] as TFunction | undefined
         if (target === undefined) throw Error(`Cannot define method '${method}' as it does not exist in contract`)
-        this.methods.register(method as string, target, callback)
+        this.methods.register(method, target, authorize, callback)
         return async (context: Context['$static'], ...params: any[]) => await this.methods.execute(context, method, params)
     }
 
     /** Calls a remote client method */
     public async call<
         Method extends keyof Contract['$static']['client'] extends infer R ? R extends string ? R : never : never,
-        Parameters extends ResolveContractMethodParameters<Contract['$static']['client'][Method]>,
-        ReturnType extends ResolveContractMethodReturnType<Contract['$static']['client'][Method]>
+        Parameters extends ContractMethodParamters<Contract['$static']['client'][Method]>,
+        ReturnType extends ContractMethodReturnType<Contract['$static']['client'][Method]>
     >(clientId: string, method: Method, ...params: Parameters): Promise<ReturnType> {
         if (!this.sockets.has(clientId)) throw new Error('ClientId not found')
         const handle = this.responder.register(clientId)
@@ -154,7 +170,7 @@ export class WebSocketService<Contract extends TContract, Context extends TSchem
     /** Sends a message to a remote client method and ignores the result */
     public send<
         Method extends keyof Contract['$static']['client'] extends infer R ? R extends string ? R : never : never,
-        Parameters extends ResolveContractMethodParameters<Contract['$static']['client'][Method]>,
+        Parameters extends ContractMethodParamters<Contract['$static']['client'][Method]>,
         >(clientId: string, method: Method, ...params: Parameters): void {
         if (!this.sockets.has(clientId)) return
         const socket = this.sockets.get(clientId)!
@@ -171,7 +187,7 @@ export class WebSocketService<Contract extends TContract, Context extends TSchem
     }
 
     // -------------------------------------------------------------------------------------------
-    // Host
+    // Host Functions
     // -------------------------------------------------------------------------------------------
 
     public async upgrade(clientId: string, request: IncomingMessage): Promise<boolean> {
@@ -185,14 +201,12 @@ export class WebSocketService<Contract extends TContract, Context extends TSchem
         }
     }
 
-
     public async accept(clientId: string, socket: WebSocket) {
         this.sockets.set(clientId, socket)
         socket.binaryType = 'arraybuffer'
         socket.addEventListener('message', event => this.onMessage(clientId, socket, event))
         socket.addEventListener('error', event => this.onError(clientId, event))
         socket.addEventListener('close', event => this.onClose(clientId, event))
-
         const context = this.resolveContext(clientId)
         await this.onConnectCallback(context)
     }
@@ -280,15 +294,15 @@ export class WebSocketService<Contract extends TContract, Context extends TSchem
     // -------------------------------------------------------------------------------------------
     // Utility
     // -------------------------------------------------------------------------------------------
-    
+
     private resolveContext(clientId: string) {
-        if(!this.contexts.has(clientId)) throw Error(`Critical: Cannot locate associated context for clientId '${clientId}'`)
+        if (!this.contexts.has(clientId)) throw Error(`Critical: Cannot locate associated context for clientId '${clientId}'`)
         return this.contexts.get(clientId)!
     }
 
     private setupNotImplemented() {
         for (const [name, schema] of Object.entries(this.contract.server)) {
-            this.methods.register(name, schema as TFunction, () => {
+            this.methods.register(name, schema as TFunction, (context: any) => context, () => {
                 throw new Exception(`Method '${name}' not implemented`, RpcErrorCode.InternalServerError, {})
             })
         }

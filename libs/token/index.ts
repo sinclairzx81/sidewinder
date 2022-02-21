@@ -26,6 +26,7 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
+export * from '@sidewinder/type'
 export * from './decoder'
 export * from './encoder'
 export * from './generate'
