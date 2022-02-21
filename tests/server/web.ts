@@ -39,10 +39,10 @@ describe('server/WebService', () => {
         const buffer  = [] as any[]
         const port    = assert.nextPort()
         const service = new WebService(Contract)
-        service.event('authorize', (context, request) => { buffer.push('authorize'); return context })
-        service.event('connect', (context) => { buffer.push('connect') })
-        service.method('test', (context) => { buffer.push('call') })
-        service.event('close', (context) => { buffer.push('close') })
+        service.event('authorize', (context) => { buffer.push('authorize'); return context })
+        service.event('connect', () => { buffer.push('connect') })
+        service.method('test', () => { buffer.push('call') })
+        service.event('close', () => { buffer.push('close') })
 
         const host = new Host()
         host.use(service)
@@ -63,10 +63,10 @@ describe('server/WebService', () => {
         const buffer  = [] as any[]
         const port    = assert.nextPort()
         const service = new WebService(Contract)
-        service.event('authorize', (context, request) => { buffer.push('authorize'); throw Error('No') })
-        service.event('connect', (context) => { buffer.push('connect') })
-        service.method('test', (context) => { buffer.push('call') })
-        service.event('close', (context) => { buffer.push('close') })
+        service.event('authorize', () => { buffer.push('authorize'); throw Error('No') })
+        service.event('connect', () => { buffer.push('connect') })
+        service.method('test', () => { buffer.push('call') })
+        service.event('close', () => { buffer.push('close') })
 
         const host = new Host()
         host.use(service)
@@ -88,7 +88,7 @@ describe('server/WebService', () => {
         const buffer  = [] as any[]
         const port    = assert.nextPort()
         const service = new WebService(Contract)
-        service.method('test', (context) => { throw Error() })
+        service.method('test', () => { throw Error() })
 
         const host = new Host()
         host.use(service)
@@ -109,7 +109,7 @@ describe('server/WebService', () => {
         const buffer  = [] as any[]
         const port    = assert.nextPort()
         const service = new WebService(Contract)
-        service.method('test', async (context) => { throw Error() })
+        service.method('test', async () => { throw Error() })
 
         const host = new Host()
         host.use(service)
@@ -183,4 +183,8 @@ describe('server/WebService', () => {
         assert.deepEqual(buffer[0], [1, 2, 3, 4, 5, 6])
     })
 
+    // ------------------------------------------------------------------
+    // Authorization
+    // ------------------------------------------------------------------
+    
 })
