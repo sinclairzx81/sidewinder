@@ -183,7 +183,7 @@ export class WebService<Contract extends TContract, Context extends TSchema = TS
     /** Writes a response buffer */
     private writeResponseBuffer(response: ServerResponse, status: number, data: Uint8Array): Promise<void> {
         return new Promise(resolve => {
-            const contentType = 'application/x-sidewinder'
+            const contentType = this.contract.format === 'json' ? 'application/json' : 'application/x-msgpack'
             const contentLength = data.length.toString()
             response.writeHead(status, { 'Content-Type': contentType, 'Content-Length': contentLength })
             const version = Platform.version()
