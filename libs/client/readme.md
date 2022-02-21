@@ -10,7 +10,7 @@
 
 ## Overview
 
-This package contains the WebClient (Http) and WebSocketClient (Ws) client types used to connect to Sidewinder services. This package is designed to operate in both Node and Browser environments. For consuming Sidewinder services outside of JavaScript environments see the `Protocol` section below.
+This package contains the WebClient and WebSocketClient client types to connect to WebService and WebSocketService services respectively. This package can be used in both Node and Browser environments. For consuming Sidewinder service in other languages see the [Protocol](#Protocol) section below.
 
 ## Contents
 
@@ -42,9 +42,11 @@ export const Contract = Type.Contract({
 ```
 </details>
 
+<details>
+<summary>Example</summary>
+
 ```typescript
 import { WebClient } from '@sidewinder/client'
-import { Contract } from '../shared/contract'
 
 const client = new WebClient(Contract, 'http://localhost:5000/')
 const add = await client.call('add', 1, 2)
@@ -53,10 +55,11 @@ const mul = await client.call('mul', 1, 2)
 const div = await client.call('div', 1, 2)
 console.log([add, sub, mul, div]) // [3, -1, 2, 0.5]
 ```
+</details>
 
 ## WebClient
 
-The WebClient connects to WebService server implementations. This client type communicates over Http and supports uni-directional request / response calling patterns only. The `WebService` client provides two methods; `call()` and `send()`. The first argument is the name of the method to call, with subsequent arguments passed as parameters to the remote function.
+The WebClient connects to WebService server implementations. This client type uses Http for the transport and only supports uni-directional request response calling patterns only. The WebClient provides two methods; `call()` and `send()`. The first argument is the name of the method to call, with subsequent arguments passed as parameters to the remote function.
 
 <details>
 <summary>Contract</summary>
@@ -75,29 +78,25 @@ export const Contract = Type.Contract({
 ```
 </details>
 
+<details>
+<summary>Example</summary>
+
 ```typescript
 import { WebClient } from '@sidewinder/client'
-import { Contract } from '../shared/contract'
 
 const client = new WebClient(Contract, 'http://localhost:5000/')
 
-/**
- * Use the call() function to execute a remote service method and obtain a result.
- */
+/** Use the call() function to execute a remote service method and obtain a result. */
 const result = client.call('add', 1, 2)
 
-/**
- * Use the send() function to execute a remote method and ignore the result. Note
- * the send() function returns void and should only be used for transient
- * notification events. For the majority of cases, use call().
- */
+/** Use the send() function to execute a remote method and ignore the result. */
 client.send('add', 1, 2)
 ```
-
+</details>
 
 ## WebSocketClient
 
-The WebSocketClient connects to WebSocketService implementations. This client type provides the same functionality as the WebClient but offers additional support for bi-directional method calls as well as connection retry options. The following example creates a WebSocketClient that connects to a WebSocketService that carries out a long running rendering task. We expect that this task will take a some time to complete, so this service provides a `progress` notification event (as informed by the Contract) to notify the client of rendering progress.
+The WebSocketClient connects to WebSocketService services. This client type provides the same functionality as the WebClient but offers additional support for bi-directional method calls as well as connection retry options.
 
 <details>
   <summary>Options</summary>
@@ -141,50 +140,49 @@ const client = new WebSocketClient(Contract, 'ws://localhost:5000/', {
 ```typescript
 import { Type } from '@sidewinder/contract'
 
-export const RenderRequest = Type.Object({
-    modelUrl: Type.String({ format: 'url' })
-})
-
-export const RenderResponse = Type.Object({
-    imageUrl: Type.String({ format: 'url' })
-})
-
-export const Progress = Type.Object({
-    method:  Type.String(),
-    percent: Type.Number()
-})
-
 export const Contract = Type.Contract({
     server: {
-        render: Type.Function([RenderRequest], RenderResponse),
+        task: Type.Function([], Type.Void()),
     },
     client: {
-        progress: Type.Function([Progress], Type.Any())
+        log: Type.Function([Type.String()], Type.Void())
     }
+})
+```
+</details>
+
+<details>
+  <summary>Server</summary>
+
+```typescript
+import { WebSocketService } from '@sidewinder/service'
+
+const service = new WebSocketService(Contract)
+
+service.method('task', async (context, request) => {
+   await service.call(context, 'log', 'log message 1')
+   await service.call(context, 'log', 'log message 2')
+   await service.call(context, 'log', 'log message 3')
 })
 ```
 
 </details>
 
+<details>
+  <summary>Client</summary>
+
 ```typescript
 import { WebSocketClient } from '@sidewinder/client'
-import { Contract }        from '../shared/contract'
 
-const client = new WebSocketClient(Contract, 'ws://localhost:5000/')
+const client = new WebSocketClient(Contract, 'ws://localhost:5000')
+client.method('log', message => console.log(message)) // 'log message 1'
+                                                      // 'log message 2'
+                                                      // 'log message 3'
 
-/** Define `progress` method to receive progress events from service */
-client.method('progress', ({ method, percent }) => {
-    console.log('method',  method)   // i.e: 'render'
-    console.log('percent', percent) // i.e: 35%
-})
-
-/** Execute render service function */
-const result = await client.call('render', {
-    modelUrl: 'https://domain.com/model/model.blend'
-})
-
-console.log(result.imageUrl)
+client.call('task')
 ```
+
+</details>
 
 ## WebProxy
 
@@ -207,6 +205,9 @@ export const Contract = Type.Contract({
 ```
 </details>
 
+<details>
+<summary>Example</summary>
+
 ```typescript
 import { WebClient, WebProxy } from '@sidewinder/client'
 
@@ -216,14 +217,15 @@ const sub = await client.sub(1, 2)
 const mul = await client.mul(1, 2)
 const div = await client.div(1, 2)
 ```
+</details>
 
 ## Protocol
 
-Sidewinder implements the [JSON RPC 2.0](https://www.jsonrpc.org/specification) protocol specification over both Http and Web Sockets service types. The following section details how remote systems can communicate with Sidewinder services using JavaScript API.
+Sidewinder implements the [JSON RPC 2.0](https://www.jsonrpc.org/specification) protocol specification over both Http and Web Sockets service types. The following section details how remote systems can communicate with Sidewinder services by using common JavaScript APIs.
 
 ### Http
 
-The following calls a WebService method using the JavaScript `fetch(...)` API.
+The following calls a WebService method using the JavaScript `fetch(...)` API. Note that the `Content-Type` must match the format described in the Contract (with is either `json` or `msgpack`). The appropriate Content Types are `application/json` or `application/x-msgpack` respectively.
 
 <details>
   <summary>Fetch Example</summary>
