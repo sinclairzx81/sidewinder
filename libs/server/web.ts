@@ -30,7 +30,7 @@ import { Exception, Type, TSchema, TString, TContract, TFunction, AuthorizeFunct
 import { Encoder, JsonEncoder, MsgPackEncoder } from '@sidewinder/encoder'
 import { Platform } from '@sidewinder/platform'
 import { Validator } from '@sidewinder/validator'
-import { ServiceMethods, RpcErrorCode, RpcProtocol, DecodeAnyResult, RpcRequest, RpcResponse } from './methods/index'
+import { ServiceMethods, RpcErrorCode, RpcProtocol, RpcRequest, RpcResponse } from './methods/index'
 import { IncomingMessage, ServerResponse } from 'http'
 
 // --------------------------------------------------------------------------

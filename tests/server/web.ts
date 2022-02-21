@@ -18,10 +18,10 @@ describe('server/WebService', () => {
         const buffer  = [] as any[]
         const port    = assert.nextPort()
         const service = new WebService(Contract)
-        service.event('authorize', (clientId, request) => { buffer.push('authorize'); return clientId })
-        service.event('connect', (clientId) => { buffer.push('connect') })
-        service.method('test', (clientId) => { buffer.push('call') })
-        service.event('close', (clientId) => { buffer.push('close') })
+        service.event('authorize', (context, request) => { buffer.push('authorize'); return context })
+        service.event('connect', (context) => { buffer.push('connect') })
+        service.method('test', (context) => { buffer.push('call') })
+        service.event('close', (context) => { buffer.push('close') })
 
         const host = new Host()
         host.use(service)
@@ -39,10 +39,10 @@ describe('server/WebService', () => {
         const buffer  = [] as any[]
         const port    = assert.nextPort()
         const service = new WebService(Contract)
-        service.event('authorize', (clientId, request) => { buffer.push('authorize'); return clientId })
-        service.event('connect', (clientId) => { buffer.push('connect') })
-        service.method('test', (clientId) => { buffer.push('call') })
-        service.event('close', (clientId) => { buffer.push('close') })
+        service.event('authorize', (context, request) => { buffer.push('authorize'); return context })
+        service.event('connect', (context) => { buffer.push('connect') })
+        service.method('test', (context) => { buffer.push('call') })
+        service.event('close', (context) => { buffer.push('close') })
 
         const host = new Host()
         host.use(service)
@@ -63,10 +63,10 @@ describe('server/WebService', () => {
         const buffer  = [] as any[]
         const port    = assert.nextPort()
         const service = new WebService(Contract)
-        service.event('authorize', (clientId, request) => { buffer.push('authorize'); throw Error('No') })
-        service.event('connect', (clientId) => { buffer.push('connect') })
-        service.method('test', (clientId) => { buffer.push('call') })
-        service.event('close', (clientId) => { buffer.push('close') })
+        service.event('authorize', (context, request) => { buffer.push('authorize'); throw Error('No') })
+        service.event('connect', (context) => { buffer.push('connect') })
+        service.method('test', (context) => { buffer.push('call') })
+        service.event('close', (context) => { buffer.push('close') })
 
         const host = new Host()
         host.use(service)
@@ -88,7 +88,7 @@ describe('server/WebService', () => {
         const buffer  = [] as any[]
         const port    = assert.nextPort()
         const service = new WebService(Contract)
-        service.method('test', (clientId) => { throw Error() })
+        service.method('test', (context) => { throw Error() })
 
         const host = new Host()
         host.use(service)
@@ -109,7 +109,7 @@ describe('server/WebService', () => {
         const buffer  = [] as any[]
         const port    = assert.nextPort()
         const service = new WebService(Contract)
-        service.method('test', async (clientId) => { throw Error() })
+        service.method('test', async (context) => { throw Error() })
 
         const host = new Host()
         host.use(service)
@@ -126,4 +126,61 @@ describe('server/WebService', () => {
             'error', 'error', 'error', 'error'
         ])
     })
+
+    // ------------------------------------------------------------------
+    // Contexts
+    // ------------------------------------------------------------------
+    
+    it('should forward service level context into method', async () => {
+        const buffer  = [] as any[]
+        const port    = assert.nextPort()
+        const context = Type.Tuple([Type.Number(), Type.Number(), Type.Number()])
+        const service = new WebService(Contract, context)
+        service.event('authorize', () => [1, 2, 3])
+        service.method('test', (context) => { buffer.push(context) })
+
+        const host = new Host()
+        host.use(service)
+        host.listen(port)
+
+        const client = new WebClient(Contract, `http://localhost:${port}`)
+        await client.call('test')
+        await host.dispose()
+        assert.deepEqual(buffer[0], [1, 2, 3])
+    })
+
+    it('should forward method level context into method', async () => {
+        const buffer  = [] as any[]
+        const port    = assert.nextPort()
+        const service = new WebService(Contract)
+        service.method('test', () => [1, 2, 3], (context) => { buffer.push(context) })
+
+        const host = new Host()
+        host.use(service)
+        host.listen(port)
+        
+        const client = new WebClient(Contract, `http://localhost:${port}`)
+        await client.call('test')
+        await host.dispose()
+        assert.deepEqual(buffer[0], [1, 2, 3])
+    })
+
+    it('should forward service and method level context into method', async () => {
+        const buffer  = [] as any[]
+        const port    = assert.nextPort()
+        const context = Type.Tuple([Type.Number(), Type.Number(), Type.Number()])
+        const service = new WebService(Contract, context)
+        service.event('authorize', () => [1, 2, 3])
+        service.method('test', (context) => [...context, 4, 5, 6], (context) => { buffer.push(context) })
+
+        const host = new Host()
+        host.use(service)
+        host.listen(port)
+        
+        const client = new WebClient(Contract, `http://localhost:${port}`)
+        await client.call('test')
+        await host.dispose()
+        assert.deepEqual(buffer[0], [1, 2, 3, 4, 5, 6])
+    })
+
 })

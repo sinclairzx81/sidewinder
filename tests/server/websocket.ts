@@ -214,4 +214,60 @@ describe('server/WebSocketService', () => {
             'client:error',
         ])
     })
+
+    // ------------------------------------------------------------------
+    // Contexts
+    // ------------------------------------------------------------------
+    
+    it('should forward service level context into method', async () => {
+        const buffer  = [] as any[]
+        const port    = assert.nextPort()
+        const context = Type.Tuple([Type.Number(), Type.Number(), Type.Number()])
+        const service = new WebSocketService(Contract, context)
+        service.event('authorize', () => [1, 2, 3])
+        service.method('test', (context) => { buffer.push(context) })
+
+        const host = new Host()
+        host.use(service)
+        host.listen(port)
+
+        const client = new WebSocketClient(Contract, `ws://localhost:${port}`)
+        await client.call('test')
+        await host.dispose()
+        assert.deepEqual(buffer[0], [1, 2, 3])
+    })
+
+    it('should forward method level context into method', async () => {
+        const buffer  = [] as any[]
+        const port    = assert.nextPort()
+        const service = new WebSocketService(Contract)
+        service.method('test', () => [1, 2, 3], (context) => { buffer.push(context) })
+
+        const host = new Host()
+        host.use(service)
+        host.listen(port)
+        
+        const client = new WebSocketClient(Contract, `ws://localhost:${port}`)
+        await client.call('test')
+        await host.dispose()
+        assert.deepEqual(buffer[0], [1, 2, 3])
+    })
+
+    it('should forward service and method level context into method', async () => {
+        const buffer  = [] as any[]
+        const port    = assert.nextPort()
+        const context = Type.Tuple([Type.Number(), Type.Number(), Type.Number()])
+        const service = new WebSocketService(Contract, context)
+        service.event('authorize', () => [1, 2, 3])
+        service.method('test', (context) => [...context, 4, 5, 6], (context) => { buffer.push(context) })
+
+        const host = new Host()
+        host.use(service)
+        host.listen(port)
+        
+        const client = new WebSocketClient(Contract, `ws://localhost:${port}`)
+        await client.call('test')
+        await host.dispose()
+        assert.deepEqual(buffer[0], [1, 2, 3, 4, 5, 6])
+    })
 })
