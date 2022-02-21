@@ -199,7 +199,7 @@ service.method('echo', (context, message) => message)
 
 ## WebSocketService
 
-A WebSocketService is JSON RPC 2.0 based WebSocket service that accepts incoming WebSocket connections from WebSocketClients. The WebSocketService offers the same functionality as the WebService but additionally provide a API to allow Services to call methods on WebSocketClients. Bidirectional calls must be defined within the Contract, with callable client methods defined on the `client` property of the Contract.
+A WebSocketService is JSON RPC 2.0 based WebSocket service that accepts incoming WebSocket connections from WebSocketClients. The WebSocketService offers the same functionality as the WebService but additionally provides an API to allow Services to call methods on WebSocketClients. Bidirectional calls must be defined within the Contract, with callable client methods defined on the `client` property of the Contract.
 
 The following creates a bidirectional contract. The service implements a `task` function, and the client implements a `log` function. The server implementation calls `log` on the client during the execution of the `task` method.
 
