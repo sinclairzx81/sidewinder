@@ -96,4 +96,5 @@ export class ContractTypeBuilder extends TypeBuilder {
     }
 }
 
+/** Extended TypeBuilder with additional Contract Types */
 export const Type = new ContractTypeBuilder()
