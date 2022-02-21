@@ -284,6 +284,7 @@ service.method('action', (context) => {
   const { clientId, name, roles } = context
 })
 ```
+</details>
 
 ### Method Level
 
