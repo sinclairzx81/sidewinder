@@ -62,18 +62,18 @@ export class ServiceMethods {
     public async execute(context: unknown, method: string, params: unknown[]) {
         this.validateMethodExists(method)
         const entry = this.methods.get(method)!
-        const authorizedContext = this.authorize(context, entry)
+        const methodContext = await this.authorize(context, entry)
         this.validateMethodParameters(entry, method, params)
-        const output = await entry.callback(authorizedContext, ...params)
+        const output = await entry.callback(methodContext, ...params)
         // Note: To support void, we remap a undefined result to null
         const result = output === undefined ? null : output
         this.validateMethodReturnType(entry, method as string, result)
         return result
     }
 
-    private authorize(context: unknown, entry: RegisteredServerMethod) {
+    private async authorize(context: unknown, entry: RegisteredServerMethod) {
         try {
-            return entry.authorize(context)
+            return await entry.authorize(context)
         } catch {
             throw new Exception('Method Authorization Failed', RpcErrorCode.InvalidRequest, {})
         }
