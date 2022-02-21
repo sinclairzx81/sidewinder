@@ -215,6 +215,20 @@ export class WebService<Contract extends TContract, Context extends TSchema = TS
     }
 
     // ---------------------------------------------------------------------
+    // Content Type
+    // ---------------------------------------------------------------------
+
+    private async checkContentType(clientId: string, request: IncomingMessage): Promise<PipelineResult<null>> {
+        const expectedContentType = this.contract.format === 'json' ? 'application/json' : 'application/x-msgpack'
+        const actualContentType = request.headers['content-type']
+        if(expectedContentType !== actualContentType) {
+            return PipelineResult.error(new Error('Invalid Content Type'))
+        } else {
+            return PipelineResult.ok(null)
+        }
+    }
+
+    // ---------------------------------------------------------------------
     // Context
     // ---------------------------------------------------------------------
 
@@ -242,6 +256,15 @@ export class WebService<Contract extends TContract, Context extends TSchema = TS
         try {
             await this.onErrorCallback(clientId, error)
         } catch { /* ignore */ }
+    }
+
+    private async writeInvalidContentType(clientId: string, response: ServerResponse) {
+        const contentType = this.contract.format === 'json' ? 'application/json' : 'application/x-msgpack'
+        return await this.writeRpcResponse(response, 401, RpcProtocol.encodeError('', {
+            data: {},
+            code: RpcErrorCode.InvalidRequest,
+            message: `Invalid Content-Type header. Expected '${contentType}'`
+        })).catch(error => this.dispatchError(clientId, error))
     }
 
     private async writeAuthorizationError(clientId: string, response: ServerResponse) {
@@ -312,6 +335,9 @@ export class WebService<Contract extends TContract, Context extends TSchema = TS
         // -----------------------------------------------------------------
         // Preflight
         // -----------------------------------------------------------------
+        const checkContentTypeResult = await this.checkContentType(clientId, request)
+        if(!checkContentTypeResult.ok()) return this.writeInvalidContentType(clientId, response)
+
         const rpcContextResult = await this.readRpcContext(clientId, request)
         if(!rpcContextResult.ok()) return this.writeAuthorizationError(clientId, response)
 
