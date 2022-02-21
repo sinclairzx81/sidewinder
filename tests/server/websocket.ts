@@ -1,4 +1,4 @@
-import { Type } from '@sidewinder/contract'
+import { Type, Exception } from '@sidewinder/contract'
 import { Host, WebSocketService } from '@sidewinder/server'
 import { WebSocketClient } from '@sidewinder/client'
 import * as assert from '../assert/index'
@@ -269,5 +269,40 @@ describe('server/WebSocketService', () => {
         await client.call('test')
         await host.dispose()
         assert.deepEqual(buffer[0], [1, 2, 3, 4, 5, 6])
+    })
+
+    // ------------------------------------------------------------------
+    // Authorization
+    // ------------------------------------------------------------------
+
+    it('should reject failed authorization attempts at the service level', async () => {
+        const port    = assert.nextPort()
+        const service = new WebSocketService(Contract)
+        service.event('authorize', () => { throw 1 })
+        service.method('test', () => {})
+        const host = new Host()
+        host.use(service)
+        host.listen(port)
+        
+        const client = new WebSocketClient(Contract, `ws://localhost:${port}`)
+        const error = await client.call('test').catch((error: Error) => error) as Error
+        await host.dispose()
+        assert.isInstanceOf(error, Error)
+    })
+
+    it('should reject failed authorization attempts at the method level', async () => {
+        const port    = assert.nextPort()
+        const service = new WebSocketService(Contract)
+        service.method('test', () => { throw 1 }, () => {})
+
+        const host = new Host()
+        host.use(service)
+        host.listen(port)
+        
+        const client = new WebSocketClient(Contract, `ws://localhost:${port}`)
+        const error = await client.call('test').catch((error: Error) => error) as Error
+        await host.dispose()
+        assert.isInstanceOf(error, Exception)
+        assert.equal(error.message, 'Method Authorization Failed')
     })
 })

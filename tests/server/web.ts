@@ -1,4 +1,4 @@
-import { Type } from '@sidewinder/contract'
+import { Type, Exception } from '@sidewinder/contract'
 import { Host, WebService } from '@sidewinder/server'
 import { WebClient } from '@sidewinder/client'
 import * as assert from '../assert/index'
@@ -186,5 +186,36 @@ describe('server/WebService', () => {
     // ------------------------------------------------------------------
     // Authorization
     // ------------------------------------------------------------------
-    
+
+    it('should reject failed authorization attempts at the service level', async () => {
+        const port    = assert.nextPort()
+        const service = new WebService(Contract)
+        service.event('authorize', () => { throw 1 })
+        service.method('test', () => {})
+        const host = new Host()
+        host.use(service)
+        host.listen(port)
+        
+        const client = new WebClient(Contract, `http://localhost:${port}`)
+        const error = await client.call('test').catch((error: Error) => error) as Error
+        await host.dispose()
+        assert.isInstanceOf(error, Exception)
+        assert.equal(error.message, 'Authorization Failed')
+    })
+
+    it('should reject failed authorization attempts at the method level', async () => {
+        const port    = assert.nextPort()
+        const service = new WebService(Contract)
+        service.method('test', () => { throw 1 }, () => {})
+
+        const host = new Host()
+        host.use(service)
+        host.listen(port)
+        
+        const client = new WebClient(Contract, `http://localhost:${port}`)
+        const error = await client.call('test').catch((error: Error) => error) as Error
+        await host.dispose()
+        assert.isInstanceOf(error, Exception)
+        assert.equal(error.message, 'Method Authorization Failed')
+    })
 })
