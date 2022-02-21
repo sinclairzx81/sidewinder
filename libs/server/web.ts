@@ -26,7 +26,7 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-import { Exception, Type, TSchema, TString, TContract, TFunction, ResolveContractMethodParameters, ResolveContractMethodReturnType } from '@sidewinder/contract'
+import { Exception, Type, TSchema, TString, TContract, TFunction, AuthorizeFunction, AuthorizeFunctionReturnType, ContractMethodParamters, ContractMethodReturnType } from '@sidewinder/contract'
 import { Encoder, JsonEncoder, MsgPackEncoder } from '@sidewinder/encoder'
 import { Platform } from '@sidewinder/platform'
 import { Validator } from '@sidewinder/validator'
@@ -68,14 +68,14 @@ class PipelineResult<Value> {
 export type WebServiceAuthorizeCallback<Context> = (clientId: string, request: IncomingMessage) => Promise<Context> | Context
 export type WebServiceConnectCallback<Context> = (context: Context) => Promise<void> | void
 export type WebServiceCloseCallback<Context> = (context: Context) => Promise<void> | void
-export type WebServiceErrorCallback<Context> = (clientId: string, error: unknown) => Promise<void> | void
+export type WebServiceErrorCallback = (clientId: string, error: unknown) => Promise<void> | void
 
 /** A JSON RPC 2.0 based HTTP service that supports remote method invocation via HTTP POST requests. */
 export class WebService<Contract extends TContract, Context extends TSchema = TString> {
     private onAuthorizeCallback: WebServiceAuthorizeCallback<Context['$static']>
     private onConnectCallback: WebServiceConnectCallback<Context['$static']>
     private onCloseCallback: WebServiceCloseCallback<Context['$static']>
-    private onErrorCallback: WebServiceErrorCallback<Context['$static']>
+    private onErrorCallback: WebServiceErrorCallback
     private readonly contextValidator: Validator<Context>
     private readonly methods: ServiceMethods
     private readonly encoder: Encoder
@@ -120,7 +120,7 @@ export class WebService<Contract extends TContract, Context extends TSchema = TS
      * Subscribes to error events. This event is raised if there are any http transport errors. This event
      * is usually immediately followed by a close event.
      */
-     public event(event: 'error', callback: WebServiceErrorCallback<Context['$static']>): WebServiceErrorCallback<Context['$static']>
+     public event(event: 'error', callback: WebServiceErrorCallback): WebServiceErrorCallback
 
     /** Subscribes to events */
     public event(event: string, callback: (...args: any[]) => any): any {
@@ -134,18 +134,34 @@ export class WebService<Contract extends TContract, Context extends TSchema = TS
         return callback
     }
 
+    /** Defines a server method implementation with method level authorization */
+    public method<
+        Method extends keyof Contract['$static']['server'] extends infer R ? R extends string ? R : never : never,
+        Parameters extends ContractMethodParamters<Contract['$static']['server'][Method]>,
+        ReturnType extends ContractMethodReturnType<Contract['$static']['server'][Method]>,
+        Authorize extends AuthorizeFunction<Context['$static'], any>
+    >(
+        method: Method,
+        authorize: Authorize,
+        callback: (context: AuthorizeFunctionReturnType<Authorize>, ...params: Parameters) => Promise<ReturnType> | ReturnType
+    ): (context: Context['$static'], ...params: Parameters) => Promise<ReturnType>
+
     /** Defines a server method implementation */
     public method<
         Method extends keyof Contract['$static']['server'] extends infer R ? R extends string ? R : never : never,
-        Parameters extends ResolveContractMethodParameters<Contract['$static']['server'][Method]>,
-        ReturnType extends ResolveContractMethodReturnType<Contract['$static']['server'][Method]>
+        Parameters extends ContractMethodParamters<Contract['$static']['server'][Method]>,
+        ReturnType extends ContractMethodReturnType<Contract['$static']['server'][Method]>
     >(
         method: Method,
         callback: (context: Context['$static'], ...params: Parameters) => Promise<ReturnType> | ReturnType
-    ): (context: Context['$static'], ...params: Parameters) => Promise<ReturnType> {
+    ): (context: Context['$static'], ...params: Parameters) => Promise<ReturnType>
+
+    /** Defines a server method implementation */
+    public method(...args: any[]): any {
+        const [method, authorize, callback] = (args.length === 3) ? [args[0], args[1], args[2]] : [args[0], (context: any) => context, args[1]]
         const target = (this.contract.server as any)[method] as TFunction | undefined
         if(target === undefined) throw Error(`Cannot define method '${method}' as it does not exist in contract`)
-        this.methods.register(method as string, target, callback)
+        this.methods.register(method, target, authorize, callback)
         return async (context: Context['$static'], ...params: any[]) => await this.methods.execute(context, method, params)
     }
 
@@ -166,7 +182,7 @@ export class WebService<Contract extends TContract, Context extends TSchema = TS
 
     /** Writes a response buffer */
     private writeResponseBuffer(response: ServerResponse, status: number, data: Uint8Array): Promise<void> {
-        return new Promise((resolve, reject) => {
+        return new Promise(resolve => {
             const contentType = 'application/x-sidewinder'
             const contentLength = data.length.toString()
             response.writeHead(status, { 'Content-Type': contentType, 'Content-Length': contentLength })
@@ -287,9 +303,9 @@ export class WebService<Contract extends TContract, Context extends TSchema = TS
         }
     }
 
-    // ------------------------------------------------------------------------
-    // Host
-    // ------------------------------------------------------------------------
+    // -------------------------------------------------------------------------------------------
+    // Host Functions
+    // -------------------------------------------------------------------------------------------
 
     /** Accepts an incoming HTTP request and processes it as JSON RPC method call. This method is called automatically by the Host. */
     public async accept(clientId: string, request: IncomingMessage, response: ServerResponse) {
@@ -321,7 +337,7 @@ export class WebService<Contract extends TContract, Context extends TSchema = TS
 
     private setupNotImplemented() {
         for (const [name, schema] of Object.entries(this.contract.server)) {
-            this.methods.register(name, schema as TFunction, () => {
+            this.methods.register(name, schema as TFunction, (context: any) => context, () => {
                 throw new Exception(`Method '${name}' not implemented`, RpcErrorCode.InternalServerError, {})
             })
         }

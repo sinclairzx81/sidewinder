@@ -30,16 +30,24 @@ import { TypeBuilder, TSchema, TFunction } from '@sidewinder/type'
 export * from '@sidewinder/type'
 
 // --------------------------------------------------------------------------
+// Authorize Function
+// --------------------------------------------------------------------------
+
+export type AuthorizeFunction<Context, AuthorizedContext> = (context: Context) => AuthorizedContext
+
+export type AuthorizeFunctionReturnType<T> = T extends AuthorizeFunction<any, infer Context> ? Context : never
+
+// --------------------------------------------------------------------------
 // TContract
 // --------------------------------------------------------------------------
 
-export type ResolveContractFormat<T> = T extends 'json' | 'msgpack' ? T : 'json'
+export type ContractFormat<T> = T extends 'json' | 'msgpack' ? T : 'json'
 
-export type ResolveContractInterface<T, R> = keyof T extends never ? R : T
+export type ContractInterface<T, R> = keyof T extends never ? R : T
 
-export type ResolveContractMethodParameters<T> = T extends (...args: any) => any ? Parameters<T> extends infer P ? P extends any[] ? P : [] : [] : []
+export type ContractMethodParamters<T> = T extends (...args: any) => any ? Parameters<T> extends infer P ? P extends any[] ? P : [] : [] : []
 
-export type ResolveContractMethodReturnType<T> = T extends (...args: any) => any ? ReturnType<T> extends infer P ? P : unknown : unknown
+export type ContractMethodReturnType<T> = T extends (...args: any) => any ? ReturnType<T> extends infer P ? P : unknown : unknown
 
 export interface TInterface {
     [name: string]: TFunction<any[], any>
@@ -57,24 +65,24 @@ export interface ContractOptions {
 export interface TContract<Options extends ContractOptions = ContractOptions> extends TSchema {
     $static: {
         /** The encoding format for this contract. The default is 'json' */
-        format: ResolveContractFormat<Options['format']>
+        format: ContractFormat<Options['format']>
         /** The server interface methods */
-        server: ResolveContractInterface<Options['server'], {}> extends infer Interface ? {
+        server: ContractInterface<Options['server'], {}> extends infer Interface ? {
             [K in keyof Interface]: Interface[K] extends TFunction<any[], any> ? Interface[K]['$static'] : never
         } : {},
         /** The client interface methods */
-        client: ResolveContractInterface<Options['client'], {}> extends infer Interface ? {
+        client: ContractInterface<Options['client'], {}> extends infer Interface ? {
             [K in keyof Interface]: Interface[K] extends TFunction<any[], any> ? Interface[K]['$static'] : never
         }: {}
     },
     type: 'contract',
     kind: 'Contract',
     /** The encoding format for this contract. The default is 'json' */
-    format: ResolveContractFormat<Options['format']>,
+    format: ContractFormat<Options['format']>,
     /** The server interface methods */
-    server: ResolveContractInterface<Options['server'], {}>,
+    server: ContractInterface<Options['server'], {}>,
     /** The client interface methods */
-    client: ResolveContractInterface<Options['client'], {}>,
+    client: ContractInterface<Options['client'], {}>,
 }
 
 

@@ -26,7 +26,7 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-import { Exception, TContract, ResolveContractMethodParameters, ResolveContractMethodReturnType } from '@sidewinder/contract'
+import { Exception, TContract, ContractMethodParamters, ContractMethodReturnType } from '@sidewinder/contract'
 import { Encoder, MsgPackEncoder, JsonEncoder } from '@sidewinder/encoder'
 import { RpcProtocol } from './methods/index'
 import { Request } from './request/index'
@@ -42,8 +42,8 @@ export class WebClient<Contract extends TContract> {
     /** Calls a remote service method */
     public async call<
         Method extends keyof Contract['$static']['server'] extends infer R ? R extends string ? R : never : never,
-        Parameters extends ResolveContractMethodParameters<Contract['$static']['server'][Method]>,
-        ReturnType extends ResolveContractMethodReturnType<Contract['$static']['server'][Method]>
+        Parameters extends ContractMethodParamters<Contract['$static']['server'][Method]>,
+        ReturnType extends ContractMethodReturnType<Contract['$static']['server'][Method]>
     >(method: Method, ...params: Parameters): Promise<ReturnType> {
         this.assertMethodExists(method as string)
         const request = RpcProtocol.encodeRequest('unknown', method as string, params)
@@ -65,7 +65,7 @@ export class WebClient<Contract extends TContract> {
     /** Sends a message to a remote service method and ignores the result */
     public send<
         Method extends keyof Contract['$static']['server'],
-        Parameters extends ResolveContractMethodParameters<Contract['$static']['server'][Method]>,
+        Parameters extends ContractMethodParamters<Contract['$static']['server'][Method]>,
         >(method: Method, ...params: Parameters) {
         this.assertMethodExists(method as string)
         const request = RpcProtocol.encodeRequest('unknown', method as string, params)
