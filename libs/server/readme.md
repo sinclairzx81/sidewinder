@@ -261,8 +261,6 @@ Sidewinder Services provide two levels of authorization; Service level and Metho
 
 Service level authorization is responsible for accepting incoming Http requests and verifying it's headers and parameters to produce a valid execution context. The execution context is forwarded to each method of the service via each methods `context` argument. Service level authorization occurs during an `authorize` event must produce a execution context that checks against schematics defined for the service.
 
-To reject a connection, simply `throw` within the `authorize` callback.
-
 <details>
   <summary>Service Level Authorization</summary>
 
@@ -276,6 +274,7 @@ const Context = Type.Object({
 const service = new WebService(Contact, Context)
 
 service.event('authorize', (clientId, request) => {
+   // throw error to reject
    const { name, roles } = Token.decode(request.headers['authorization'])
    return { clientId, name, roles }
 })
@@ -303,11 +302,13 @@ const Context = Type.Object({
 const service = new WebService(Contact, Context)
 
 service.event('authorize', (clientId, request) => {
+   // throw error to reject
    const { name, roles } = Token.decode(request.headers['authorization'])
    return { clientId, name, roles }
 })
 
 service.method('action', (context) => {
+  // throw error to reject
   return { ...context, foo: 'bar' }
 }, (context) => {
   const { clientId, name, roles, foo } = context
