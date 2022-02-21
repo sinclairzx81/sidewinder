@@ -18,10 +18,10 @@ describe('server/WebSocketService', () => {
         const buffer = [] as any[]
         const port = assert.nextPort()
         const service = new WebSocketService(Contract)
-        service.event('authorize', (clientId, request) => { buffer.push('server:authorize'); return clientId })
-        service.event('connect', (context) => { buffer.push('server:connect') })
-        service.method('test', (context) => { buffer.push('server:call') })
-        service.event('close', (context) => { buffer.push('server:close') })
+        service.event('authorize', (clientId) => { buffer.push('server:authorize'); return clientId })
+        service.event('connect', () => { buffer.push('server:connect') })
+        service.method('test', () => { buffer.push('server:call') })
+        service.event('close', () => { buffer.push('server:close') })
 
         const host = new Host()
         host.use(service)
@@ -43,10 +43,10 @@ describe('server/WebSocketService', () => {
         const buffer = [] as any[]
         const port = assert.nextPort()
         const service = new WebSocketService(Contract)
-        service.event('authorize', (clientId, request) => { buffer.push('server:authorize'); return clientId })
-        service.event('connect', (context) => { buffer.push('server:connect') })
-        service.method('test', (context) => { buffer.push('server:call') })
-        service.event('close', (context) => { buffer.push('server:close') })
+        service.event('authorize', (clientId) => { buffer.push('server:authorize'); return clientId })
+        service.event('connect', () => { buffer.push('server:connect') })
+        service.method('test', () => { buffer.push('server:call') })
+        service.event('close', () => { buffer.push('server:close') })
 
         const host = new Host()
         host.use(service)
@@ -75,10 +75,10 @@ describe('server/WebSocketService', () => {
         const buffer = [] as any[]
         const port = assert.nextPort()
         const service = new WebSocketService(Contract)
-        service.event('authorize', (clientId, request) => { buffer.push('server:authorize'); throw 1 })
-        service.event('connect', (context) => { buffer.push('server:connect') })
-        service.method('test', (context) => { buffer.push('server:call') })
-        service.event('close', (context) => { buffer.push('server:close') })
+        service.event('authorize', () => { buffer.push('server:authorize'); throw 1 })
+        service.event('connect', () => { buffer.push('server:connect') })
+        service.method('test', () => { buffer.push('server:call') })
+        service.event('close', () => { buffer.push('server:close') })
 
         const host = new Host()
         host.use(service)
@@ -103,7 +103,7 @@ describe('server/WebSocketService', () => {
         const buffer = [] as any[]
         const port = assert.nextPort()
         const service = new WebSocketService(Contract)
-        service.method('test', (context) => { throw Error() })
+        service.method('test', () => { throw Error() })
         const host = new Host()
         host.use(service)
         host.listen(port)
@@ -128,7 +128,7 @@ describe('server/WebSocketService', () => {
         const buffer = [] as any[]
         const port = assert.nextPort()
         const service = new WebSocketService(Contract)
-        service.method('test', async (context) => { throw Error() })
+        service.method('test', async () => { throw Error() })
 
         const host = new Host()
         host.use(service)
@@ -193,7 +193,7 @@ describe('server/WebSocketService', () => {
         service.event('authorize', () => { return { x: 1, y: 2 } })
         service.event('connect', () => buffer.push('server:connect'))
         service.event('close', () => buffer.push('server:close'))
-        service.method('test', (context) => { buffer.push('server:call') })
+        service.method('test', () => { buffer.push('server:call') })
 
         const host = new Host()
         host.use(service)
