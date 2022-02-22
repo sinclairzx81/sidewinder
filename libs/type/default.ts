@@ -242,32 +242,32 @@ export class DefaultBuilder {
     /** Creates a default object for the given schema */
     public Create<T extends Types.TSchema>(schema: T): Types.Static<T> {
         switch(schema.kind) {
-            case 'Any': return this.Any(schema as any)
-            case 'Array': return this.Array(schema as any)
-            case 'Boolean': return this.Boolean(schema as any)
-            case 'Constructor': return this.Constructor(schema as any)
-            case 'Enum': return this.Enum(schema as any)
-            case 'Function': return this.Function(schema as any)
-            case 'Integer': return this.Integer(schema as any)
-            case 'Intersect': return this.Intersect(schema as any)
-            case 'KeyOf': return this.KeyOf(schema as any)
-            case 'Literal': return this.Literal(schema as any)
-            case 'Namespace': return this.Namespace(schema as any)
-            case 'Null': return this.Null(schema as any)
-            case 'Number': return this.Number(schema as any)
-            case 'Object': return this.Object(schema as any)
-            case 'Promise': return this.Promise(schema as any)
-            case 'Record': return this.Record(schema as any)
-            case 'Rec': return this.Rec(schema as any)
-            case 'Ref': return this.Ref(schema as any)
-            case 'RegEx': return this.RegEx(schema as any)
-            case 'String': return this.String(schema as any)
-            case 'Tuple': return this.Tuple(schema as any)
-            case 'Undefined': return this.Undefined(schema as any)
-            case 'Union': return this.Union(schema as any)
-            case 'Uint8Array': return this.Uint8Array(schema as any)
-            case 'Unknown': return this.Unknown(schema as any)
-            case 'Void': return this.Void(schema as any)
+            case 'Any': return this.Any(schema as any) as any
+            case 'Array': return this.Array(schema as any) as any
+            case 'Boolean': return this.Boolean(schema as any) as any
+            case 'Constructor': return this.Constructor(schema as any) as any
+            case 'Enum': return this.Enum(schema as any) as any
+            case 'Function': return this.Function(schema as any) as any
+            case 'Integer': return this.Integer(schema as any) as any
+            case 'Intersect': return this.Intersect(schema as any) as any
+            case 'KeyOf': return this.KeyOf(schema as any) as any
+            case 'Literal': return this.Literal(schema as any) as any
+            case 'Namespace': return this.Namespace(schema as any) as any
+            case 'Null': return this.Null(schema as any) as any
+            case 'Number': return this.Number(schema as any) as any
+            case 'Object': return this.Object(schema as any) as any
+            case 'Promise': return this.Promise(schema as any) as any
+            case 'Record': return this.Record(schema as any) as any
+            case 'Rec': return this.Rec(schema as any) as any
+            case 'Ref': return this.Ref(schema as any) as any
+            case 'RegEx': return this.RegEx(schema as any) as any
+            case 'String': return this.String(schema as any) as any
+            case 'Tuple': return this.Tuple(schema as any) as any
+            case 'Undefined': return this.Undefined(schema as any) as any
+            case 'Union': return this.Union(schema as any) as any
+            case 'Uint8Array': return this.Uint8Array(schema as any) as any
+            case 'Unknown': return this.Unknown(schema as any) as any
+            case 'Void': return this.Void(schema as any) as any
             default: throw Error(`Unknown schema kind '${schema.kind}'`)
         }
     }
