@@ -2,7 +2,7 @@
 
 <h1>Sidewinder Mongo</h1>
 
-<p>Provides a Type Safe interface for interacting with the NodeJS Mongo Driver</p>
+<p>Type Safe interface for the NodeJS Mongo Driver</p>
 
 [<img src="https://img.shields.io/npm/v/@sidewinder/mongo?label=%40sidewinder%2Fmongo">](https://www.npmjs.com/package/@sidewinder/mongo)
 
