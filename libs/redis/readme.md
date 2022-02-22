@@ -8,6 +8,12 @@
 
 </div>
 
+## Overview
+
+The Sidewinder Redis library provides a type safe abstraction over Redis. It implements remote versions of JavaScript's Array, Map and Set collection types that are modelled within Redis; with each Collection type strictly validated with Sidewinder Types. Additionally this library provides functionality for Channels and PubSub through Redis, with messages sent through Redis also strictly validated.
+
+License MIT
+
 ## Contents
 
 - [Overview](#Overview)
@@ -21,10 +27,6 @@
 - [RedisPubSub](#RedisPubSub)
     - [RedisPub](#RedisPub)
     - [RedisSub](#RedisSub)
-
-## Overview
-
-The Sidewinder Redis library provides a type safe abstraction over Redis. It implements remote versions of JavaScript's Array, Map and Set collection types that are modelled within Redis; with each Collection type strictly validated with Sidewinder Types. Additionally this library provides functionality for Channels and PubSub through Redis, with messages sent through Redis also strictly validated.
 
 ## RedisDatabase
 
@@ -143,7 +145,7 @@ for await(const value of vectors) {
 
 ## RedisChannel
 
-The Sidewinder Redis library provides RedisSender and RedisReceiver types that replicate the Sidewinder Channel across the network. These types are designed to be used in Multi Producer, Single Consumer architectures where multiple Producers can stream values to a single consumer over the network.
+The Sidewinder Redis library provides the RedisSender and RedisReceiver types that replicate the Sidewinder Channel across the network. These types are designed to be used in Multi Producer, Single Consumer architectures where multiple Producers can stream values to a single consumer over the network.
 
 ### RedisSender
 
@@ -155,7 +157,7 @@ The RedisSender is analogous to a SyncSender Channel. It sends messages to a sin
 ```typescript
 import { Type, RedisSender } from '@sidewinder/redis'
 
-const sender = await RedisPub.connect(Type.String(), 'logs', 'redis://redis.domain.com:6379')
+const sender = await RedisSender.connect(Type.String(), 'logs', 'redis://redis.domain.com:6379')
 
 await sender.send('log message 1')
 await sender.send('log message 2')
@@ -179,6 +181,48 @@ for await(const message of receiver) {
     console.log(message)  // log message 1
                           // log message 2
                           // log message 3
+}
+```
+</details>
+
+## RedisPubSub
+
+The Sidewinder Redis library provides the RedisPub and RedisSub types that can be used to broadcast messages out across a network. These types are designed to be used in Single Producer, Multi Consumer architectures where multiple Consumers receive published messages sent by a Producer.
+
+### RedisPub
+
+The RedisPub type broadcasts messages out to subscribers of a topic. RedisPub can only broadcast to one topic per instance. The following connects to a Redis instance and publishes to a `news` topic.
+
+<details>
+<summary>Example</summary>
+
+```typescript
+import { Type, RedisPub } from '@sidewinder/redis'
+
+const sender = await RedisPub.connect(Type.String(), 'news', 'redis://redis.domain.com:6379')
+
+await sender.send('good news')
+await sender.send('bad news')
+await sender.send('average news')
+```
+</details>
+
+### RedisSub
+
+The RedisSub can be used to receive messages sent to a topic. The following connects to the topic above and receives messages.
+
+<details>
+<summary>Example</summary>
+
+```typescript
+import { Type, RedisSub } from '@sidewinder/redis'
+
+const receiver = await RedisSub.connect(Type.String(), 'logs', 'redis://redis.domain.com:6379')
+
+for await(const message of receiver) {
+    console.log(message)  // good news
+                          // bad news
+                          // average news
 }
 ```
 </details>
