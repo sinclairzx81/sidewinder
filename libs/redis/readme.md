@@ -99,7 +99,7 @@ for await (const vector of array) {
 
 ### RedisMap
 
-The RedisMap manages a Dictionary data structure within Redis and is analogous to the JavaScript Map collection. It `set`, `get`, `has` and `delete` and entries can be enumerated using `for-await`
+The RedisMap manages a Dictionary data structure within Redis and is analogous to the JavaScript Map collection. It provides the `set`, `get`, `has` and `delete` functions and entries can be enumerated using `for-await`
 
 <details>
 <summary>Example</summary>
