@@ -21,17 +21,17 @@ const Schema = Type.Database({
 async function start() {
     const database = await RedisDatabase.connect(Schema, 6379, '172.30.1.24', { })
     
-    const list = database.list('users')
-    await list.clear()
-    await list.unshift(0, 1, 2, 3)
-    
-    console.log('value', await list.index(99))
-    for await(const value of list) {
+    const map = database.map('users')
+    map.set('A', { index: 1 })
+    map.set('B', { index: 2 })
+    map.set('C', { index: 3 })
+    map.set('D', { index: 4 })
+    map.delete('C')
+
+    for await(const value of map.keys()) {
         console.log(value)
     }
-
-
-    
+    console.log(await map.size())
 }
 
 start()

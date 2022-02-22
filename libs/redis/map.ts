@@ -34,44 +34,76 @@ import { TSchema } from './type'
 export class RedisMap<T> {
     private readonly validator: Validator<TSchema>
     private readonly encoder: RedisEncoder
-    
+
     constructor(private readonly schema: TSchema, private readonly redis: Redis, private readonly keyspace: string) {
         this.validator = new Validator(schema)
         this.encoder = new RedisEncoder(schema)
     }
 
+    /** Async iterator for this map */
+    public async * [Symbol.asyncIterator]() {
+        for(const key of await this.redis.keys(this.encodeKey('*'))) {
+            const value = await this.redis.get(key)
+            if(value === null) continue
+            yield [this.decodeKey(key), this.encoder.decode<T>(value)]
+        }
+    }
+
+    /** Returns true if this key exists */
     public async has(key: string) {
-
+        return await this.redis.exists(this.encodeKey(key))
     }
 
+    /** Sets the value for the given key */
     public async set(key: string, value: T) {
-
+        this.validator.assert(value)
+        return await this.redis.set(this.encodeKey(key), this.encoder.encode(value))
     }
 
+    /** Gets the value for the given key or undefined if not exists */
     public async get(key: string): Promise<T | undefined> {
-        throw 1
+        const value = await this.redis.get(this.encodeKey(key))
+        if(value === null) return undefined
+        return this.encoder.decode(value)
     }
 
+    /** Deletes the given key */
     public async delete(key: string) {
-
+        return await this.redis.del(this.encodeKey(key))
     }
 
+    /** Clears all entries in this map */
     public async clear() {
-        const map = new Map()
+        return await this.redis.del(this.encodeKey('*'))
     }
 
+    /** Returns the number of entries in this map */
     public async size(): Promise<number> {
-        return 1
+        const keys = await this.redis.keys(this.encodeKey('*'))
+        return keys.length
     }
 
+    /** Returns an async iterator to the values in this map */
     public async * values(): AsyncIterable<T> {
-
+        for(const key of await this.redis.keys(this.encodeKey('*'))) {
+            const value = await this.redis.get(key)
+            if(value === null) continue
+            yield this.encoder.decode(value)
+        }
     }
+
+    /** Returns an async iterator to the keys in this map */
     public async * keys(): AsyncIterable<string> {
-
+        for(const key of await this.redis.keys(this.encodeKey('*'))) {
+            yield key
+        }
     }
 
-    private resolveKey(key: string) {
+    private encodeKey(key: string) {
         return `map:${this.keyspace}:${key}`
+    }
+
+    private decodeKey(key: string) {
+        return key.replace(`map:${this.keyspace}:`, '')
     }
 }

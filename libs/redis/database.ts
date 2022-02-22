@@ -44,7 +44,7 @@ export class RedisDatabase<Database extends TDatabase = TDatabase> {
         return new RedisList(schema, this.redis, name as string)
     }
     /** Returns a redis map type */
-    public map<Name extends keyof Database['maps']>(name: Name): RedisMap<Static<Database['lists'][Name]>> {
+    public map<Name extends keyof Database['maps']>(name: Name): RedisMap<Static<Database['maps'][Name]>> {
         const schema = (this.schema['maps'] as any)[name as string]
         if(schema === undefined) throw Error(`The map '${name}' not defined in redis schema`)
         return new RedisMap(schema, this.redis, name as string)
