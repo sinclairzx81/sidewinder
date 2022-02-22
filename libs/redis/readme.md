@@ -12,15 +12,15 @@
 
 - [Overview](#Overview)
 - [RedisDatabase](#RedisDatabase)
-  - [RedisArray](#RedisArray)
-  - [RedisMap](#RedisMap)
-  - [RedisSet](#RedisSet)
-- [RedisChannel]
- - [RedisSender](#RedisSender)
- - [RedisReceiver](#RedisReceiver)
-- [RedisPubSub]
- - [RedisPub](#RedisPub)
- - [RedisSub](#RedisSub)
+    - [RedisArray](#RedisArray)
+    - [RedisMap](#RedisMap)
+    - [RedisSet](#RedisSet)
+- [RedisChannel](#RedisChannel)
+    - [RedisSender](#RedisSender)
+    - [RedisReceiver](#RedisReceiver)
+- [RedisPubSub](#RedisPubSub)
+    - [RedisPub](#RedisPub)
+    - [RedisSub](#RedisSub)
 
 ## Overview
 
@@ -139,4 +139,46 @@ for await(const value of vectors) {
 }
 ```
 
+</details>
+
+## RedisChannel
+
+The Sidewinder Redis library provides RedisSender and RedisReceiver types that replicate the Sidewinder Channel across the network. These types are designed to be used in Multi Producer, Single Consumer architectures where multiple Producers can stream values to a single consumer over the network.
+
+### RedisSender
+
+The RedisSender is analogous to a SyncSender Channel. It sends messages to a single Redis list and uses `RPUSH` to push new messages on that list. RedisSender can only connect to one Redis instance per list. The following connects to a redis instance and streams logs to a `logs` list.
+
+<details>
+<summary>Example</summary>
+
+```typescript
+import { Type, RedisSender } from '@sidewinder/redis'
+
+const sender = await RedisPub.connect(Type.String(), 'logs', 'redis://redis.domain.com:6379')
+
+await sender.send('log message 1')
+await sender.send('log message 2')
+await sender.send('log message 3')
+```
+</details>
+
+### RedisReceiver
+
+The RedisReceiver is analogous to a Sidewinder Receiver Channel. It receives messages from a single Redis list and uses `BLPOP` to pull new messages from the list in a queue like fashion. RedisReceiver can only connect to one Redis instance per list. The following connects to the same Redis instance above and receives logging from the sender.
+
+<details>
+<summary>Example</summary>
+
+```typescript
+import { Type, RedisReceiver } from '@sidewinder/redis'
+
+const receiver = await RedisReceiver.connect(Type.String(), 'logs', 'redis://redis.domain.com:6379')
+
+for await(const message of receiver) {
+    console.log(message)  // log message 1
+                          // log message 2
+                          // log message 3
+}
+```
 </details>
