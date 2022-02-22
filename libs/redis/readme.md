@@ -220,7 +220,7 @@ The RedisSub type can be used to receive messages sent to a single topic. This t
 ```typescript
 import { Type, RedisSub } from '@sidewinder/redis'
 
-const receiver = await RedisSub.connect(Type.String(), 'logs', 'redis://redis.domain.com:6379')
+const receiver = await RedisSub.connect(Type.String(), 'news', 'redis://redis.domain.com:6379')
 
 for await (const message of receiver) {
   console.log(message) // good news
