@@ -35,7 +35,9 @@ export * from '@sidewinder/type'
 
 export type AuthorizeFunction<Context, AuthorizedContext> = (context: Context) => AuthorizedContext
 
-export type AuthorizeFunctionReturnType<T> = T extends AuthorizeFunction<any, infer Context> ? Context : never
+export type AuthorizeFunctionReturnType<T> = T extends AuthorizeFunction<any, infer Context> 
+    ? Context extends Promise<infer I> ? I : Context
+    : never
 
 // --------------------------------------------------------------------------
 // TContract
