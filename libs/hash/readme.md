@@ -1,6 +1,6 @@
 <div align='center'>
 
-<h1>Sidewinder Hashing</h1>
+<h1>Sidewinder Hash</h1>
 
 <p>Sidewinder Hashing Utility</p>
 

@@ -11,7 +11,7 @@ const packages = [
     ['client',    version, 'Sidewinder Client'],
     ['contract',  version, 'Sidewinder Contract'],
     ['events',    version, 'Sidewinder Events'],
-    ['hashing',   version, 'Sidewinder Hashing'],
+    ['hash',      version, 'Sidewinder Hashing'],
     ['mongo',     version, 'Sidewinder Mongo'],
     ['platform',  version, 'Sidewinder Platform'],
     ['redis',     version, 'Sidewinder Redis'],

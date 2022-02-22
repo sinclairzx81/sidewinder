@@ -28,7 +28,7 @@ THE SOFTWARE.
 
 import { Redis } from 'ioredis'
 import { Validator } from '@sidewinder/validator'
-import { ValueHash } from '@sidewinder/hashing'
+import { ValueHash } from '@sidewinder/hash'
 import { RedisEncoder } from '../encoder'
 import { Static, TSchema } from '../type'
 
