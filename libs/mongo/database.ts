@@ -27,7 +27,7 @@ THE SOFTWARE.
 ---------------------------------------------------------------------------*/
 
 import { MongoClient, Db, MongoClientOptions, ObjectId } from 'mongodb'
-import { TDatabase }  from "./types"
+import { TDatabase }  from "./type"
 import { Collection } from './collection'
 
 /** TypeSafe database with JSON Schema validation built in */
@@ -41,15 +41,15 @@ export class Database<Schema extends TDatabase = TDatabase> {
     }
 
     /** Returns a collection with the given name */
-    public collection<Name extends keyof Schema['collections']>(name: Name): Collection<Schema['collections'][Name]> {
-        if(this.schema['collections'][name as string] === undefined) throw new Error(`Collection name '${name}' not defined in schema`)
-        const schema = this.schema['collections'][name as string]
-        const collection = this.db.collection(name as string)
-        return new Collection<Schema['collections'][Name]>(schema as any, collection) 
+    public collection<CollectionName extends keyof Schema['collections']>(collectionName: CollectionName): Collection<Schema['collections'][CollectionName]> {
+        if(this.schema['collections'][collectionName as string] === undefined) throw new Error(`Collection name '${collectionName}' not defined in schema`)
+        const schema = this.schema['collections'][collectionName as string]
+        const collection = this.db.collection(collectionName as string)
+        return new Collection<Schema['collections'][CollectionName]>(schema as any, collection) 
     }
     
     /** Opens a database with the given url and options. */
-    public static async open<Schema extends TDatabase = TDatabase>(schema: Schema, url: string, options?: MongoClientOptions | undefined): Promise<Database<Schema>> {
+    public static async connect<Schema extends TDatabase = TDatabase>(schema: Schema, url: string, options?: MongoClientOptions | undefined): Promise<Database<Schema>> {
         const client = new MongoClient(url, options)
         await client.connect()
         const database = await client.db('test')

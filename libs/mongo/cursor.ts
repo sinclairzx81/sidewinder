@@ -26,12 +26,12 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-import { Encoder } from './encoder'
+import { MongoEncoder } from './encoder'
 import * as Mongo from 'mongodb'
 import { matchArguments } from './arguments'
 
 export class Cursor<T> {
-    constructor(private readonly encoder: Encoder, public readonly cursor: Mongo.FindCursor<Mongo.WithId<Mongo.Document>>) { }
+    constructor(private readonly encoder: MongoEncoder, public readonly cursor: Mongo.FindCursor<Mongo.WithId<Mongo.Document>>) { }
 
     /** Asynchronous iterator for this Cursor */
     public async *[Symbol.asyncIterator]() {

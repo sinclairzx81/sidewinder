@@ -28,22 +28,22 @@ THE SOFTWARE.
 
 import * as Mongo from 'mongodb'
 import { Validator } from '@sidewinder/validator'
-import { Type, TObject, TPartial, TProperties, Static } from './types'
+import { Type, TObject, TPartial, TProperties, Static } from './type'
 import { Cursor } from './cursor'
-import { Encoder } from './encoder'
+import { MongoEncoder } from './encoder'
 import { matchArguments } from './arguments'
 
 export class Collection<T extends TObject<TProperties> = TObject<TProperties>> {
     private readonly validatePartial: Validator<TPartial<T>>
     private readonly validate: Validator<T>
-    private readonly encoder: Encoder
+    private readonly encoder: MongoEncoder
     
     
 
     constructor(public readonly schema: T, public readonly collection: Mongo.Collection) {
         this.validatePartial = new Validator(Type.Partial(schema))
         this.validate = new Validator(schema)
-        this.encoder = new Encoder()
+        this.encoder = new MongoEncoder(schema)
     }
 
     /** Counts the number of documents in this collection. Internally uses countDocuments() */

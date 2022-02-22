@@ -28,4 +28,4 @@ THE SOFTWARE.
 
 export * from './collection'
 export * from './database'
-export * from './types'
+export * from './type'

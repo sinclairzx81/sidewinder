@@ -29,8 +29,10 @@ THE SOFTWARE.
 import * as Mongo from 'mongodb'
 import { TObject } from '@sidewinder/type'
 
-export class Encoder {
+export class MongoEncoder {
     
+    constructor(private readonly schema: TObject) {}
+
     /** Decodes mongo records to plain JavaScript objects */
     public decode(value: any): any {
         if(value instanceof Mongo.ObjectId) {

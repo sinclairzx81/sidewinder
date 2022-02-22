@@ -27,38 +27,26 @@ THE SOFTWARE.
 ---------------------------------------------------------------------------*/
 
 import { Static, SchemaOptions, TObject, TypeBuilder } from '@sidewinder/type'
-import { matchArguments } from './arguments'
 export * from '@sidewinder/type'
 
-export type TCollections = Record<string, TObject>
-export type TIndices = Record<string, any>
+export interface TDatabaseOptions {
+    [collection: string]: TObject
+}
 
-export interface TDatabase<
-    Collections extends TCollections = TCollections,
-    Indices extends TIndices = TIndices
-    > {
+export interface TDatabase<Collections extends TDatabaseOptions = TDatabaseOptions> {
     $static: { [K in keyof Collections['collections']]: Static<Collections['collections'][K]> }
     kind: 'Database'
     type: 'object'
     collections: Collections
-    indices: Indices
 }
 
 export class DatabaseTypeBuilder extends TypeBuilder {
-    /** Creates a database schematic with indices */
-    public Database<Collections extends TCollections, Indices extends TIndices>(collections: Collections, indices: Indices): TDatabase<Collections, Indices>
-    /** Creates a database schematic */
-    public Database<Collections extends TCollections>(collections: Collections): TDatabase<Collections, {}>
-    /** Creates a database schemaic */
-    public Database(...args: any[]): any {
-        return matchArguments(args, {
-            2: (collections, indices) => this.Create({ kind: 'Database', type: 'object', collections, indices }),
-            1: (collections) => this.Create({ kind: 'Database', type: 'object', collections, indices: {} }),
-            _: () => { throw new Error('Invalid Database() arguments') }
-        })
+    /** Creates a database schematic type */
+    public Database<DatabaseOptions extends TDatabaseOptions>(options: DatabaseOptions): TDatabase<DatabaseOptions> {
+        return this.Create({ kind: 'Database', type: 'object', collections: options })
     }
 
-    /** Creates a Mongo Identifier */
+    /** Creates a Mongo identifier type */
     public ObjectId(options: SchemaOptions = {}) {
         return super.RegEx(/^[0-9a-fA-F]{24}$/, options)
     }
