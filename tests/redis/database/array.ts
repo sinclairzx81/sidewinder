@@ -136,6 +136,42 @@ describe('redis/RedisArray', () => {
   })
 
   // ---------------------------------------------------------
+  // Set
+  // ---------------------------------------------------------
+
+  it('should set value at index', async () => {
+    const database = resolveDatabase()
+    const array = database.array('vectors')
+    await array.push([0, 0, 0])
+    await array.push([1, 1, 1])
+    await array.set(1, [2, 2, 2])
+    const value0 = await array.get(0)
+    const value1 = await array.get(1)
+    const length = await array.length()
+    Assert.deepEqual(value0, [0, 0, 0])
+    Assert.deepEqual(value1, [2, 2, 2])
+    Assert.deepEqual(length, 2)
+  })
+
+  // ---------------------------------------------------------
+  // Clear
+  // ---------------------------------------------------------
+
+  it('should clear values', async () => {
+    const database = resolveDatabase()
+    const array = database.array('vectors')
+    await array.push([0, 0, 0])
+    await array.push([1, 1, 1])
+    await array.clear()
+    const value0 = await array.get(0)
+    const value1 = await array.get(1)
+    const length = await array.length()
+    Assert.deepEqual(value0, undefined)
+    Assert.deepEqual(value1, undefined)
+    Assert.deepEqual(length, 0)
+  })
+
+  // ---------------------------------------------------------
   // Iterate
   // ---------------------------------------------------------
 
@@ -186,13 +222,14 @@ describe('redis/RedisArray', () => {
     const database = resolveDatabase()
     const array = database.array('vectors')
     // @ts-ignore
-    Assert.throwsAsync(async () => await array.push([0, 0]))
+    await Assert.throwsAsync(async () => await array.push([0, 0]))
   })
 
   it('should throw unshift on invalid value', async () => {
     const database = resolveDatabase()
     const array = database.array('vectors')
     // @ts-ignore
-    Assert.throwsAsync(async () => await array.unshift([0, 0]))
+    await Assert.throwsAsync(async () => await array.unshift([0, 0]))
   })
+
 })

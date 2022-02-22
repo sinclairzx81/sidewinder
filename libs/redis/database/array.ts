@@ -63,6 +63,12 @@ export class RedisArray<Schema extends TSchema> {
     return this.encoder.decode(value)
   }
 
+  /** Sets the value at the given index */
+  public async set(index: number, value: Static<Schema>): Promise<void> {
+    this.validator.assert(value)
+    this.redis.lset(this.resolveKey(), index, this.encoder.encode(value))
+  }
+
   /** Pushes a value to the end of this Array */
   public async push(...values: Static<Schema>[]) {
     for (const value of values) {
