@@ -26,5 +26,17 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-export * from './database/index'
-export * from './type'
+import { Receiver } from '@sidewinder/channel'
+import { TSchema } from '../type'
+
+export class RedisReceiver<T> implements Receiver<T> {
+    constructor(private readonly schema: TSchema) { }
+    
+    public async * [Symbol.asyncIterator]() {
+        throw new Error('Method not implemented.');
+    }
+
+    public next(): Promise<T | null> {
+        throw new Error('Method not implemented.');
+    }
+}

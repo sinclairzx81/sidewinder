@@ -28,8 +28,8 @@ THE SOFTWARE.
 
 import { Redis } from 'ioredis'
 import { Validator } from '@sidewinder/validator'
-import { RedisEncoder } from './encoder'
-import { TSchema } from './type'
+import { RedisEncoder } from '../encoder'
+import { TSchema } from '../type'
 
 
 export class RedisList<T> {
@@ -38,8 +38,8 @@ export class RedisList<T> {
     private readonly encoder: RedisEncoder
 
     constructor(private readonly schema: TSchema, private readonly redis: Redis, private readonly keyspace: string) {
-        this.validator = new Validator(schema)
-        this.encoder = new RedisEncoder(schema)
+        this.validator = new Validator(this.schema)
+        this.encoder = new RedisEncoder(this.schema)
     }
 
     public async * [Symbol.asyncIterator]() {

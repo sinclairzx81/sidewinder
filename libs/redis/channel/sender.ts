@@ -26,36 +26,28 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-import { Redis } from 'ioredis'
-import { Validator } from '@sidewinder/validator'
-import { RedisEncoder } from './encoder'
-import { TSchema } from './type'
+import { Redis }        from 'ioredis'
+import { SyncSender }   from '@sidewinder/channel'
+import { Validator }    from '@sidewinder/validator'
+import { RedisEncoder } from '../encoder'
+import { TSchema }      from '../type'
 
-export class RedisSet<T> {
+export class RedisSender<T> implements SyncSender<T> {
     private readonly validator: Validator<TSchema>
     private readonly encoder: RedisEncoder
 
-    constructor(private readonly schema: TSchema, private readonly redis: Redis, private readonly keyspace: string) {
-        this.validator = new Validator(schema)
-        this.encoder = new RedisEncoder(schema)
-    }
-    
-    public async add(value: T) {
-
+    constructor(private readonly schema: TSchema, private readonly redis: Redis) { 
+        this.validator = new Validator(this.schema)
+        this.encoder = new RedisEncoder(this.schema)
     }
 
-    public async delete(value: T) {
-
+    public send(value: T): Promise<void> {
+        throw new Error('Method not implemented.')
     }
-
-    public async clear() {
-
+    public error(error: Error): Promise<void> {
+        throw new Error('Method not implemented.')
     }
-
-    public async * values(): AsyncIterable<T> {
-
-    }
-    private resolveKey() {
-        return `set:${this.keyspace}`
+    public end(): Promise<void> {
+        throw new Error('Method not implemented.')
     }
 }

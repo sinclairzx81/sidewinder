@@ -26,5 +26,36 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-export * from './database/index'
-export * from './type'
+import { Redis } from 'ioredis'
+import { Validator } from '@sidewinder/validator'
+import { RedisEncoder } from '../encoder'
+import { TSchema } from '../type'
+
+export class RedisSet<T> {
+    private readonly validator: Validator<TSchema>
+    private readonly encoder: RedisEncoder
+
+    constructor(private readonly schema: TSchema, private readonly redis: Redis, private readonly keyspace: string) {
+        this.validator = new Validator(this.schema)
+        this.encoder = new RedisEncoder(this.schema)
+    }
+    
+    public async add(value: T) {
+
+    }
+
+    public async delete(value: T) {
+
+    }
+
+    public async clear() {
+
+    }
+
+    public async * values(): AsyncIterable<T> {
+
+    }
+    private resolveKey() {
+        return `set:${this.keyspace}`
+    }
+}
