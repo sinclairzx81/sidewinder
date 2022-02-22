@@ -26,16 +26,16 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-import IORedis, { Redis, RedisOptions } from 'ioredis'
-import { Timeout } from '@sidewinder/async'
+import { Redis, RedisOptions } from 'ioredis'
 import { TDatabase } from '../type'
+import { RedisConnect } from '../connect'
 import { RedisArray } from './array'
 import { RedisMap } from './map'
 import { RedisSet } from './set'
 
 export class RedisDatabase<Database extends TDatabase = TDatabase> {
     constructor(private readonly schema: Database, private readonly redis: Redis) {}
-    
+
     /** Returns a RedisArray type */
     public array<Name extends keyof Database['arrays']>(name: Name): RedisArray<Database['arrays'][Name]> {
         const schema = (this.schema['arrays'] as any)[name as string]
@@ -56,7 +56,7 @@ export class RedisDatabase<Database extends TDatabase = TDatabase> {
         if(schema === undefined) throw Error(`The set '${name}' not defined in redis schema`)
         return new RedisSet(schema, this.redis, name as string)
     }
-
+    
     /** Connects to Redis with the given parameters */
     public static connect<Database extends TDatabase = TDatabase>(schema: Database, port?: number, host?: string, options?: RedisOptions): Promise<RedisDatabase<Database>>
     /** Connects to Redis with the given parameters */
@@ -65,11 +65,6 @@ export class RedisDatabase<Database extends TDatabase = TDatabase> {
     public static connect<Database extends TDatabase = TDatabase>(schema: Database, options: RedisOptions): Promise<RedisDatabase<Database>>
     public static async connect(...args: any[]): Promise<any> {
         const [schema, params] = [args[0], args.slice(1)]
-        const redis = new IORedis(...params)
-        await Timeout.run(8000, async () => {
-            const echo = await redis.echo('echo')
-            if(echo !== 'echo') throw Error('Connection assertion failed')
-        }, new Error('Connection to Redis timed out'))
-        return new RedisDatabase(schema, redis)
+        return new RedisDatabase(schema, await RedisConnect.connect(...params))
     }
 }
