@@ -1,51 +1,60 @@
-import { Type }     from '@sidewinder/type'
+import { Type } from '@sidewinder/type'
 import { ok, fail } from './validate'
 import { strictEqual } from 'assert'
 
 describe('type/Partial', () => {
-    it('Should convert a required object into a partial.', () => {
-        const A = Type.Object({
-            x: Type.Number(),
-            y: Type.Number(),
-            z: Type.Number()
-        }, { additionalProperties: false })
-        const T = Type.Partial(A)
-        ok(T, { x: 1, y: 1, z: 1 })
-        ok(T, { x: 1, y: 1 })
-        ok(T, { x: 1 })
-        ok(T, {})
-    })
+  it('Should convert a required object into a partial.', () => {
+    const A = Type.Object(
+      {
+        x: Type.Number(),
+        y: Type.Number(),
+        z: Type.Number(),
+      },
+      { additionalProperties: false },
+    )
+    const T = Type.Partial(A)
+    ok(T, { x: 1, y: 1, z: 1 })
+    ok(T, { x: 1, y: 1 })
+    ok(T, { x: 1 })
+    ok(T, {})
+  })
 
-    it('Should update modifier types correctly when converting to partial', () => {
-        const A = Type.Object({
-            x: Type.ReadonlyOptional(Type.Number()),
-            y: Type.Readonly(Type.Number()),
-            z: Type.Optional(Type.Number()),
-            w: Type.Number()
-        }, { additionalProperties: false })
-        const T = Type.Partial(A)
-        strictEqual(T.properties.x.modifier, 'ReadonlyOptional')
-        strictEqual(T.properties.y.modifier, 'ReadonlyOptional')
-        strictEqual(T.properties.z.modifier, 'Optional')
-        strictEqual(T.properties.w.modifier, 'Optional')
-    })
+  it('Should update modifier types correctly when converting to partial', () => {
+    const A = Type.Object(
+      {
+        x: Type.ReadonlyOptional(Type.Number()),
+        y: Type.Readonly(Type.Number()),
+        z: Type.Optional(Type.Number()),
+        w: Type.Number(),
+      },
+      { additionalProperties: false },
+    )
+    const T = Type.Partial(A)
+    strictEqual(T.properties.x.modifier, 'ReadonlyOptional')
+    strictEqual(T.properties.y.modifier, 'ReadonlyOptional')
+    strictEqual(T.properties.z.modifier, 'Optional')
+    strictEqual(T.properties.w.modifier, 'Optional')
+  })
 
-    it('Should inherit options from the source object', () => {
-        const A = Type.Object({
-            x: Type.Number(),
-            y: Type.Number(),
-            z: Type.Number()
-        }, { additionalProperties: false })
-        const T = Type.Partial(A)
-        strictEqual(A.additionalProperties, false)
-        strictEqual(T.additionalProperties, false)
-    })
+  it('Should inherit options from the source object', () => {
+    const A = Type.Object(
+      {
+        x: Type.Number(),
+        y: Type.Number(),
+        z: Type.Number(),
+      },
+      { additionalProperties: false },
+    )
+    const T = Type.Partial(A)
+    strictEqual(A.additionalProperties, false)
+    strictEqual(T.additionalProperties, false)
+  })
 
-    it('Should construct new object when targetting reference', () => {
-        const T = Type.Object({ a: Type.String(), b: Type.String() }, { $id: 'T' })
-        const R = Type.Ref(T)
-        const P = Type.Partial(R)
-        strictEqual(P.properties.a.type, 'string')
-        strictEqual(P.properties.b.type, 'string')
-     })
+  it('Should construct new object when targetting reference', () => {
+    const T = Type.Object({ a: Type.String(), b: Type.String() }, { $id: 'T' })
+    const R = Type.Ref(T)
+    const P = Type.Partial(R)
+    strictEqual(P.properties.a.type, 'string')
+    strictEqual(P.properties.b.type, 'string')
+  })
 })

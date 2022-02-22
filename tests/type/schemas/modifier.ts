@@ -1,5 +1,3 @@
-import { Type }    from '@sidewinder/type'
+import { Type } from '@sidewinder/type'
 
-describe('type/Modifier', () => {
-   
-})
+describe('type/Modifier', () => {})
