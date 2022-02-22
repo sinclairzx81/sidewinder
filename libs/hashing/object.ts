@@ -28,8 +28,8 @@ THE SOFTWARE.
 
 import objectHash from 'object-hash'
 
+/** Hashes any valid JavaScript value */
 export namespace ValueHash {
-    
     /** Generates a sha1 hash of the given JavaScript value. Hashes are returned as hex strings. */
     export function hash(value: any): string {
         return objectHash(value, { algorithm: 'sha1', encoding: 'hex' })

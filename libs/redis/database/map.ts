@@ -41,7 +41,7 @@ export class RedisMap<Schema extends TSchema> {
         this.encoder = new RedisEncoder(this.schema)
     }
 
-    /** Async iterator for this map */
+    /** Async iterator for this Map */
     public async * [Symbol.asyncIterator]() {
         for(const key of await this.redis.keys(this.encodeKey('*'))) {
             const value = await this.redis.get(key)
@@ -50,7 +50,7 @@ export class RedisMap<Schema extends TSchema> {
         }
     }
 
-    /** Clears all entries in this map */
+    /** Clears all this Map */
     public async clear() {
         for(const key of await this.redis.keys(this.encodeAllKeys())) {
             await this.redis.del(key)
@@ -69,7 +69,7 @@ export class RedisMap<Schema extends TSchema> {
         return await this.redis.set(this.encodeKey(key), this.encoder.encode(value))
     }
 
-    /** Gets the value for the given key or undefined if not exists */
+    /** Gets the value for the given key */
     public async get(key: string): Promise<Static<Schema> | undefined> {
         const value = await this.redis.get(this.encodeKey(key))
         if(value === null) return undefined
@@ -81,13 +81,22 @@ export class RedisMap<Schema extends TSchema> {
         return await this.redis.del(this.encodeKey(key))
     }
 
-    /** Returns the number of entries in this map */
+    /** Returns the number of entries in this Map */
     public async size(): Promise<number> {
         const keys = await this.redis.keys(this.encodeKey('*'))
         return keys.length
     }
 
-    /** Returns an async iterator to the values in this map */
+    /** Returns an async iterator for all entries in this Map */
+    public async * entries(): AsyncGenerator<[string, Static<Schema>]> {
+        for(const key of await this.redis.keys(this.encodeKey('*'))) {
+            const value = await this.redis.get(key)
+            if(value === null) continue
+            yield [this.decodeKey(key), this.encoder.decode<Static<Schema>>(value)]
+        }
+    }
+
+    /** Returns an async iterator to the values in this Map */
     public async * values(): AsyncIterable<Static<Schema>> {
         for(const key of await this.redis.keys(this.encodeAllKeys())) {
             const value = await this.redis.get(key)
@@ -96,12 +105,24 @@ export class RedisMap<Schema extends TSchema> {
         }
     }
 
-    /** Returns an async iterator to the keys in this map */
+    /** Returns an async iterator to the keys in this Map */
     public async * keys(): AsyncIterable<string> {
         for(const key of await this.redis.keys(this.encodeAllKeys())) {
-            yield key
+            yield this.decodeKey(key)
         }
     }
+    
+    /** Returns all entries in this Map */
+    public async collect(): Promise<[string, Static<Schema>][]> {
+        const values: [string, Static<Schema>][] = []
+        for await(const value of this.entries()) {
+            values.push(value)
+        }
+        return values
+    }
+    // ------------------------------------------------------------
+    // Key Encoding
+    // ------------------------------------------------------------
 
     private encodeAllKeys() {
         return `map::${this.keyspace}:*`
