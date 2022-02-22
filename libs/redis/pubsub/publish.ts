@@ -26,7 +26,30 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-export * from './channel/index'
-export * from './database/index'
-export * from './pubsub/index'
-export * from './type'
+import { Redis }        from 'ioredis'
+import { SyncSender }   from '@sidewinder/channel'
+import { Validator }    from '@sidewinder/validator'
+import { RedisEncoder } from '../encoder'
+import { TSchema }      from '../type'
+
+export class RedisPublish<T> implements SyncSender<T> {
+    private readonly validator: Validator<TSchema>
+    private readonly encoder: RedisEncoder
+
+    constructor(private readonly schema: TSchema, private readonly redis: Redis) { 
+        this.validator = new Validator(this.schema)
+        this.encoder = new RedisEncoder(this.schema)
+    }
+
+    public send(value: T): Promise<void> {
+        throw new Error('Method not implemented.')
+    }
+    
+    public error(error: Error): Promise<void> {
+        throw new Error('Method not implemented.')
+    }
+
+    public end(): Promise<void> {
+        throw new Error('Method not implemented.')
+    }
+}
