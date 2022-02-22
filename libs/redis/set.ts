@@ -26,26 +26,11 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-import { Type, TDatabase } from './type'
-import { RedisList } from './list'
-import { RedisMap } from './map'
-import { RedisSet } from './set'
+export class RedisSet {
+    public async add(value: string | number) {
 
-export class RedisDatabase<Database extends TDatabase = TDatabase> {
-
-    constructor(private readonly schema: Database) {}
-
-    public list(name: string): RedisList {
-        return new RedisList()
     }
-    public map(name: string): RedisMap {
-        return new RedisMap()
-    }
-    public set(name: string): RedisSet {
-        return new RedisSet()
-    }
+    public async delete(value: string | number) {
 
-    public static async connect<Database extends TDatabase>(schema: Database): Promise<RedisDatabase<Database>> {
-        throw 1
     }
 }
