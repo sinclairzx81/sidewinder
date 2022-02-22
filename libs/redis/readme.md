@@ -2,11 +2,25 @@
 
 <h1>Sidewinder Redis</h1>
 
-<p>Type Safe Redis Interface</p>
+<p>Type Safe Redis for Node</p>
 
 [<img src="https://img.shields.io/npm/v/@sidewinder/redis?label=%40sidewinder%2Fredis">](https://www.npmjs.com/package/@sidewinder/redis)
 
 </div>
+
+## Contents
+
+- [Overview](#Overview)
+- [RedisDatabase](#RedisDatabase)
+  - [RedisArray](#RedisArray)
+  - [RedisMap](#RedisMap)
+  - [RedisSet](#RedisSet)
+- [RedisChannel]
+ - [RedisSender](#RedisSender)
+ - [RedisReceiver](#RedisReceiver)
+- [RedisPubSub]
+ - [RedisPub](#RedisPub)
+ - [RedisSub](#RedisSub)
 
 ## Overview
 
