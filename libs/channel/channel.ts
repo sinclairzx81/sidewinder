@@ -63,13 +63,13 @@ export class Channel<T = any> implements Sender<T>, Receiver<T> {
     }
 
     /** Sends the given value to this channel. If channel has ended no action. */
-    public async send(value: T): Promise<void> {
+    public send(value: T): void {
         if(this.ended) return
         this.queue.enqueue({ type: MessageType.Next, value })
     }
 
     /** Sends the given error to this channel causing the receiver to throw on next(). If channel has ended no action. */
-    public async error(error: Error): Promise<void> {
+    public error(error: Error): void {
         if (this.ended) return
         this.ended = true
         this.queue.enqueue({ type: MessageType.Error, error })
@@ -77,7 +77,7 @@ export class Channel<T = any> implements Sender<T>, Receiver<T> {
     }
 
     /** Ends this channel. */
-    public async end(): Promise<void> {
+    public end(): void {
         if (this.ended) return
         this.ended = true
         this.queue.enqueue({ type: MessageType.End })
