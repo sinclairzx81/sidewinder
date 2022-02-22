@@ -2,7 +2,6 @@ import { Assert } from '../../assert/index'
 import { resolveDatabase } from '../resolve'
 
 describe('redis/RedisArray', () => {
-
   // ---------------------------------------------------------
   // Push
   // ---------------------------------------------------------
@@ -102,9 +101,43 @@ describe('redis/RedisArray', () => {
   })
 
   // ---------------------------------------------------------
+  // Shift
+  // ---------------------------------------------------------
+
+  it('should shift values', async () => {
+    const database = resolveDatabase()
+    const array = database.array('vectors')
+    await array.push([0, 0, 0])
+    await array.push([1, 1, 1])
+    const value0 = await array.shift()
+    const value1 = await array.shift()
+    const value2 = await array.shift()
+    Assert.deepEqual(value0, [0, 0, 0])
+    Assert.deepEqual(value1, [1, 1, 1])
+    Assert.deepEqual(value2, undefined)
+  })
+
+  // ---------------------------------------------------------
+  // Pop
+  // ---------------------------------------------------------
+
+  it('should pop values', async () => {
+    const database = resolveDatabase()
+    const array = database.array('vectors')
+    await array.push([0, 0, 0])
+    await array.push([1, 1, 1])
+    const value0 = await array.pop()
+    const value1 = await array.pop()
+    const value2 = await array.pop()
+    Assert.deepEqual(value0, [1, 1, 1])
+    Assert.deepEqual(value1, [0, 0, 0])
+    Assert.deepEqual(value2, undefined)
+  })
+
+  // ---------------------------------------------------------
   // Iterate
   // ---------------------------------------------------------
-  
+
   it('should iterate values in an array', async () => {
     const database = resolveDatabase()
     const array = database.array('vectors')
@@ -113,7 +146,7 @@ describe('redis/RedisArray', () => {
     await array.push([2, 0, 0])
     await array.push([3, 0, 0])
     const buffer: any[] = []
-    for await(const value of array) {
+    for await (const value of array) {
       buffer.push(value)
     }
     Assert.deepEqual(buffer, [
@@ -127,7 +160,7 @@ describe('redis/RedisArray', () => {
   // ---------------------------------------------------------
   // Collect
   // ---------------------------------------------------------
-  
+
   it('should collect values in an array', async () => {
     const database = resolveDatabase()
     const array = database.array('vectors')
