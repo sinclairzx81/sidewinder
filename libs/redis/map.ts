@@ -26,8 +26,17 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
+import { Validator } from '@sidewinder/validator'
+import { Redis } from 'ioredis'
+import { TSchema } from './type'
+
 export class RedisMap<T> {
-    
+    private readonly validator: Validator<TSchema>
+
+    constructor(private readonly schema: TSchema, private readonly redis: Redis, private readonly keyspace: string) {
+        this.validator = new Validator(schema)
+    }
+
     public async has(key: string) {
 
     }
@@ -57,5 +66,9 @@ export class RedisMap<T> {
     }
     public async * keys(): AsyncIterable<string> {
 
+    }
+
+    private resolveKey(key: string) {
+        return `map:${this.keyspace}:${key}`
     }
 }

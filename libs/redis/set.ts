@@ -26,9 +26,15 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
+import { Validator } from '@sidewinder/validator'
+import { TSchema } from './type'
+import { Redis } from 'ioredis'
+
 export class RedisSet<T> {
-    constructor() {
-        const set = new Set()
+    private readonly validator: Validator<TSchema>
+
+    constructor(private readonly schema: TSchema, private readonly redis: Redis, private readonly keyspace: string) {
+        this.validator = new Validator(schema)
     }
     
     public async add(value: T) {
@@ -45,5 +51,8 @@ export class RedisSet<T> {
 
     public async * values(): AsyncIterable<T> {
 
+    }
+    private resolveKey() {
+        return `set:${this.keyspace}`
     }
 }

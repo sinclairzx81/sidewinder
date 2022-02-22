@@ -26,9 +26,18 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
+import { Validator } from '@sidewinder/validator'
+import { Redis } from 'ioredis'
 import { TSchema } from './type'
 
 export class RedisList<T> {
+
+    private readonly validator: Validator<TSchema>
+
+    constructor(private readonly schema: TSchema, private readonly redis: Redis, private readonly keyspace: string) {
+        
+        this.validator = new Validator(schema)
+    }
 
     public async * [Symbol.iterator](): AsyncIterable<T> {
 
