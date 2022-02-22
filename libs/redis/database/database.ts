@@ -28,7 +28,7 @@ THE SOFTWARE.
 
 import IORedis, { Redis, RedisOptions } from 'ioredis'
 import { Timeout } from '@sidewinder/async'
-import { TDatabase, Static } from './type'
+import { TDatabase, Static } from '../type'
 import { RedisList } from './list'
 import { RedisMap } from './map'
 import { RedisSet } from './set'
