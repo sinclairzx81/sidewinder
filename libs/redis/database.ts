@@ -26,7 +26,7 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-import { Type, TDatabase } from './type'
+import { TDatabase, Static } from './type'
 import { RedisList } from './list'
 import { RedisMap } from './map'
 import { RedisSet } from './set'
@@ -35,13 +35,13 @@ export class RedisDatabase<Database extends TDatabase = TDatabase> {
 
     constructor(private readonly schema: Database) {}
 
-    public list(name: string): RedisList {
+    public list<Name extends keyof Database['lists']>(name: Name): RedisList<Static<Database['lists'][Name]>> {
         return new RedisList()
     }
-    public map(name: string): RedisMap {
+    public map<Name extends keyof Database['maps']>(name: Name): RedisMap<Static<Database['lists'][Name]>> {
         return new RedisMap()
     }
-    public set(name: string): RedisSet {
+    public set<Name extends keyof Database['sets']>(name: Name): RedisSet<Static<Database['sets'][Name]>> {
         return new RedisSet()
     }
 

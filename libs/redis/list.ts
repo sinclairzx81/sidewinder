@@ -26,18 +26,26 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-export class RedisList {
-    public async push(value: any) {
+import { TSchema } from './type'
+
+export class RedisList<T> {
+
+    public async * [Symbol.iterator](): AsyncIterable<T> {
 
     }
-    public async unshift(value: any): Promise<any> {
+
+    public async push(value: T) {
 
     }
-    public async pop(): Promise<any> {
+    public async unshift(value: T): Promise<any> {
+
+    }
+    public async pop(): Promise<T> {
+        throw 1
         
     }
-    public async shift(): Promise<any> {
-
+    public async shift(): Promise<T> {
+        throw 1
     }
 
 }

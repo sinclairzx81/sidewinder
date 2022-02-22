@@ -43,9 +43,9 @@ export type AuthorizeFunctionReturnType<T> = T extends AuthorizeFunction<any, in
 // TContract
 // --------------------------------------------------------------------------
 
-export type ContractFormat<T> = T extends 'json' | 'msgpack' ? T : 'json'
+type DefinedOr<T, R> = keyof T extends never ? R : T
 
-export type ContractInterface<T, R> = keyof T extends never ? R : T
+export type ContractFormat<T> = T extends 'json' | 'msgpack' ? T : 'json'
 
 export type ContractMethodParamters<T> = T extends (...args: any) => any ? Parameters<T> extends infer P ? P extends any[] ? P : [] : [] : []
 
@@ -69,11 +69,11 @@ export interface TContract<Options extends ContractOptions = ContractOptions> ex
         /** The encoding format for this contract. The default is 'json' */
         format: ContractFormat<Options['format']>
         /** The server interface methods */
-        server: ContractInterface<Options['server'], {}> extends infer Interface ? {
+        server: DefinedOr<Options['server'], {}> extends infer Interface ? {
             [K in keyof Interface]: Interface[K] extends TFunction<any[], any> ? Interface[K]['$static'] : never
         } : {},
         /** The client interface methods */
-        client: ContractInterface<Options['client'], {}> extends infer Interface ? {
+        client: DefinedOr<Options['client'], {}> extends infer Interface ? {
             [K in keyof Interface]: Interface[K] extends TFunction<any[], any> ? Interface[K]['$static'] : never
         }: {}
     },
@@ -82,9 +82,9 @@ export interface TContract<Options extends ContractOptions = ContractOptions> ex
     /** The encoding format for this contract. The default is 'json' */
     format: ContractFormat<Options['format']>,
     /** The server interface methods */
-    server: ContractInterface<Options['server'], {}>,
+    server: DefinedOr<Options['server'], {}>,
     /** The client interface methods */
-    client: ContractInterface<Options['client'], {}>,
+    client: DefinedOr<Options['client'], {}>,
 }
 
 

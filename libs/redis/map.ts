@@ -26,19 +26,36 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-export class RedisMap {
-    public async set(key: string, value: any) {
+export class RedisMap<T> {
+    
+    public async has(key: string) {
 
     }
 
-    public async get(key: string): Promise<any> {
+    public async set(key: string, value: T) {
 
     }
 
-    public async values() {
+    public async get(key: string): Promise<T | undefined> {
+        throw 1
+    }
+
+    public async delete(key: string) {
 
     }
-    public async keys() {
+
+    public async clear() {
+        const map = new Map()
+    }
+
+    public async size(): Promise<number> {
+        return 1
+    }
+
+    public async * values(): AsyncIterable<T> {
+
+    }
+    public async * keys(): AsyncIterable<string> {
 
     }
 }

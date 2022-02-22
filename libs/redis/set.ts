@@ -26,11 +26,24 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-export class RedisSet {
-    public async add(value: string | number) {
+export class RedisSet<T> {
+    constructor() {
+        const set = new Set()
+    }
+    
+    public async add(value: T) {
 
     }
-    public async delete(value: string | number) {
+
+    public async delete(value: T) {
+
+    }
+
+    public async clear() {
+
+    }
+
+    public async * values(): AsyncIterable<T> {
 
     }
 }

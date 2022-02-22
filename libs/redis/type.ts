@@ -26,26 +26,61 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-import { TypeBuilder, TSchema } from '@sidewinder/type'
+import { TypeBuilder, TSchema, TObject, TString, TNumber } from '@sidewinder/type'
+export * from '@sidewinder/type'
+
+type DefinedOr<T, Or> = keyof T extends never ? Or : T
+
+// --------------------------------------------------------------------------
+// TDatabase
+// --------------------------------------------------------------------------
+
+export type ResolveListDefinition<Database extends TDatabase, Name> = Name extends keyof Database['lists'] ? Database['lists'][Name] extends TSchema ? Database['lists'][Name] : never : never
+export type ResolveMapDefinition<Database extends TDatabase, Name> = Name extends keyof Database['maps'] ? Database['maps'][Name] extends TSchema ? Database['lists'][Name] : never : never
+export type ResolveSetDefinition<Database extends TDatabase, Name> = Name extends keyof Database['sets'] ? Database['sets'][Name] extends TSchema ? Database['lists'][Name] : never : never
+
+export interface TListDefinitions {
+    [name: string]: TSchema
+}
+export interface TMapDefinitions {
+    [name: string]: TSchema
+}
+export interface TSetDefinitions {
+    [name: string]: TString | TNumber
+}
 
 export interface TDatabaseOptions {
-    lists: any
-    maps:  any
-    sets:  any
+    /** List definitions */
+    lists?: TListDefinitions
+    /** Map definitions */
+    maps?: TMapDefinitions
+    /** Set definitions */
+    sets?: TSetDefinitions
 }
 
 export interface TDatabase<DatabaseOptions extends TDatabaseOptions = TDatabaseOptions> extends TSchema {
-    $static: unknown
-    type:   'object'
-    kind:   'Database'
-    lists:   unknown
-    sets:    unknown
-    maps:    unknown
+    $static: {
+        lists: DefinedOr<DatabaseOptions['lists'], TObject>,
+        maps: DefinedOr<DatabaseOptions['maps'], TObject>,
+        sets: DefinedOr<DatabaseOptions['sets'], TObject>,
+    }
+    type: 'object'
+    kind: 'Database'
+    lists: DefinedOr<DatabaseOptions['lists'], {}>,
+    maps: DefinedOr<DatabaseOptions['maps'], {}>,
+    sets: DefinedOr<DatabaseOptions['sets'], {}>,
 }
 
+// --------------------------------------------------------------------------
+// RedisTypeBuilder
+// --------------------------------------------------------------------------
+
 export class RedisTypeBuilder extends TypeBuilder {
-    public Database<DatabaseOptions extends TDatabaseOptions>(options: DatabaseOptions): TDatabase<TDatabaseOptions> {
-        return this.Create({})
+    public Database<DatabaseOptions extends TDatabaseOptions>(options: DatabaseOptions): TDatabase<DatabaseOptions> {
+        const lists = options.lists || {}
+        const maps = options.maps || {}
+        const sets = options.sets || {}
+        return this.Create({ type: 'object', kind: 'Database', lists, maps, sets })
     }
 }
 
