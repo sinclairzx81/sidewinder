@@ -35,20 +35,22 @@ import { RedisSet } from './set'
 
 export class RedisDatabase<Database extends TDatabase = TDatabase> {
     constructor(private readonly schema: Database, private readonly redis: Redis) {}
-    /** Returns a redis list type */
-    public list<Name extends keyof Database['lists']>(name: Name): RedisArray<Database['lists'][Name]> {
-        const schema = (this.schema['lists'] as any)[name as string]
+    
+    /** Returns a RedisArray type */
+    public array<Name extends keyof Database['arrays']>(name: Name): RedisArray<Database['arrays'][Name]> {
+        const schema = (this.schema['arrays'] as any)[name as string]
         if(schema === undefined) throw Error(`The list '${name}' not defined in redis schema`)
         return new RedisArray(schema, this.redis, name as string)
     }
-    /** Returns a redis map type */
+
+    /** Returns a RedisMap type */
     public map<Name extends keyof Database['maps']>(name: Name): RedisMap<Database['maps'][Name]> {
         const schema = (this.schema['maps'] as any)[name as string]
         if(schema === undefined) throw Error(`The map '${name}' not defined in redis schema`)
         return new RedisMap(schema, this.redis, name as string)
     }
 
-    /** Returns a redis set type */
+    /** Returns a RedisSet type */
     public set<Name extends keyof Database['sets']>(name: Name): RedisSet<Database['sets'][Name]> {
         const schema = (this.schema['sets'] as any)[name as string]
         if(schema === undefined) throw Error(`The set '${name}' not defined in redis schema`)

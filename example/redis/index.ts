@@ -5,7 +5,7 @@ export const User = Type.Object({
 })
 
 const Schema = Type.Database({
-    lists: {
+    arrays: {
         users: Type.Number()
     },
     maps: {
@@ -30,6 +30,7 @@ export class Test {
 
 async function start() {
     const database = await RedisDatabase.connect(Schema, 'redis://172.30.1.24:6379')
+    database.array('users')
     const vectors = database.set('vectors')
     await vectors.add([1, 2])
     await vectors.add([1, 3])

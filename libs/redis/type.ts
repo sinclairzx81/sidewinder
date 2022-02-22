@@ -39,7 +39,7 @@ export type ResolveListDefinition<Database extends TDatabase, Name> = Name exten
 export type ResolveMapDefinition<Database extends TDatabase, Name> = Name extends keyof Database['maps'] ? Database['maps'][Name] extends TSchema ? Database['lists'][Name] : never : never
 export type ResolveSetDefinition<Database extends TDatabase, Name> = Name extends keyof Database['sets'] ? Database['sets'][Name] extends TSchema ? Database['lists'][Name] : never : never
 
-export interface TListDefinitions {
+export interface TArrayDefinitions {
     [name: string | number | symbol]: TSchema
 }
 export interface TMapDefinitions {
@@ -51,7 +51,7 @@ export interface TSetDefinitions {
 
 export interface TDatabaseOptions {
     /** List definitions */
-    lists?: TListDefinitions
+    arrays?: TArrayDefinitions
     /** Map definitions */
     maps?: TMapDefinitions
     /** Set definitions */
@@ -62,7 +62,7 @@ export interface TDatabase<DatabaseOptions extends TDatabaseOptions = TDatabaseO
     $static: unknown
     type: 'object'
     kind: 'Database'
-    lists: DefinedOr<DatabaseOptions['lists'], TObject>,
+    arrays: DefinedOr<DatabaseOptions['arrays'], TObject>,
     maps: DefinedOr<DatabaseOptions['maps'], TObject>,
     sets: DefinedOr<DatabaseOptions['sets'], TObject>,
 }
@@ -73,10 +73,10 @@ export interface TDatabase<DatabaseOptions extends TDatabaseOptions = TDatabaseO
 
 export class RedisTypeBuilder extends TypeBuilder {
     public Database<DatabaseOptions extends TDatabaseOptions>(options: DatabaseOptions): TDatabase<DatabaseOptions> {
-        const lists = options.lists || {}
+        const arrays = options.arrays || {}
         const maps = options.maps || {}
         const sets = options.sets || {}
-        return this.Create({ type: 'object', kind: 'Database', lists, maps, sets })
+        return this.Create({ type: 'object', kind: 'Database', arrays, maps, sets })
     }
 }
 
