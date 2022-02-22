@@ -27,10 +27,10 @@ License MIT
 
 - [Overview](#Overview)
 - [Install](#Install)
-- [Services](#Services)
-- [Static and Runtime Type Safety](#TypeSafety)
-- [Type Reflection and Metadata](#TypeReflection)
-- [Building Locally](#BuildLocal)
+- [Static and Runtime Safe](#TypeSafety)
+- [Services and Clients](#ServicesAndClients)
+- [Services and Metadata](#ServiceAndMetadata)
+- [Build Local](#BuildLocal)
 
 ### Packages
 
@@ -48,28 +48,94 @@ License MIT
 - [Types](libs/type)
 - [Validation](libs/validator)
 
-
-
 ## Install
 
-Sidewinder consists of several distinct packages that target various aspects common to micro service development. These packages can be taken individually or as a whole.
+Sidewinder consists of a number of packages that target various facets of micro service development. Each package is orientated towards type safe interactions with services and common Node infrastructure.
 
 ```bash
+# Runtime Type System
+$ npm install @sidewinder/type       # Json Schema Runtime Type Builder
+$ npm install @sidewinder/validator  # Json Schema Validator
+
+# Service Packages
+$ npm install @sidewinder/contract   # Service Descriptions Contracts
+$ npm install @sidewinder/client     # Http and Web Socket Clients
+$ npm install @sidewinder/server     # Http and Web Socket Services and Hosting
+
+# Database and Infrastructure
+$ npm install @sidewinder/mongo      # Type Safe Mongo
+$ npm install @sidewinder/redis      # Type Safe Redis
+
+# Application Messaging
 $ npm install @sidewinder/async      # Asynchronous Primitives
 $ npm install @sidewinder/channel    # Asynchronous Channels
-$ npm install @sidewinder/client     # Http and Web Socket Clients
-$ npm install @sidewinder/contract   # Service Descriptions Contracts
-$ npm install @sidewinder/encoder    # Json and MessagePack Encoding
 $ npm install @sidewinder/events     # Portable Event Emitter
-$ npm install @sidewinder/mongo      # Type Safe Mongo Driver
-$ npm install @sidewinder/platform   # JavaScript Environment Checks
-$ npm install @sidewinder/server     # Http and Web Socket Services and Hosting
+
+# Hashing and Signing
+$ npm install @sidewinder/hash       # Hashing Functions
 $ npm install @sidewinder/token      # Type Safe Json Web Token
-$ npm install @sidewinder/type       # Json Schema Type Builder with Static Types
-$ npm install @sidewinder/validator  # Json Schema compiler and validator
+
+# Environment
+$ npm install @sidewinder/platform   # JavaScript Runtime Environment Checks
 ```
 
-## Services
+<a name="TypeSafety"></a>
+
+## Static and Runtime Safe
+
+[TypeScript Example Link](https://www.typescriptlang.org/play?#code/JYWwDg9gTgLgBAbzgFQJ5gKZwL5wGZQQhwDkAAgM7AAmGA7sAHa1QD0AxhIzFAIbswSAKFCRYiOAHUMAIwDKGKADdg7LLgJFSlGvSYtWFRUsXDR0eEmkyAwgBtgGbjnyFi5KrQbNFHB08EhIVZWOABaCMio6JjYuPiExPjg0JsuHn4YFPCk3Lz8gqigzkYKeDTuPgE4AF4UdAwAOgqMgQAKBCE4brgjZUUALkQuntGSXmpqEiG0TEaAMQBXRgFgLjaAbVmmgDlFkBlFNoBKABp6ub2Do+OAXXPtxqvDqBPjke7sIWx37ML-gGAsLZBTKVQYP5AqHQuLFLhlXrGcG1OCMehSWSglRqNotKowX59bFNEAYGAACwg1Da40mJHObXY-m4AElqOdeOcZMdagA+YajEKjUYAH2F4rFwpFHzgQvFcEl8u6ip6AGpInAwLw+CAKHA2rwhox9i8uUaTYp3oLQvKVbaZXKJUq1RrlsAAI6LLBMxzOXTcYB4RxQB02iWhpXqiJwUkUqmo3ikuBMPCKKAYaiuLQlVpZa2hiOjKNhODpmCLKCMZOMVNQdOZ3h6gAGxuuUCbhZ60tGZYrVd4cFVcBkcG+vyFMMnU+y9l9WQnU8XQLhpXgPoCKLRdAxtmZMFx6Xx5xI5JgMDAAxCjWvjRIvxKCPTFEWdngdV4dF4wDXe8a7F4dh2DSExTOcACM4HvI6CrOrBTpKtK0F2nBzrIS60bagA5vsAR6o2+qxpS1BDGUUBMJhHLmm2ZqohaUBQWGMEoShYrZF2zEocWMZkkRCZJimaYZlmxA5vibHKuJg4ak+L7wMAzati8TZAA)
+
+Sidewinder provides both runtime and static type safety derived from Contract definitions encoded in JavaScript. It makes heavy use of TypeScript's type inference capabilities to statically infer Client and Service method signatures for contract, with data received over the network runtime checked to ensure it matches the expected parameter and return types defined for each method.
+
+```typescript
+// ---------------------------------------------------------------------------
+// Contract
+// ---------------------------------------------------------------------------
+
+const Contract = Type.Contract({
+    server: {
+        'add': Type.Function([Type.Number(), Type.Number()], Type.Number())
+    }
+})
+
+// ---------------------------------------------------------------------------
+// Service
+// ---------------------------------------------------------------------------
+
+const service = new WebService(Contract)
+
+service.method('add', (clientId, a, b) => {
+    //        |           |      |
+    //        |           |      +--- params (a: number, b: number)
+    //        |           |
+    //        |           +--- unique client identifier
+    //        |
+    //        +--- method name inferred from contract
+    //
+    //
+    //     +--- return inferred as `number`
+    //     |
+    return a + b 
+})
+
+// ---------------------------------------------------------------------------
+// Client
+// ---------------------------------------------------------------------------
+
+const client = new WebClient(Contract, 'http://....')
+
+const result = await client.call('add', 1, 1)
+//    |                         |         |
+//    |                         |         +--- arguments as (method: string, a: number, b: number)
+//    |                         | 
+//    |                         +--- method name inferred from contract
+//    |
+//    +--- result is `number`
+```
+
+<a name="ServicesAndClients"></a>
+
+## Services and Clients
 
 [TypeScript Example Link](https://www.typescriptlang.org/play?#code/JYWwDg9gTgLgBAbzgFQJ5gKZwL5z-g-AMyghDgHIABAZ2ABMMB3YAO0agHoBjCVmKAENuMCgFgAUKEixEcABIQaMADRwA6hgBGAZQxQAbsG5ZcJMpVoNmbDpxr6D+8VPDR4STVoDCAG2AY-DiExKTk1HSMLOz6PP6BopKSnJxwALQZmVnZObl5+QWF+cmp3nwCwjAlJXBl-EIiNHCCUFgOhsZYbDD6RMJYjDTcUMBgMMB8TTAAFoLwg8PAWliCcA7wEERw3IK+voJavhg1RACurCITrE2C7M2scBBjV7twgbz0bADmcETQIHMAHRwHTWaIcOCnBxNOoVRpwGAQOA1Ay7BhzAZzVYOIIQJxQZpwVgYGBMaAAa2aTSYGD2VIRSOUc2Mu18qDgbCI+lq8SCNVu9BBjm5IBJ0wg9CabBQ6AwOkWY2ByCg7O4s1YX2+COmWDALUEop6UBud1aMFOUAeNRgsqafwJMywZwu40mcGWvggTAZHNYqP89AxPICQQFQsMIrFEpogOqEhS6SKSeTKdTWSSEl413gsIa8AAvDLMIDc5UABQISQEe0AmAALkoACsaHwKCoq-h2viG5WJCE8BRBPR6BQG2hiwAxc6XPhlgDa44wgIAcqcQMsoGWAJRqRcrtcb7cAXV3sv36-0253HZCFBopy0o6LS6nLqu873q4vm53z-Ph63E8-y-ADrz7fsKBAU5fCfPdXxnVgPzPEDL1-T8D1QoD0O-K923A29PgMWCz3g11EIXZCMJ-U9ixQn8sMonCtzAghsEkbAtwzBM0x43i+LSGo9A6Ew4wTISjBMJowFIIxGG2PhhhJLpwCOUV+GZN17Vqco8xjcMJKwQ1xUlGpWhMYAnEJLMegAD3gXY+B+FgZgRWVBT1IRDX0JpGCINgMEFR1tUMqN6CVHUaiZcZuFczBfRrDSHmAHz9AsgLfjCYLtPqSpY3jTgan4oriuKCRJCzZQ1kcTo4ELYlvS8cTOjLUsRE4iQu06QEjIlMtB2HNs4DLayMDstRBDULQt1qgA+QkAGp3XazqTG60K+vvR81GG8pRtUZpJum-M5tWNIlskFalx6+g+qgmDtpGsaDqW2bCQAKnOjrqtW66+sIwadv4PbxsO17VlSKaMwq+BxUqurmAUJQYG3SRYZgQEoQwMtLvatHAX8ZRAjLABWAAGcn2sKkrqepmo-BDKp8rp3kYCaLNiREH0msk4FQSiWxuWkvFrCmMlthZ2KMD05AdWRfLfmAY14GSwkvHphI4CYaZjGmeTWA51mfUa77lLAVSEkSpo8W5Gp5BgGAwHGu4gocLNBRV1ZGogbhyRJdWgi1nW9YNqYkS9n2SW5rAamkc31LIq38VV7QQW9330ZQWW-j2L0tUUjEbg0bR-fgRE5YTCq1ywF2TeaLRrbylIqZplu+KhyZ4G4CX4Ya4uWZanTKjUChpntsA6xST0dl8NG6zJ8nOAodroeaYdauaJhBGATuWcBaffD6ocRzUABGNQACZl47tYH3XwRN+38WGb31kNofQaz7gS-yuvu674fnez9963Wgh-C+V9sxwEIv-LegCEgvz2H9CyYCv4QJbEcfGEAvjziPmoTaag7pqEIkeaaCY5wAGY1BpE-ufNQpNATEyPEAA)
 
@@ -141,64 +207,13 @@ const div = await client.call('div', 1, 2)
 console.log([add, sub, mul, div]) // [3, -1, 2, 0.5]
 ```
 
-<a name="TypeSafety"></a>
-
-## Static and Runtime Type Safety
-
-[TypeScript Example Link](https://www.typescriptlang.org/play?#code/JYWwDg9gTgLgBAbzgFQJ5gKZwL5wGZQQhwDkAAgM7AAmGA7sAHa1QD0AxhIzFAIbswSAKFCRYiOAHUMAIwDKGKADdg7LLgJFSlGvSYtWFRUsXDR0eEmkyAwgBtgGbjnyFi5KrQbNFHB08EhIVZWOABaCMio6JjYuPiExPjg0JsuHn4YFPCk3Lz8gqigzkYKeDTuPgE4AF4UdAwAOgqMgQAKBCE4brgjZUUALkQuntGSXmpqEiG0TEaAMQBXRgFgLjaAbVmmgDlFkBlFNoBKABp6ub2Do+OAXXPtxqvDqBPjke7sIWx37ML-gGAsLZBTKVQYP5AqHQuLFLhlXrGcG1OCMehSWSglRqNotKowX59bFNEAYGAACwg1Da40mJHObXY-m4AElqOdeOcZMdagA+YajEKjUYAH2F4rFwpFHzgQvFcEl8u6ip6AGpInAwLw+CAKHA2rwhox9i8uUaTYp3oLQvKVbaZXKJUq1RrlsAAI6LLBMxzOXTcYB4RxQB02iWhpXqiJwUkUqmo3ikuBMPCKKAYaiuLQlVpZa2hiOjKNhODpmCLKCMZOMVNQdOZ3h6gAGxuuUCbhZ60tGZYrVd4cFVcBkcG+vyFMMnU+y9l9WQnU8XQLhpXgPoCKLRdAxtmZMFx6Xx5xI5JgMDAAxCjWvjRIvxKCPTFEWdngdV4dF4wDXe8a7F4dh2DSExTOcACM4HvI6CrOrBTpKtK0F2nBzrIS60bagA5vsAR6o2+qxpS1BDGUUBMJhHLmm2ZqohaUBQWGMEoShYrZF2zEocWMZkkRCZJimaYZlmxA5vibHKuJg4ak+L7wMAzati8TZAA)
-
-Sidewinder provides both runtime and static type safety derived from Contract definitions. It is able to statically infer Client and Service method signatures in TypeScript, with data received over the network runtime checked to ensure it matches the expected parameter and return types defined for each method.
-
-```typescript
-// ---------------------------------------------------------------------------
-// Contract
-// ---------------------------------------------------------------------------
-
-const Contract = Type.Contract({
-    server: {
-        'add': Type.Function([Type.Number(), Type.Number()], Type.Number())
-    }
-})
-
-// ---------------------------------------------------------------------------
-// Service
-// ---------------------------------------------------------------------------
-
-const service = new WebService(Contract)
-
-service.method('add', (clientId, a, b) => {
-    //        |           |      |
-    //        |           |      +--- params (a: number, b: number)
-    //        |           |
-    //        |           +--- unique client identifier
-    //        |
-    //        +--- method name inferred from contract
-    //
-    //
-    //     +--- return inferred as `number`
-    //     |
-    return a + b 
-})
-
-// ---------------------------------------------------------------------------
-// Client
-// ---------------------------------------------------------------------------
-
-const client = new WebClient(Contract, 'http://....')
-
-const result = await client.call('add', 1, 1)
-//    |                         |         |
-//    |                         |         +--- arguments as (method: string, a: number, b: number)
-//    |                         | 
-//    |                         +--- method name inferred from contract
-//    |
-//    +--- result is `number`
-```
 
 
-<a name="TypeReflection"></a>
 
-## Type Reflection and Metadata
+
+<a name="ServiceAndMetadata"></a>
+
+## Service And Metadata
 
 Sidewinder Contracts are expressed as serializable JavaScript objects with embedded JSON schema used to represent method parameter and return types. Contracts can be used for machine readable schematics and published to remote systems, or used to generate human readable documentation.
 
@@ -264,7 +279,7 @@ const Contract = {
 
 <a name="BuildLocal"></a>
 
-## Building Locally
+## Build Local
 
 Sidewinder is built as a mono repository with each publishable package located under the libs directory. Sidewinder uses the [Hammer](https://github.com/sinclairzx81/hammer) build tooling for automated tests, builds and publishing. Sidewinder requires Node 14 LTS. The following shell commands clone the project and outline the commands provide through npm scripts.
 
@@ -278,6 +293,7 @@ $ npm install
 $ npm start         # starts the example project
 $ npm test          # runs the full sidewinder test suite
 $ npm test channel  # runs the sidewinder channel test suite only
+$ npm run format    # runs code formatting across the project
 $ npm run build     # builds all packages to target/build
 $ npm run clean     # cleans all build artifacts
 ```
