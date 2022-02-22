@@ -17,7 +17,7 @@
 
 ## Overview
 
-Sidewinder is a strictly typed and runtime validated micro service framework built for Node and Browser environments. It is designed for service orientated architectures where multiple services need to communicate with one another in complex ways; and where challenges may arise verifying each service is communicating with every other service using strict communication contracts. 
+Sidewinder is a strictly typed and runtime validated micro service framework built for Node and Browser environments. It is designed for service orientated architectures where multiple services need to communicate with one another in complex ways; and where challenges may arise verifying that each service is communicating using strict communication contracts. 
 
 Sidewinder is developed primarily around a [runtime type system](https://github.com/sinclairzx81/typebox) based on JSON Schema. It encodes runtime type information into JavaScript directly then leverages the TypeScript language to statically infer associated static types at compile time. This approach enables distributed services to be statically checked using only the TypeScript compiler, with the same runtime data assertions handled automatically by Sidewinder packages using standard JSON Schema validation.
 
