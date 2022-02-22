@@ -59,10 +59,6 @@ export namespace Request {
         return new Uint8Array(arraybuffer)
     }
 
-    function dynamicImport<T = any>(name: string): T {
-        return (new Function('require', 'name', 'return require(name)'))(require, name)
-    }
-
     /** 
      * NodeJS Fallback. We use the core API to carry out the request as pretty much
      * every fetch polyfill library for node breaks esbuild dependency resolution. We
@@ -71,8 +67,8 @@ export namespace Request {
      */
     function node(contract: TContract, endpoint: string, additionalHeaders: Record<string, string>, body: Uint8Array) {
         return new Promise<Uint8Array>((resolve, reject) => {
-            const urlObject = dynamicImport('url').parse(endpoint)
-            const http = urlObject.protocol === 'https:' ? dynamicImport('https') : dynamicImport('http')
+            const urlObject = Platform.dynamicImport('url').parse(endpoint)
+            const http = urlObject.protocol === 'https:' ? Platform.dynamicImport('https') : Platform.dynamicImport('http')
             const requiredHeaders = createRequiredHeader(contract, body)
             const headers = { ...additionalHeaders, ...requiredHeaders }
             const request =  http.request({ method: 'POST', headers, ...urlObject }, (res: any) => {

@@ -34,26 +34,37 @@ export namespace Platform {
         minor: number,
         revision: string
     }
+    
+    /** 
+     * Dynamically imports the given module. This is used by packages that run in both browser
+     * and node environments. It is used primarily to omit node specific packages used to polyfill
+     * browser API's, specifically to allow downstream bundlers to omit the node specific code
+     * when bundling for browser environments.
+     */
+    export function dynamicImport<T = any>(name: string): T {
+        return (new Function('require', 'name', 'return require(name)'))(require, name)
+    }
 
-    /** Resolves the JavaScript environment */
+    /** Returns the JavaScript runtime environment. Either `node` or `browser`. */
     export function platform(): 'node' | 'browser' {
         return typeof window === 'undefined' ? 'node' : 'browser'
     }
 
     let _version: Version | undefined
-
-    /** Resolves the node version */
+    /** Resolves the environment version */
     export function version(): Version {
-        if(_version) return _version
-        if(platform() === 'node') {
+        if (_version) return _version
+        if (platform() === 'node') {
             const [_major, _minor, revision] = process.version.split('.')
             const major = parseInt(_major.replace('v', ''))
             const minor = parseInt(_minor.replace('v', ''))
-            _version = {  major, minor, revision }
+            _version = { major, minor, revision }
             return _version
         } else {
             _version = { major: 0, minor: 0, revision: '' }
             return _version
         }
     }
+
+
 }
