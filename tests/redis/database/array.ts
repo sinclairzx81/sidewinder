@@ -2,6 +2,7 @@ import { Assert } from '../../assert/index'
 import { resolveDatabase } from '../resolve'
 
 describe('redis/RedisArray', () => {
+
   // ---------------------------------------------------------
   // Push
   // ---------------------------------------------------------
