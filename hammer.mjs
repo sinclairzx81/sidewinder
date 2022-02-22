@@ -14,6 +14,7 @@ const packages = [
     ['events',    version, 'Sidewinder Events'],
     ['mongo',     version, 'Sidewinder Mongo'],
     ['platform',  version, 'Sidewinder Platform'],
+    ['redis',     version, 'Sidewinder Redis'],
     ['server',    version, 'Sidewinder Server'],
     ['token',     version, 'Sidewinder Token'],
     ['type',      version, 'Sidewinder Type'],
