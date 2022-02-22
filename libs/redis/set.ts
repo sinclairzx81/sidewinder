@@ -31,7 +31,6 @@ import { Validator } from '@sidewinder/validator'
 import { RedisEncoder } from './encoder'
 import { TSchema } from './type'
 
-
 export class RedisSet<T> {
     private readonly validator: Validator<TSchema>
     private readonly encoder: RedisEncoder
@@ -48,7 +47,7 @@ export class RedisSet<T> {
     public async delete(value: T) {
 
     }
-    
+
     public async clear() {
 
     }

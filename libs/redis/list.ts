@@ -42,22 +42,65 @@ export class RedisList<T> {
         this.encoder = new RedisEncoder(schema)
     }
 
-    public async * [Symbol.iterator](): AsyncIterable<T> {
-
+    public async * [Symbol.asyncIterator]() {
+        const length = await this.redis.llen(this.resolveKey())
+        const slice = 32
+        for(let i = 0; i < length; i += slice) {
+            for(const value of await this.redis.lrange(this.resolveKey(), i, i + slice)) {
+                yield this.encoder.decode<T>(value)
+            }
+        } 
     }
 
-    public async push(value: T) {
+    /** Clears this list */
+    public async clear() {
+        return await this.redis.del(this.resolveKey())
+    }
 
+    /** Returns the length of this length */
+    public async length(): Promise<number> {
+        return await this.redis.llen(this.resolveKey())
     }
-    public async unshift(value: T): Promise<any> {
 
+    /** Returns the value at the given index */
+    public async index(index: number): Promise<T | undefined> {
+        const value = await this.redis.lindex(this.resolveKey(), index)
+        if(value === null) return undefined
+        return this.encoder.decode(value)
     }
-    public async pop(): Promise<T> {
-        throw 1
-        
+
+    /** Pushes a value to the end of this list */
+    public async push(...values: T[]) {
+        for(const value of values) {
+            this.validator.assert(value)
+        }
+        for(const value of values) {
+            await this.redis.rpush(this.resolveKey(), this.encoder.encode(value))
+        }
     }
-    public async shift(): Promise<T> {
-        throw 1
+
+    /** Pushes a value to the start of this list */
+    public async unshift(...values: T[]): Promise<any> {
+        for(const value of values) {
+            this.validator.assert(value)
+        }
+        for(const value of values.reverse()) {
+            await this.redis.lpush(this.resolveKey(), this.encoder.encode(value))
+        }
+    }
+
+    /** Pops a value from the end of this list or undefined if empty */
+    public async pop(): Promise<T | undefined> {
+        const value = await this.redis.rpop(this.resolveKey())
+        if(value === null) return undefined
+        return this.encoder.decode(value)
+    }
+
+    /** Shifts a value from the start of this list or undefined if empty */
+    public async shift(): Promise<T | undefined> {
+        const value = await this.redis.lpop(this.resolveKey())
+        if(value === null) return undefined
+        return this.encoder.decode(value)
     }
 
     private resolveKey() {
