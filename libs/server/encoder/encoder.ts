@@ -1,6 +1,6 @@
 /*--------------------------------------------------------------------------
 
-@sidewinder/client
+@sidewinder/encoder
 
 The MIT License (MIT)
 
@@ -26,9 +26,7 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-export * from '@sidewinder/contract'
-export * from './encoder/index'
-export * from './methods/index'
-export * from './proxy'
-export * from './web'
-export * from './websocket'
+export interface Encoder {
+    encode<T = any>(data: T): Uint8Array
+    decode<T = any>(data: Uint8Array): T
+}

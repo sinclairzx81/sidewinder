@@ -27,8 +27,8 @@ THE SOFTWARE.
 ---------------------------------------------------------------------------*/
 
 import { Exception, TContract, ContractMethodParamters, ContractMethodReturnType } from '@sidewinder/contract'
-import { Encoder, MsgPackEncoder, JsonEncoder } from '@sidewinder/encoder'
 import { RpcProtocol } from './methods/index'
+import { Encoder, MsgPackEncoder, JsonEncoder } from './encoder/index'
 import { Request } from './request/index'
 
 /** A JSON RPC 2.0 based HTTP client used to connect to Sidewinder WebService endpoints. */

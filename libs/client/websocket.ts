@@ -27,8 +27,8 @@ THE SOFTWARE.
 ---------------------------------------------------------------------------*/
 
 import { Exception, TContract, ContractMethodParamters, ContractMethodReturnType, TFunction } from '@sidewinder/contract'
-import { Encoder, JsonEncoder, MsgPackEncoder } from '@sidewinder/encoder'
 import { ClientMethods, Responder, RpcErrorCode, RpcProtocol, RpcRequest, RpcResponse } from './methods/index'
+import { Encoder, MsgPackEncoder, JsonEncoder } from './encoder/index'
 import { Barrier } from '@sidewinder/async'
 import { RetryWebSocket, UnifiedWebSocket } from './sockets'
 

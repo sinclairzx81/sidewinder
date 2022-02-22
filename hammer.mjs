@@ -10,7 +10,6 @@ const packages = [
     ['channel',   version, 'Sidewinder Channel'],
     ['client',    version, 'Sidewinder Client'],
     ['contract',  version, 'Sidewinder Contract'],
-    ['encoder',   version, 'Sidewinder Encoder'],
     ['events',    version, 'Sidewinder Events'],
     ['mongo',     version, 'Sidewinder Mongo'],
     ['platform',  version, 'Sidewinder Platform'],

@@ -83,6 +83,8 @@ export class RedisMap<Schema extends TSchema> {
         return keys.length
     }
 
+    // consider https://redis.io/commands/scan for key enumeration
+
     /** Returns an async iterator to the values in this map */
     public async * values(): AsyncIterable<Static<Schema>> {
         for(const key of await this.redis.keys(this.encodeKey('*'))) {

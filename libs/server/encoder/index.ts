@@ -1,6 +1,6 @@
 /*--------------------------------------------------------------------------
 
-@sidewinder/client
+@sidewinder/encoder
 
 The MIT License (MIT)
 
@@ -26,9 +26,6 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-export * from '@sidewinder/contract'
-export * from './encoder/index'
-export * from './methods/index'
-export * from './proxy'
-export * from './web'
-export * from './websocket'
+export * from './encoder'
+export * from './json'
+export * from './msgpack'

@@ -12,7 +12,6 @@
             "@sidewinder/channel":   ["libs/channel/index.ts"],
             "@sidewinder/client":    ["libs/client/index.ts"],
             "@sidewinder/contract":  ["libs/contract/index.ts"],
-            "@sidewinder/encoder":   ["libs/encoder/index.ts"],
             "@sidewinder/events":    ["libs/events/index.ts"],
             "@sidewinder/mongo":     ["libs/mongo/index.ts"],
             "@sidewinder/platform":  ["libs/platform/index.ts"],
