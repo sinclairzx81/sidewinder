@@ -26,5 +26,6 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
+export * from './channel/index'
 export * from './database/index'
 export * from './type'
