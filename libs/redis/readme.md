@@ -18,15 +18,15 @@ License MIT
 
 - [Overview](#Overview)
 - [RedisDatabase](#RedisDatabase)
-    - [RedisArray](#RedisArray)
-    - [RedisMap](#RedisMap)
-    - [RedisSet](#RedisSet)
+  - [RedisArray](#RedisArray)
+  - [RedisMap](#RedisMap)
+  - [RedisSet](#RedisSet)
 - [RedisChannel](#RedisChannel)
-    - [RedisSender](#RedisSender)
-    - [RedisReceiver](#RedisReceiver)
+  - [RedisSender](#RedisSender)
+  - [RedisReceiver](#RedisReceiver)
 - [RedisPubSub](#RedisPubSub)
-    - [RedisPub](#RedisPub)
-    - [RedisSub](#RedisSub)
+  - [RedisPub](#RedisPub)
+  - [RedisSub](#RedisSub)
 
 ## RedisDatabase
 
@@ -41,15 +41,15 @@ import { Type, RedisDatabase } from '@sidewinder/redis'
 const Vector = Type.Tuple([Type.Number(), Type.Number(), Type.Number()])
 
 const Schema = Type.Database({
-    arrays: {
-        vectors: Vector // Array<[number, number, number]>
-    },
-    sets: {
-        vectors: Vector // Set<[number, number, number]>
-    },
-    maps: {
-        vectors: Vector // Map<string, [number, number, number]>
-    }
+  arrays: {
+    vectors: Vector, // Array<[number, number, number]>
+  },
+  sets: {
+    vectors: Vector, // Set<[number, number, number]>
+  },
+  maps: {
+    vectors: Vector, // Map<string, [number, number, number]>
+  },
 })
 
 const database = await RedisDatabase.connect(Schema, 'redis://172.30.1.24:6379')
@@ -90,8 +90,8 @@ await array.push([0, 0, 1])
 
 const vector = await array.get(1) // [0, 1, 0]
 
-for await(const vector of array) {
-    console.log(vector)
+for await (const vector of array) {
+  console.log(vector)
 }
 ```
 
@@ -112,8 +112,8 @@ await map.set('Z', [0, 0, 1])
 
 const Y = await map.get('Y')
 
-for await(const [key, value] of map) {
-    console.log(key, value)
+for await (const [key, value] of map) {
+  console.log(key, value)
 }
 ```
 
@@ -136,8 +136,8 @@ const exists = await vectors.has([0, 1, 2])
 
 await set.delete([0, 1, 0])
 
-for await(const value of vectors) {
-    console.log(key, value)
+for await (const value of vectors) {
+  console.log(key, value)
 }
 ```
 
@@ -163,6 +163,7 @@ await sender.send('log message 1')
 await sender.send('log message 2')
 await sender.send('log message 3')
 ```
+
 </details>
 
 ### RedisReceiver
@@ -177,12 +178,13 @@ import { Type, RedisReceiver } from '@sidewinder/redis'
 
 const receiver = await RedisReceiver.connect(Type.String(), 'logs', 'redis://redis.domain.com:6379')
 
-for await(const message of receiver) {
-    console.log(message)  // log message 1
-                          // log message 2
-                          // log message 3
+for await (const message of receiver) {
+  console.log(message) // log message 1
+  // log message 2
+  // log message 3
 }
 ```
+
 </details>
 
 ## RedisPubSub
@@ -205,6 +207,7 @@ await sender.send('good news')
 await sender.send('bad news')
 await sender.send('average news')
 ```
+
 </details>
 
 ### RedisSub
@@ -219,10 +222,11 @@ import { Type, RedisSub } from '@sidewinder/redis'
 
 const receiver = await RedisSub.connect(Type.String(), 'logs', 'redis://redis.domain.com:6379')
 
-for await(const message of receiver) {
-    console.log(message)  // good news
-                          // bad news
-                          // average news
+for await (const message of receiver) {
+  console.log(message) // good news
+  // bad news
+  // average news
 }
 ```
+
 </details>

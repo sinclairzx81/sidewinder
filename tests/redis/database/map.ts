@@ -2,7 +2,6 @@ import { Assert } from '../../assert/index'
 import { resolveDatabase } from '../resolve'
 
 describe('redis/RedisMap', () => {
-
   // ---------------------------------------------------------
   // Set
   // ---------------------------------------------------------
@@ -48,7 +47,7 @@ describe('redis/RedisMap', () => {
     await map.set('B', [1, 0, 0])
     await map.set('C', [2, 0, 0])
     await map.delete('B')
-    
+
     const value0 = await map.get('A')
     const value1 = await map.get('B')
     const value2 = await map.get('C')
@@ -85,7 +84,7 @@ describe('redis/RedisMap', () => {
     Assert.deepEqual(value0, true)
     Assert.deepEqual(value1, false)
   })
-  
+
   // ---------------------------------------------------------
   // Type Assertions
   // ---------------------------------------------------------
@@ -96,6 +95,4 @@ describe('redis/RedisMap', () => {
     // @ts-ignore
     await Assert.throwsAsync(async () => await map.set('A', [0, 0]))
   })
-
-
 })

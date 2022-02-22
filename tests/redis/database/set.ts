@@ -2,7 +2,6 @@ import { Assert } from '../../assert/index'
 import { resolveDatabase } from '../resolve'
 
 describe('redis/RedisSet', () => {
-
   // ---------------------------------------------------------
   // add
   // ---------------------------------------------------------
@@ -63,7 +62,7 @@ describe('redis/RedisSet', () => {
     const size = await set.size()
     Assert.deepEqual(size, 0)
   })
-    
+
   // ---------------------------------------------------------
   // Iterator
   // ---------------------------------------------------------
@@ -75,9 +74,9 @@ describe('redis/RedisSet', () => {
     await set.add([1, 0, 0])
     await set.add([2, 0, 0])
     const buffer: any[] = []
-    for await(const value of set) {
-        buffer.push(value)
-    }  
+    for await (const value of set) {
+      buffer.push(value)
+    }
     Assert.deepEqual(buffer.length, 3)
   })
 
@@ -105,6 +104,4 @@ describe('redis/RedisSet', () => {
     // @ts-ignore
     await Assert.throwsAsync(async () => await set.add([0, 0]))
   })
-
-
 })

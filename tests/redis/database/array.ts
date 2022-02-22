@@ -2,7 +2,6 @@ import { Assert } from '../../assert/index'
 import { resolveDatabase } from '../resolve'
 
 describe('redis/RedisArray', () => {
-
   // ---------------------------------------------------------
   // Push
   // ---------------------------------------------------------
@@ -238,5 +237,4 @@ describe('redis/RedisArray', () => {
     // @ts-ignore
     await Assert.throwsAsync(async () => await array.set(0, [0, 0]))
   })
-
 })

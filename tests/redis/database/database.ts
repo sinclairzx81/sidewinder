@@ -29,14 +29,12 @@ describe('redis/RedisDatabase', () => {
     const database = resolveDatabase()
     // @ts-ignore
     Assert.throws(() => database.array('unknown'))
-    
   })
 
   it('should throw on unknown set', () => {
     const database = resolveDatabase()
     // @ts-ignore
     Assert.throws(() => database.set('unknown'))
-    
   })
 
   it('should throw on unknown map', () => {
