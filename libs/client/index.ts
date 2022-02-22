@@ -27,6 +27,7 @@ THE SOFTWARE.
 ---------------------------------------------------------------------------*/
 
 export * from '@sidewinder/contract'
+export * from './encoder/index'
 export * from './methods/index'
 export * from './proxy'
 export * from './web'

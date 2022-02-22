@@ -1,6 +1,6 @@
 /*--------------------------------------------------------------------------
 
-@sidewinder/encoder
+@sidewinder/redis
 
 The MIT License (MIT)
 
@@ -26,19 +26,5 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-import { Encoder } from './encoder'
-
-export class JsonEncoder implements Encoder {
-    private readonly encoder: TextEncoder
-    private readonly decoder: TextDecoder
-    constructor() {
-        this.encoder = new TextEncoder()
-        this.decoder = new TextDecoder()
-    }
-    public encode<T = any>(data: T): Uint8Array {
-        return this.encoder.encode(JSON.stringify(data))
-    }
-    public decode<T = any>(data: Uint8Array): T {
-        return JSON.parse(this.decoder.decode(data))
-    }
-}
+export * from './receiver'
+export * from './sender'

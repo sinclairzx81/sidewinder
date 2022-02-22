@@ -1,6 +1,6 @@
 /*--------------------------------------------------------------------------
 
-@sidewinder/encoder
+@sidewinder/redis
 
 The MIT License (MIT)
 
@@ -26,6 +26,7 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-export * from './encoder'
-export * from './json'
-export * from './msgpack'
+export * from './channel/index'
+export * from './database/index'
+export * from './pubsub/index'
+export * from './type'

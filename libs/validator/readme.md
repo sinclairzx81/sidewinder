@@ -35,26 +35,25 @@ The following shows general usual
 
 ```typescript
 import { Validator } from '@sidewinder/validation'
-import { Type }      from '@sidewinder/type'
+import { Type } from '@sidewinder/type'
 
 const T = Type.Object({
-    a: Type.String(),
-    b: Type.Number(),
-    c: Type.Boolean(),
-    d: Type.Uint8Array(),
-    e: Type.Void()
+  a: Type.String(),
+  b: Type.Number(),
+  c: Type.Boolean(),
+  d: Type.Uint8Array(),
+  e: Type.Void(),
 })
 
 const validator = new Validator(T)
 
 validator.assert({
-    a: 'foo',
-    b: 1,
-    c: true,
-    d: new Uint8Array(),
-    e: null
+  a: 'foo',
+  b: 1,
+  c: true,
+  d: new Uint8Array(),
+  e: null,
 })
-
 ```
 
 ## Assert
@@ -67,20 +66,19 @@ import { Validator, ValidatorError } from '@sidewinder/validation'
 const validator = new Validator(T)
 
 try {
-    validator.assert({
-        a: 'foo',
-        b: 1,
-        c: true,
-        d: new Uint8Array(),
-        e: null
-    })
+  validator.assert({
+    a: 'foo',
+    b: 1,
+    c: true,
+    d: new Uint8Array(),
+    e: null,
+  })
 } catch (error) {
-    if(error instanceof ValidatorError) {
-        console.log(error.errors)
-        console.log(error.message)
-    } 
+  if (error instanceof ValidatorError) {
+    console.log(error.errors)
+    console.log(error.message)
+  }
 }
-
 ```
 
 ## Check
@@ -89,22 +87,21 @@ The check function will check the given data and return a `ValidatorResult` obje
 to test the value without throwing.
 
 ```typescript
-
 import { Validator, ValidatorResult } from '@sidewinder/validation'
 
 const validator = new Validator(T)
 
 const result: ValidationResult = validator.check({
-    a: 'foo',
-    b: 1,
-    c: true,
-    d: new Uint8Array(),
-    e: null
+  a: 'foo',
+  b: 1,
+  c: true,
+  d: new Uint8Array(),
+  e: null,
 })
 
-if(!result.success) {
-    console.log(result.errors)
-    console.log(result.message)
+if (!result.success) {
+  console.log(result.errors)
+  console.log(result.message)
 }
 ```
 
@@ -121,13 +118,16 @@ import { Compiler, Validator } from '@sidewinder/validation'
 // Referenceable Schema
 // -------------------------------------------------------------------
 
-const T = Type.Object({
+const T = Type.Object(
+  {
     a: Type.String(),
     b: Type.Number(),
     c: Type.Boolean(),
     d: Type.Uint8Array(),
-    e: Type.Void()
-}, { $id: 'T' }) // must be unique
+    e: Type.Void(),
+  },
+  { $id: 'T' },
+) // must be unique
 
 Compiler.addSchema(T)
 
@@ -144,11 +144,10 @@ const validator = new Validator(R)
 // -------------------------------------------------------------------
 
 const result = validator.check({
-    a: 'foo',
-    b: 1,
-    c: true,
-    d: new Uint8Array(),
-    e: null
+  a: 'foo',
+  b: 1,
+  c: true,
+  d: new Uint8Array(),
+  e: null,
 })
-
 ```

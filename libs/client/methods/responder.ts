@@ -29,68 +29,68 @@ THE SOFTWARE.
 import { v4 } from 'uuid'
 
 interface Deferred {
-    context: string
-    promise: Promise<unknown>
-    resolve: Function
-    reject:  Function
+  context: string
+  promise: Promise<unknown>
+  resolve: Function
+  reject: Function
 }
-/** 
+/**
  * A Responder is a specialized async utility used to handle request response resolution
  * over WebSockets. It is a form of Deferred but supports rejecting multiple deferreds
  * via a context (for example a WebSocket identifier)
-*/
+ */
 export class Responder {
-    private readonly entries: Map<string, Deferred>
+  private readonly entries: Map<string, Deferred>
 
-    constructor() {
-        this.entries = new Map<string, Deferred>()
-    }
+  constructor() {
+    this.entries = new Map<string, Deferred>()
+  }
 
-    /** Registers a deferred with the given context and returns an awaitable handle. */
-    public register(context: string): string {
-        let resolve!: Function
-        let reject!: Function
-        const promise = new Promise((_resolve, _reject) => {
-            resolve = _resolve
-            reject  = _reject
-        })
-        const handle = v4()
-        this.entries.set(handle, { context, promise, resolve, reject })
-        return handle
-    }
+  /** Registers a deferred with the given context and returns an awaitable handle. */
+  public register(context: string): string {
+    let resolve!: Function
+    let reject!: Function
+    const promise = new Promise((_resolve, _reject) => {
+      resolve = _resolve
+      reject = _reject
+    })
+    const handle = v4()
+    this.entries.set(handle, { context, promise, resolve, reject })
+    return handle
+  }
 
-    /** Waits for the given handle to resolve. If the handle does not exist and error is thrown. */
-    public async wait<T = any>(handle: string): Promise<T> {
-        if(!this.entries.has(handle)) throw Error('Response')
-        const entry = this.entries.get(handle)!
-        try {
-            const result = await entry.promise as T
-            this.entries.delete(handle)
-            return result
-        } catch(error) {
-            this.entries.delete(handle)
-            throw error
-        }
+  /** Waits for the given handle to resolve. If the handle does not exist and error is thrown. */
+  public async wait<T = any>(handle: string): Promise<T> {
+    if (!this.entries.has(handle)) throw Error('Response')
+    const entry = this.entries.get(handle)!
+    try {
+      const result = (await entry.promise) as T
+      this.entries.delete(handle)
+      return result
+    } catch (error) {
+      this.entries.delete(handle)
+      throw error
     }
+  }
 
-    /** Resolves a deferred with the given result */
-    public resolve(handle: string, result: unknown) {
-        if(!this.entries.has(handle)) return console.log('NO HANDLE')
-        const deferred = this.entries.get(handle)!
-        deferred.resolve(result)
-    }
+  /** Resolves a deferred with the given result */
+  public resolve(handle: string, result: unknown) {
+    if (!this.entries.has(handle)) return console.log('NO HANDLE')
+    const deferred = this.entries.get(handle)!
+    deferred.resolve(result)
+  }
 
-    /** Rejects a deferred with the given error */
-    public reject(handle: string, error: unknown) {
-        if(!this.entries.has(handle)) return
-        const deferred = this.entries.get(handle)!
-        deferred.reject(error)
+  /** Rejects a deferred with the given error */
+  public reject(handle: string, error: unknown) {
+    if (!this.entries.has(handle)) return
+    const deferred = this.entries.get(handle)!
+    deferred.reject(error)
+  }
+
+  /** Rejects all deferreds matching the given context */
+  public rejectFor(context: string, error: unknown) {
+    for (const [handle, deferred] of this.entries) {
+      if (deferred.context === context) deferred.reject(error)
     }
-    
-    /** Rejects all deferreds matching the given context */
-    public rejectFor(context: string, error: unknown) {
-        for(const [handle, deferred] of this.entries) {
-            if(deferred.context === context) deferred.reject(error)
-        }
-    }
+  }
 }

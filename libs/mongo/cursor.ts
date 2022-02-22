@@ -30,63 +30,63 @@ import { MongoEncoder } from './encoder'
 import * as Mongo from 'mongodb'
 import { matchArguments } from './arguments'
 
-export class Cursor<T> {
-    constructor(private readonly encoder: MongoEncoder, public readonly cursor: Mongo.FindCursor<Mongo.WithId<Mongo.Document>>) { }
+export class MongoCursor<T> {
+  constructor(private readonly encoder: MongoEncoder, public readonly cursor: Mongo.FindCursor<Mongo.WithId<Mongo.Document>>) {}
 
-    /** Asynchronous iterator for this Cursor */
-    public async *[Symbol.asyncIterator]() {
-        for (const value of await await this.toArray()) {
-            yield value
-        }
+  /** Asynchronous iterator for this Cursor */
+  public async *[Symbol.asyncIterator]() {
+    for (const value of await await this.toArray()) {
+      yield value
     }
+  }
 
-    /** Returns a new uninitialized copy of this cursor, with options matching those that have been set on the current instance */
-    public clone(): Cursor<T> {
-        return new Cursor(this.encoder, this.cursor.clone())
-    }
+  /** Returns a new uninitialized copy of this cursor, with options matching those that have been set on the current instance */
+  public clone(): MongoCursor<T> {
+    return new MongoCursor(this.encoder, this.cursor.clone())
+  }
 
-    /** Get the count of documents for this cursor */
-    public count(options: Mongo.CountOptions): Promise<number>
-    /** Get the count of documents for this cursor */
-    public count(): Promise<number>
-    /** Get the count of documents for this cursor */
-    public count(...args: any): any {
-        return matchArguments(args, {
-            1: (options) => {
-                return this.cursor.count(options)
-            },
-            0: () => {
-                return this.cursor.count()
-            },
-            _: () => {
-                throw new Error('Invalid count() arguments')
-            }
-        })
-    }
+  /** Get the count of documents for this cursor */
+  public count(options: Mongo.CountOptions): Promise<number>
+  /** Get the count of documents for this cursor */
+  public count(): Promise<number>
+  /** Get the count of documents for this cursor */
+  public count(...args: any): any {
+    return matchArguments(args, {
+      1: (options) => {
+        return this.cursor.count(options)
+      },
+      0: () => {
+        return this.cursor.count()
+      },
+      _: () => {
+        throw new Error('Invalid count() arguments')
+      },
+    })
+  }
 
-    /** Set the cursor query */
-    public filter(filter: Mongo.Document): Cursor<T> {
-        return new Cursor(this.encoder, this.cursor.filter(filter))
-    }
+  /** Set the cursor query */
+  public filter(filter: Mongo.Document): MongoCursor<T> {
+    return new MongoCursor(this.encoder, this.cursor.filter(filter))
+  }
 
-    /** Sets the sort order of the cursor query. */
-    public sort(sort: Mongo.Sort | string, direction?: Mongo.SortDirection): Cursor<T> {
-        return new Cursor(this.encoder, this.cursor.sort(sort, direction))
-    }
+  /** Sets the sort order of the cursor query. */
+  public sort(sort: Mongo.Sort | string, direction?: Mongo.SortDirection): MongoCursor<T> {
+    return new MongoCursor(this.encoder, this.cursor.sort(sort, direction))
+  }
 
-    /** Set the limit for the cursor. */
-    public take(value: number): Cursor<T> {
-        return new Cursor(this.encoder, this.cursor.limit(value))
-    }
+  /** Set the limit for the cursor. */
+  public take(value: number): MongoCursor<T> {
+    return new MongoCursor(this.encoder, this.cursor.limit(value))
+  }
 
-    /** Set the skip for the cursor. */
-    public skip(value: number): Cursor<T> {
-        return new Cursor(this.encoder, this.cursor.skip(value))
-    }
+  /** Set the skip for the cursor. */
+  public skip(value: number): MongoCursor<T> {
+    return new MongoCursor(this.encoder, this.cursor.skip(value))
+  }
 
-    /** Returns results as an array */
-    public async toArray(): Promise<Array<T>> {
-        const results = await this.cursor.toArray()
-        return results.map(result => this.encoder.decode(result))
-    }
+  /** Returns results as an array */
+  public async toArray(): Promise<Array<T>> {
+    const results = await this.cursor.toArray()
+    return results.map((result) => this.encoder.decode(result))
+  }
 }

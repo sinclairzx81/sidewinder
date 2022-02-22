@@ -10,10 +10,11 @@ const packages = [
     ['channel',   version, 'Sidewinder Channel'],
     ['client',    version, 'Sidewinder Client'],
     ['contract',  version, 'Sidewinder Contract'],
-    ['encoder',   version, 'Sidewinder Encoder'],
     ['events',    version, 'Sidewinder Events'],
+    ['hash',      version, 'Sidewinder Hashing'],
     ['mongo',     version, 'Sidewinder Mongo'],
     ['platform',  version, 'Sidewinder Platform'],
+    ['redis',     version, 'Sidewinder Redis'],
     ['server',    version, 'Sidewinder Server'],
     ['token',     version, 'Sidewinder Token'],
     ['type',      version, 'Sidewinder Type'],
@@ -29,11 +30,24 @@ export async function clean() {
 }
 
 // -------------------------------------------------------------
+// Format
+// -------------------------------------------------------------
+
+export async function format() {
+    await shell('prettier --no-semi --single-quote --print-width 200 --trailing-comma all --write libs tests')
+}
+
+// -------------------------------------------------------------
 // Start
 // -------------------------------------------------------------
 
 export async function start(example = 'basic') {
-    await Promise.all([
+    // run-as: node application
+    if(await file(`example/${example}/index.ts`).exists()) {
+        return await shell(`hammer run example/${example}/index.ts --dist target/example/${example}`)
+    } 
+    // run-as: node and browser application
+    return await Promise.all([
         shell(`hammer run example/${example}/server/index.ts --dist target/example/${example}/server`),
         shell(`hammer serve example/${example}/client/index.html --dist target/example/${example}/client`)
     ])

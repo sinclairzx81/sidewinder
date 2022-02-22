@@ -8,7 +8,6 @@
 
 </div>
 
-
 <a name="Overview"></a>
 
 ## Overview
@@ -18,6 +17,7 @@ Sidewinder Types is an extended version of the TypeBox type library. It provides
 License MIT
 
 ## Contents
+
 - [Install](#Install)
 - [Overview](#Overview)
 - [Usage](#Usage)
@@ -28,7 +28,6 @@ License MIT
 - [Reference Types](#Reference-Types)
 - [Recursive Types](#Recursive-Types)
 - [Extended Types](#Extended-Types)
-
 
 ## Install
 
@@ -41,7 +40,6 @@ $ npm install @sidewinder/type
 The following demonstrates general usage.
 
 ```typescript
-
 import { Static, Type } from '@sidewinder/type'
 
 //--------------------------------------------------------------------------------------------
@@ -51,9 +49,9 @@ import { Static, Type } from '@sidewinder/type'
 //--------------------------------------------------------------------------------------------
 
 type T = {
-    id: string,
-    name: string,
-    timestamp: number
+  id: string
+  name: string
+  timestamp: number
 }
 
 //--------------------------------------------------------------------------------------------
@@ -62,25 +60,26 @@ type T = {
 //
 //--------------------------------------------------------------------------------------------
 
-const T = Type.Object({               // const T = {
-    id: Type.String(),                //   type: 'object',
-    name: Type.String(),              //   properties: { 
-    timestamp: Type.Integer()         //      id: { 
-})                                    //         type: 'string' 
-                                      //      },
-                                      //      name: { 
-                                      //         type: 'string' 
-                                      //      },
-                                      //      timestamp: { 
-                                      //         type: 'integer' 
-                                      //      }
-                                      //   }, 
-                                      //   required: [
-                                      //      "id",
-                                      //      "name",
-                                      //      "timestamp"
-                                      //   ]
-                                      // } 
+const T = Type.Object({
+  // const T = {
+  id: Type.String(), //   type: 'object',
+  name: Type.String(), //   properties: {
+  timestamp: Type.Integer(), //      id: {
+}) //         type: 'string'
+//      },
+//      name: {
+//         type: 'string'
+//      },
+//      timestamp: {
+//         type: 'integer'
+//      }
+//   },
+//   required: [
+//      "id",
+//      "name",
+//      "timestamp"
+//   ]
+// }
 
 //--------------------------------------------------------------------------------------------
 //
@@ -88,11 +87,11 @@ const T = Type.Object({               // const T = {
 //
 //--------------------------------------------------------------------------------------------
 
-type T = Static<typeof T>             // type T = {
-                                      //    id: string,
-                                      //    name: string,
-                                      //    timestamp: number
-                                      // }
+type T = Static<typeof T> // type T = {
+//    id: string,
+//    name: string,
+//    timestamp: number
+// }
 
 //--------------------------------------------------------------------------------------------
 //
@@ -100,12 +99,13 @@ type T = Static<typeof T>             // type T = {
 //
 //--------------------------------------------------------------------------------------------
 
-function receive(value: T) {         // ... as a Type
+function receive(value: T) {
+  // ... as a Type
 
-    if(JSON.validate(T, value)) {    // ... as a Schema
-
-        // ok...
-    }
+  if (JSON.validate(T, value)) {
+    // ... as a Schema
+    // ok...
+  }
 }
 ```
 
@@ -309,6 +309,7 @@ The following table outlines the Sidewinder Type mappings between TypeScript and
 │                                │                             │                                │
 └────────────────────────────────┴─────────────────────────────┴────────────────────────────────┘
 ```
+
 <a name="Modifiers"></a>
 
 ### Modifiers
@@ -369,11 +370,12 @@ const T = Type.Number({ multipleOf: 2 })
 // array must have at least 5 integer values
 const T = Type.Array(Type.Integer(), { minItems: 5 })
 ```
+
 <a name="Generic-Types"></a>
 
 ### Generic Types
 
-Generic types can be created using functions. The following creates a generic `Nullable<T>` type. 
+Generic types can be created using functions. The following creates a generic `Nullable<T>` type.
 
 ```typescript
 import { Type, Static, TSchema } from '@sidewinder/type'
@@ -382,25 +384,25 @@ import { Type, Static, TSchema } from '@sidewinder/type'
 
 const Nullable = <T extends TSchema>(type: T) => Type.Union([type, Type.Null()])
 
-const T = Nullable(Type.String())              // const T = {
-                                               //   "anyOf": [{
-                                               //      type: 'string'
-                                               //   }, {
-                                               //      type: 'null'
-                                               //   }]
-                                               // }
+const T = Nullable(Type.String()) // const T = {
+//   "anyOf": [{
+//      type: 'string'
+//   }, {
+//      type: 'null'
+//   }]
+// }
 
-type T = Static<typeof T>                      // type T = string | null
+type T = Static<typeof T> // type T = string | null
 
-const U = Nullable(Type.Number())              // const U = {
-                                               //   "anyOf": [{
-                                               //      type: 'number'
-                                               //   }, {
-                                               //      type: 'null'
-                                               //   }]
-                                               // }
+const U = Nullable(Type.Number()) // const U = {
+//   "anyOf": [{
+//      type: 'number'
+//   }, {
+//      type: 'null'
+//   }]
+// }
 
-type U = Static<typeof U>                      // type U = number | null
+type U = Static<typeof U> // type U = number | null
 ```
 
 <a name="Reference-Types"></a>
@@ -410,61 +412,69 @@ type U = Static<typeof U>                      // type U = number | null
 Types can be referenced with `Type.Ref(...)`. To reference a type, the target type must specify an `$id`.
 
 ```typescript
-const T = Type.String({ $id: 'T' })            // const T = {
-                                               //    $id: 'T',
-                                               //    type: 'string'
-                                               // }
-                                             
-const R = Type.Ref(T)                          // const R = {
-                                               //    $ref: 'T'
-                                               // }
+const T = Type.String({ $id: 'T' }) // const T = {
+//    $id: 'T',
+//    type: 'string'
+// }
+
+const R = Type.Ref(T) // const R = {
+//    $ref: 'T'
+// }
 ```
 
 It can sometimes be helpful to organize shared referenced types under a common namespace. The `Type.Namespace(...)` function can be used to create a shared definition container for related types. The following creates a `Math3D` container and a `Vertex` structure that references types in the container.
 
 ```typescript
-const Math3D = Type.Namespace({                 //  const Math3D = {
-  Vector4: Type.Object({                        //    $id: 'Math3D',
-    x: Type.Number(),                           //    $defs: {
-    y: Type.Number(),                           //      Vector4: {
-    z: Type.Number(),                           //        type: 'object',
-    w: Type.Number()                            //        properties: {
-  }),                                           //          x: { type: 'number' },
-  Vector3: Type.Object({                        //          y: { type: 'number' },
-    x: Type.Number(),                           //          z: { type: 'number' },
-    y: Type.Number(),                           //          w: { type: 'number' }
-    z: Type.Number()                            //        },
-  }),                                           //        required: ['x', 'y', 'z', 'w']
-  Vector2: Type.Object({                        //      },
-    x: Type.Number(),                           //      Vector3: {
-    y: Type.Number()                            //        type: 'object',
-  })                                            //        properties: {
-}, { $id: 'Math3D' })                           //          x: { 'type': 'number' },
-                                                //          y: { 'type': 'number' },
-                                                //          z: { 'type': 'number' }
-                                                //        },
-                                                //        required: ['x', 'y', 'z']
-                                                //      },
-                                                //      Vector2: {
-                                                //        type: 'object',
-                                                //        properties: {
-                                                //          x: { 'type': 'number' },
-                                                //          y: { 'type': 'number' },
-                                                //        },
-                                                //        required: ['x', 'y']
-                                                //      }
-                                                //    }
-                                                //  }
-													 
-const Vertex = Type.Object({                    //  const Vertex = {
-    position: Type.Ref(Math3D, 'Vector4'),      //    type: 'object',
-    normal:   Type.Ref(Math3D, 'Vector3'),      //    properties: {
-    uv:       Type.Ref(Math3D, 'Vector2')       //      position: { $ref: 'Math3D#/$defs/Vector4' },
-})                                              //      normal: { $ref: 'Math3D#/$defs/Vector3' },
-                                                //      uv: { $ref: 'Math3D#/$defs/Vector2' }
-                                                //    },
-                                                //    required: ['position', 'normal', 'uv']
-                                                //  }
+const Math3D = Type.Namespace(
+  {
+    //  const Math3D = {
+    Vector4: Type.Object({
+      //    $id: 'Math3D',
+      x: Type.Number(), //    $defs: {
+      y: Type.Number(), //      Vector4: {
+      z: Type.Number(), //        type: 'object',
+      w: Type.Number(), //        properties: {
+    }), //          x: { type: 'number' },
+    Vector3: Type.Object({
+      //          y: { type: 'number' },
+      x: Type.Number(), //          z: { type: 'number' },
+      y: Type.Number(), //          w: { type: 'number' }
+      z: Type.Number(), //        },
+    }), //        required: ['x', 'y', 'z', 'w']
+    Vector2: Type.Object({
+      //      },
+      x: Type.Number(), //      Vector3: {
+      y: Type.Number(), //        type: 'object',
+    }), //        properties: {
+  },
+  { $id: 'Math3D' },
+) //          x: { 'type': 'number' },
+//          y: { 'type': 'number' },
+//          z: { 'type': 'number' }
+//        },
+//        required: ['x', 'y', 'z']
+//      },
+//      Vector2: {
+//        type: 'object',
+//        properties: {
+//          x: { 'type': 'number' },
+//          y: { 'type': 'number' },
+//        },
+//        required: ['x', 'y']
+//      }
+//    }
+//  }
+
+const Vertex = Type.Object({
+  //  const Vertex = {
+  position: Type.Ref(Math3D, 'Vector4'), //    type: 'object',
+  normal: Type.Ref(Math3D, 'Vector3'), //    properties: {
+  uv: Type.Ref(Math3D, 'Vector2'), //      position: { $ref: 'Math3D#/$defs/Vector4' },
+}) //      normal: { $ref: 'Math3D#/$defs/Vector3' },
+//      uv: { $ref: 'Math3D#/$defs/Vector2' }
+//    },
+//    required: ['position', 'normal', 'uv']
+//  }
 ```
 
 <a name="Recursive-Types"></a>
@@ -474,35 +484,40 @@ const Vertex = Type.Object({                    //  const Vertex = {
 Recursive types can be created with the `Type.Rec(...)` function. The following creates a `Node` type that contains an array of inner Nodes. Note that due to current restrictions on TypeScript inference, it is not possible for Sidewinder Types to statically infer for recursive types. Sidewinder Types will infer the inner recursive type as `any`.
 
 ```typescript
-const Node = Type.Rec(Self => Type.Object({    // const Node = {
-  id:    Type.String(),                        //   $id: 'Node',
-  nodes: Type.Array(Self),                     //   $ref: 'Node#/$defs/self',
-}), { $id: 'Node' })                           //   $defs: {
-                                               //     self: {
-                                               //       type: 'object',
-                                               //       properties: {
-                                               //         id: {
-                                               //           type: 'string'
-                                               //         },
-                                               //         nodes: {
-                                               //            type: 'array',
-                                               //            items: {
-                                               //              $ref: 'Node#/$defs/self'
-                                               //            }
-                                               //         }
-                                               //      }
-                                               //    }
-                                               // }
+const Node = Type.Rec(
+  (Self) =>
+    Type.Object({
+      // const Node = {
+      id: Type.String(), //   $id: 'Node',
+      nodes: Type.Array(Self), //   $ref: 'Node#/$defs/self',
+    }),
+  { $id: 'Node' },
+) //   $defs: {
+//     self: {
+//       type: 'object',
+//       properties: {
+//         id: {
+//           type: 'string'
+//         },
+//         nodes: {
+//            type: 'array',
+//            items: {
+//              $ref: 'Node#/$defs/self'
+//            }
+//         }
+//      }
+//    }
+// }
 
-type Node = Static<typeof Node>                // type Node = {
-                                               //   id: string
-                                               //   nodes: any[]
-                                               // }
+type Node = Static<typeof Node> // type Node = {
+//   id: string
+//   nodes: any[]
+// }
 
 function visit(node: Node) {
-    for(const inner of node.nodes) {
-        visit(inner as Node)                   // Assert inner as Node
-    }
+  for (const inner of node.nodes) {
+    visit(inner as Node) // Assert inner as Node
+  }
 }
 ```
 

@@ -30,52 +30,52 @@ import { Exception, TSchema, TFunction } from '@sidewinder/contract'
 import { RpcErrorCode } from './protocol'
 
 export interface RegisteredClientMethod {
-    /** The callback function */
-    callback: Function
-    schema: TSchema
+  /** The callback function */
+  callback: Function
+  schema: TSchema
 }
 
-/** 
+/**
  * A Client method container for a set of methods. This container provides an interface to allow
  * callers to register functions and execute those functions directly or via JSON RPC 2.0 protocol.
  * This container works like the ServiceMethods container except data is not strictly validated by
  * JSON Schema.
  */
 export class ClientMethods {
-    private readonly methods: Map<string, RegisteredClientMethod>
-    
-    constructor() {
-        this.methods = new Map<string, RegisteredClientMethod>()
-    }
-    
-    /** Registers a client method. */
-    public register(method: string, schema: TFunction<any[], any>, callback: Function) {
-        this.methods.set(method, { callback, schema })
-    }
-    
-    /** Executes a client method and returns its result. */
-    public async execute(method: string, params: unknown[]) {
-        this.validateMethodExists(method)
-        const entry = this.methods.get(method)!
-        this.validateMethodParameters(entry, method, params)
-        const output = await entry.callback(...params)
-        // Note: To support void, we remap a undefined result to null
-        const result = output === undefined ? null : output
-        this.validateMethodReturnType(entry, method as string, result)
-        return result
-    }
+  private readonly methods: Map<string, RegisteredClientMethod>
 
-    private validateMethodExists(method: string) {
-        if (!this.methods.has(method)) {
-            throw new Exception(`Method not found`, RpcErrorCode.MethodNotFound, {})
-        }
-    }
+  constructor() {
+    this.methods = new Map<string, RegisteredClientMethod>()
+  }
 
-    private validateMethodParameters(entry: RegisteredClientMethod, method: string, params: unknown[]) {
-        // note: Validation not implemented on clients
-    }
+  /** Registers a client method. */
+  public register(method: string, schema: TFunction<any[], any>, callback: Function) {
+    this.methods.set(method, { callback, schema })
+  }
 
-    private validateMethodReturnType(entry: RegisteredClientMethod, method: string, result: unknown) {
-        // note: Validation not implemented on clients
+  /** Executes a client method and returns its result. */
+  public async execute(method: string, params: unknown[]) {
+    this.validateMethodExists(method)
+    const entry = this.methods.get(method)!
+    this.validateMethodParameters(entry, method, params)
+    const output = await entry.callback(...params)
+    // Note: To support void, we remap a undefined result to null
+    const result = output === undefined ? null : output
+    this.validateMethodReturnType(entry, method as string, result)
+    return result
+  }
+
+  private validateMethodExists(method: string) {
+    if (!this.methods.has(method)) {
+      throw new Exception(`Method not found`, RpcErrorCode.MethodNotFound, {})
     }
+  }
+
+  private validateMethodParameters(entry: RegisteredClientMethod, method: string, params: unknown[]) {
+    // note: Validation not implemented on clients
+  }
+
+  private validateMethodReturnType(entry: RegisteredClientMethod, method: string, result: unknown) {
+    // note: Validation not implemented on clients
+  }
 }

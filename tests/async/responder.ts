@@ -1,5 +1,3 @@
 import { expect } from 'chai'
 
-describe('async/Responder', () => {
-
-})
+describe('async/Responder', () => {})

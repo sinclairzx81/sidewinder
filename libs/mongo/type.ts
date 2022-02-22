@@ -30,26 +30,26 @@ import { Static, SchemaOptions, TObject, TypeBuilder } from '@sidewinder/type'
 export * from '@sidewinder/type'
 
 export interface TDatabaseOptions {
-    [collection: string]: TObject
+  [collection: string]: TObject
 }
 
 export interface TDatabase<Collections extends TDatabaseOptions = TDatabaseOptions> {
-    $static: { [K in keyof Collections['collections']]: Static<Collections['collections'][K]> }
-    kind: 'Database'
-    type: 'object'
-    collections: Collections
+  $static: { [K in keyof Collections['collections']]: Static<Collections['collections'][K]> }
+  kind: 'Database'
+  type: 'object'
+  collections: Collections
 }
 
 export class DatabaseTypeBuilder extends TypeBuilder {
-    /** Creates a database schematic type */
-    public Database<DatabaseOptions extends TDatabaseOptions>(options: DatabaseOptions): TDatabase<DatabaseOptions> {
-        return this.Create({ kind: 'Database', type: 'object', collections: options })
-    }
+  /** Creates a database schematic type */
+  public Database<DatabaseOptions extends TDatabaseOptions>(options: DatabaseOptions): TDatabase<DatabaseOptions> {
+    return this.Create({ kind: 'Database', type: 'object', collections: options })
+  }
 
-    /** Creates a Mongo identifier type */
-    public ObjectId(options: SchemaOptions = {}) {
-        return super.RegEx(/^[0-9a-fA-F]{24}$/, options)
-    }
+  /** Creates a Mongo identifier type */
+  public ObjectId(options: SchemaOptions = {}) {
+    return super.RegEx(/^[0-9a-fA-F]{24}$/, options)
+  }
 }
 
 /** Extended TypeBuilder with additional Mongo Types */

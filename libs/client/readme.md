@@ -32,14 +32,15 @@ The following shows general usage of the Sidewinder WebClient.
 import { Type } from '@sidewinder/contract'
 
 export const Contract = Type.Contract({
-    server: {
-        add: Type.Function([Type.Number(), Type.Number()], Type.Number()),
-        sub: Type.Function([Type.Number(), Type.Number()], Type.Number()),
-        mul: Type.Function([Type.Number(), Type.Number()], Type.Number()),
-        div: Type.Function([Type.Number(), Type.Number()], Type.Number()),
-    }
+  server: {
+    add: Type.Function([Type.Number(), Type.Number()], Type.Number()),
+    sub: Type.Function([Type.Number(), Type.Number()], Type.Number()),
+    mul: Type.Function([Type.Number(), Type.Number()], Type.Number()),
+    div: Type.Function([Type.Number(), Type.Number()], Type.Number()),
+  },
 })
 ```
+
 </details>
 
 <details>
@@ -55,6 +56,7 @@ const mul = await client.call('mul', 1, 2)
 const div = await client.call('div', 1, 2)
 console.log([add, sub, mul, div]) // [3, -1, 2, 0.5]
 ```
+
 </details>
 
 ## WebClient
@@ -68,14 +70,15 @@ The WebClient connects to WebService server implementations. This client type us
 import { Type } from '@sidewinder/contract'
 
 export const Contract = Type.Contract({
-    server: {
-        add: Type.Function([Type.Number(), Type.Number()], Type.Number()),
-        sub: Type.Function([Type.Number(), Type.Number()], Type.Number()),
-        mul: Type.Function([Type.Number(), Type.Number()], Type.Number()),
-        div: Type.Function([Type.Number(), Type.Number()], Type.Number()),
-    }
+  server: {
+    add: Type.Function([Type.Number(), Type.Number()], Type.Number()),
+    sub: Type.Function([Type.Number(), Type.Number()], Type.Number()),
+    mul: Type.Function([Type.Number(), Type.Number()], Type.Number()),
+    div: Type.Function([Type.Number(), Type.Number()], Type.Number()),
+  },
 })
 ```
+
 </details>
 
 <details>
@@ -92,6 +95,7 @@ const result = client.call('add', 1, 2)
 /** Use the send() function to execute a remote method and ignore the result. */
 client.send('add', 1, 2)
 ```
+
 </details>
 
 ## WebSocketClient
@@ -103,32 +107,32 @@ The WebSocketClient connects to WebSocketService services. This client type prov
 
 ```typescript
 const client = new WebSocketClient(Contract, 'ws://localhost:5000/', {
-    /**
-     * If true, this socket will attempt to automatically reconnect
-     * to the remote service if the underlying WebSocket transport 
-     * closes. 
-     * 
-     * (Default is false)
-     */
-    autoReconnectEnabled: false,
-    /**
-     * If true, this socket will buffer any RPC method calls if calls
-     * are made while the underlying WebSocket transport is in a
-     * disconnected state. This option is only available if the
-     * autoReconnectEnabled option is true.
-     * 
-     * (Default is false)
-     */
-    autoReconnectBuffer: false,
-    /**
-     * The auto reconnection timeout. This is the period of time that
-     * should elapse before a reconnection attempt is made in instances
-     * the underlying WebSocket connection terminates. This option is 
-     * only available if the autoReconnectEnabled option is true.
-     * 
-     * (Default is 4000)
-     */
-    autoReconnectTimeout: false
+  /**
+   * If true, this socket will attempt to automatically reconnect
+   * to the remote service if the underlying WebSocket transport
+   * closes.
+   *
+   * (Default is false)
+   */
+  autoReconnectEnabled: false,
+  /**
+   * If true, this socket will buffer any RPC method calls if calls
+   * are made while the underlying WebSocket transport is in a
+   * disconnected state. This option is only available if the
+   * autoReconnectEnabled option is true.
+   *
+   * (Default is false)
+   */
+  autoReconnectBuffer: false,
+  /**
+   * The auto reconnection timeout. This is the period of time that
+   * should elapse before a reconnection attempt is made in instances
+   * the underlying WebSocket connection terminates. This option is
+   * only available if the autoReconnectEnabled option is true.
+   *
+   * (Default is 4000)
+   */
+  autoReconnectTimeout: false,
 })
 ```
 
@@ -141,14 +145,15 @@ const client = new WebSocketClient(Contract, 'ws://localhost:5000/', {
 import { Type } from '@sidewinder/contract'
 
 export const Contract = Type.Contract({
-    server: {
-        task: Type.Function([], Type.Void()),
-    },
-    client: {
-        log: Type.Function([Type.String()], Type.Void())
-    }
+  server: {
+    task: Type.Function([], Type.Void()),
+  },
+  client: {
+    log: Type.Function([Type.String()], Type.Void()),
+  },
 })
 ```
+
 </details>
 
 <details>
@@ -160,9 +165,9 @@ import { WebSocketService } from '@sidewinder/service'
 const service = new WebSocketService(Contract)
 
 service.method('task', async (context, request) => {
-   await service.call(context, 'log', 'log message 1')
-   await service.call(context, 'log', 'log message 2')
-   await service.call(context, 'log', 'log message 3')
+  await service.call(context, 'log', 'log message 1')
+  await service.call(context, 'log', 'log message 2')
+  await service.call(context, 'log', 'log message 3')
 })
 ```
 
@@ -175,9 +180,9 @@ service.method('task', async (context, request) => {
 import { WebSocketClient } from '@sidewinder/client'
 
 const client = new WebSocketClient(Contract, 'ws://localhost:5000')
-client.method('log', message => console.log(message)) // 'log message 1'
-                                                      // 'log message 2'
-                                                      // 'log message 3'
+client.method('log', (message) => console.log(message)) // 'log message 1'
+// 'log message 2'
+// 'log message 3'
 
 client.call('task')
 ```
@@ -195,14 +200,15 @@ The WebProxy is a utility function that transforms either WebClient or WebServic
 import { Type } from '@sidewinder/contract'
 
 export const Contract = Type.Contract({
-    server: {
-        add: Type.Function([Type.Number(), Type.Number()], Type.Number()),
-        sub: Type.Function([Type.Number(), Type.Number()], Type.Number()),
-        mul: Type.Function([Type.Number(), Type.Number()], Type.Number()),
-        div: Type.Function([Type.Number(), Type.Number()], Type.Number()),
-    }
+  server: {
+    add: Type.Function([Type.Number(), Type.Number()], Type.Number()),
+    sub: Type.Function([Type.Number(), Type.Number()], Type.Number()),
+    mul: Type.Function([Type.Number(), Type.Number()], Type.Number()),
+    div: Type.Function([Type.Number(), Type.Number()], Type.Number()),
+  },
 })
 ```
+
 </details>
 
 <details>
@@ -217,6 +223,7 @@ const sub = await client.sub(1, 2)
 const mul = await client.mul(1, 2)
 const div = await client.div(1, 2)
 ```
+
 </details>
 
 ## Protocol
@@ -232,17 +239,18 @@ The following calls a WebService method using the JavaScript `fetch(...)` API. N
 
 ```typescript
 const result = await fetch('http://localhost:5001/', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-        jsonrpc: '2.0',
-        id:      '1',    // optional: omit if send()
-        method:  'add',
-        params:  [1, 2],
-    })
-}).then(res => res.json())
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    jsonrpc: '2.0',
+    id: '1', // optional: omit if send()
+    method: 'add',
+    params: [1, 2],
+  }),
+}).then((res) => res.json())
 // result = { jsonrpc: '2.0', id: '1', result: 3 }
 ```
+
 </details>
 
 ### WebSockets
@@ -259,18 +267,20 @@ const socket  = new WebSocket('ws://localhost:5001/')
 socket.binaryType = 'arraybuffer'
 
 socket.onmessage = (event) => {
-    const result = JSON.parse(decoder.decode(event.data))
-    // result = { jsonrpc: '2.0', id: '1', result: 3 }
+const result = JSON.parse(decoder.decode(event.data))
+// result = { jsonrpc: '2.0', id: '1', result: 3 }
 }
 socket.onopen = () => {
-    socket.send(encoder.encode(JSON.stringify({
-        jsonrpc: '2.0',
-        id:      '1',  // optional: omit if send()
-        method:  'add',
-        params:  [1, 2]
-    })))
+socket.send(encoder.encode(JSON.stringify({
+jsonrpc: '2.0',
+id: '1', // optional: omit if send()
+method: 'add',
+params: [1, 2]
+})))
 }
+
 ```
 </details>
 
 
+```

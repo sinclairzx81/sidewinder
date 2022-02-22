@@ -1,6 +1,6 @@
 /*--------------------------------------------------------------------------
 
-@sidewinder/encoder
+@sidewinder/redis
 
 The MIT License (MIT)
 
@@ -26,14 +26,5 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-import { Encoder } from './encoder'
-import * as msgpack from '@msgpack/msgpack'
-
-export class MsgPackEncoder implements Encoder {
-    public encode<T = any>(data: T): Uint8Array {
-        return msgpack.encode(data)
-    }
-    public decode<T = any>(data: Uint8Array): T {
-        return msgpack.decode(data as Uint8Array) as T
-    }
-}
+export * from './pub'
+export * from './sub'

@@ -35,67 +35,68 @@ export * from '@sidewinder/type'
 
 export type AuthorizeFunction<Context, AuthorizedContext> = (context: Context) => AuthorizedContext
 
-export type AuthorizeFunctionReturnType<T> = T extends AuthorizeFunction<any, infer Context> 
-    ? Context extends Promise<infer I> ? I : Context
-    : never
+export type AuthorizeFunctionReturnType<T> = T extends AuthorizeFunction<any, infer Context> ? (Context extends Promise<infer I> ? I : Context) : never
 
 // --------------------------------------------------------------------------
 // TContract
 // --------------------------------------------------------------------------
 
+type DefinedOr<T, R> = keyof T extends never ? R : T
+
 export type ContractFormat<T> = T extends 'json' | 'msgpack' ? T : 'json'
 
-export type ContractInterface<T, R> = keyof T extends never ? R : T
+export type ContractMethodParamters<T> = T extends (...args: any) => any ? (Parameters<T> extends infer P ? (P extends any[] ? P : []) : []) : []
 
-export type ContractMethodParamters<T> = T extends (...args: any) => any ? Parameters<T> extends infer P ? P extends any[] ? P : [] : [] : []
-
-export type ContractMethodReturnType<T> = T extends (...args: any) => any ? ReturnType<T> extends infer P ? P : unknown : unknown
+export type ContractMethodReturnType<T> = T extends (...args: any) => any ? (ReturnType<T> extends infer P ? P : unknown) : unknown
 
 export interface TInterface {
-    [name: string]: TFunction<any[], any>
+  [name: string]: TFunction<any[], any>
 }
 
 export interface ContractOptions {
-    /** The encoding format for this contract. The default is 'json' */
-    format?: 'json' | 'msgpack'
-    /** The server interface methods */
-    server?: TInterface
-    /** The client interface methods */
-    client?: TInterface
+  /** The encoding format for this contract. The default is 'json' */
+  format?: 'json' | 'msgpack'
+  /** The server interface methods */
+  server?: TInterface
+  /** The client interface methods */
+  client?: TInterface
 }
 
 export interface TContract<Options extends ContractOptions = ContractOptions> extends TSchema {
-    $static: {
-        /** The encoding format for this contract. The default is 'json' */
-        format: ContractFormat<Options['format']>
-        /** The server interface methods */
-        server: ContractInterface<Options['server'], {}> extends infer Interface ? {
-            [K in keyof Interface]: Interface[K] extends TFunction<any[], any> ? Interface[K]['$static'] : never
-        } : {},
-        /** The client interface methods */
-        client: ContractInterface<Options['client'], {}> extends infer Interface ? {
-            [K in keyof Interface]: Interface[K] extends TFunction<any[], any> ? Interface[K]['$static'] : never
-        }: {}
-    },
-    type: 'contract',
-    kind: 'Contract',
+  $static: {
     /** The encoding format for this contract. The default is 'json' */
-    format: ContractFormat<Options['format']>,
+    format: ContractFormat<Options['format']>
     /** The server interface methods */
-    server: ContractInterface<Options['server'], {}>,
+    server: DefinedOr<Options['server'], {}> extends infer Interface
+      ? {
+          [K in keyof Interface]: Interface[K] extends TFunction<any[], any> ? Interface[K]['$static'] : never
+        }
+      : {}
     /** The client interface methods */
-    client: ContractInterface<Options['client'], {}>,
+    client: DefinedOr<Options['client'], {}> extends infer Interface
+      ? {
+          [K in keyof Interface]: Interface[K] extends TFunction<any[], any> ? Interface[K]['$static'] : never
+        }
+      : {}
+  }
+  type: 'contract'
+  kind: 'Contract'
+  /** The encoding format for this contract. The default is 'json' */
+  format: ContractFormat<Options['format']>
+  /** The server interface methods */
+  server: DefinedOr<Options['server'], {}>
+  /** The client interface methods */
+  client: DefinedOr<Options['client'], {}>
 }
 
-
 export class ContractTypeBuilder extends TypeBuilder {
-    /** Creates a contract type */
-    public Contract<Options extends ContractOptions>(options: Options): TContract<Options> {
-        const format = options.format || 'json'
-        const server = options.server || {}
-        const client = options.client || {}
-        return this.Create({ type: 'contract', kind: 'Contract', format, server, client })
-    }
+  /** Creates a contract type */
+  public Contract<Options extends ContractOptions>(options: Options): TContract<Options> {
+    const format = options.format || 'json'
+    const server = options.server || {}
+    const client = options.client || {}
+    return this.Create({ type: 'contract', kind: 'Contract', format, server, client })
+  }
 }
 
 /** Extended TypeBuilder with additional Contract Types */

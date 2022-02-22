@@ -1,6 +1,4 @@
-import { Events } from '@sidewinder/shared'
+import { Events } from '@sidewinder/events'
 import * as asserts from '../assert/index'
 
-describe('shared/events/Events', () => {
-
-})
+describe('shared/events/Events', () => {})

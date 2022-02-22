@@ -27,10 +27,9 @@ THE SOFTWARE.
 ---------------------------------------------------------------------------*/
 
 export interface Receiver<T> {
+  /** Async iterator for this receiver */
+  [Symbol.asyncIterator](): AsyncGenerator<T, void, unknown>
 
-    /** Async iterator for this receiver */
-    [Symbol.asyncIterator](): AsyncGenerator<T, void, unknown>
-    
-    /** Returns the next value from this channel or null if EOF. */
-    next(): Promise<T | null>
+  /** Returns the next value from this channel or null if EOF. */
+  next(): Promise<T | null>
 }

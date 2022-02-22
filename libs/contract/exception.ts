@@ -27,7 +27,7 @@ THE SOFTWARE.
 ---------------------------------------------------------------------------*/
 
 export class Exception extends Error {
-    constructor(message: string, public code: number, public readonly data: unknown) {
-        super(message)
-    }
+  constructor(message: string, public code: number, public readonly data: unknown) {
+    super(message)
+  }
 }

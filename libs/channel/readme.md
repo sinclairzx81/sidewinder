@@ -10,7 +10,7 @@
 
 ## Overview
 
-Sidewinder Channels are asynchronous channels that are loosely modelled on Rust mpsc Channel and SyncChannel types. They are built upon JavaScript async iterators and allow values to be lazily emitted into the channel and received via `for-await` iteration. 
+Sidewinder Channels are asynchronous channels that are loosely modelled on Rust mpsc Channel and SyncChannel types. They are built upon JavaScript async iterators and allow values to be lazily emitted into the channel and received via `for-await` iteration.
 
 License MIT
 
@@ -50,8 +50,8 @@ channel.end()
 // Receiver: Await values then end
 // --------------------------------------------------------------
 
-for await(const value of channel) {
-    console.log(value) // 0, 1, 2
+for await (const value of channel) {
+  console.log(value) // 0, 1, 2
 }
 
 console.log('done')
@@ -59,7 +59,7 @@ console.log('done')
 
 ## Channel
 
-The Channel type allows one to stream values from a sender a receiver. This channel provides the `send()`, `error()` and `end()` which are used by the Sender all push values into the channel and a `next()` function is used by the Receiver to receive values. Callers can read values by calling `next()` which will either return the value or `null` to indicate EOF. This channel is unbounded and a sender can send many values which will be buffered until the receiver receives the values via `next()`. 
+The Channel type allows one to stream values from a sender a receiver. This channel provides the `send()`, `error()` and `end()` which are used by the Sender all push values into the channel and a `next()` function is used by the Receiver to receive values. Callers can read values by calling `next()` which will either return the value or `null` to indicate EOF. This channel is unbounded and a sender can send many values which will be buffered until the receiver receives the values via `next()`.
 
 <details>
     <summary>Example</summary>
@@ -77,11 +77,10 @@ channel.end()
 const value0 = await channel.next()
 const value1 = await channel.next()
 const value2 = await channel.next()
-const eof    = await channel.next() // null
+const eof = await channel.next() // null
 ```
 
 </details>
-
 
 ## SyncChannel
 
@@ -97,11 +96,11 @@ import { SyncChannel } from '@sidewinder/channel'
 const channel = new Channel(1) // allow 1 value to be buffered
 
 ;(async () => {
-    await channel.send(0)     // 1 second
-    await channel.send(1)     // 2 seconds
-    await channel.send(2)     // 3 seconds
-    await channel.end()       // 4 seconds
-                              // done
+  await channel.send(0) // 1 second
+  await channel.send(1) // 2 seconds
+  await channel.send(2) // 3 seconds
+  await channel.end() // 4 seconds
+  // done
 })()
 
 // Receiver waits 1 second before receiving the next value
@@ -129,20 +128,18 @@ import { Channel } from '@sidewinder/channel'
 
 const channel = new Channel()
 
-channel.send(0)                                            // 1
-channel.send(1)                                            // 2
-channel.error(new Error())                                 // error
-channel.end()                                              // optional: Has no effect
+channel.send(0) // 1
+channel.send(1) // 2
+channel.error(new Error()) // error
+channel.end() // optional: Has no effect
 
-const value0 = await channel.next()                        // 1
-const value1 = await channel.next()                        // 2
-const value2 = await channel.next().catch(error => error)  // error
-const eof    = await channel.next()                        // null
+const value0 = await channel.next() // 1
+const value1 = await channel.next() // 2
+const value2 = await channel.next().catch((error) => error) // error
+const eof = await channel.next() // null
 ```
 
-
 </details>
-
 
 ## Select
 
@@ -162,8 +159,8 @@ strings.send('hello')
 numbers.send(1)
 strings.send('world')
 numbers.send(2)
-numbers.end()        // Note: all senders must end for the select
-strings.end()        //       receiver to end.
+numbers.end() // Note: all senders must end for the select
+strings.end() //       receiver to end.
 
 const select = Select([numbers, strings])
 await channel.next() // 0
@@ -176,7 +173,6 @@ await channel.next() // null - eof
 
 </details>
 
-
 ## KeepAlive
 
 In Node environments, the JavaScript process will terminate if there are no actions scheduled to run in the JS event loop. Because Sidewinder channels receive values without interacting with the JS event loop for performance reasons, the NodeJS runtime may terminate a process while a receiver is awaiting for values. This behaviour occurs only in scenarios where there are no other pending actions being scheduled on the event loop.
@@ -187,7 +183,6 @@ To ensure a process stays active, the Channel and SyncChannel constructors accep
 
 In the following example, we setup a receiver to receive values however there is no sender sending values. The expectation here would be for the receiver to await indefinitely, however Node will terminate the process immediately as there is no actions being scheduled on the JS event loop.
 
-
 <details>
     <summary>Example</summary>
 
@@ -197,9 +192,9 @@ import { Channel } from '@sidewinder/channel'
 const channel = new Channel()
 
 async function receiver() {
-    for await(const value of channel) {
-        console.log(value)
-    }
+  for await (const value of channel) {
+    console.log(value)
+  }
 }
 
 receiver().then(() => console.log('done'))
@@ -220,9 +215,9 @@ import { Channel } from '@sidewinder/channel'
 const channel = new Channel(true) // keepAlive
 
 async function receiver() {
-    for await(const value of channel) {
-        console.log(value)
-    }
+  for await (const value of channel) {
+    console.log(value)
+  }
 }
 
 receiver().then(() => console.log('done'))
