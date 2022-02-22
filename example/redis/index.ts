@@ -29,6 +29,9 @@ async function start() {
 
     const map = database.map('users')
     map.set('user', { name: 'dave' })
+
+
+    console.log(list)
 }
 
 start()

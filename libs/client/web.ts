@@ -35,7 +35,7 @@ import { Request } from './request/index'
 export class WebClient<Contract extends TContract> {
     private readonly encoder: Encoder
 
-    constructor(public readonly contract: Contract, public readonly endpoint: string) { 
+    constructor(public readonly contract: Contract, public readonly endpoint: string, public readonly additionalHeaders: Record<string, string> = {}) { 
         this.encoder = contract.format === 'json' ? new JsonEncoder() : new MsgPackEncoder()
     }
 
@@ -70,7 +70,7 @@ export class WebClient<Contract extends TContract> {
         this.assertMethodExists(method as string)
         const request = RpcProtocol.encodeRequest('unknown', method as string, params)
         const encoded = this.encoder.encode(request)
-        Request.call(this.contract, this.endpoint, {}, encoded).catch(() => { /* ignore */ })
+        Request.call(this.contract, this.endpoint, this.additionalHeaders, encoded).catch(() => { /* ignore */ })
     }
 
     private assertMethodExists(method: string) {

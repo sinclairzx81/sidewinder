@@ -26,7 +26,7 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-import { Platform } from '@sidewinder/platform'
+import { Platform }  from '@sidewinder/platform'
 import { TContract } from '@sidewinder/contract'
 
 export namespace Request {
@@ -96,9 +96,9 @@ export namespace Request {
         })
     }
 
-    export async function call(contract: TContract, endpoint: string, headers: Record<string, string>, body: Uint8Array): Promise<Uint8Array> {
+    export async function call(contract: TContract, endpoint: string, additionalHeaders: Record<string, string>, body: Uint8Array): Promise<Uint8Array> {
         return Platform.platform() === 'browser'
-            ? await browser(contract, endpoint, headers, body)
-            : await node(contract, endpoint, headers, body)
+            ? await browser(contract, endpoint, additionalHeaders, body)
+            : await node(contract, endpoint, additionalHeaders, body)
     }
 }
