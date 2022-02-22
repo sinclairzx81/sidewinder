@@ -1,10 +1,10 @@
 import * as resolve from './resolve'
 import * as assert from '../assert/index'
-import { Database, Collection } from '@sidewinder/mongo'
+import { MongoDatabase, MongoCollection } from '@sidewinder/mongo'
 
 describe('mongo/Cursor', () => {
 
-    async function createTestData(database: Database, collection: Collection<any>) {
+    async function createTestData(database: MongoDatabase, collection: MongoCollection<any>) {
         await collection.insertMany([
             { _id: database.id(), x: 1, y: 2, z: 0 },  // 0
             { _id: database.id(), x: 1, y: 2, z: 1 },  // 1

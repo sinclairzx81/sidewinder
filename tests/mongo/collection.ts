@@ -1,7 +1,7 @@
 import * as resolve from './resolve'
 import * as assert from '../assert/index'
 
-describe('mongo/Collection', () => {
+describe('mongo/MongoCollection', () => {
 
     // -----------------------------------------------------------------------------
     // insertOne

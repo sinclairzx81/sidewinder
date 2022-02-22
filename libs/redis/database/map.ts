@@ -29,13 +29,13 @@ THE SOFTWARE.
 import { Redis } from 'ioredis'
 import { Validator } from '@sidewinder/validator'
 import { RedisEncoder } from '../encoder'
-import { TSchema } from '../type'
+import { Static, TSchema } from '../type'
 
-export class RedisMap<T> {
+export class RedisMap<Schema extends TSchema> {
     private readonly validator: Validator<TSchema>
     private readonly encoder: RedisEncoder
 
-    constructor(private readonly schema: TSchema, private readonly redis: Redis, private readonly keyspace: string) {
+    constructor(private readonly schema: Schema, private readonly redis: Redis, private readonly keyspace: string) {
         this.validator = new Validator(this.schema)
         this.encoder = new RedisEncoder(this.schema)
     }
@@ -45,7 +45,7 @@ export class RedisMap<T> {
         for(const key of await this.redis.keys(this.encodeKey('*'))) {
             const value = await this.redis.get(key)
             if(value === null) continue
-            yield [this.decodeKey(key), this.encoder.decode<T>(value)]
+            yield [this.decodeKey(key), this.encoder.decode<Static<Schema>>(value)]
         }
     }
 
@@ -55,13 +55,13 @@ export class RedisMap<T> {
     }
 
     /** Sets the value for the given key */
-    public async set(key: string, value: T) {
+    public async set(key: string, value: Static<Schema>) {
         this.validator.assert(value)
         return await this.redis.set(this.encodeKey(key), this.encoder.encode(value))
     }
 
     /** Gets the value for the given key or undefined if not exists */
-    public async get(key: string): Promise<T | undefined> {
+    public async get(key: string): Promise<Static<Schema> | undefined> {
         const value = await this.redis.get(this.encodeKey(key))
         if(value === null) return undefined
         return this.encoder.decode(value)
@@ -84,7 +84,7 @@ export class RedisMap<T> {
     }
 
     /** Returns an async iterator to the values in this map */
-    public async * values(): AsyncIterable<T> {
+    public async * values(): AsyncIterable<Static<Schema>> {
         for(const key of await this.redis.keys(this.encodeKey('*'))) {
             const value = await this.redis.get(key)
             if(value === null) continue

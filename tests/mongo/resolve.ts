@@ -25,7 +25,7 @@ export function db(callback: (db: Db) => Promise<void> | void) {
 // Common Database Structure
 // -------------------------------------------------------------
 
-import { Database, Type } from '@sidewinder/mongo'
+import { MongoDatabase, Type } from '@sidewinder/mongo'
 
 const Vector = Type.Object({
     _id: Type.ObjectId(),
@@ -45,9 +45,9 @@ const Schema = Type.Database({
     'vectors-no-id': VectorNoID
 })
 
-export function database(callback: (db: Database<typeof Schema>) => Promise<void> | void) {
+export function database(callback: (db: MongoDatabase<typeof Schema>) => Promise<void> | void) {
     return async () => db(async db => {
-        const database: any = new Database(Schema, db)
+        const database: any = new MongoDatabase(Schema, db)
         await callback(database)
     })()
 }

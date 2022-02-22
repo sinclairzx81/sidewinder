@@ -66,9 +66,9 @@ export interface TDatabase<DatabaseOptions extends TDatabaseOptions = TDatabaseO
     }
     type: 'object'
     kind: 'Database'
-    lists: DefinedOr<DatabaseOptions['lists'], {}>,
-    maps: DefinedOr<DatabaseOptions['maps'], {}>,
-    sets: DefinedOr<DatabaseOptions['sets'], {}>,
+    lists: DefinedOr<DatabaseOptions['lists'], TObject>,
+    maps: DefinedOr<DatabaseOptions['maps'], TObject>,
+    sets: DefinedOr<DatabaseOptions['sets'], TObject>,
 }
 
 // --------------------------------------------------------------------------

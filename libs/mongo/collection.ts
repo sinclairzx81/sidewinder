@@ -29,11 +29,11 @@ THE SOFTWARE.
 import * as Mongo from 'mongodb'
 import { Validator } from '@sidewinder/validator'
 import { Type, TObject, TPartial, TProperties, Static } from './type'
-import { Cursor } from './cursor'
+import { MongoCursor } from './cursor'
 import { MongoEncoder } from './encoder'
 import { matchArguments } from './arguments'
 
-export class Collection<T extends TObject<TProperties> = TObject<TProperties>> {
+export class MongoCollection<T extends TObject<TProperties> = TObject<TProperties>> {
     private readonly validatePartial: Validator<TPartial<T>>
     private readonly validate: Validator<T>
     private readonly encoder: MongoEncoder
@@ -93,22 +93,22 @@ export class Collection<T extends TObject<TProperties> = TObject<TProperties>> {
     }
 
     /** Creates a cursor for a filter that can be used to iterate over results from MongoDB */
-    public find(filter: Mongo.Filter<Static<T>>, options: Mongo.FindOptions): Cursor<Static<T>>
+    public find(filter: Mongo.Filter<Static<T>>, options: Mongo.FindOptions): MongoCursor<Static<T>>
     /** Creates a cursor for a filter that can be used to iterate over results from MongoDB */
-    public find(filter: Mongo.Filter<Static<T>>): Cursor<Static<T>>
+    public find(filter: Mongo.Filter<Static<T>>): MongoCursor<Static<T>>
     /** Creates a cursor for a filter that can be used to iterate over results from MongoDB */
-    public find(): Cursor<Static<T>>
+    public find(): MongoCursor<Static<T>>
     /** Creates a cursor for a filter that can be used to iterate over results from MongoDB */
-    public find(...args: any[]): Cursor<Static<T>> {
+    public find(...args: any[]): MongoCursor<Static<T>> {
         return matchArguments(args, {
             2: (filter, options) => {
-                return new Cursor(this.encoder, this.collection.find(this.encoder.encode(filter), options))
+                return new MongoCursor(this.encoder, this.collection.find(this.encoder.encode(filter), options))
             },
             1: (filter) => {
-                return new Cursor(this.encoder, this.collection.find(this.encoder.encode(filter)))
+                return new MongoCursor(this.encoder, this.collection.find(this.encoder.encode(filter)))
             },
             0: () => {
-                return new Cursor(this.encoder, this.collection.find({}))
+                return new MongoCursor(this.encoder, this.collection.find({}))
             },
             _: () => {
                 throw new Error('Invalid find() arguments')

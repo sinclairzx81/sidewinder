@@ -18,13 +18,14 @@ const Schema = Type.Database({
 })
 
 export class Test {
-    private readonly users: RedisMap<Static<typeof User>>
+    private readonly users: RedisMap<typeof User>
 
     constructor(private readonly database: RedisDatabase<typeof Schema>) {
         this.users = this.database.map('users')
     }
     public async test() {
         await this.users.set('name', { index: 0 })
+        await this.users.has('')
     }
 }
 

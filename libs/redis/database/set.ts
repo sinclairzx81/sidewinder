@@ -29,22 +29,26 @@ THE SOFTWARE.
 import { Redis } from 'ioredis'
 import { Validator } from '@sidewinder/validator'
 import { RedisEncoder } from '../encoder'
-import { TSchema } from '../type'
+import { Static, TSchema } from '../type'
 
-export class RedisSet<T> {
+export class RedisSet<T extends TSchema> {
     private readonly validator: Validator<TSchema>
     private readonly encoder: RedisEncoder
 
-    constructor(private readonly schema: TSchema, private readonly redis: Redis, private readonly keyspace: string) {
+    constructor(private readonly schema: T, private readonly redis: Redis, private readonly keyspace: string) {
         this.validator = new Validator(this.schema)
         this.encoder = new RedisEncoder(this.schema)
     }
-    
-    public async add(value: T) {
+
+    public async has(value: Static<T>): Promise<boolean> {
+        return true
+    }
+
+    public async add(value: Static<T>) {
 
     }
 
-    public async delete(value: T) {
+    public async delete(value: Static<T>) {
 
     }
 
@@ -52,7 +56,7 @@ export class RedisSet<T> {
 
     }
 
-    public async * values(): AsyncIterable<T> {
+    public async * values(): AsyncIterable<Static<T>> {
 
     }
     private resolveKey() {

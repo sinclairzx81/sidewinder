@@ -34,30 +34,26 @@ import { RedisMap } from './map'
 import { RedisSet } from './set'
 
 export class RedisDatabase<Database extends TDatabase = TDatabase> {
-
     constructor(private readonly schema: Database, private readonly redis: Redis) {}
-
     /** Returns a redis list type */
-    public list<Name extends keyof Database['lists']>(name: Name): RedisList<Static<Database['lists'][Name]>> {
+    public list<Name extends keyof Database['lists']>(name: Name): RedisList<Database['lists'][Name]> {
         const schema = (this.schema['lists'] as any)[name as string]
         if(schema === undefined) throw Error(`The list '${name}' not defined in redis schema`)
         return new RedisList(schema, this.redis, name as string)
     }
     /** Returns a redis map type */
-    public map<Name extends keyof Database['maps']>(name: Name): RedisMap<Static<Database['maps'][Name]>> {
+    public map<Name extends keyof Database['maps']>(name: Name): RedisMap<Database['maps'][Name]> {
         const schema = (this.schema['maps'] as any)[name as string]
         if(schema === undefined) throw Error(`The map '${name}' not defined in redis schema`)
         return new RedisMap(schema, this.redis, name as string)
     }
 
     /** Returns a redis set type */
-    public set<Name extends keyof Database['sets']>(name: Name): RedisSet<Static<Database['sets'][Name]>> {
+    public set<Name extends keyof Database['sets']>(name: Name): RedisSet<Database['sets'][Name]> {
         const schema = (this.schema['sets'] as any)[name as string]
         if(schema === undefined) throw Error(`The set '${name}' not defined in redis schema`)
         return new RedisSet(schema, this.redis, name as string)
     }
-
-
 
     /** Connects to Redis with the given parameters */
     public static connect<Database extends TDatabase = TDatabase>(schema: Database, port?: number, host?: string, options?: RedisOptions): Promise<RedisDatabase<Database>>

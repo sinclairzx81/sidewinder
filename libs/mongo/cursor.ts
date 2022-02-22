@@ -30,7 +30,7 @@ import { MongoEncoder } from './encoder'
 import * as Mongo from 'mongodb'
 import { matchArguments } from './arguments'
 
-export class Cursor<T> {
+export class MongoCursor<T> {
     constructor(private readonly encoder: MongoEncoder, public readonly cursor: Mongo.FindCursor<Mongo.WithId<Mongo.Document>>) { }
 
     /** Asynchronous iterator for this Cursor */
@@ -41,8 +41,8 @@ export class Cursor<T> {
     }
 
     /** Returns a new uninitialized copy of this cursor, with options matching those that have been set on the current instance */
-    public clone(): Cursor<T> {
-        return new Cursor(this.encoder, this.cursor.clone())
+    public clone(): MongoCursor<T> {
+        return new MongoCursor(this.encoder, this.cursor.clone())
     }
 
     /** Get the count of documents for this cursor */
@@ -65,23 +65,23 @@ export class Cursor<T> {
     }
 
     /** Set the cursor query */
-    public filter(filter: Mongo.Document): Cursor<T> {
-        return new Cursor(this.encoder, this.cursor.filter(filter))
+    public filter(filter: Mongo.Document): MongoCursor<T> {
+        return new MongoCursor(this.encoder, this.cursor.filter(filter))
     }
 
     /** Sets the sort order of the cursor query. */
-    public sort(sort: Mongo.Sort | string, direction?: Mongo.SortDirection): Cursor<T> {
-        return new Cursor(this.encoder, this.cursor.sort(sort, direction))
+    public sort(sort: Mongo.Sort | string, direction?: Mongo.SortDirection): MongoCursor<T> {
+        return new MongoCursor(this.encoder, this.cursor.sort(sort, direction))
     }
 
     /** Set the limit for the cursor. */
-    public take(value: number): Cursor<T> {
-        return new Cursor(this.encoder, this.cursor.limit(value))
+    public take(value: number): MongoCursor<T> {
+        return new MongoCursor(this.encoder, this.cursor.limit(value))
     }
 
     /** Set the skip for the cursor. */
-    public skip(value: number): Cursor<T> {
-        return new Cursor(this.encoder, this.cursor.skip(value))
+    public skip(value: number): MongoCursor<T> {
+        return new MongoCursor(this.encoder, this.cursor.skip(value))
     }
 
     /** Returns results as an array */

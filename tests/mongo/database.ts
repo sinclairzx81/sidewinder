@@ -1,8 +1,8 @@
 import * as resolve from './resolve'
 import * as assert from '../assert/index'
-import { Collection } from '@sidewinder/mongo'
+import { MongoCollection } from '@sidewinder/mongo'
 
-describe('mongo/Database', () => {
+describe('mongo/MongoDatabase', () => {
     it('should return an identifier as 24 character hexstring', resolve.database(database => {
         const id = database.id()
         assert.equal(typeof id, 'string')
@@ -12,8 +12,8 @@ describe('mongo/Database', () => {
     it('should return collection types', resolve.database(database => {
         const vectors_1 = database.collection('vectors')
         const vectors_2 = database.collection('vectors-no-id')
-        assert.isInstanceOf(vectors_1, Collection)
-        assert.isInstanceOf(vectors_2, Collection)
+        assert.isInstanceOf(vectors_1, MongoCollection)
+        assert.isInstanceOf(vectors_2, MongoCollection)
     }))
     
     it('should throw on returning unknown collection type', resolve.database(database => {
