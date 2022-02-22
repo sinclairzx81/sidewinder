@@ -10,7 +10,7 @@
 
 ## Overview
 
-The Sidewinder Redis library provides a type safe abstraction over Redis. It implements remote versions of JavaScript's Array, Map and Set collection types over Redis key value store. Each Collection type is strictly validated with Sidewinder Types. Additionally this library provides functionality for Channels and PubSub through Redis, with messages sent through Redis also strictly validated.
+This package provides a type safe abstraction over Redis. It implements remote versions of JavaScript's Array, Map and Set collection types over Redis key value store. Each Redis collection type is strictly validated with Sidewinder Types. Additionally this library also provides functionality for type safe Channel and PubSub messaging through Redis.
 
 License MIT
 
