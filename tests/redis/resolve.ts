@@ -13,7 +13,7 @@ export function resolveDatabase() {
     maps: {
       vectors: Vector,
     },
-    set: {
+    sets: {
       vectors: Vector,
     },
   })
