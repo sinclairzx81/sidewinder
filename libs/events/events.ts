@@ -30,12 +30,12 @@ THE SOFTWARE.
 // EventListener
 // --------------------------------------------------------
 
-export class EventListener  {
-    constructor(private readonly callback: () => any) {}
-    
-    public dispose() {
-        this.callback()
-    }
+export class EventListener {
+  constructor(private readonly callback: () => any) {}
+
+  public dispose() {
+    this.callback()
+  }
 }
 
 // --------------------------------------------------------
@@ -49,31 +49,31 @@ export type EventHandler<T> = (value: T) => any
 // --------------------------------------------------------
 
 export class Event<T> {
-    private readonly subscriptions = new Set<readonly [boolean, EventHandler<T>]>()
-    
-    public on(handler: EventHandler<T>): EventListener {
-        const subscription = [false, handler] as const
-        this.subscriptions.add(subscription)
-        return new EventListener(() => this.subscriptions.delete(subscription))
-    }
+  private readonly subscriptions = new Set<readonly [boolean, EventHandler<T>]>()
 
-    public once(handler: EventHandler<T>): EventListener {
-        const subscription = [true, handler] as const
-        this.subscriptions.add(subscription)
-        return new EventListener(() => this.subscriptions.delete(subscription))
-    }
+  public on(handler: EventHandler<T>): EventListener {
+    const subscription = [false, handler] as const
+    this.subscriptions.add(subscription)
+    return new EventListener(() => this.subscriptions.delete(subscription))
+  }
 
-    public send(value: T): any {
-        for(const subscriber of this.subscriptions) {
-            const [once, handler] = subscriber
-            if(once) this.subscriptions.delete(subscriber)
-            handler(value)
-        }
-    }
+  public once(handler: EventHandler<T>): EventListener {
+    const subscription = [true, handler] as const
+    this.subscriptions.add(subscription)
+    return new EventListener(() => this.subscriptions.delete(subscription))
+  }
 
-    public dispose() {
-        this.subscriptions.clear()
+  public send(value: T): any {
+    for (const subscriber of this.subscriptions) {
+      const [once, handler] = subscriber
+      if (once) this.subscriptions.delete(subscriber)
+      handler(value)
     }
+  }
+
+  public dispose() {
+    this.subscriptions.clear()
+  }
 }
 
 // --------------------------------------------------------
@@ -81,34 +81,34 @@ export class Event<T> {
 // --------------------------------------------------------
 
 export class Events {
-    private readonly events = new Map<string, Event<any>>()
+  private readonly events = new Map<string, Event<any>>()
 
-    /** Subscribes to an event */
-    public on<T = unknown>(name: string, handler: EventHandler<T>): EventListener {
-        if(!this.events.has(name)) this.events.set(name, new Event())
-        const event = this.events.get(name)!
-        return event.on(handler)
-    }
+  /** Subscribes to an event */
+  public on<T = unknown>(name: string, handler: EventHandler<T>): EventListener {
+    if (!this.events.has(name)) this.events.set(name, new Event())
+    const event = this.events.get(name)!
+    return event.on(handler)
+  }
 
-    /** Subscribes once to an event */
-    public once<T = unknown>(name: string, handler: EventHandler<T>): EventListener {
-        if(!this.events.has(name)) this.events.set(name, new Event())
-        const event = this.events.get(name)!
-        return event.once(handler)
-    }
+  /** Subscribes once to an event */
+  public once<T = unknown>(name: string, handler: EventHandler<T>): EventListener {
+    if (!this.events.has(name)) this.events.set(name, new Event())
+    const event = this.events.get(name)!
+    return event.once(handler)
+  }
 
-    /** Sends a value to subscribers of this event */
-    public send<T = unknown>(name: string, value: T) {
-        if(!this.events.has(name)) return
-        const event = this.events.get(name)!
-        event.send(value)
-    }
+  /** Sends a value to subscribers of this event */
+  public send<T = unknown>(name: string, value: T) {
+    if (!this.events.has(name)) return
+    const event = this.events.get(name)!
+    event.send(value)
+  }
 
-    /** Disposes of this event */
-    public dispose() {
-        for(const [key, event] of this.events) {
-            this.events.delete(key)
-            event.dispose()   
-        }
+  /** Disposes of this event */
+  public dispose() {
+    for (const [key, event] of this.events) {
+      this.events.delete(key)
+      event.dispose()
     }
+  }
 }

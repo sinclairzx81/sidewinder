@@ -37,14 +37,15 @@ The following creates a Http WebService and Hosts it on port 5000.
 import { Type } from '@sidewinder/contract'
 
 export const Contract = Type.Contract({
-    server: {
-        add: Type.Function([Type.Number(), Type.Number()], Type.Number()),
-        sub: Type.Function([Type.Number(), Type.Number()], Type.Number()),
-        mul: Type.Function([Type.Number(), Type.Number()], Type.Number()),
-        div: Type.Function([Type.Number(), Type.Number()], Type.Number()),
-    }
+  server: {
+    add: Type.Function([Type.Number(), Type.Number()], Type.Number()),
+    sub: Type.Function([Type.Number(), Type.Number()], Type.Number()),
+    mul: Type.Function([Type.Number(), Type.Number()], Type.Number()),
+    div: Type.Function([Type.Number(), Type.Number()], Type.Number()),
+  },
 })
 ```
+
 </details>
 
 <details>
@@ -93,33 +94,33 @@ A Sidewinder Host is a Http server that hosts Sidewinder Services and Express Ro
 import { Host } from '@sidewinder/service'
 
 const host = new Host({
-    /** 
-     * Load balancer keep alive. Transmits a `ping` signal to each connected 
+    /**
+     * Load balancer keep alive. Transmits a `ping` signal to each connected
      * web socket to prevent inactive sockets being terminated by the balancer.
-     * 
-     * (Default is 8000) 
+     *
+     * (Default is 8000)
      */
      keepAliveTimeout: number
 
-     /** 
-      * Disables client message compression. By default, browsers will compress web 
-      * socket frames which the server needs to decompress on a per message basis. 
-      * Setting this value to false means the server can skip frame decompression 
+     /**
+      * Disables client message compression. By default, browsers will compress web
+      * socket frames which the server needs to decompress on a per message basis.
+      * Setting this value to false means the server can skip frame decompression
       * (reducing CPU overhead) but at the expense of adding IO / Network overhead.
-      * 
+      *
       * (Default is false)
       */
      disableFrameCompression: boolean
- 
+
      /**
-      * Sets an upper limit for the number of concurrent web sockets allowed on the 
-      * host. This can be useful for autoscaling scenarios where the AWS ALB will 
+      * Sets an upper limit for the number of concurrent web sockets allowed on the
+      * host. This can be useful for autoscaling scenarios where the AWS ALB will
       * limited connections to around 4075, but where autoscaling may be dependent on
       * service latency.
-      * 
+      *
       * (Default is 16384)
       */
-     maxSocketCount: number 
+     maxSocketCount: number
 })
 
 ```
@@ -130,7 +131,7 @@ const host = new Host({
   <summary>Example</summary>
 
 ```typescript
-import { Host }   from '@sidewinder/service'
+import { Host } from '@sidewinder/service'
 import { Router } from 'express'
 
 const host = new Host()
@@ -154,8 +155,8 @@ import cors from 'cors'
 
 const router = Router()
 router.get('/contact', (req, res) => res.send('contact page'))
-router.get('/about',   (req, res) => res.send('about page'))
-router.get('/',        (req, res) => res.send('home page'))
+router.get('/about', (req, res) => res.send('about page'))
+router.get('/', (req, res) => res.send('home page'))
 
 const host = new Host()
 host.use(cors())
@@ -176,12 +177,12 @@ A WebService is JSON RPC 2.0 based Http service that accepts requests on singula
 import { Type } from '@sidewinder/contract'
 
 export const Contract = Type.Contract({
-    server: {
-        echo: Type.Function([Type.String()], Type.String())
-    }
+  server: {
+    echo: Type.Function([Type.String()], Type.String()),
+  },
 })
-
 ```
+
 </details>
 
 <details>
@@ -194,8 +195,8 @@ const service = new WebService(Contract)
 
 service.method('echo', (context, message) => message)
 ```
-</details>
 
+</details>
 
 ## WebSocketService
 
@@ -210,14 +211,15 @@ The following creates a bidirectional contract. The service implements a `task` 
 import { Type } from '@sidewinder/contract'
 
 export const Contract = Type.Contract({
-    server: {
-        task: Type.Function([], Type.Void()),
-    },
-    client: {
-        log: Type.Function([Type.String()], Type.Void())
-    }
+  server: {
+    task: Type.Function([], Type.Void()),
+  },
+  client: {
+    log: Type.Function([Type.String()], Type.Void()),
+  },
 })
 ```
+
 </details>
 
 <details>
@@ -229,9 +231,9 @@ import { WebSocketService } from '@sidewinder/service'
 const service = new WebSocketService(Contract)
 
 service.method('task', async (context, request) => {
-   await service.call(context, 'log', 'log message 1')
-   await service.call(context, 'log', 'log message 2')
-   await service.call(context, 'log', 'log message 3')
+  await service.call(context, 'log', 'log message 1')
+  await service.call(context, 'log', 'log message 2')
+  await service.call(context, 'log', 'log message 3')
 })
 ```
 
@@ -244,9 +246,9 @@ service.method('task', async (context, request) => {
 import { WebSocketClient } from '@sidewinder/client'
 
 const client = new WebSocketClient(Contract, 'ws://localhost:5000')
-client.method('log', message => console.log(message)) // 'log message 1'
-                                                      // 'log message 2'
-                                                      // 'log message 3'
+client.method('log', (message) => console.log(message)) // 'log message 1'
+// 'log message 2'
+// 'log message 3'
 
 client.call('task')
 ```
@@ -283,6 +285,7 @@ service.method('action', (context) => {
   const { clientId, name, roles } = context
 })
 ```
+
 </details>
 
 ### Method Level
@@ -314,6 +317,7 @@ service.method('action', (context) => {
   const { clientId, name, roles, foo } = context
 })
 ```
+
 </details>
 
 ## Events
@@ -330,7 +334,7 @@ export type WebServiceCloseCallback<Context>     = (context: Context) => Promise
 export type WebServiceErrorCallback              = (clientId: string, error: unknown) => Promise<unknown> | unknown
 
 /**
- * Subscribes to authorize events. This event is raised for every incoming Http Rpc request. Subscribing to 
+ * Subscribes to authorize events. This event is raised for every incoming Http Rpc request. Subscribing to
  * this event is mandatory if the service provides a context schema. The authorize event must return a value
  * that conforms to the services context or throw if the user is not authorized.
  */
@@ -344,7 +348,7 @@ public event(event: 'connect', callback: WebServiceConnectCallback<Context>): We
 
 /**
  * Subscribes to close events. This event is raised whenever the remote Http request is about to close.
- * Callers should use this event to clean up any associated state created for the request. This event receives 
+ * Callers should use this event to clean up any associated state created for the request. This event receives
  * the context returned from a successful authorization.
  */
 public event(event: 'close', callback: WebServiceCloseCallback<Context>): WebServiceCloseCallback<Context>
@@ -356,6 +360,7 @@ public event(event: 'close', callback: WebServiceCloseCallback<Context>): WebSer
 public event(event: 'error', callback: WebServiceErrorCallback<Context>): WebServiceErrorCallback<Context>
 
 ```
+
 </details>
 
 <details>
@@ -368,7 +373,7 @@ export type WebSocketServiceCloseCallback<Context>     = (context: Context) => P
 export type WebSocketServiceErrorCallback              = (context: string, error: unknown) => Promise<unknown> | unknown
 
 /**
- * Subscribes to authorize events. This event is raised once for each incoming WebSocket request. Subscribing to 
+ * Subscribes to authorize events. This event is raised once for each incoming WebSocket request. Subscribing to
  * this event is mandatory if the service provides a context schema. The authorize event must return a value
  * that conforms to the services context or throw if the user is not authorized. This context is reused for
  * subsequence calls on this service.
@@ -383,7 +388,7 @@ public event(event: 'connect', callback: WebSocketServiceConnectCallback<Context
 
 /**
  * Subscribes to close events. This event is raised whenever the remote WebSocket disconnects from the service.
- * Callers should use this event to clean up any associated state created for the connection. This event receives 
+ * Callers should use this event to clean up any associated state created for the connection. This event receives
  * the context returned from a successful authorization.
  */
 public event(event: 'close', callback: WebSocketServiceCloseCallback<Context>): WebSocketServiceCloseCallback<Context>
@@ -394,6 +399,7 @@ public event(event: 'close', callback: WebSocketServiceCloseCallback<Context>): 
 */
 public event(event: 'error', callback: WebSocketServiceErrorCallback): WebSocketServiceErrorCallback
 ```
+
 </details>
 
 ## Exceptions
@@ -409,34 +415,34 @@ The following creates some application specific Exceptions related to a registra
 import { Exception } from '@sidewinder/contract'
 
 export class UsernameAlreadyExistsException extends Exception {
-    constructor(email: string) {
-        super(`The email '${email}' already exists`, 1000, {})
-    }
+  constructor(email: string) {
+    super(`The email '${email}' already exists`, 1000, {})
+  }
 }
 export class EmailAlreadyExistsException extends Exception {
-    constructor(email: string) {
-        super(`The email '${email}' already exists`, 1001, {})
-    }
+  constructor(email: string) {
+    super(`The email '${email}' already exists`, 1001, {})
+  }
 }
 export class PasswordNotStrongEnoughException extends Exception {
-    constructor() {
-        super(`Password not strong enough`, 1002, {})
-    }
+  constructor() {
+    super(`Password not strong enough`, 1002, {})
+  }
 }
 
 server.method('user:create', (clientId, request) => {
-    // If any of these checks fail, the caller will receive meaningful information as to what went wrong.
-    if(await database.usernameExists(request.email)) throw new UsernameAlreadyExistsException(request.username)
-    if(await database.emailExists(request.email)) throw new EmailAlreadyExistsException(request.email)
-    if(!passwords.checkPasswordStength(request.password)) throw new PasswordNotStrongEnoughException(request.password)
-    
-    // If this throws an Error, a generic `Internal Server Error` will be returned to the caller.
-    const { userId } = await database.createUser({
-        username: request.username,
-        password: request.password,
-        email: request.email
-    })
-    return { userId }
+  // If any of these checks fail, the caller will receive meaningful information as to what went wrong.
+  if (await database.usernameExists(request.email)) throw new UsernameAlreadyExistsException(request.username)
+  if (await database.emailExists(request.email)) throw new EmailAlreadyExistsException(request.email)
+  if (!passwords.checkPasswordStength(request.password)) throw new PasswordNotStrongEnoughException(request.password)
+
+  // If this throws an Error, a generic `Internal Server Error` will be returned to the caller.
+  const { userId } = await database.createUser({
+    username: request.username,
+    password: request.password,
+    email: request.email,
+  })
+  return { userId }
 })
 ```
 
@@ -501,40 +507,52 @@ import { Type, Host, WebService } from '@sidewinder/server'
 // -------------------------------------------------------------------------
 
 const Contract = Type.Contract({
-    format: 'json',
-    server: {
-        'add': Type.Function([Type.Number(), Type.Number()], Type.Number()),
-        'sub': Type.Function([Type.Number(), Type.Number()], Type.Number()),
-        'mul': Type.Function([Type.Number(), Type.Number()], Type.Number()),
-        'div': Type.Function([Type.Number(), Type.Number()], Type.Number()),
-    }
+  format: 'json',
+  server: {
+    add: Type.Function([Type.Number(), Type.Number()], Type.Number()),
+    sub: Type.Function([Type.Number(), Type.Number()], Type.Number()),
+    mul: Type.Function([Type.Number(), Type.Number()], Type.Number()),
+    div: Type.Function([Type.Number(), Type.Number()], Type.Number()),
+  },
 })
 
 const Context = Type.Object({
-    name:  Type.String(),
-    roles: Type.Array(Type.String())
+  name: Type.String(),
+  roles: Type.Array(Type.String()),
 })
 
 export interface Logger {
-    log(...args: any[]): void
+  log(...args: any[]): void
 }
 
 export class MathService extends WebService<typeof Contract, typeof Context> {
-    constructor(private readonly logger: Logger) {
-        super(Contract, Context)
-    }
+  constructor(private readonly logger: Logger) {
+    super(Contract, Context)
+  }
 
-    // authorization
-    authorize = this.event('authorize', (clientId, request) => {
-        this.logger.log('authorizing clientId', clientId)
-        return { name: 'dave', roles: ['admin', 'moderator'] }
-    })
+  // authorization
+  authorize = this.event('authorize', (clientId, request) => {
+    this.logger.log('authorizing clientId', clientId)
+    return { name: 'dave', roles: ['admin', 'moderator'] }
+  })
 
-    // methods
-    public add = this.method('add', (context, a, b) => { this.logger.log('called add'); return a + b })
-    public sub = this.method('sub', (context, a, b) => { this.logger.log('called sub'); return a - b })
-    public mul = this.method('mul', (context, a, b) => { this.logger.log('called mul'); return a * b })
-    public div = this.method('div', (context, a, b) => { this.logger.log('called div'); return a / b })
+  // methods
+  public add = this.method('add', (context, a, b) => {
+    this.logger.log('called add')
+    return a + b
+  })
+  public sub = this.method('sub', (context, a, b) => {
+    this.logger.log('called sub')
+    return a - b
+  })
+  public mul = this.method('mul', (context, a, b) => {
+    this.logger.log('called mul')
+    return a * b
+  })
+  public div = this.method('div', (context, a, b) => {
+    this.logger.log('called div')
+    return a / b
+  })
 }
 
 // -------------------------------------------------------------------------

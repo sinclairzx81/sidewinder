@@ -31,48 +31,48 @@ import { Compiler, ValidateFunction } from './compiler'
 
 /** The Error type thrown on validator assert. */
 export class ValidateError extends Error {
-    constructor(public readonly errors: any[]) {
-        super('Data did not to validate')
-    }
+  constructor(public readonly errors: any[]) {
+    super('Data did not to validate')
+  }
 }
 /** The return type for validate check. */
 export interface ValidateResult {
-    success: boolean
-    errors: any[]
-    errorText: string
+  success: boolean
+  errors: any[]
+  errorText: string
 }
 
 /** Provides runtime validation for Sidewinder Types */
 export class Validator<T extends TSchema> {
-    private readonly validateFunction: ValidateFunction<unknown>
-    constructor(private readonly schema: T) {
-        this.validateFunction = Compiler.compile(this.schema)
-    }
+  private readonly validateFunction: ValidateFunction<unknown>
+  constructor(private readonly schema: T) {
+    this.validateFunction = Compiler.compile(this.schema)
+  }
 
-    /** Check if the given data conforms to this validators schema. */
-    public check(data: unknown): ValidateResult {
-        try {
-            const result = this.validateFunction(data)
-            if(!result) {
-                const errors = this.validateFunction.errors ? this.validateFunction.errors : []
-                const errorText = Compiler.errorsText(errors)
-                return { success: false, errors, errorText }
-            } else {
-                return { success: true, errors: [], errorText: '' }
-            }
-        } catch(error) {
-            if(error instanceof Error) {
-                return { success: false, errors: [error], errorText: error.message }
-            } else {
-                return { success: false, errors: [], errorText: 'Unknown error validating schema'}
-            }
-        }
+  /** Check if the given data conforms to this validators schema. */
+  public check(data: unknown): ValidateResult {
+    try {
+      const result = this.validateFunction(data)
+      if (!result) {
+        const errors = this.validateFunction.errors ? this.validateFunction.errors : []
+        const errorText = Compiler.errorsText(errors)
+        return { success: false, errors, errorText }
+      } else {
+        return { success: true, errors: [], errorText: '' }
+      }
+    } catch (error) {
+      if (error instanceof Error) {
+        return { success: false, errors: [error], errorText: error.message }
+      } else {
+        return { success: false, errors: [], errorText: 'Unknown error validating schema' }
+      }
     }
+  }
 
-    /** Asserts if the given data conforms to this validators schema. */
-    public assert(data: unknown): data is T {
-        const result = this.check(data)
-        if(!result.success) throw new ValidateError(result.errors)
-        return true
-    }
+  /** Asserts if the given data conforms to this validators schema. */
+  public assert(data: unknown): data is T {
+    const result = this.check(data)
+    if (!result.success) throw new ValidateError(result.errors)
+    return true
+  }
 }

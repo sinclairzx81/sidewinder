@@ -28,18 +28,22 @@ THE SOFTWARE.
 
 export type Message<T> = NextMessage<T> | ErrorMessage | EndMessage
 
-export enum MessageType { Next, Error, End }
+export enum MessageType {
+  Next,
+  Error,
+  End,
+}
 
 export interface NextMessage<T> {
-    type: MessageType.Next
-    value: T
+  type: MessageType.Next
+  value: T
 }
 
 export interface ErrorMessage {
-    type: MessageType.Error
-    error: Error
+  type: MessageType.Error
+  error: Error
 }
 
 export interface EndMessage {
-    type: MessageType.End
+  type: MessageType.End
 }

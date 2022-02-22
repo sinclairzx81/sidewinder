@@ -34,42 +34,42 @@ import { RedisMap } from './map'
 import { RedisSet } from './set'
 
 export class RedisDatabase<Database extends TDatabase = TDatabase> {
-    constructor(private readonly schema: Database, private readonly redis: Redis) {}
-    
-    /** Returns a RedisArray type */
-    public array<Name extends keyof Database['arrays']>(name: Name): RedisArray<Database['arrays'][Name]> {
-        const schema = (this.schema['arrays'] as any)[name as string]
-        if(schema === undefined) throw Error(`The list '${name}' not defined in redis schema`)
-        return new RedisArray(schema, this.redis, name as string)
-    }
+  constructor(private readonly schema: Database, private readonly redis: Redis) {}
 
-    /** Returns a RedisMap type */
-    public map<Name extends keyof Database['maps']>(name: Name): RedisMap<Database['maps'][Name]> {
-        const schema = (this.schema['maps'] as any)[name as string]
-        if(schema === undefined) throw Error(`The map '${name}' not defined in redis schema`)
-        return new RedisMap(schema, this.redis, name as string)
-    }
+  /** Returns a RedisArray type */
+  public array<Name extends keyof Database['arrays']>(name: Name): RedisArray<Database['arrays'][Name]> {
+    const schema = (this.schema['arrays'] as any)[name as string]
+    if (schema === undefined) throw Error(`The list '${name}' not defined in redis schema`)
+    return new RedisArray(schema, this.redis, name as string)
+  }
 
-    /** Returns a RedisSet type */
-    public set<Name extends keyof Database['sets']>(name: Name): RedisSet<Database['sets'][Name]> {
-        const schema = (this.schema['sets'] as any)[name as string]
-        if(schema === undefined) throw Error(`The set '${name}' not defined in redis schema`)
-        return new RedisSet(schema, this.redis, name as string)
-    }
+  /** Returns a RedisMap type */
+  public map<Name extends keyof Database['maps']>(name: Name): RedisMap<Database['maps'][Name]> {
+    const schema = (this.schema['maps'] as any)[name as string]
+    if (schema === undefined) throw Error(`The map '${name}' not defined in redis schema`)
+    return new RedisMap(schema, this.redis, name as string)
+  }
 
-    /** Disposes of this database */
-    public dispose() {
-        this.redis.disconnect(false)
-    }
-    
-    /** Connects to Redis with the given parameters */
-    public static connect<Database extends TDatabase = TDatabase>(schema: Database, port?: number, host?: string, options?: RedisOptions): Promise<RedisDatabase<Database>>
-    /** Connects to Redis with the given parameters */
-    public static connect<Database extends TDatabase = TDatabase>(schema: Database, host?: string, options?: RedisOptions): Promise<RedisDatabase<Database>>
-    /** Connects to Redis with the given parameters */
-    public static connect<Database extends TDatabase = TDatabase>(schema: Database, options: RedisOptions): Promise<RedisDatabase<Database>>
-    public static async connect(...args: any[]): Promise<any> {
-        const [schema, params] = [args[0], args.slice(1)]
-        return new RedisDatabase(schema, await RedisConnect.connect(...params))
-    }
+  /** Returns a RedisSet type */
+  public set<Name extends keyof Database['sets']>(name: Name): RedisSet<Database['sets'][Name]> {
+    const schema = (this.schema['sets'] as any)[name as string]
+    if (schema === undefined) throw Error(`The set '${name}' not defined in redis schema`)
+    return new RedisSet(schema, this.redis, name as string)
+  }
+
+  /** Disposes of this database */
+  public dispose() {
+    this.redis.disconnect(false)
+  }
+
+  /** Connects to Redis with the given parameters */
+  public static connect<Database extends TDatabase = TDatabase>(schema: Database, port?: number, host?: string, options?: RedisOptions): Promise<RedisDatabase<Database>>
+  /** Connects to Redis with the given parameters */
+  public static connect<Database extends TDatabase = TDatabase>(schema: Database, host?: string, options?: RedisOptions): Promise<RedisDatabase<Database>>
+  /** Connects to Redis with the given parameters */
+  public static connect<Database extends TDatabase = TDatabase>(schema: Database, options: RedisOptions): Promise<RedisDatabase<Database>>
+  public static async connect(...args: any[]): Promise<any> {
+    const [schema, params] = [args[0], args.slice(1)]
+    return new RedisDatabase(schema, await RedisConnect.connect(...params))
+  }
 }

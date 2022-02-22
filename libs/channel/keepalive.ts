@@ -28,11 +28,11 @@ THE SOFTWARE.
 
 /** Used to prevent the Node process from terminating with no actions scheduled on the JS event loop */
 export class KeepAlive {
-    private timer: NodeJS.Timer
-    constructor() {
-        this.timer = setInterval(() => {}, 60_000)
-    }
-    public dispose() {
-        clearInterval(this.timer)
-    }
+  private timer: NodeJS.Timer
+  constructor() {
+    this.timer = setInterval(() => {}, 60_000)
+  }
+  public dispose() {
+    clearInterval(this.timer)
+  }
 }

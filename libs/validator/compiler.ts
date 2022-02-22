@@ -27,71 +27,84 @@ THE SOFTWARE.
 ---------------------------------------------------------------------------*/
 
 import Ajv, { ErrorObject, ValidateFunction } from 'ajv/dist/2019'
-import { TSchema, Static, TUint8Array }       from '@sidewinder/type'
-import addFormats                             from 'ajv-formats'
-export { ValidateFunction }                   from 'ajv'
+import { TSchema, Static, TUint8Array } from '@sidewinder/type'
+import addFormats from 'ajv-formats'
+export { ValidateFunction } from 'ajv'
 
 /** Sidewinder Schema Compiler */
 export namespace Compiler {
-
-    /** Validates for UInt8Array types. */
-    function validateUint8Array(data: any, parentSchema: any) {
-        const schema = parentSchema       as TUint8Array
-        const facade = validateUint8Array as any
-        if(!(data instanceof Uint8Array)) {
-            const message = `object is not of type Uint8Array`
-            facade.errors = [{keyword: 'object', class: 'Uint8Array', message, params: {}}];
-            return false
-        }
-        if(schema.maxByteLength && data.length > schema.maxByteLength) {
-            const message = `maxByteLength is ${schema.maxByteLength} but received ${data.length}`
-            facade.errors = [{keyword: 'object', class: 'Uint8Array', message, params: {}}];
-            return false
-        }
-        if(schema.minByteLength && data.length < schema.minByteLength) {
-            const message = `minByteLength is ${schema.minByteLength} but received ${data.length}`
-            facade.errors = [{keyword: 'object', class: 'Uint8Array', message, params: {}}];
-            return false
-        }
-        return true
+  /** Validates for UInt8Array types. */
+  function validateUint8Array(data: any, parentSchema: any) {
+    const schema = parentSchema as TUint8Array
+    const facade = validateUint8Array as any
+    if (!(data instanceof Uint8Array)) {
+      const message = `object is not of type Uint8Array`
+      facade.errors = [{ keyword: 'object', class: 'Uint8Array', message, params: {} }]
+      return false
     }
-
-    /** Validates for undefined. */
-    function validateUndefined(data: any, parentSchema: any) {
-        return data === undefined
+    if (schema.maxByteLength && data.length > schema.maxByteLength) {
+      const message = `maxByteLength is ${schema.maxByteLength} but received ${data.length}`
+      facade.errors = [{ keyword: 'object', class: 'Uint8Array', message, params: {} }]
+      return false
     }
-
-    function validateSpecialized(specializedType: string, data: any, parentSchema: any) {
-        switch(specializedType) {
-            case 'Uint8Array': return validateUint8Array(data, parentSchema)
-            case 'Undefined': return validateUndefined(data, parentSchema)
-            default: return false
-        }
+    if (schema.minByteLength && data.length < schema.minByteLength) {
+      const message = `minByteLength is ${schema.minByteLength} but received ${data.length}`
+      facade.errors = [{ keyword: 'object', class: 'Uint8Array', message, params: {} }]
+      return false
     }
+    return true
+  }
 
-    const ajv = addFormats(new Ajv({}), [ 
-        'date-time', 'time', 'date', 'email', 'hostname', 'ipv4', 
-        'ipv6', 'uri', 'uri-reference', 'uuid', 'uri-template', 
-        'json-pointer', 'relative-json-pointer', 'regex'
-    ])
+  /** Validates for undefined. */
+  function validateUndefined(data: any, parentSchema: any) {
+    return data === undefined
+  }
+
+  function validateSpecialized(specializedType: string, data: any, parentSchema: any) {
+    switch (specializedType) {
+      case 'Uint8Array':
+        return validateUint8Array(data, parentSchema)
+      case 'Undefined':
+        return validateUndefined(data, parentSchema)
+      default:
+        return false
+    }
+  }
+
+  const ajv = addFormats(new Ajv({}), [
+    'date-time',
+    'time',
+    'date',
+    'email',
+    'hostname',
+    'ipv4',
+    'ipv6',
+    'uri',
+    'uri-reference',
+    'uuid',
+    'uri-template',
+    'json-pointer',
+    'relative-json-pointer',
+    'regex',
+  ])
     .addKeyword({ keyword: 'specialized', type: 'object', validate: validateSpecialized })
     .addKeyword('maxByteLength')
     .addKeyword('minByteLength')
     .addKeyword('modifier')
     .addKeyword('kind')
-    
-    /** Formats errors given by the ValidateFunction on validation fail. */
-    export function errorsText(errors: ErrorObject[]) {
-        return ajv.errorsText(errors)
-    }
 
-    /** Adds the given schemas to the compiler */
-    export function addSchema(schemas: TSchema[]) {
-        ajv.addSchema(schemas)
-    }
+  /** Formats errors given by the ValidateFunction on validation fail. */
+  export function errorsText(errors: ErrorObject[]) {
+    return ajv.errorsText(errors)
+  }
 
-    /** Compiles the given schema and returns a validate function. */
-    export function compile<T extends TSchema>(schema: T): ValidateFunction<Static<T>> {
-        return ajv.compile(schema)
-    }
+  /** Adds the given schemas to the compiler */
+  export function addSchema(schemas: TSchema[]) {
+    ajv.addSchema(schemas)
+  }
+
+  /** Compiles the given schema and returns a validate function. */
+  export function compile<T extends TSchema>(schema: T): ValidateFunction<Static<T>> {
+    return ajv.compile(schema)
+  }
 }

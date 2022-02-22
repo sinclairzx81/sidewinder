@@ -30,40 +30,39 @@ import * as Mongo from 'mongodb'
 import { TObject } from '@sidewinder/type'
 
 export class MongoEncoder {
-    
-    constructor(private readonly schema: TObject) {}
+  constructor(private readonly schema: TObject) {}
 
-    /** Decodes mongo records to plain JavaScript objects */
-    public decode(value: any): any {
-        if(value instanceof Mongo.ObjectId) {
-            return value.toHexString()
-        } else if(value instanceof Mongo.Binary) {
-            return new Uint8Array(value.buffer)
-        } else if(typeof value === 'object' && !Array.isArray(value)) {
-            return Object.entries(value).reduce((acc, [key, value]) => {
-                return { ...acc, [key]: this.decode(value) }
-            }, {})
-        } else if(typeof value === 'object' && Array.isArray(value)) {
-            return value.map(item => this.decode(item))
-        } else {
-            return value
-        }
+  /** Decodes mongo records to plain JavaScript objects */
+  public decode(value: any): any {
+    if (value instanceof Mongo.ObjectId) {
+      return value.toHexString()
+    } else if (value instanceof Mongo.Binary) {
+      return new Uint8Array(value.buffer)
+    } else if (typeof value === 'object' && !Array.isArray(value)) {
+      return Object.entries(value).reduce((acc, [key, value]) => {
+        return { ...acc, [key]: this.decode(value) }
+      }, {})
+    } else if (typeof value === 'object' && Array.isArray(value)) {
+      return value.map((item) => this.decode(item))
+    } else {
+      return value
     }
+  }
 
-    /** Encodes plain JavaScript objects into Mongo records */
-    public encode(value: any): any {
-        if(typeof value === 'string' && value.match(/^[0-9a-fA-F]{24}$/)) {
-            return new Mongo.ObjectId(value)
-        } else if(value instanceof Uint8Array) {
-            return new Mongo.Binary(Buffer.from(value))
-        } else if(typeof value === 'object' && !Array.isArray(value)) {
-            return Object.entries(value).reduce((acc, [key, value]) => {
-                return { ...acc, [key]: this.encode(value) }
-            }, {})
-        } else if(typeof value === 'object' && Array.isArray(value)) {
-            return value.map(item => this.encode(item))
-        } else {
-            return value
-        }
+  /** Encodes plain JavaScript objects into Mongo records */
+  public encode(value: any): any {
+    if (typeof value === 'string' && value.match(/^[0-9a-fA-F]{24}$/)) {
+      return new Mongo.ObjectId(value)
+    } else if (value instanceof Uint8Array) {
+      return new Mongo.Binary(Buffer.from(value))
+    } else if (typeof value === 'object' && !Array.isArray(value)) {
+      return Object.entries(value).reduce((acc, [key, value]) => {
+        return { ...acc, [key]: this.encode(value) }
+      }, {})
+    } else if (typeof value === 'object' && Array.isArray(value)) {
+      return value.map((item) => this.encode(item))
+    } else {
+      return value
     }
+  }
 }

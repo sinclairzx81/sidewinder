@@ -26,54 +26,53 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-import { verify }        from 'jsonwebtoken'
+import { verify } from 'jsonwebtoken'
 import { Type, TObject } from '@sidewinder/type'
-import { Validator }     from '@sidewinder/validator'
-import { Format }        from './format'
+import { Validator } from '@sidewinder/validator'
+import { Format } from './format'
 
 export class TokenDecoderVerifyError extends Error {
-    constructor() {
-        super('TokenDecoder cannot verify token with the given publicKey')
-    }
+  constructor() {
+    super('TokenDecoder cannot verify token with the given publicKey')
+  }
 }
 
 export class TokenDecoderTypeError extends Error {
-    constructor(public readonly errors: any[], errorText: string) {
-        super(`TokenDecoder failed to type check. ${errorText}`)
-    }
+  constructor(public readonly errors: any[], errorText: string) {
+    super(`TokenDecoder failed to type check. ${errorText}`)
+  }
 }
 
 export class TokenDecoder<Claims extends TObject> {
-    private readonly tokenValidator: Validator<Claims>
+  private readonly tokenValidator: Validator<Claims>
 
-    constructor(private readonly schema: Claims, private readonly publicKey: string) {
-        this.publicKey = Format.key(this.publicKey)
-        this.tokenValidator = new Validator(this.schema)
-    }
+  constructor(private readonly schema: Claims, private readonly publicKey: string) {
+    this.publicKey = Format.key(this.publicKey)
+    this.tokenValidator = new Validator(this.schema)
+  }
 
-    /** Validates the given token and returns the decoded claims + iat */
-    private validateToken(token: string): unknown {
-        try {
-            return verify(token, this.publicKey, { algorithms: ['RS256'] })
-        } catch {
-            throw new TokenDecoderVerifyError()
-        }
+  /** Validates the given token and returns the decoded claims + iat */
+  private validateToken(token: string): unknown {
+    try {
+      return verify(token, this.publicKey, { algorithms: ['RS256'] })
+    } catch {
+      throw new TokenDecoderVerifyError()
     }
+  }
 
-    /** Validates the given token is of the correct type */
-    private validateType(verified: unknown): Claims['$static'] & { iat: number } {
-        const check = this.tokenValidator.check(verified)
-        if(!check.success) {
-            throw new TokenDecoderTypeError(check.errors, check.errorText)
-        } else {
-            return verified as Claims['$static'] & { iat: number }
-        }
+  /** Validates the given token is of the correct type */
+  private validateType(verified: unknown): Claims['$static'] & { iat: number } {
+    const check = this.tokenValidator.check(verified)
+    if (!check.success) {
+      throw new TokenDecoderTypeError(check.errors, check.errorText)
+    } else {
+      return verified as Claims['$static'] & { iat: number }
     }
+  }
 
-    /** Decodes the given token and returns the token type */
-    public decode(token: string): Claims['$static'] & { iat: number } {
-        const verified = this.validateToken(token)
-        return this.validateType(verified)
-    }
+  /** Decodes the given token and returns the token type */
+  public decode(token: string): Claims['$static'] & { iat: number } {
+    const verified = this.validateToken(token)
+    return this.validateType(verified)
+  }
 }
-

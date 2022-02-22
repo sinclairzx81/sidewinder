@@ -27,30 +27,33 @@ THE SOFTWARE.
 ---------------------------------------------------------------------------*/
 
 import { WebSocketClient } from './websocket'
-import { WebClient }       from './web'
-
+import { WebClient } from './web'
 
 /** Remaps functions of the given object to return promises. */
 type RemapWebProxyCallMethods<T extends object> = {
-    [K in keyof T]: T[K] extends (...args: any[]) => any 
-        ? (...args: Parameters<T[K]>) => Promise<ReturnType<T[K]>>
-        : never
+  [K in keyof T]: T[K] extends (...args: any[]) => any ? (...args: Parameters<T[K]>) => Promise<ReturnType<T[K]>> : never
 }
 
 /** Extracts the server contract and remaps each method to return a promise. */
-export type WebProxy<T> = 
-    T extends WebSocketClient <infer Contract> ? RemapWebProxyCallMethods<Contract['$static']['server']> extends infer I ? {[K in keyof I]: I[K]} : never :     
-    T extends WebClient       <infer Contract> ? RemapWebProxyCallMethods<Contract['$static']['server']> extends infer I ? {[K in keyof I]: I[K]} : never :
-    never
+export type WebProxy<T> = T extends WebSocketClient<infer Contract>
+  ? RemapWebProxyCallMethods<Contract['$static']['server']> extends infer I
+    ? { [K in keyof I]: I[K] }
+    : never
+  : T extends WebClient<infer Contract>
+  ? RemapWebProxyCallMethods<Contract['$static']['server']> extends infer I
+    ? { [K in keyof I]: I[K] }
+    : never
+  : never
 
-
-/** 
+/**
  * Converts a WebClient or WebSocketClient into a callable proxy object. This enables functions
  * to be called directly object without specifying method names as strings.
  */
 export function WebProxy<T extends WebClient<any> | WebSocketClient<any>>(client: T): WebProxy<T> {
-    return new Proxy(client, {
-        get: (target: any, method: any) => (...params: any[]) => target.call(method, ...params)
-    })
+  return new Proxy(client, {
+    get:
+      (target: any, method: any) =>
+      (...params: any[]) =>
+        target.call(method, ...params),
+  })
 }
-

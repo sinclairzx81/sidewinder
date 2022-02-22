@@ -33,47 +33,46 @@ import { Request } from './request/index'
 
 /** A JSON RPC 2.0 based HTTP client used to connect to Sidewinder WebService endpoints. */
 export class WebClient<Contract extends TContract> {
-    private readonly encoder: Encoder
+  private readonly encoder: Encoder
 
-    constructor(public readonly contract: Contract, public readonly endpoint: string, public readonly additionalHeaders: Record<string, string> = {}) { 
-        this.encoder = contract.format === 'json' ? new JsonEncoder() : new MsgPackEncoder()
-    }
+  constructor(public readonly contract: Contract, public readonly endpoint: string, public readonly additionalHeaders: Record<string, string> = {}) {
+    this.encoder = contract.format === 'json' ? new JsonEncoder() : new MsgPackEncoder()
+  }
 
-    /** Calls a remote service method */
-    public async call<
-        Method extends keyof Contract['$static']['server'] extends infer R ? R extends string ? R : never : never,
-        Parameters extends ContractMethodParamters<Contract['$static']['server'][Method]>,
-        ReturnType extends ContractMethodReturnType<Contract['$static']['server'][Method]>
-    >(method: Method, ...params: Parameters): Promise<ReturnType> {
-        this.assertMethodExists(method as string)
-        const request = RpcProtocol.encodeRequest('unknown', method as string, params)
-        const encoded = this.encoder.encode(request)
-        const decoded = this.encoder.decode(await Request.call(this.contract, this.endpoint, {}, encoded))
-        const message = RpcProtocol.decodeAny(decoded)
-        if (message === undefined) throw Error('Unable to decode response')
-        if(message.type !== 'response') throw Error('Server responded with an invalid protocol response')
-        const response = message.data
-        if (response.result !== undefined) {
-            return response.result as ReturnType
-        } else if (response.error) {
-            const { message, code, data } = response.error
-            throw new Exception(message, code, data)
-        }
-        throw Error('Unreachable')
+  /** Calls a remote service method */
+  public async call<
+    Method extends keyof Contract['$static']['server'] extends infer R ? (R extends string ? R : never) : never,
+    Parameters extends ContractMethodParamters<Contract['$static']['server'][Method]>,
+    ReturnType extends ContractMethodReturnType<Contract['$static']['server'][Method]>,
+  >(method: Method, ...params: Parameters): Promise<ReturnType> {
+    this.assertMethodExists(method as string)
+    const request = RpcProtocol.encodeRequest('unknown', method as string, params)
+    const encoded = this.encoder.encode(request)
+    const decoded = this.encoder.decode(await Request.call(this.contract, this.endpoint, {}, encoded))
+    const message = RpcProtocol.decodeAny(decoded)
+    if (message === undefined) throw Error('Unable to decode response')
+    if (message.type !== 'response') throw Error('Server responded with an invalid protocol response')
+    const response = message.data
+    if (response.result !== undefined) {
+      return response.result as ReturnType
+    } else if (response.error) {
+      const { message, code, data } = response.error
+      throw new Exception(message, code, data)
     }
+    throw Error('Unreachable')
+  }
 
-    /** Sends a message to a remote service method and ignores the result */
-    public send<
-        Method extends keyof Contract['$static']['server'],
-        Parameters extends ContractMethodParamters<Contract['$static']['server'][Method]>,
-        >(method: Method, ...params: Parameters) {
-        this.assertMethodExists(method as string)
-        const request = RpcProtocol.encodeRequest('unknown', method as string, params)
-        const encoded = this.encoder.encode(request)
-        Request.call(this.contract, this.endpoint, this.additionalHeaders, encoded).catch(() => { /* ignore */ })
-    }
+  /** Sends a message to a remote service method and ignores the result */
+  public send<Method extends keyof Contract['$static']['server'], Parameters extends ContractMethodParamters<Contract['$static']['server'][Method]>>(method: Method, ...params: Parameters) {
+    this.assertMethodExists(method as string)
+    const request = RpcProtocol.encodeRequest('unknown', method as string, params)
+    const encoded = this.encoder.encode(request)
+    Request.call(this.contract, this.endpoint, this.additionalHeaders, encoded).catch(() => {
+      /* ignore */
+    })
+  }
 
-    private assertMethodExists(method: string) {
-        if(!Object.keys(this.contract.server).includes(method)) throw new Error(`Method '${method}' not defined in contract`)
-    }
+  private assertMethodExists(method: string) {
+    if (!Object.keys(this.contract.server).includes(method)) throw new Error(`Method '${method}' not defined in contract`)
+  }
 }

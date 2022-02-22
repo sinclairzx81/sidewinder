@@ -33,50 +33,49 @@ import { RedisConnect } from '../connect'
 import { Static, TSchema } from '../type'
 
 export class RedisPub<Schema extends TSchema> {
-    private readonly validator: Validator<TSchema>
-    private readonly encoder: RedisEncoder
-    private ended: boolean
+  private readonly validator: Validator<TSchema>
+  private readonly encoder: RedisEncoder
+  private ended: boolean
 
-    constructor(public readonly topic: string, private readonly schema: Schema, private readonly redis: Redis) {
-        this.validator = new Validator(this.schema)
-        this.encoder = new RedisEncoder(this.schema)
-        this.ended = false
-    }
+  constructor(public readonly topic: string, private readonly schema: Schema, private readonly redis: Redis) {
+    this.validator = new Validator(this.schema)
+    this.encoder = new RedisEncoder(this.schema)
+    this.ended = false
+  }
 
-    /** Publishes the given value to the topic. */
-    public async send(value: Static<Schema>): Promise<void> {
-        if(this.ended) return
-        this.validator.assert(value)
-        await this.redis.publish(this.encodeKey(), this.encoder.encode(value))
-    }
+  /** Publishes the given value to the topic. */
+  public async send(value: Static<Schema>): Promise<void> {
+    if (this.ended) return
+    this.validator.assert(value)
+    await this.redis.publish(this.encodeKey(), this.encoder.encode(value))
+  }
 
-    /** Disposes of this publisher */
-    public dispose() {
-        this.ended = true
-        this.redis.disconnect(false)
-    }
+  /** Disposes of this publisher */
+  public dispose() {
+    this.ended = true
+    this.redis.disconnect(false)
+  }
 
-    // ------------------------------------------------------------
-    // Key Encoding
-    // ------------------------------------------------------------
+  // ------------------------------------------------------------
+  // Key Encoding
+  // ------------------------------------------------------------
 
-    private encodeKey() {
-        return `topic::${this.topic}`
-    }
+  private encodeKey() {
+    return `topic::${this.topic}`
+  }
 
-    // ------------------------------------------------------------
-    // Connect
-    // ------------------------------------------------------------
+  // ------------------------------------------------------------
+  // Connect
+  // ------------------------------------------------------------
 
-    /** Connects to Redis with the given parameters */
-    public static connect<Schema extends TSchema = TSchema>(topic: string, schema: Schema, port?: number, host?: string, options?: RedisOptions): Promise<RedisPub<Schema>>
-    /** Connects to Redis with the given parameters */
-    public static connect<Schema extends TSchema = TSchema>(topic: string, schema: Schema, host?: string, options?: RedisOptions): Promise<RedisPub<Schema>>
-    /** Connects to Redis with the given parameters */
-    public static connect<Schema extends TSchema = TSchema>(topic: string, schema: Schema, options: RedisOptions): Promise<RedisPub<Schema>>
-    public static async connect(...args: any[]): Promise<any> {
-        const [topic, schema, params] = [args[0], args[1], args.slice(2)]
-        return new RedisPub(topic, schema, await RedisConnect.connect(...params))
-    }
-
+  /** Connects to Redis with the given parameters */
+  public static connect<Schema extends TSchema = TSchema>(topic: string, schema: Schema, port?: number, host?: string, options?: RedisOptions): Promise<RedisPub<Schema>>
+  /** Connects to Redis with the given parameters */
+  public static connect<Schema extends TSchema = TSchema>(topic: string, schema: Schema, host?: string, options?: RedisOptions): Promise<RedisPub<Schema>>
+  /** Connects to Redis with the given parameters */
+  public static connect<Schema extends TSchema = TSchema>(topic: string, schema: Schema, options: RedisOptions): Promise<RedisPub<Schema>>
+  public static async connect(...args: any[]): Promise<any> {
+    const [topic, schema, params] = [args[0], args[1], args.slice(2)]
+    return new RedisPub(topic, schema, await RedisConnect.connect(...params))
+  }
 }

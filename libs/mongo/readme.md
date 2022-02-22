@@ -41,24 +41,24 @@ await client.connect()
 // ---------------------------------------------------------
 
 const User = Type.Object({
-    _id:     Type.ObjectId(),
-    name:    Type.String(),
-    email:   Type.String({ format: 'email' }),
-    created: Type.Integer(),
-    updated: Type.Integer()
+  _id: Type.ObjectId(),
+  name: Type.String(),
+  email: Type.String({ format: 'email' }),
+  created: Type.Integer(),
+  updated: Type.Integer(),
 })
 
 const Record = Type.Object({
-    _id:      Type.ObjectId(),
-    _user_id: Type.ObjectId(),
-    created:  Type.Integer(),
-    updated:  Type.Integer(),
-    value:    Type.Number()
+  _id: Type.ObjectId(),
+  _user_id: Type.ObjectId(),
+  created: Type.Integer(),
+  updated: Type.Integer(),
+  value: Type.Number(),
 })
 
 const Schema = Type.Database({
-    users:   User,
-    records: Record
+  users: User,
+  records: Record,
 })
 
 // ---------------------------------------------------------
@@ -74,36 +74,41 @@ const database = new Database(Schema, client.db())
 const user_id = database.id()
 
 await database.collection('users').insertOne({
-    _id:      user_id,
-    name:    'dave',
-    email:   'dave@domain.com',
-    created: Date.now(),
-    updated: Date.now()
+  _id: user_id,
+  name: 'dave',
+  email: 'dave@domain.com',
+  created: Date.now(),
+  updated: Date.now(),
 })
 
-await database.collection('records').insertMany([{
-    _id:      database.id(),
+await database.collection('records').insertMany([
+  {
+    _id: database.id(),
     _user_id: user_id,
-    created:  Date.now(),
-    updated:  Date.now(),
-    value:    0
-}, {
-    _id:      database.id(),
+    created: Date.now(),
+    updated: Date.now(),
+    value: 0,
+  },
+  {
+    _id: database.id(),
     _user_id: user_id,
-    created:  Date.now(),
-    updated:  Date.now(),
-    value:    1
-}])
+    created: Date.now(),
+    updated: Date.now(),
+    value: 1,
+  },
+])
 
 // ---------------------------------------------------------
 // Update
 // ---------------------------------------------------------
 
-await database.collection('users').updateOne({ _id: user_id }, {
-    email:   'dave@other-domain.com',
-    updated: Date.now()
-})
-
+await database.collection('users').updateOne(
+  { _id: user_id },
+  {
+    email: 'dave@other-domain.com',
+    updated: Date.now(),
+  },
+)
 
 // ---------------------------------------------------------
 // Find
@@ -115,9 +120,8 @@ const user = await database.collection('users').findOne({ _id: user_id })
 // Iterate
 // ---------------------------------------------------------
 
-for await(const user of database.collection('users').find({ }).skip(0).take(10)) {
-
-    // ...
+for await (const user of database.collection('users').find({}).skip(0).take(10)) {
+  // ...
 }
 
 // ---------------------------------------------------------

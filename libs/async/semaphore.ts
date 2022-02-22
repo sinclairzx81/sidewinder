@@ -27,56 +27,53 @@ THE SOFTWARE.
 ---------------------------------------------------------------------------*/
 
 interface SemaphoreAwaiter<T = any> {
-    executor(): Promise<T> | T
-    resolve (value: T): void
-    reject  (error: Error): void
+  executor(): Promise<T> | T
+  resolve(value: T): void
+  reject(error: Error): void
 }
 
 export class Semaphore {
-    private readonly awaiters: Array<SemaphoreAwaiter>
-    private running: number
+  private readonly awaiters: Array<SemaphoreAwaiter>
+  private running: number
 
-    constructor(
-        private readonly concurrency: number = 1, 
-        private readonly throttle:    number = 0
-    ) {
-        this.awaiters = []
-        this.running = 0
-    }
-    
-    public run<T = any>(executor: () => Promise<T> | T): Promise<T> {
-        return new Promise<T>((resolve, reject) => {
-            this.awaiters.push({ executor, resolve, reject })
-            this.dispatch()
-        })
-    }
-    
-    private increment() {
-        this.running += 1
-    }
-    
-    private decrement() {
-        this.running -= 1
-    }
+  constructor(private readonly concurrency: number = 1, private readonly throttle: number = 0) {
+    this.awaiters = []
+    this.running = 0
+  }
 
-    private resume() {
-        setTimeout(() => {
-            this.decrement()
-            this.dispatch()
-        }, this.throttle)
+  public run<T = any>(executor: () => Promise<T> | T): Promise<T> {
+    return new Promise<T>((resolve, reject) => {
+      this.awaiters.push({ executor, resolve, reject })
+      this.dispatch()
+    })
+  }
+
+  private increment() {
+    this.running += 1
+  }
+
+  private decrement() {
+    this.running -= 1
+  }
+
+  private resume() {
+    setTimeout(() => {
+      this.decrement()
+      this.dispatch()
+    }, this.throttle)
+  }
+
+  private async dispatch(): Promise<any> {
+    if (this.awaiters.length === 0 || this.running >= this.concurrency) {
+      return
     }
-    
-    private async dispatch(): Promise<any> {
-        if (this.awaiters.length === 0 || this.running >= this.concurrency) {
-            return
-        }
-        const awaiter = this.awaiters.shift()!
-        this.increment()
-        try {
-            awaiter.resolve(await awaiter.executor())
-        } catch (error) {
-            awaiter.reject(error as any)
-        }
-        this.resume()
+    const awaiter = this.awaiters.shift()!
+    this.increment()
+    try {
+      awaiter.resolve(await awaiter.executor())
+    } catch (error) {
+      awaiter.reject(error as any)
     }
+    this.resume()
+  }
 }

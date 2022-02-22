@@ -27,49 +27,49 @@ THE SOFTWARE.
 ---------------------------------------------------------------------------*/
 
 import { Static, TSchema, Type } from '@sidewinder/contract'
-import { Validator }             from '@sidewinder/validator'
+import { Validator } from '@sidewinder/validator'
 
 // -------------------------------------------------------------------------
 // Protocol Types
 // -------------------------------------------------------------------------
 
 export enum RpcErrorCode {
-    ParseError          = -32700, // Invalid JSON was received by the server.
-    InvalidRequest      = -32600, // The JSON sent is not a valid Request object.
-    MethodNotFound      = -32601, // The method does not exist / is not available.
-    InvalidParams       = -32602, // Invalid method parameter(s).
-    InternalError       = -32603, // Internal JSON-RPC error.
-    InternalServerError = -32001  // (custom) Reserved for implementation-defined server-errors.
+  ParseError = -32700, // Invalid JSON was received by the server.
+  InvalidRequest = -32600, // The JSON sent is not a valid Request object.
+  MethodNotFound = -32601, // The method does not exist / is not available.
+  InvalidParams = -32602, // Invalid method parameter(s).
+  InternalError = -32603, // Internal JSON-RPC error.
+  InternalServerError = -32001, // (custom) Reserved for implementation-defined server-errors.
 }
 
 function Nullable<T extends TSchema>(schema: T) {
-    return Type.Union([schema, Type.Null()])
+  return Type.Union([schema, Type.Null()])
 }
 
-export type RpcRequest  = Static<typeof RpcRequest>
+export type RpcRequest = Static<typeof RpcRequest>
 export const RpcRequest = Type.Object({
-    jsonrpc: Type.Literal('2.0'),
-    method:  Type.String(),
-    params:  Type.Array(Type.Unknown()),
-    id:      Type.Optional(Nullable(Type.String()))
-}) 
+  jsonrpc: Type.Literal('2.0'),
+  method: Type.String(),
+  params: Type.Array(Type.Unknown()),
+  id: Type.Optional(Nullable(Type.String())),
+})
 
-export type RpcError  = Static<typeof RpcError>
+export type RpcError = Static<typeof RpcError>
 export const RpcError = Type.Object({
-    code:    Type.Integer(),
-    message: Type.String(),
-    data:    Type.Optional(Type.Unknown())
+  code: Type.Integer(),
+  message: Type.String(),
+  data: Type.Optional(Type.Unknown()),
 })
 
 export type RpcResponse = Static<typeof RpcResponse>
 export const RpcResponse = Type.Object({
-    jsonrpc: Type.Literal('2.0'),
-    result:  Type.Optional(Type.Unknown()),
-    error:   Type.Optional(RpcError),
-    id:      Type.String()
+  jsonrpc: Type.Literal('2.0'),
+  result: Type.Optional(Type.Unknown()),
+  error: Type.Optional(RpcError),
+  id: Type.String(),
 })
 
-export type RpcRequestOrResponse  = Static<typeof RpcRequestOrResponse>
+export type RpcRequestOrResponse = Static<typeof RpcRequestOrResponse>
 export const RpcRequestOrResponse = Type.Union([RpcRequest, RpcResponse])
 
 // -------------------------------------------------------------------------
@@ -77,37 +77,35 @@ export const RpcRequestOrResponse = Type.Union([RpcRequest, RpcResponse])
 // -------------------------------------------------------------------------
 
 export interface DecodedRpcRequest {
-    type: 'request',
-    data: RpcRequest
+  type: 'request'
+  data: RpcRequest
 }
 export interface DecodedRpcResponse {
-    type: 'response',
-    data: RpcResponse
+  type: 'response'
+  data: RpcResponse
 }
 
 export type DecodeAnyResult = DecodedRpcRequest | DecodedRpcResponse
 
 export namespace RpcProtocol {
-    const validateRequestOrResponse = new Validator(RpcRequestOrResponse)
+  const validateRequestOrResponse = new Validator(RpcRequestOrResponse)
 
-    export function encodeRequest(id: string | undefined, method: string, params: unknown[]): any {
-        return { id, jsonrpc: '2.0', method, params }
-    }
+  export function encodeRequest(id: string | undefined, method: string, params: unknown[]): any {
+    return { id, jsonrpc: '2.0', method, params }
+  }
 
-    export function encodeResult(id: string, result: unknown): RpcResponse {
-        return { jsonrpc: '2.0', id, result }
-    }
+  export function encodeResult(id: string, result: unknown): RpcResponse {
+    return { jsonrpc: '2.0', id, result }
+  }
 
-    export function encodeError(id: string, error: RpcError): RpcResponse {
-        return { jsonrpc: '2.0', id, error }
-    }
-    
-    export function decodeAny(request: unknown): DecodeAnyResult | undefined {
-        const object = request as RpcRequestOrResponse
-        const result = validateRequestOrResponse.check(object)
-        if(!result.success) return undefined
-        return ((<any>object)['method'])
-            ? { type: 'request',  data: object as RpcRequest }
-            : { type: 'response', data: object as RpcResponse }
-    }
+  export function encodeError(id: string, error: RpcError): RpcResponse {
+    return { jsonrpc: '2.0', id, error }
+  }
+
+  export function decodeAny(request: unknown): DecodeAnyResult | undefined {
+    const object = request as RpcRequestOrResponse
+    const result = validateRequestOrResponse.check(object)
+    if (!result.success) return undefined
+    return (<any>object)['method'] ? { type: 'request', data: object as RpcRequest } : { type: 'response', data: object as RpcResponse }
+  }
 }

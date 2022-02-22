@@ -29,21 +29,21 @@ THE SOFTWARE.
 import * as crypto from 'crypto'
 
 export namespace Generate {
-    /** Generates a Private and Public Key pair. The default modulusLength is 2048 */
-    export function KeyPair(modulusLength: 2048 | 4096 = 2048): [privateKey: string, publicKey: string] {
-        const { publicKey, privateKey } = crypto.generateKeyPairSync('rsa', {
-            modulusLength,
-            publicKeyEncoding: {
-                type: 'spki',
-                format: 'pem'
-            },
-            privateKeyEncoding: {
-                type: 'pkcs8',
-                format: 'pem',
-                // cipher:     'aes-256-cbc', // *optional*
-                // passphrase: 'secret'       // *optional*   
-            }
-        })
-        return [privateKey, publicKey]
-    }
+  /** Generates a Private and Public Key pair. The default modulusLength is 2048 */
+  export function KeyPair(modulusLength: 2048 | 4096 = 2048): [privateKey: string, publicKey: string] {
+    const { publicKey, privateKey } = crypto.generateKeyPairSync('rsa', {
+      modulusLength,
+      publicKeyEncoding: {
+        type: 'spki',
+        format: 'pem',
+      },
+      privateKeyEncoding: {
+        type: 'pkcs8',
+        format: 'pem',
+        // cipher:     'aes-256-cbc', // *optional*
+        // passphrase: 'secret'       // *optional*
+      },
+    })
+    return [privateKey, publicKey]
+  }
 }

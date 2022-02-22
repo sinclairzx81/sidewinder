@@ -26,80 +26,82 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-import { Queue }                from './queue'
-import { KeepAlive }            from './keepalive'
+import { Queue } from './queue'
+import { KeepAlive } from './keepalive'
 import { Message, MessageType } from './message'
-import { Sender }               from './sender'
-import { Receiver }             from './receiver'
+import { Sender } from './sender'
+import { Receiver } from './receiver'
 
 /** An unbounded asynchronous channel. */
 export class Channel<T = any> implements Sender<T>, Receiver<T> {
-    private readonly keepAlive: KeepAlive | null
-    private readonly queue: Queue<Message<T>>
-    private ended: boolean
+  private readonly keepAlive: KeepAlive | null
+  private readonly queue: Queue<Message<T>>
+  private ended: boolean
 
-    /** 
-     * Creates a new Channel
-     * @param keepAlive If true, will prevent the process from exiting if there are no values being received. Default is false.
-     */
-    constructor(keepAlive: boolean = false) {
-        this.keepAlive = keepAlive ? new KeepAlive() : null
-        this.queue = new Queue<Message<T>>()
-        this.ended = false
-    }
+  /**
+   * Creates a new Channel
+   * @param keepAlive If true, will prevent the process from exiting if there are no values being received. Default is false.
+   */
+  constructor(keepAlive: boolean = false) {
+    this.keepAlive = keepAlive ? new KeepAlive() : null
+    this.queue = new Queue<Message<T>>()
+    this.ended = false
+  }
 
-    /** Async iterator for this channel */
-    public async *[Symbol.asyncIterator]() {
-        while (true) {
-            const next = await this.next()
-            if (next === null) return
-            yield next
-        }
+  /** Async iterator for this channel */
+  public async *[Symbol.asyncIterator]() {
+    while (true) {
+      const next = await this.next()
+      if (next === null) return
+      yield next
     }
+  }
 
-    /** Returns the number of values buffered in this channel */
-    public get bufferedAmount() {
-        return this.queue.bufferedAmount
-    }
+  /** Returns the number of values buffered in this channel */
+  public get bufferedAmount() {
+    return this.queue.bufferedAmount
+  }
 
-    /** Sends the given value to this channel. If channel has ended no action. */
-    public send(value: T): void {
-        if(this.ended) return
-        this.queue.enqueue({ type: MessageType.Next, value })
-    }
+  /** Sends the given value to this channel. If channel has ended no action. */
+  public send(value: T): void {
+    if (this.ended) return
+    this.queue.enqueue({ type: MessageType.Next, value })
+  }
 
-    /** Sends the given error to this channel causing the receiver to throw on next(). If channel has ended no action. */
-    public error(error: Error): void {
-        if (this.ended) return
-        this.ended = true
-        this.queue.enqueue({ type: MessageType.Error, error })
-        this.queue.enqueue({ type: MessageType.End })
-    }
+  /** Sends the given error to this channel causing the receiver to throw on next(). If channel has ended no action. */
+  public error(error: Error): void {
+    if (this.ended) return
+    this.ended = true
+    this.queue.enqueue({ type: MessageType.Error, error })
+    this.queue.enqueue({ type: MessageType.End })
+  }
 
-    /** Ends this channel. */
-    public end(): void {
-        if (this.ended) return
-        this.ended = true
-        this.queue.enqueue({ type: MessageType.End })
-    }
+  /** Ends this channel. */
+  public end(): void {
+    if (this.ended) return
+    this.ended = true
+    this.queue.enqueue({ type: MessageType.End })
+  }
 
-    /** Returns the next value from this channel or null if EOF. */
-    public async next(): Promise<T | null> {
-        if(this.ended && this.queue.bufferedAmount === 0) return null
-        const message = await this.queue.dequeue()
-        switch (message.type) {
-            case MessageType.Next: return message.value
-            case MessageType.Error: throw message.error
-            case MessageType.End: {
-                this.terminateKeepAlive()
-                return null
-            }
-        }
+  /** Returns the next value from this channel or null if EOF. */
+  public async next(): Promise<T | null> {
+    if (this.ended && this.queue.bufferedAmount === 0) return null
+    const message = await this.queue.dequeue()
+    switch (message.type) {
+      case MessageType.Next:
+        return message.value
+      case MessageType.Error:
+        throw message.error
+      case MessageType.End: {
+        this.terminateKeepAlive()
+        return null
+      }
     }
+  }
 
-    /** Terminates the keepAlive */
-    private terminateKeepAlive() {
-        if(this.keepAlive === null) return
-        this.keepAlive.dispose()
-    }
+  /** Terminates the keepAlive */
+  private terminateKeepAlive() {
+    if (this.keepAlive === null) return
+    this.keepAlive.dispose()
+  }
 }

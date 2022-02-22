@@ -27,15 +27,14 @@ THE SOFTWARE.
 ---------------------------------------------------------------------------*/
 
 export namespace Timeout {
+  function timeout<T>(error: Error, milliseconds: number): Promise<T> {
+    return new Promise<T>((_, reject) => setTimeout(() => reject(error), milliseconds))
+  }
 
-    function timeout<T>(error: Error, milliseconds: number): Promise<T> {
-        return new Promise<T>((_, reject) => setTimeout(() => reject(error), milliseconds))
-    }
-
-    /** Runs the given function and throws if it does not completed within the configured milliseconds. */
-    export async function run<T>(milliseconds: number, func: () => Promise<T> | T, error: Error = new Error('Timeout')): Promise<T> {
-        const action = Promise.resolve(func())
-        const failed = timeout<T>(error, milliseconds)
-        return await Promise.race([action, failed]) as T
-    }
+  /** Runs the given function and throws if it does not completed within the configured milliseconds. */
+  export async function run<T>(milliseconds: number, func: () => Promise<T> | T, error: Error = new Error('Timeout')): Promise<T> {
+    const action = Promise.resolve(func())
+    const failed = timeout<T>(error, milliseconds)
+    return (await Promise.race([action, failed])) as T
+  }
 }

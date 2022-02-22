@@ -31,96 +31,99 @@ import { Events, EventHandler, EventListener } from '@sidewinder/events'
 import type * as ws from 'ws'
 
 export interface UnifiedWebSocketOptions {
-    binaryType: BinaryType
+  binaryType: BinaryType
 }
-/** 
+/**
  * A unified client web socket that can run in both Node and Browser environments.
  */
 export class UnifiedWebSocket {
-    private readonly socket: WebSocket | ws.WebSocket
-    private readonly events: Events
-    constructor(private readonly endpoint: string, private readonly options: UnifiedWebSocketOptions = {
-        binaryType: 'blob'
-    }) {
-        this.events = new Events()
-        if (Platform.platform() === 'browser') {
-            this.socket = new WebSocket(this.endpoint)
-            this.socket.binaryType = this.options.binaryType
-            this.socket.addEventListener('open',    ()    => this.onOpen())
-            this.socket.addEventListener('message', event => this.onMessage(event))
-            this.socket.addEventListener('error',   event => this.onError(event))
-            this.socket.addEventListener('close',   ()    => this.onClose())
-        } else {
-            const WebSocket = Platform.dynamicImport('ws').WebSocket
-            this.socket = new WebSocket(this.endpoint) as ws.WebSocket
-            this.socket.binaryType = this.options.binaryType as any
-            this.socket.addEventListener('open',    ()    => this.onOpen())
-            this.socket.addEventListener('message', event => this.onMessage(event as any))
-            this.socket.addEventListener('error',   event => this.onError(event as any))
-            this.socket.addEventListener('close',   ()    => this.onClose())
-            this.socket.on('ping', () => this.onPing())
-            this.socket.on('pong', () => this.onPong())
-        }
+  private readonly socket: WebSocket | ws.WebSocket
+  private readonly events: Events
+  constructor(
+    private readonly endpoint: string,
+    private readonly options: UnifiedWebSocketOptions = {
+      binaryType: 'blob',
+    },
+  ) {
+    this.events = new Events()
+    if (Platform.platform() === 'browser') {
+      this.socket = new WebSocket(this.endpoint)
+      this.socket.binaryType = this.options.binaryType
+      this.socket.addEventListener('open', () => this.onOpen())
+      this.socket.addEventListener('message', (event) => this.onMessage(event))
+      this.socket.addEventListener('error', (event) => this.onError(event))
+      this.socket.addEventListener('close', () => this.onClose())
+    } else {
+      const WebSocket = Platform.dynamicImport('ws').WebSocket
+      this.socket = new WebSocket(this.endpoint) as ws.WebSocket
+      this.socket.binaryType = this.options.binaryType as any
+      this.socket.addEventListener('open', () => this.onOpen())
+      this.socket.addEventListener('message', (event) => this.onMessage(event as any))
+      this.socket.addEventListener('error', (event) => this.onError(event as any))
+      this.socket.addEventListener('close', () => this.onClose())
+      this.socket.on('ping', () => this.onPing())
+      this.socket.on('pong', () => this.onPong())
     }
+  }
 
-    public get binaryType(): BinaryType {
-        return this.socket.binaryType as BinaryType
-    }
+  public get binaryType(): BinaryType {
+    return this.socket.binaryType as BinaryType
+  }
 
-    public set binaryType(value: BinaryType) {
-        this.socket.binaryType = value
-    }
+  public set binaryType(value: BinaryType) {
+    this.socket.binaryType = value
+  }
 
-    public on(event: 'open',    func: EventHandler<void>):  EventListener
-    public on(event: 'ping',    func: EventHandler<void>):  EventListener
-    public on(event: 'pong',    func: EventHandler<void>):  EventListener
-    public on(event: 'message', func: EventHandler<any>):   EventListener
-    public on(event: 'error',   func: EventHandler<any>):   EventListener
-    public on(event: 'close',   func: EventHandler<void>):  EventListener
-    public on(event: string,    func: EventHandler<any>) {
-        return this.events.on(event, func)
-    }
-    public once(event: 'open',    func: EventHandler<void>):  EventListener
-    public once(event: 'ping',    func: EventHandler<void>):  EventListener
-    public once(event: 'pong',    func: EventHandler<void>):  EventListener
-    public once(event: 'message', func: EventHandler<any>):   EventListener
-    public once(event: 'error',   func: EventHandler<any>):   EventListener
-    public once(event: 'close',   func: EventHandler<void>):  EventListener
-    public once(event: string,    func: EventHandler<any>) {
-        return this.events.once(event, func)
-    }
-    public ping(data?: any, mask?:boolean) {
-        if(Platform.platform() === 'browser') return 
-        const socket = this.socket as ws.WebSocket
-        socket.ping(data, mask)
-    }
-    public pong(data?: any, mask?:boolean) {
-        if(Platform.platform() === 'browser') return 
-        const socket = this.socket as ws.WebSocket
-        socket.pong(data, mask)
-    }
-    public send(data: any) {
-        this.socket.send(data)
-    }
-    public close(code?: number) {
-        this.socket.close(code)
-    }
-    private onOpen() {
-        this.events.send('open', void 0)
-    }
-    private onMessage(event: MessageEvent) {
-        this.events.send('message', event)
-    }
-    private onError(event: Event) {
-        this.events.send('error', event)
-    }
-    private onPing() {
-        this.events.send('ping', void 0)
-    }
-    private onPong() {
-        this.events.send('pong', void 0)
-    }
-    private onClose() {
-        this.events.send('close', void 0)
-    }
+  public on(event: 'open', func: EventHandler<void>): EventListener
+  public on(event: 'ping', func: EventHandler<void>): EventListener
+  public on(event: 'pong', func: EventHandler<void>): EventListener
+  public on(event: 'message', func: EventHandler<any>): EventListener
+  public on(event: 'error', func: EventHandler<any>): EventListener
+  public on(event: 'close', func: EventHandler<void>): EventListener
+  public on(event: string, func: EventHandler<any>) {
+    return this.events.on(event, func)
+  }
+  public once(event: 'open', func: EventHandler<void>): EventListener
+  public once(event: 'ping', func: EventHandler<void>): EventListener
+  public once(event: 'pong', func: EventHandler<void>): EventListener
+  public once(event: 'message', func: EventHandler<any>): EventListener
+  public once(event: 'error', func: EventHandler<any>): EventListener
+  public once(event: 'close', func: EventHandler<void>): EventListener
+  public once(event: string, func: EventHandler<any>) {
+    return this.events.once(event, func)
+  }
+  public ping(data?: any, mask?: boolean) {
+    if (Platform.platform() === 'browser') return
+    const socket = this.socket as ws.WebSocket
+    socket.ping(data, mask)
+  }
+  public pong(data?: any, mask?: boolean) {
+    if (Platform.platform() === 'browser') return
+    const socket = this.socket as ws.WebSocket
+    socket.pong(data, mask)
+  }
+  public send(data: any) {
+    this.socket.send(data)
+  }
+  public close(code?: number) {
+    this.socket.close(code)
+  }
+  private onOpen() {
+    this.events.send('open', void 0)
+  }
+  private onMessage(event: MessageEvent) {
+    this.events.send('message', event)
+  }
+  private onError(event: Event) {
+    this.events.send('error', event)
+  }
+  private onPing() {
+    this.events.send('ping', void 0)
+  }
+  private onPong() {
+    this.events.send('pong', void 0)
+  }
+  private onClose() {
+    this.events.send('close', void 0)
+  }
 }

@@ -30,23 +30,19 @@ import { Validator } from '@sidewinder/validator'
 import { Type } from '../type'
 
 export const NextMessage = Type.Object({
-    type: Type.Literal('next'),
-    value: Type.Any()
+  type: Type.Literal('next'),
+  value: Type.Any(),
 })
 
 export const ErrorMessage = Type.Object({
-    type: Type.Literal('error'),
-    error: Type.String()
+  type: Type.Literal('error'),
+  error: Type.String(),
 })
 
 export const EndMessage = Type.Object({
-    type: Type.Literal('end')
+  type: Type.Literal('end'),
 })
 
-export const Message = Type.Union([
-    NextMessage,
-    ErrorMessage,
-    EndMessage
-])
+export const Message = Type.Union([NextMessage, ErrorMessage, EndMessage])
 
 export const MessageValidator = new Validator(Message)

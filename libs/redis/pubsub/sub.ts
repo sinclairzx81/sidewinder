@@ -34,73 +34,73 @@ import { Static, TSchema } from '../type'
 import { RedisConnect } from '../connect'
 
 export class RedisSub<Schema extends TSchema> {
-    private readonly validator: Validator<TSchema>
-    private readonly encoder: RedisEncoder
-    private readonly channel: Channel<Static<Schema>>
+  private readonly validator: Validator<TSchema>
+  private readonly encoder: RedisEncoder
+  private readonly channel: Channel<Static<Schema>>
 
-    constructor(public readonly topic: string, private readonly schema: TSchema, private readonly redis: Redis) {
-        this.validator = new Validator(this.schema)
-        this.encoder = new RedisEncoder(this.schema)
-        this.channel = new Channel<Static<Schema>>()
-        console.log('subscribing')
-        this.redis.subscribe(this.encodeKey())
-        this.redis.on('message', (channel, value) => this.onMessage(channel, value))
+  constructor(public readonly topic: string, private readonly schema: TSchema, private readonly redis: Redis) {
+    this.validator = new Validator(this.schema)
+    this.encoder = new RedisEncoder(this.schema)
+    this.channel = new Channel<Static<Schema>>()
+    console.log('subscribing')
+    this.redis.subscribe(this.encodeKey())
+    this.redis.on('message', (channel, value) => this.onMessage(channel, value))
+  }
+
+  /** Async iterator for this subscriber. */
+  public async *[Symbol.asyncIterator]() {
+    while (true) {
+      const next = await this.next()
+      if (next === null) return null
+      yield next
     }
+  }
 
-    /** Async iterator for this subscriber. */
-    public async *[Symbol.asyncIterator]() {
-        while (true) {
-            const next = await this.next()
-            if (next === null) return null
-            yield next
-        }
-    }
+  /** Receives the next message from this topic. */
+  public async next(): Promise<Static<Schema> | null> {
+    const next = await this.channel.next()
+    if (next === null) return null
+    return next
+  }
 
-    /** Receives the next message from this topic. */
-    public async next(): Promise<Static<Schema> | null> {
-        const next = await this.channel.next()
-        if (next === null) return null
-        return next
-    }
+  /** Disposes of this subscriber */
+  public dispose() {
+    this.channel.end()
+    this.redis.disconnect(false)
+  }
 
-    /** Disposes of this subscriber */
-    public dispose() {
-        this.channel.end()
-        this.redis.disconnect(false)
-    }
+  // ------------------------------------------------------------
+  // Events
+  // ------------------------------------------------------------
 
-    // ------------------------------------------------------------
-    // Events
-    // ------------------------------------------------------------ 
+  private onMessage(event: string, value: string) {
+    try {
+      const data = this.encoder.decode<Static<Schema>>(value)
+      this.validator.assert(data)
+      this.channel.send(data)
+    } catch {}
+  }
 
-    private onMessage(event: string, value: string) {
-        try {
-            const data = this.encoder.decode<Static<Schema>>(value)
-            this.validator.assert(data)
-            this.channel.send(data)
-        } catch { }
-    }
+  // ------------------------------------------------------------
+  // Key Encoding
+  // ------------------------------------------------------------
 
-    // ------------------------------------------------------------
-    // Key Encoding
-    // ------------------------------------------------------------
+  private encodeKey() {
+    return `topic::${this.topic}`
+  }
 
-    private encodeKey() {
-        return `topic::${this.topic}`
-    }
+  // ------------------------------------------------------------
+  // Connect
+  // ------------------------------------------------------------
 
-    // ------------------------------------------------------------
-    // Connect
-    // ------------------------------------------------------------
-
-    /** Connects to Redis with the given parameters */
-    public static connect<Schema extends TSchema = TSchema>(topic: string, schema: Schema, port?: number, host?: string, options?: RedisOptions): Promise<RedisSub<Schema>>
-    /** Connects to Redis with the given parameters */
-    public static connect<Schema extends TSchema = TSchema>(topic: string, schema: Schema, host?: string, options?: RedisOptions): Promise<RedisSub<Schema>>
-    /** Connects to Redis with the given parameters */
-    public static connect<Schema extends TSchema = TSchema>(topic: string, schema: Schema, options: RedisOptions): Promise<RedisSub<Schema>>
-    public static async connect(...args: any[]): Promise<any> {
-        const [topic, schema, params] = [args[0], args[1], args.slice(2)]
-        return new RedisSub(topic, schema, await RedisConnect.connect(...params))
-    }
+  /** Connects to Redis with the given parameters */
+  public static connect<Schema extends TSchema = TSchema>(topic: string, schema: Schema, port?: number, host?: string, options?: RedisOptions): Promise<RedisSub<Schema>>
+  /** Connects to Redis with the given parameters */
+  public static connect<Schema extends TSchema = TSchema>(topic: string, schema: Schema, host?: string, options?: RedisOptions): Promise<RedisSub<Schema>>
+  /** Connects to Redis with the given parameters */
+  public static connect<Schema extends TSchema = TSchema>(topic: string, schema: Schema, options: RedisOptions): Promise<RedisSub<Schema>>
+  public static async connect(...args: any[]): Promise<any> {
+    const [topic, schema, params] = [args[0], args[1], args.slice(2)]
+    return new RedisSub(topic, schema, await RedisConnect.connect(...params))
+  }
 }

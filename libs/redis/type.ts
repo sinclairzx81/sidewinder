@@ -36,21 +36,21 @@ type DefinedOr<T, Or> = keyof T extends never ? Or : T
 // --------------------------------------------------------------------------
 
 export interface TDatabaseOptions {
-    /** Array definitions */
-    arrays?: Record<string | number | symbol, TSchema>
-    /** Map definitions */
-    maps?: Record<string | number | symbol, TSchema>
-    /** Set definitions */
-    sets?: Record<string | number | symbol, TSchema>
+  /** Array definitions */
+  arrays?: Record<string | number | symbol, TSchema>
+  /** Map definitions */
+  maps?: Record<string | number | symbol, TSchema>
+  /** Set definitions */
+  sets?: Record<string | number | symbol, TSchema>
 }
 
 export interface TDatabase<DatabaseOptions extends TDatabaseOptions = TDatabaseOptions> extends TSchema {
-    $static: unknown
-    type: 'object'
-    kind: 'RedisDatabase'
-    arrays: DefinedOr<DatabaseOptions['arrays'], TObject>,
-    maps: DefinedOr<DatabaseOptions['maps'], TObject>,
-    sets: DefinedOr<DatabaseOptions['sets'], TObject>,
+  $static: unknown
+  type: 'object'
+  kind: 'RedisDatabase'
+  arrays: DefinedOr<DatabaseOptions['arrays'], TObject>
+  maps: DefinedOr<DatabaseOptions['maps'], TObject>
+  sets: DefinedOr<DatabaseOptions['sets'], TObject>
 }
 
 // --------------------------------------------------------------------------
@@ -58,14 +58,13 @@ export interface TDatabase<DatabaseOptions extends TDatabaseOptions = TDatabaseO
 // --------------------------------------------------------------------------
 
 export class RedisTypeBuilder extends TypeBuilder {
-
-    /** Creates a Redis schematic */
-    public Database<DatabaseOptions extends TDatabaseOptions>(options: DatabaseOptions): TDatabase<DatabaseOptions> {
-        const arrays = options.arrays || {}
-        const maps = options.maps || {}
-        const sets = options.sets || {}
-        return this.Create({ type: 'object', kind: 'RedisDatabase', arrays, maps, sets })
-    }
+  /** Creates a Redis schematic */
+  public Database<DatabaseOptions extends TDatabaseOptions>(options: DatabaseOptions): TDatabase<DatabaseOptions> {
+    const arrays = options.arrays || {}
+    const maps = options.maps || {}
+    const sets = options.sets || {}
+    return this.Create({ type: 'object', kind: 'RedisDatabase', arrays, maps, sets })
+  }
 }
 
 export const Type = new RedisTypeBuilder()

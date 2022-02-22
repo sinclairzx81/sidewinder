@@ -30,15 +30,15 @@ import { Timeout } from '@sidewinder/async'
 import IORedis, { RedisOptions, Redis } from 'ioredis'
 
 export namespace RedisConnect {
-    /** Connects to Redis with the given parameters */
-    export function connect(port?: number, host?: string, options?: RedisOptions): Promise<Redis>
-    /** Connects to Redis with the given parameters */
-    export function connect(host?: string, options?: RedisOptions): Promise<Redis>
-    /** Connects to Redis with the given parameters */
-    export function connect(options: RedisOptions): Promise<Redis>
-    export async function connect(...args: any[]): Promise<any> {
-        const redis = new IORedis(...args)
-        await Timeout.run(8000, async () => await redis.echo('echo'), new Error('Connection to Redis timed out'))
-        return redis
-    }
+  /** Connects to Redis with the given parameters */
+  export function connect(port?: number, host?: string, options?: RedisOptions): Promise<Redis>
+  /** Connects to Redis with the given parameters */
+  export function connect(host?: string, options?: RedisOptions): Promise<Redis>
+  /** Connects to Redis with the given parameters */
+  export function connect(options: RedisOptions): Promise<Redis>
+  export async function connect(...args: any[]): Promise<any> {
+    const redis = new IORedis(...args)
+    await Timeout.run(8000, async () => await redis.echo('echo'), new Error('Connection to Redis timed out'))
+    return redis
+  }
 }

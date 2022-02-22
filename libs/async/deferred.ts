@@ -27,31 +27,31 @@ THE SOFTWARE.
 ---------------------------------------------------------------------------*/
 
 export type Resolve<T> = (value: T) => void
-export type Reject     = (error: Error) => void
+export type Reject = (error: Error) => void
 
 export class Deferred<T> {
-    private resolveFunction!: Resolve<T>
-    private rejectFunction!:  Reject
-    private awaiter: Promise<T>
-    constructor() {
-        this.awaiter = new Promise<T>((resolve, reject) => {
-            this.resolveFunction = resolve
-            this.rejectFunction = reject
-        })
-    }
+  private resolveFunction!: Resolve<T>
+  private rejectFunction!: Reject
+  private awaiter: Promise<T>
+  constructor() {
+    this.awaiter = new Promise<T>((resolve, reject) => {
+      this.resolveFunction = resolve
+      this.rejectFunction = reject
+    })
+  }
 
-    /** Returns this deferreds promise */
-    public promise(): Promise<T> {
-        return this.awaiter
-    }
+  /** Returns this deferreds promise */
+  public promise(): Promise<T> {
+    return this.awaiter
+  }
 
-    /** Resolves this deffered with the given value */
-    public resolve(value: T) {
-        this.resolveFunction(value)
-    }
+  /** Resolves this deffered with the given value */
+  public resolve(value: T) {
+    this.resolveFunction(value)
+  }
 
-    /** Rejects this deffered with the given error */
-    public reject(error: any) {
-        this.rejectFunction(error)
-    }
+  /** Rejects this deffered with the given error */
+  public reject(error: any) {
+    this.rejectFunction(error)
+  }
 }

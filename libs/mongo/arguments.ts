@@ -28,11 +28,11 @@ THE SOFTWARE.
 
 /** Matches overloaded argument lists. This function is used frequently to deal with overload mongo method calls. */
 export function matchArguments(args: any[], arms: Record<string | number, (...args: any[]) => any>): any {
-    if (arms[args.length]) {
-        return arms[args.length](...args)
-    } else if (arms['_']) {
-        return arms['_']()
-    } else {
-        throw new Error('Unmatched arm')
-    }
+  if (arms[args.length]) {
+    return arms[args.length](...args)
+  } else if (arms['_']) {
+    return arms['_']()
+  } else {
+    throw new Error('Unmatched arm')
+  }
 }

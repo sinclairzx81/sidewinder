@@ -15,6 +15,7 @@ Sidewinder Contracts are JSON Schema interface schematics that describe callable
 Licence MIT
 
 ## Contents
+
 - [Overview](#Overview)
 - [Install](#Install)
 - [Contracts](#Contracts)
@@ -34,15 +35,16 @@ The following creates a contract where the `server` exposes a `foo` function, an
 import { Type } from '@sidewinder/contract'
 
 const Contract = Type.Contract({
-    format: 'json',
-    server: {
-        foo: Type.Function([Type.String()], Type.String())
-    },
-    client: {
-        bar: Type.Function([Type.String()], Type.String())
-    }
+  format: 'json',
+  server: {
+    foo: Type.Function([Type.String()], Type.String()),
+  },
+  client: {
+    bar: Type.Function([Type.String()], Type.String()),
+  },
 })
 ```
+
 ## Formats
 
 Contracts can specify a `format` option to inform Client and Server the message encoding format that should be used to exchange messages. Sidewinder provides encoding options for `json` and `msgpack` with `json` being the default. By setting the `format` to `msgpack`, Sidewinder can exchange binary buffers of type `Uint8Array`. The following uses the `msgpack` format.
@@ -51,9 +53,9 @@ Contracts can specify a `format` option to inform Client and Server the message 
 import { Type } from '@sidewinder/contract'
 
 const Contract = Type.Contract({
-    format: 'msgpack',
-    server: {
-        test: Type.Function([Type.String()], Type.String())
-    }
+  format: 'msgpack',
+  server: {
+    test: Type.Function([Type.String()], Type.String()),
+  },
 })
 ```
