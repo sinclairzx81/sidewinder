@@ -41,6 +41,7 @@ License MIT
 - [Clients](libs/client)
 - [Contracts](libs/contract)
 - [Events](libs/events)
+- [Hash](libs/hash)
 - [Mongo](libs/mongo)
 - [Platforms](libs/platform)
 - [Redis](libs/redis)
