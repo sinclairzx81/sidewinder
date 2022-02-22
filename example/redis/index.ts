@@ -18,10 +18,11 @@ const Schema = Type.Database({
 
 
 async function start() {
-    const database = await RedisDatabase.connect(Schema)
+    const database = await RedisDatabase.connect(Schema, 6379, '172.30.1.24', { })
+    
     const list = database.list('users')
     list.push({ name: '1' })
-    
+
     const set = database.set('users')
     set.add('1')
     set.delete('1')

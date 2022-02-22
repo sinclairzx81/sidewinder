@@ -26,6 +26,8 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
+import IORedis, { Redis, RedisOptions } from 'ioredis'
+import { Timeout } from '@sidewinder/async'
 import { TDatabase, Static } from './type'
 import { RedisList } from './list'
 import { RedisMap } from './map'
@@ -33,19 +35,37 @@ import { RedisSet } from './set'
 
 export class RedisDatabase<Database extends TDatabase = TDatabase> {
 
-    constructor(private readonly schema: Database) {}
+    constructor(private readonly schema: Database, private readonly redis: Redis) {}
 
+    /** Returns a redis list type */
     public list<Name extends keyof Database['lists']>(name: Name): RedisList<Static<Database['lists'][Name]>> {
         return new RedisList()
     }
+    /** Returns a redis map type */
     public map<Name extends keyof Database['maps']>(name: Name): RedisMap<Static<Database['lists'][Name]>> {
         return new RedisMap()
     }
+
+    /** Returns a redis set type */
     public set<Name extends keyof Database['sets']>(name: Name): RedisSet<Static<Database['sets'][Name]>> {
         return new RedisSet()
     }
 
-    public static async connect<Database extends TDatabase>(schema: Database): Promise<RedisDatabase<Database>> {
-        throw 1
+
+
+    /** Connects to Redis with the given parameters */
+    public static connect<Database extends TDatabase = TDatabase>(schema: Database, port?: number, host?: string, options?: RedisOptions): Promise<RedisDatabase<Database>>
+    /** Connects to Redis with the given parameters */
+    public static connect<Database extends TDatabase = TDatabase>(schema: Database, host?: string, options?: RedisOptions): Promise<RedisDatabase<Database>>
+    /** Connects to Redis with the given parameters */
+    public static connect<Database extends TDatabase = TDatabase>(schema: Database, options: RedisOptions): Promise<RedisDatabase<Database>>
+    public static async connect(...args: any[]): Promise<any> {
+        const [schema, params] = [args[0], args.slice(1)]
+        const redis = new IORedis(...params)
+        await Timeout.run(8000, async () => {
+            const echo = await redis.echo('echo')
+            if(echo !== 'echo') throw Error('Connection assertion failed')
+        }, new Error('Connection to Redis timed out'))
+        return new RedisDatabase(schema, redis)
     }
 }

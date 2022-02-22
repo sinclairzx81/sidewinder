@@ -1,6 +1,6 @@
 /*--------------------------------------------------------------------------
 
-@sidewinder/async
+@sidewinder/redis
 
 The MIT License (MIT)
 
@@ -26,16 +26,13 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-export namespace Timeout {
-
-    function timeout<T>(error: Error, milliseconds: number): Promise<T> {
-        return new Promise<T>((_, reject) => setTimeout(() => reject(error), milliseconds))
-    }
-
-    /** Runs the given function and throws if it does not completed within the configured milliseconds. */
-    export async function run<T>(milliseconds: number, func: () => Promise<T> | T, error: Error = new Error('Timeout')): Promise<T> {
-        const action = Promise.resolve(func())
-        const failed = timeout<T>(error, milliseconds)
-        return await Promise.race([action, failed]) as T
+/** Matches overloaded argument lists. This function is used frequently to deal with overload mongo method calls. */
+export function matchArguments(args: any[], arms: Record<string | number, (...args: any[]) => any>): any {
+    if (arms[args.length]) {
+        return arms[args.length](...args)
+    } else if (arms['_']) {
+        return arms['_']()
+    } else {
+        throw new Error('Unmatched arm')
     }
 }
