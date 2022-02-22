@@ -4,7 +4,6 @@
 
 <p>Micro Service Framework for Node</p>
 
-
 <img src='https://github.com/sinclairzx81/sidewinder/blob/master/build/assets/sidewinder.png?raw=true' />
 
 <br />
