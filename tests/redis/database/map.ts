@@ -76,21 +76,26 @@ describe('redis/RedisMap', () => {
     Assert.deepEqual(value2, undefined)
   })
 
+  it('should return correct has value', async () => {
+    const database = resolveDatabase()
+    const map = database.map('vectors')
+    await map.set('A', [0, 0, 0])
+    const value0 = await map.has('A')
+    const value1 = await map.has('B')
+    Assert.deepEqual(value0, true)
+    Assert.deepEqual(value1, false)
+  })
+  
   // ---------------------------------------------------------
   // Type Assertions
   // ---------------------------------------------------------
 
-  it('should throw push on invalid value', async () => {
+  it('should throw set invalid value', async () => {
     const database = resolveDatabase()
-    const array = database.array('vectors')
+    const map = database.array('vectors')
     // @ts-ignore
-    Assert.throwsAsync(async () => await array.push([0, 0]))
+    await Assert.throwsAsync(async () => await map.set('A', [0, 0]))
   })
 
-  it('should throw unshift on invalid value', async () => {
-    const database = resolveDatabase()
-    const array = database.array('vectors')
-    // @ts-ignore
-    Assert.throwsAsync(async () => await array.unshift([0, 0]))
-  })
+
 })

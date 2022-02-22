@@ -232,4 +232,11 @@ describe('redis/RedisArray', () => {
     await Assert.throwsAsync(async () => await array.unshift([0, 0]))
   })
 
+  it('should throw set on invalid value', async () => {
+    const database = resolveDatabase()
+    const array = database.array('vectors')
+    // @ts-ignore
+    await Assert.throwsAsync(async () => await array.set(0, [0, 0]))
+  })
+
 })

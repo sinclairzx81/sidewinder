@@ -74,6 +74,12 @@ export class RedisSet<Schema extends TSchema> {
     return this.redis.del(this.encodeKey(value))
   }
 
+  /** Returns the number of entries in this Set */
+  public async size(): Promise<number> {
+    const keys = await this.redis.keys(this.encodeAllKeys())
+    return keys.length
+  }
+
   /** Returns an async iterator each key in this Set  */
   public async *keys(): AsyncIterable<string> {
     for (const key of await this.redis.keys(this.encodeAllKeys())) {

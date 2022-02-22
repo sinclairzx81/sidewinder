@@ -83,7 +83,7 @@ export class RedisMap<Schema extends TSchema> {
 
   /** Returns the number of entries in this Map */
   public async size(): Promise<number> {
-    const keys = await this.redis.keys(this.encodeKey('*'))
+    const keys = await this.redis.keys(this.encodeAllKeys())
     return keys.length
   }
 
@@ -120,6 +120,7 @@ export class RedisMap<Schema extends TSchema> {
     }
     return values
   }
+
   // ------------------------------------------------------------
   // Key Encoding
   // ------------------------------------------------------------
