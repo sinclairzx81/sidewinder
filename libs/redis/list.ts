@@ -26,17 +26,20 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-import { Validator } from '@sidewinder/validator'
 import { Redis } from 'ioredis'
+import { Validator } from '@sidewinder/validator'
+import { RedisEncoder } from './encoder'
 import { TSchema } from './type'
+
 
 export class RedisList<T> {
 
     private readonly validator: Validator<TSchema>
+    private readonly encoder: RedisEncoder
 
     constructor(private readonly schema: TSchema, private readonly redis: Redis, private readonly keyspace: string) {
-        
         this.validator = new Validator(schema)
+        this.encoder = new RedisEncoder(schema)
     }
 
     public async * [Symbol.iterator](): AsyncIterable<T> {
@@ -57,4 +60,7 @@ export class RedisList<T> {
         throw 1
     }
 
+    private resolveKey() {
+        return `list:${this.keyspace}`
+    }
 }

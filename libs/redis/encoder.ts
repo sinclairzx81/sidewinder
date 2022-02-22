@@ -26,52 +26,17 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-import { Redis } from 'ioredis'
-import { Validator } from '@sidewinder/validator'
-import { RedisEncoder } from './encoder'
 import { TSchema } from './type'
 
-export class RedisMap<T> {
-    private readonly validator: Validator<TSchema>
-    private readonly encoder: RedisEncoder
+export class RedisEncoder {
     
-    constructor(private readonly schema: TSchema, private readonly redis: Redis, private readonly keyspace: string) {
-        this.validator = new Validator(schema)
-        this.encoder = new RedisEncoder(schema)
+    constructor(private readonly schema: TSchema) {}
+
+    public encode<T>(data: T): string {
+        return JSON.stringify(data)
     }
 
-    public async has(key: string) {
-
-    }
-
-    public async set(key: string, value: T) {
-
-    }
-
-    public async get(key: string): Promise<T | undefined> {
-        throw 1
-    }
-
-    public async delete(key: string) {
-
-    }
-
-    public async clear() {
-        const map = new Map()
-    }
-
-    public async size(): Promise<number> {
-        return 1
-    }
-
-    public async * values(): AsyncIterable<T> {
-
-    }
-    public async * keys(): AsyncIterable<string> {
-
-    }
-
-    private resolveKey(key: string) {
-        return `map:${this.keyspace}:${key}`
+    public decode<T>(data: string): T {
+        return JSON.parse(data)
     }
 }

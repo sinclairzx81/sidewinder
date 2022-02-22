@@ -26,15 +26,19 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-import { Validator } from '@sidewinder/validator'
-import { TSchema } from './type'
 import { Redis } from 'ioredis'
+import { Validator } from '@sidewinder/validator'
+import { RedisEncoder } from './encoder'
+import { TSchema } from './type'
+
 
 export class RedisSet<T> {
     private readonly validator: Validator<TSchema>
+    private readonly encoder: RedisEncoder
 
     constructor(private readonly schema: TSchema, private readonly redis: Redis, private readonly keyspace: string) {
         this.validator = new Validator(schema)
+        this.encoder = new RedisEncoder(schema)
     }
     
     public async add(value: T) {
@@ -44,7 +48,7 @@ export class RedisSet<T> {
     public async delete(value: T) {
 
     }
-
+    
     public async clear() {
 
     }

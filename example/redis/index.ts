@@ -23,15 +23,8 @@ async function start() {
     
     const list = database.list('users')
     list.push({ name: '1' })
+
     
-    const set = database.set('items')
-    set.add(1)
-    set.delete(1)
-
-    const map = database.map('users')
-    map.set('user', { name: 'dave' })
-
-    console.log(list)
 }
 
 start()
