@@ -481,7 +481,7 @@ export interface TVoid extends TSchema {
 // Static<T>
 // --------------------------------------------------------------------------
 
-export type Static<T extends TSchema> = T['$static']
+export type Static<T> = T extends TSchema ? T['$static'] : never
 
 
 // --------------------------------------------------------------------------

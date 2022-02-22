@@ -40,13 +40,13 @@ export type ResolveMapDefinition<Database extends TDatabase, Name> = Name extend
 export type ResolveSetDefinition<Database extends TDatabase, Name> = Name extends keyof Database['sets'] ? Database['sets'][Name] extends TSchema ? Database['lists'][Name] : never : never
 
 export interface TListDefinitions {
-    [name: string]: TSchema
+    [name: string | number | symbol]: TSchema
 }
 export interface TMapDefinitions {
-    [name: string]: TSchema
+    [name: string | number | symbol]: TSchema
 }
 export interface TSetDefinitions {
-    [name: string]: TString | TNumber
+    [name: string | number | symbol]: TString | TNumber
 }
 
 export interface TDatabaseOptions {
