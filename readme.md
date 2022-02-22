@@ -105,16 +105,16 @@ const Contract = Type.Contract({
 const service = new WebService(Contract)
 
 service.method('add', (clientId, a, b) => {
-    //        |           |      |
-    //        |           |      +--- params (a: number, b: number)
-    //        |           |
-    //        |           +--- unique client identifier
-    //        |
-    //        +--- method name inferred from contract
+    //        │           │      │
+    //        │           │      └─── params (a: number, b: number)
+    //        │           │
+    //        │           └─── unique client identifier
+    //        │
+    //        └─── method name inferred from contract
     //
     //
-    //     +--- return inferred as `number`
-    //     |
+    //     ┌─── return inferred as `number`
+    //     │
     return a + b 
 })
 
@@ -125,12 +125,12 @@ service.method('add', (clientId, a, b) => {
 const client = new WebClient(Contract, 'http://....')
 
 const result = await client.call('add', 1, 1)
-//    |                         |         |
-//    |                         |         +--- arguments as (method: string, a: number, b: number)
-//    |                         | 
-//    |                         +--- method name inferred from contract
-//    |
-//    +--- result is `number`
+//    │                         │         │
+//    │                         │         └─── arguments as (method: string, a: number, b: number)
+//    │                         │ 
+//    │                         └─── method name inferred from contract
+//    │
+//    └─── result is `number`
 ```
 
 <a name="ServicesAndClients"></a>
