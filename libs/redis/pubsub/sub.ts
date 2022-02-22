@@ -38,7 +38,7 @@ export class RedisSub<Schema extends TSchema> {
   private readonly encoder: RedisEncoder
   private readonly channel: Channel<Static<Schema>>
 
-  constructor(public readonly topic: string, private readonly schema: TSchema, private readonly redis: Redis) {
+  constructor(private readonly schema: TSchema, public readonly topic: string, private readonly redis: Redis) {
     this.validator = new Validator(this.schema)
     this.encoder = new RedisEncoder(this.schema)
     this.channel = new Channel<Static<Schema>>()
@@ -86,7 +86,7 @@ export class RedisSub<Schema extends TSchema> {
   // ------------------------------------------------------------
 
   private encodeKey() {
-    return `topic::${this.topic}`
+    return `sw::topic:${this.topic}`
   }
 
   // ------------------------------------------------------------
@@ -94,13 +94,13 @@ export class RedisSub<Schema extends TSchema> {
   // ------------------------------------------------------------
 
   /** Connects to Redis with the given parameters */
-  public static connect<Schema extends TSchema = TSchema>(topic: string, schema: Schema, port?: number, host?: string, options?: RedisOptions): Promise<RedisSub<Schema>>
+  public static connect<Schema extends TSchema = TSchema>(schema: Schema, topic: string, port?: number, host?: string, options?: RedisOptions): Promise<RedisSub<Schema>>
   /** Connects to Redis with the given parameters */
-  public static connect<Schema extends TSchema = TSchema>(topic: string, schema: Schema, host?: string, options?: RedisOptions): Promise<RedisSub<Schema>>
+  public static connect<Schema extends TSchema = TSchema>(schema: Schema, topic: string, host?: string, options?: RedisOptions): Promise<RedisSub<Schema>>
   /** Connects to Redis with the given parameters */
-  public static connect<Schema extends TSchema = TSchema>(topic: string, schema: Schema, options: RedisOptions): Promise<RedisSub<Schema>>
+  public static connect<Schema extends TSchema = TSchema>(schema: Schema, topic: string, options: RedisOptions): Promise<RedisSub<Schema>>
   public static async connect(...args: any[]): Promise<any> {
-    const [topic, schema, params] = [args[0], args[1], args.slice(2)]
-    return new RedisSub(topic, schema, await RedisConnect.connect(...params))
+    const [schema, topic, params] = [args[0], args[1], args.slice(2)]
+    return new RedisSub(schema, topic, await RedisConnect.connect(...params))
   }
 }

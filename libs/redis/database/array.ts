@@ -122,6 +122,6 @@ export class RedisArray<Schema extends TSchema> {
   // ------------------------------------------------------------
 
   private resolveKey() {
-    return `array::${this.keyspace}`
+    return `sw::array:${this.keyspace}`
   }
 }

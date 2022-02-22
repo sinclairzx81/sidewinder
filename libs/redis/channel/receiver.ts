@@ -43,7 +43,7 @@ export class RedisReceiver<Schema extends TSchema> implements Receiver<Static<Sc
   private readonly encoder: RedisEncoder
   private readonly validator: Validator<TSchema>
 
-  constructor(private readonly channel: string, private readonly schema: TSchema, private readonly redis: Redis) {
+  constructor(private readonly schema: TSchema, private readonly channel: string, private readonly redis: Redis) {
     this.encoder = new RedisEncoder(this.schema)
     this.validator = new Validator(this.schema)
   }
@@ -82,7 +82,7 @@ export class RedisReceiver<Schema extends TSchema> implements Receiver<Static<Sc
   // ------------------------------------------------------------
 
   private encodeKey() {
-    return `channel::${this.channel}`
+    return `sw::channel:${this.channel}`
   }
 
   // ------------------------------------------------------------
@@ -90,13 +90,13 @@ export class RedisReceiver<Schema extends TSchema> implements Receiver<Static<Sc
   // ------------------------------------------------------------
 
   /** Connects to Redis with the given parameters */
-  public static connect<Schema extends TSchema = TSchema>(channel: string, schema: Schema, port?: number, host?: string, options?: RedisOptions): Promise<RedisReceiver<Schema>>
+  public static connect<Schema extends TSchema = TSchema>(schema: Schema, channel: string, port?: number, host?: string, options?: RedisOptions): Promise<RedisReceiver<Schema>>
   /** Connects to Redis with the given parameters */
-  public static connect<Schema extends TSchema = TSchema>(channel: string, schema: Schema, host?: string, options?: RedisOptions): Promise<RedisReceiver<Schema>>
+  public static connect<Schema extends TSchema = TSchema>(schema: Schema, channel: string, host?: string, options?: RedisOptions): Promise<RedisReceiver<Schema>>
   /** Connects to Redis with the given parameters */
-  public static connect<Schema extends TSchema = TSchema>(channel: string, schema: Schema, options: RedisOptions): Promise<RedisReceiver<Schema>>
+  public static connect<Schema extends TSchema = TSchema>(schema: Schema, channel: string, options: RedisOptions): Promise<RedisReceiver<Schema>>
   public static async connect(...args: any[]): Promise<any> {
-    const [channel, schema, params] = [args[0], args[1], args.slice(2)]
-    return new RedisReceiver(channel, schema, await RedisConnect.connect(...params))
+    const [schema, channel, params] = [args[0], args[1], args.slice(2)]
+    return new RedisReceiver(schema, channel, await RedisConnect.connect(...params))
   }
 }

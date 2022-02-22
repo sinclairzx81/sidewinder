@@ -125,14 +125,14 @@ export class RedisMap<Schema extends TSchema> {
   // ------------------------------------------------------------
 
   private encodeAllKeys() {
-    return `map::${this.keyspace}:*`
+    return `sw::map:${this.keyspace}:*`
   }
 
   private encodeKey(key: string) {
-    return `map::${this.keyspace}:${key}`
+    return `sw::map:${this.keyspace}:${key}`
   }
 
   private decodeKey(key: string) {
-    return key.replace(`map::${this.keyspace}:`, '')
+    return key.replace(`sw::map:${this.keyspace}:`, '')
   }
 }

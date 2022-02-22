@@ -37,7 +37,7 @@ export class RedisPub<Schema extends TSchema> {
   private readonly encoder: RedisEncoder
   private ended: boolean
 
-  constructor(public readonly topic: string, private readonly schema: Schema, private readonly redis: Redis) {
+  constructor(private readonly schema: Schema, public readonly topic: string, private readonly redis: Redis) {
     this.validator = new Validator(this.schema)
     this.encoder = new RedisEncoder(this.schema)
     this.ended = false
@@ -61,7 +61,7 @@ export class RedisPub<Schema extends TSchema> {
   // ------------------------------------------------------------
 
   private encodeKey() {
-    return `topic::${this.topic}`
+    return `sw::topic:${this.topic}`
   }
 
   // ------------------------------------------------------------
@@ -69,13 +69,13 @@ export class RedisPub<Schema extends TSchema> {
   // ------------------------------------------------------------
 
   /** Connects to Redis with the given parameters */
-  public static connect<Schema extends TSchema = TSchema>(topic: string, schema: Schema, port?: number, host?: string, options?: RedisOptions): Promise<RedisPub<Schema>>
+  public static connect<Schema extends TSchema = TSchema>(schema: Schema, topic: string, port?: number, host?: string, options?: RedisOptions): Promise<RedisPub<Schema>>
   /** Connects to Redis with the given parameters */
-  public static connect<Schema extends TSchema = TSchema>(topic: string, schema: Schema, host?: string, options?: RedisOptions): Promise<RedisPub<Schema>>
+  public static connect<Schema extends TSchema = TSchema>(schema: Schema, topic: string, host?: string, options?: RedisOptions): Promise<RedisPub<Schema>>
   /** Connects to Redis with the given parameters */
-  public static connect<Schema extends TSchema = TSchema>(topic: string, schema: Schema, options: RedisOptions): Promise<RedisPub<Schema>>
+  public static connect<Schema extends TSchema = TSchema>(schema: Schema, topic: string, options: RedisOptions): Promise<RedisPub<Schema>>
   public static async connect(...args: any[]): Promise<any> {
-    const [topic, schema, params] = [args[0], args[1], args.slice(2)]
-    return new RedisPub(topic, schema, await RedisConnect.connect(...params))
+    const [schema, topic, params] = [args[0], args[1], args.slice(2)]
+    return new RedisPub(schema, topic, await RedisConnect.connect(...params))
   }
 }

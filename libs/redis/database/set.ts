@@ -104,15 +104,15 @@ export class RedisSet<Schema extends TSchema> {
   // ------------------------------------------------------------
 
   private encodeAllKeys() {
-    return `set::${this.keyspace}:*`
+    return `sw::set:${this.keyspace}:*`
   }
 
   private encodeKey(value: Static<Schema>) {
     const hash = ValueHash.hash(value)
-    return `set::${this.keyspace}:${hash}`
+    return `sw::set:${this.keyspace}:${hash}`
   }
 
   private decodeKey(key: string) {
-    return key.replace(`set::${this.keyspace}:`, '')
+    return key.replace(`sw::set:${this.keyspace}:`, '')
   }
 }
