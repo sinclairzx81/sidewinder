@@ -26,5 +26,5 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-export * from './publish'
-export * from './subscribe'
+export * from './pub'
+export * from './sub'

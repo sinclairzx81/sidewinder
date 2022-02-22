@@ -35,33 +35,19 @@ type DefinedOr<T, Or> = keyof T extends never ? Or : T
 // TDatabase
 // --------------------------------------------------------------------------
 
-export type ResolveListDefinition<Database extends TDatabase, Name> = Name extends keyof Database['lists'] ? Database['lists'][Name] extends TSchema ? Database['lists'][Name] : never : never
-export type ResolveMapDefinition<Database extends TDatabase, Name> = Name extends keyof Database['maps'] ? Database['maps'][Name] extends TSchema ? Database['lists'][Name] : never : never
-export type ResolveSetDefinition<Database extends TDatabase, Name> = Name extends keyof Database['sets'] ? Database['sets'][Name] extends TSchema ? Database['lists'][Name] : never : never
-
-export interface TArrayDefinitions {
-    [name: string | number | symbol]: TSchema
-}
-export interface TMapDefinitions {
-    [name: string | number | symbol]: TSchema
-}
-export interface TSetDefinitions {
-    [name: string | number | symbol]: TSchema
-}
-
 export interface TDatabaseOptions {
-    /** List definitions */
-    arrays?: TArrayDefinitions
+    /** Array definitions */
+    arrays?: Record<string | number | symbol, TSchema>
     /** Map definitions */
-    maps?: TMapDefinitions
+    maps?: Record<string | number | symbol, TSchema>
     /** Set definitions */
-    sets?: TSetDefinitions
+    sets?: Record<string | number | symbol, TSchema>
 }
 
 export interface TDatabase<DatabaseOptions extends TDatabaseOptions = TDatabaseOptions> extends TSchema {
     $static: unknown
     type: 'object'
-    kind: 'Database'
+    kind: 'RedisDatabase'
     arrays: DefinedOr<DatabaseOptions['arrays'], TObject>,
     maps: DefinedOr<DatabaseOptions['maps'], TObject>,
     sets: DefinedOr<DatabaseOptions['sets'], TObject>,
@@ -72,11 +58,13 @@ export interface TDatabase<DatabaseOptions extends TDatabaseOptions = TDatabaseO
 // --------------------------------------------------------------------------
 
 export class RedisTypeBuilder extends TypeBuilder {
+
+    /** Creates a Redis schematic */
     public Database<DatabaseOptions extends TDatabaseOptions>(options: DatabaseOptions): TDatabase<DatabaseOptions> {
         const arrays = options.arrays || {}
         const maps = options.maps || {}
         const sets = options.sets || {}
-        return this.Create({ type: 'object', kind: 'Database', arrays, maps, sets })
+        return this.Create({ type: 'object', kind: 'RedisDatabase', arrays, maps, sets })
     }
 }
 

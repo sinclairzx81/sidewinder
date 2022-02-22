@@ -35,11 +35,11 @@ import { Static, TSchema } from '../type'
 import { Message } from './message'
 
 /** 
- * A RedisSender is the sender side of a Redis backed channel. This sender writes values to a 
- * Redis LIST using RPUSH. These are received on the Receiver via (blocking) BRLPOP. There can 
- * be multiple RedisSender writing to a single channel. This replicates the mpsc behaviour of
- * Sidewinder channels across Redis.
-*/
+ * A RedisSender is the sending side of a Redis backed channel. This RedisSender writes values a 
+ * Redis via RPUSH which are received on the Receiver via (blocking) BRLPOP. There can be
+ * multiple RedisSender writers writing to a single channel. This replicates the mpsc behaviour
+ * of Sidewinder channels across Redis.
+ */
 export class RedisSender<Schema extends TSchema> implements SyncSender<Static<Schema>> {
     private readonly validator: Validator<TSchema>
     private readonly encoder: RedisEncoder
@@ -92,7 +92,6 @@ export class RedisSender<Schema extends TSchema> implements SyncSender<Static<Sc
     // ------------------------------------------------------------
     // Connect
     // ------------------------------------------------------------
-
 
     /** Connects to Redis with the given parameters */
     public static connect<Schema extends TSchema = TSchema>(channel: string, schema: Schema, port?: number, host?: string, options?: RedisOptions): Promise<RedisSender<Schema>>

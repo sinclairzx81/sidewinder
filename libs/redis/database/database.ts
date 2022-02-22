@@ -35,7 +35,7 @@ import { RedisSet } from './set'
 
 export class RedisDatabase<Database extends TDatabase = TDatabase> {
     constructor(private readonly schema: Database, private readonly redis: Redis) {}
-
+    
     /** Returns a RedisArray type */
     public array<Name extends keyof Database['arrays']>(name: Name): RedisArray<Database['arrays'][Name]> {
         const schema = (this.schema['arrays'] as any)[name as string]
@@ -55,6 +55,11 @@ export class RedisDatabase<Database extends TDatabase = TDatabase> {
         const schema = (this.schema['sets'] as any)[name as string]
         if(schema === undefined) throw Error(`The set '${name}' not defined in redis schema`)
         return new RedisSet(schema, this.redis, name as string)
+    }
+
+    /** Disposes of this database */
+    public dispose() {
+        this.redis.disconnect(false)
     }
     
     /** Connects to Redis with the given parameters */
