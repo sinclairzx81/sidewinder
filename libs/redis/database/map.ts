@@ -31,6 +31,7 @@ import { Validator } from '@sidewinder/validator'
 import { RedisEncoder } from '../encoder'
 import { Static, TSchema } from '../type'
 
+/** A RedisMap is analogous to a JavaScript Map. It provides asynchronous set, get, clear and key value enumeration. */
 export class RedisMap<Schema extends TSchema> {
     private readonly validator: Validator<TSchema>
     private readonly encoder: RedisEncoder
@@ -49,9 +50,17 @@ export class RedisMap<Schema extends TSchema> {
         }
     }
 
+    /** Clears all entries in this map */
+    public async clear() {
+        for(const key of await this.redis.keys(this.encodeAllKeys())) {
+            await this.redis.del(key)
+        }
+    }
+
     /** Returns true if this key exists */
-    public async has(key: string) {
-        return await this.redis.exists(this.encodeKey(key))
+    public async has(key: string): Promise<boolean> {
+        const result = await this.redis.exists(this.encodeKey(key))
+        return result > 0
     }
 
     /** Sets the value for the given key */
@@ -72,22 +81,15 @@ export class RedisMap<Schema extends TSchema> {
         return await this.redis.del(this.encodeKey(key))
     }
 
-    /** Clears all entries in this map */
-    public async clear() {
-        return await this.redis.del(this.encodeKey('*'))
-    }
-
     /** Returns the number of entries in this map */
     public async size(): Promise<number> {
         const keys = await this.redis.keys(this.encodeKey('*'))
         return keys.length
     }
 
-    // consider https://redis.io/commands/scan for key enumeration
-
     /** Returns an async iterator to the values in this map */
     public async * values(): AsyncIterable<Static<Schema>> {
-        for(const key of await this.redis.keys(this.encodeKey('*'))) {
+        for(const key of await this.redis.keys(this.encodeAllKeys())) {
             const value = await this.redis.get(key)
             if(value === null) continue
             yield this.encoder.decode(value)
@@ -96,16 +98,20 @@ export class RedisMap<Schema extends TSchema> {
 
     /** Returns an async iterator to the keys in this map */
     public async * keys(): AsyncIterable<string> {
-        for(const key of await this.redis.keys(this.encodeKey('*'))) {
+        for(const key of await this.redis.keys(this.encodeAllKeys())) {
             yield key
         }
     }
 
+    private encodeAllKeys() {
+        return `map::${this.keyspace}:*`
+    }
+
     private encodeKey(key: string) {
-        return `map:${this.keyspace}:${key}`
+        return `map::${this.keyspace}:${key}`
     }
 
     private decodeKey(key: string) {
-        return key.replace(`map:${this.keyspace}:`, '')
+        return key.replace(`map::${this.keyspace}:`, '')
     }
 }

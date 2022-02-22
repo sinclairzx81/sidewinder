@@ -26,40 +26,63 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-import { Redis } from 'ioredis'
-import { Validator } from '@sidewinder/validator'
-import { RedisEncoder } from '../encoder'
+import { Redis }           from 'ioredis'
+import { Validator }       from '@sidewinder/validator'
+import { ValueHash }       from '@sidewinder/hashing'
+import { RedisEncoder }    from '../encoder'
 import { Static, TSchema } from '../type'
 
-export class RedisSet<T extends TSchema> {
+/**
+ * A RedisSet is analogous to a JavaScript Set. It provides asynchronous add, delete and has methods
+ * which are executed in a unqiue keyspace. The RedisSet supports arbituary object hashing allowing
+ * JavaScript objects and arrays to be safely added to sets.
+ */
+export class RedisSet<Schema extends TSchema> {
     private readonly validator: Validator<TSchema>
     private readonly encoder: RedisEncoder
 
-    constructor(private readonly schema: T, private readonly redis: Redis, private readonly keyspace: string) {
+    constructor(private readonly schema: Schema, private readonly redis: Redis, private readonly keyspace: string) {
         this.validator = new Validator(this.schema)
         this.encoder = new RedisEncoder(this.schema)
     }
 
-    public async has(value: Static<T>): Promise<boolean> {
-        return true
+    public async * [Symbol.asyncIterator]() {
+        yield * this.values()
     }
 
-    public async add(value: Static<T>) {
-
+    public async has(value: Static<Schema>): Promise<boolean> {
+        return await this.redis.exists(this.encodeKey(value)) > 0
     }
 
-    public async delete(value: Static<T>) {
+    public async add(value: Static<Schema>) {
+        this.validator.assert(value)
+        return this.redis.set(this.encodeKey(value), this.encoder.encode(value))
+    }
 
+    public async delete(value: Static<Schema>) {
+        return this.redis.del(this.encodeKey(value))
     }
 
     public async clear() {
-
+        for(const key of await this.redis.keys(this.encodeAllKeys())) {
+            await this.redis.del(key)
+        }
     }
 
-    public async * values(): AsyncIterable<Static<T>> {
-
+    public async * values(): AsyncIterable<Static<Schema>> {
+        for(const key of await this.redis.keys(this.encodeAllKeys())) {
+            const value = await this.redis.get(key)
+            if(value === null) continue
+            yield this.encoder.decode(value)
+        }
     }
-    private resolveKey() {
-        return `set:${this.keyspace}`
+
+    private encodeAllKeys() {
+        return `set:${this.keyspace}:*`
+    }
+
+    private encodeKey(value: Static<Schema>) {
+        const hash =  ValueHash.hash(value)
+        return `set:${this.keyspace}:${hash}`
     }
 }

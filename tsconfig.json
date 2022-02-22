@@ -13,6 +13,7 @@
             "@sidewinder/client":    ["libs/client/index.ts"],
             "@sidewinder/contract":  ["libs/contract/index.ts"],
             "@sidewinder/events":    ["libs/events/index.ts"],
+            "@sidewinder/hashing":   ["libs/hashing/index.ts"],
             "@sidewinder/mongo":     ["libs/mongo/index.ts"],
             "@sidewinder/platform":  ["libs/platform/index.ts"],
             "@sidewinder/redis":     ["libs/redis/index.ts"],

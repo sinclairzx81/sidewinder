@@ -12,8 +12,7 @@ const Schema = Type.Database({
         users: User,
     },
     sets: {
-        strings: Type.String(),
-        numbers: Type.Number()
+        vectors: Type.Tuple([Type.Number(), Type.Number()])
     }
 })
 
@@ -31,14 +30,15 @@ export class Test {
 
 async function start() {
     const database = await RedisDatabase.connect(Schema, 'redis://172.30.1.24:6379')
+    const vectors = database.set('vectors')
+    await vectors.add([1, 2])
+    await vectors.add([1, 3])
+    await vectors.add([1, 4])
+    console.log(await vectors.has([1, 2]))
 
-    const map = database.map('users')
-
-    for await(const value of map.keys()) {
+    for await(const value of vectors) {
         console.log(value)
     }
-
-    console.log(await map.size())
 }
 
 start()

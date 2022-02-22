@@ -26,13 +26,13 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-import { Redis } from 'ioredis'
-import { Validator } from '@sidewinder/validator'
-import { RedisEncoder } from '../encoder'
+import { Redis }           from 'ioredis'
+import { Validator }       from '@sidewinder/validator'
+import { RedisEncoder }    from '../encoder'
 import { Static, TSchema } from '../type'
 
-export class RedisList<Schema extends TSchema> {
-
+/** A RedisArray is analogous to a JavaScript array. It provides asynchronous push, shift, pop, unshift and indexing values in a remote Redis list. */
+export class RedisArray<Schema extends TSchema> {
     private readonly validator: Validator<TSchema>
     private readonly encoder: RedisEncoder
 
@@ -41,14 +41,15 @@ export class RedisList<Schema extends TSchema> {
         this.encoder = new RedisEncoder(this.schema)
     }
 
-    public async * [Symbol.asyncIterator]() {
+    /** Async iterator for this list. */
+    public async *[Symbol.asyncIterator]() {
         const length = await this.redis.llen(this.resolveKey())
         const slice = 32
-        for(let i = 0; i < length; i += slice) {
-            for(const value of await this.redis.lrange(this.resolveKey(), i, i + slice)) {
+        for (let offset = 0; offset < length; offset += slice) {
+            for (const value of await this.redis.lrange(this.resolveKey(), offset, offset + slice)) {
                 yield this.encoder.decode<Static<Schema>>(value)
             }
-        } 
+        }
     }
 
     /** Clears this list */
@@ -64,41 +65,33 @@ export class RedisList<Schema extends TSchema> {
     /** Returns the value at the given index */
     public async index(index: number): Promise<Static<Schema> | undefined> {
         const value = await this.redis.lindex(this.resolveKey(), index)
-        if(value === null) return undefined
+        if (value === null) return undefined
         return this.encoder.decode(value)
     }
 
     /** Pushes a value to the end of this list */
     public async push(...values: Static<Schema>[]) {
-        for(const value of values) {
-            this.validator.assert(value)
-        }
-        for(const value of values) {
-            await this.redis.rpush(this.resolveKey(), this.encoder.encode(value))
-        }
+        for (const value of values) { this.validator.assert(value) }
+        for (const value of values) { await this.redis.rpush(this.resolveKey(), this.encoder.encode(value)) }
     }
 
     /** Pushes a value to the start of this list */
     public async unshift(...values: Static<Schema>[]): Promise<void> {
-        for(const value of values) {
-            this.validator.assert(value)
-        }
-        for(const value of values.reverse()) {
-            await this.redis.lpush(this.resolveKey(), this.encoder.encode(value))
-        }
+        for (const value of values) { this.validator.assert(value) }
+        for (const value of values.reverse()) { await this.redis.lpush(this.resolveKey(), this.encoder.encode(value)) }
     }
 
     /** Pops a value from the end of this list or undefined if empty */
     public async pop(): Promise<Static<Schema> | undefined> {
         const value = await this.redis.rpop(this.resolveKey())
-        if(value === null) return undefined
+        if (value === null) return undefined
         return this.encoder.decode(value)
     }
 
     /** Shifts a value from the start of this list or undefined if empty */
     public async shift(): Promise<Static<Schema> | undefined> {
         const value = await this.redis.lpop(this.resolveKey())
-        if(value === null) return undefined
+        if (value === null) return undefined
         return this.encoder.decode(value)
     }
 

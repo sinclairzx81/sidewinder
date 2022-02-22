@@ -28,18 +28,18 @@ THE SOFTWARE.
 
 import IORedis, { Redis, RedisOptions } from 'ioredis'
 import { Timeout } from '@sidewinder/async'
-import { TDatabase, Static } from '../type'
-import { RedisList } from './list'
+import { TDatabase } from '../type'
+import { RedisArray } from './array'
 import { RedisMap } from './map'
 import { RedisSet } from './set'
 
 export class RedisDatabase<Database extends TDatabase = TDatabase> {
     constructor(private readonly schema: Database, private readonly redis: Redis) {}
     /** Returns a redis list type */
-    public list<Name extends keyof Database['lists']>(name: Name): RedisList<Database['lists'][Name]> {
+    public list<Name extends keyof Database['lists']>(name: Name): RedisArray<Database['lists'][Name]> {
         const schema = (this.schema['lists'] as any)[name as string]
         if(schema === undefined) throw Error(`The list '${name}' not defined in redis schema`)
-        return new RedisList(schema, this.redis, name as string)
+        return new RedisArray(schema, this.redis, name as string)
     }
     /** Returns a redis map type */
     public map<Name extends keyof Database['maps']>(name: Name): RedisMap<Database['maps'][Name]> {

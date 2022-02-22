@@ -46,7 +46,7 @@ export interface TMapDefinitions {
     [name: string | number | symbol]: TSchema
 }
 export interface TSetDefinitions {
-    [name: string | number | symbol]: TString | TNumber
+    [name: string | number | symbol]: TSchema
 }
 
 export interface TDatabaseOptions {
@@ -59,11 +59,7 @@ export interface TDatabaseOptions {
 }
 
 export interface TDatabase<DatabaseOptions extends TDatabaseOptions = TDatabaseOptions> extends TSchema {
-    $static: {
-        lists: DefinedOr<DatabaseOptions['lists'], TObject>,
-        maps: DefinedOr<DatabaseOptions['maps'], TObject>,
-        sets: DefinedOr<DatabaseOptions['sets'], TObject>,
-    }
+    $static: unknown
     type: 'object'
     kind: 'Database'
     lists: DefinedOr<DatabaseOptions['lists'], TObject>,

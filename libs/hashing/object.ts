@@ -1,6 +1,6 @@
 /*--------------------------------------------------------------------------
 
-@sidewinder/redis
+@sidewinder/hashing
 
 The MIT License (MIT)
 
@@ -26,7 +26,12 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-export * from './database'
-export * from './array'
-export * from './map'
-export * from './set'
+import objectHash from 'object-hash'
+
+export namespace ValueHash {
+    
+    /** Generates a sha1 hash of the given JavaScript value. Hashes are returned as hex strings. */
+    export function hash(value: any): string {
+        return objectHash(value, { algorithm: 'sha1', encoding: 'hex' })
+    }
+}
