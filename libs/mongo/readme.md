@@ -10,7 +10,7 @@
 
 ## Overview
 
-This package provides a type safe layer over the [official mongodb driver](https://www.npmjs.com/package/mongodb) package for NodeJS. It enables document models to be created with Sidewinder Contract types with each document strictly data checked via JSON schema prior to writing to MongoDB. In addition, this package provides automatic `ObjectId` and binary data encode and decode to and from MongoDB. This allows applications to treat Mongo identifiers as validated hex strings and Mongo `Binary` objects as `Uint8Array`.
+This package provides a thin type safe layer over the [official mongodb driver](https://www.npmjs.com/package/mongodb) package for NodeJS. It enables document models to be created with Sidewinder Types with each document strictly data checked via JSON schema prior to writing to MongoDB. In addition, this package provides automatic `ObjectId` and binary data encode and decode to and from MongoDB. This allows applications to treat Mongo identifiers as validated hex strings and Mongo `Binary` objects as `Uint8Array`.
 
 License MIT
 
@@ -18,15 +18,16 @@ License MIT
 
 - [Overview](#Overview)
 - [Example](#Example)
+- [ObjectId](#ObjectId)
 
 ## Example
 
-[TypeScript Example Link](https://www.typescriptlang.org/play?#code/JYWwDg9gTgLgBAbzgEQIY1QI1QZwKYA0cAKgJ5h5wC+cAZlBCHAOQACOwAJngO7AB23KAHoQEfgHMIzAFChIsRHACy4qQGEANsDz94NeoxZjJETplkzhwuAFp7Dx0+cvXb9-as3VprTr1edh7BIaHOMjIAxuI48JHauvAAvHD8vCpqEH6JABTMJlLmAFzWmhCRqJoAFhCxRQBMAOwADACMjcLmzACUMqg8qMBxCXoAdNH8aZEwOb2BYQuLboFoGNj4cADKkVV4IOjAkfNLJycRE7FwAKr4UHApZBSjAPKYAFZ40zkIMnB-cAB9LhFf5-R54F7vT4wACSnFmBF+-34qBAeBB-3Bo02MCgAgkCKRfz2g00GJI5AhOLxkm+dGg+xgIOYJOAmmY1G6iNBkSgeHQeE4IKxML0eAkeCghNBAFcwJwBUKKU9RTBxZLZjIqHMLvAAEqfaCce7KiGvD5fH6goFK0GmyEW2HwrlEwEy2424WUh3QuHS-68-lq20isUSqUu2XyxUY0Nq8P+v4AN0qMvRoKxADkZSBMBretrzjF4NtdvsTVjVlhcHhvq73ZKcOSbpLuf8+dEoJwm3ADZ3OFq5tYgqdR6EVuhq-hjmPZ+4i-xLgq1jWTWkeChJ+ta6WSUR4v4YKNzLMhzY5xfXIFRbcYDPLw-bAvLg2oDaTcupxCuJq+gMhnAn7buMECaJo0LAOIeSvjgPSjAIt7PGkdbWsCdpwK+Nptn8KJouSLAKkmeDMNhcCsmS-zMIReCsJwjCDPwIEgCRrqBjGm5qqM-AQDwiYYdGwYgqsELcbxBZzP0gzwEBNYgWBEFQcwHZGrB3TwYukowMoqD8KQOQANpWv8nroTJ+Dwc6pEAphaE2ZwpFsYJfzCVxPF8XKy6ChiLmiXxKaaGm+HNFqRBGX8Jl2mZ36Wa61kerZ8X2axfLsRxIluZG-wealPkZaR-mBaCrRagAumeI6PpegRXAJeD3pVc4RJJAFRXJ4HTJB-DQbcqmjNlapIbWSAmXZ1Cha65HklRqBEawEAwLsUC2HR+wCExLFRp5Sq5WJg4RPVDVjoEABiAgDsOh1VVExYYbcJrNdJW6ydE8kdYpMFwbQZ2DXSI2JZyEQXZdjXDjCapQAKB3A0sES0NAcAPTkuq3ZKcAQLQgFPeZL3tTAnXdY2n1nXS2qjDgADWwBgDkzRqRg5O1q0tPdIgESgsOoyc1qgPntDR3DsgeDgWqUN82ETX-o9K7Y6BuP48wH1qdwwt4D9w0JZK77akAA)
+[TypeScript Example Link](https://www.typescriptlang.org/play?#code/JYWwDg9gTgLgBAbzgWQgOwOYQCIEMa4BGuAzgKYA0cAKgJ5hlwC+cAZlBCHAOQACJwACZkA7sDTCoAehDos3AFChIsRCjkQAwgBtgZNPBbtOPWZgiDCihVKlwAtI6fOXrt+4+fHNu6nM69Ax8HL1Cw8NcFBQBjdBJ4aN19eABeODRRdX8kgwAKbjMsSwAuW20IaNxtAAsIeOKAJgB2AAYARiapS24ASgVcEVxgBJyYADpYtAzomFy+4IjFpY9gvAJicjgAZWjqshB8YGiF5dPTqMn4uABVcig4NLoGMYB5QgArMhnchAU4OAA+kJiv9QU8yK8Pl8YABJQRzCh-dK4EBkEFg+gQrYwKDiDAIpH7IbadE0TFjbG4zA-NjQA4wEHcInAbTcZg9RH-aJQMj4MiCEHgsYwgxkDBkKAE-4AVzAgj5ArJzxFMDFEoJTHml3gACUvtBBA8lRC3p9vr9-kDFaD-kLTdC4VLAdK7lbBeT7TNHRykdzearrUKVWrJT6ZXKFeig6LxaHOXAAG5VaVom1CgBy0pAhHVPs1Fzi8B2ewORqFayIpDIPyRLolJBBtwl8Z5sSgggbcD1bcEiPzJzOg-Cq3wlfIA6Hk5WMULcHl6yrRoyIiyWArG2rxaJVESgXGljm81sISnp8ix5FdxgE7Pt4LaCudagVqN87HEKEcyiAyG8DfG4mCBtG0aFgHQfInxIXoxnEK8XgyGtLWBG04CfK14zQFFU1Bbh5QTMhuHjZkSRwvCyF4QROCGNBAJAQjfR5SM4DWCE0AgEQnVled+RBFixjYji83mH9hjnUcANiYDQPA7hWwNKCehgh8JRgZBcDQWhcgAbSRC1QTdMSF3IGD4TDfS0OQizeyRLlGIDXi+X49inXDbjFT4gSXMTZNUxaeMmHjPSkMVf8qxMryASskErPjWz-R45jHM8szXKYjznJS7ztBTEE2n8xEAF0jzsW9Su8Y9rgjVUbzKydv0GUTQuMySQJmMC0Agu4FLGLi+Xg6tdMBSzXSEZhApsuBiMZMjeAgGA9igexKIOcRaPom1evsxLVScwT8oUYqT1qqdggAMXEQQauOs570fO4jREv9xLClrpI67hIOg1gLv6mkDKs9komPa7T2CGFVSgPkrpBpYolYaA4EeuBcm1VD7ogVhDPfQCpLamTPsU76JB+TUxhIABrYAwFyFpFIIcnqzaWmekQJFjzGDmFCYIGSphodVjIEDquBvnB3q38sYkoDWpgdrOvraDhCFshfqQf6RsNTUgA)
 
-Sidewinder Mongo provides a strict validation layer directly over the Mongo `Db` object. It provides a subset the drivers `Db` functions that can safely checked and runtime validated. To use, users will first need to establish a connection to MongoDB via the driver then pass an instance of `client.db()` to the MongoDatabase constructor along with associated schema.
+The Sidewinder MongoDatabase provides a strict subset of the Mongo `Db` API. It accepts a Database schema as it's first argument and `Db` instance for its second. Callers can access a Type Safe Collection API that automatically validates documents based on the Sidewinder Types defined in the Database schema. For indexing MongoDB and specifying other configuration options, use the `Db` object.
 
 ```typescript
-import { MongoDatabase, Type } from '@sidewinder/mongo'
+import { Type, MongoDatabase } from '@sidewinder/mongo'
 import { MongoClient } from 'mongodb'
 
 // ---------------------------------------------------------
@@ -74,9 +75,9 @@ const database = new MongoDatabase(Schema, client.db())
 const user_id = database.id()
 
 await database.collection('users').insertOne({
-  _id: user_id,
-  name: 'dave',
-  email: 'dave@domain.com',
+  _id:     user_id,
+  name:    'dave',
+  email:   'dave@domain.com',
   created: Date.now(),
   updated: Date.now(),
 })
@@ -129,4 +130,48 @@ for await (const user of database.collection('users').find({}).skip(0).take(10))
 // ---------------------------------------------------------
 
 await database.collection('users').deleteOne({ _id: user_id })
+```
+
+## ObjectId
+
+Sidewinder Mongo does not use the MongoDB `ObjectId` to read and write `_id` fields to Mongo. Rather it detects the format of string values and automatically encodes to and from `ObjectId`. This allows `ObjectId` values to be transmitted across a network as strings without additional encoding to and from this type.
+
+```typescript
+const User = Type.Object({
+  _id:  Type.ObjectId() // Is a string regex string validated for 24 character hex strings values
+  name: Type.String()
+})
+
+const Schema = Type.Database({
+  users: User
+})
+
+const database = new MongoDatabase(Schema, Db)
+
+database.collection('users').insertOne({
+  _id: database.id(),  // Generates a new 24 character hex string
+  name: 'dave'
+})
+```
+
+## Uint8Buffer
+
+Sidewinder Mongo supports automatic encode and decode of JavaScript `Uint8Array` buffers only. This can be used to read and write binary property values into Mongo.
+
+```typescript
+const ImageSegment = Type.Object({
+  _id: Type.ObjectId()    // Is a string regex string validated for 24 character hex strings values
+  data: Type.Uint8Array()
+})
+const Schema = Type.Database({
+  imageSegments: ImageSegment
+})
+
+const database = new MongoDatabase(Schema, Db)
+
+database.collection('imageSegments').insertOne({
+  _id:  database.id(),        // Generates a new 24 character hex string
+  data: new Uint8Array(16384) // 16K image segment
+})
+
 ```

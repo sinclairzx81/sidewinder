@@ -10,7 +10,7 @@
 
 ## Overview
 
-This package provides a type safe abstraction over Redis. It implements remote versions of JavaScript's Array, Map and Set collection types over Redis key value store. Each Redis collection type is strictly validated with Sidewinder Types. Additionally this library also provides functionality for type safe Channel and PubSub messaging through Redis.
+This package provides a type safe abstraction over Redis which it achieves by implementing remote versions of JavaScript's Array, Map and Set collection types over Redis's key value store. Each Redis collection type is strictly validated with Sidewinder Types and handles JSON encode and decode to and from Redis. Additionally this library also provides functionality for type safe Channel and PubSub messaging through Redis.
 
 License MIT
 
