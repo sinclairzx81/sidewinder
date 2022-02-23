@@ -19,6 +19,7 @@ License MIT
 - [Overview](#Overview)
 - [Example](#Example)
 - [ObjectId](#ObjectId)
+- [Uint8Array](#Uint8Array)
 
 ## Example
 
