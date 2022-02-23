@@ -2,7 +2,7 @@
 
 <h1>Sidewinder Channel</h1>
 
-<p>Asynchronous Channels for JavaScript</p>
+<p>Multi Producer Single Consumer Channels for JavaScript</p>
 
 [<img src="https://img.shields.io/npm/v/@sidewinder/channel?label=%40sidewinder%2Fchannel">](https://www.npmjs.com/package/@sidewinder/channel)
 
@@ -10,7 +10,7 @@
 
 ## Overview
 
-Sidewinder Channels are asynchronous channels that are loosely modelled on Rust mpsc Channel and SyncChannel types. They are built upon JavaScript async iterators and allow values to be lazily emitted into the channel and received via `for-await` iteration.
+Sidewinder Channels are asynchronous uni directional channels based on Rust's Multi Producer Single Consumer Channel types. They allow for values to be streamed from multiple senders to a single receiver who can receive values using `for-await` iteration. Sidewinder Channels do not implement runtime type checking and are intended to be used for communication messages within the context of an application.
 
 License MIT
 
