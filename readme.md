@@ -2,9 +2,9 @@
 
 <h1>Sidewinder</h1>
 
-<p>Micro Service Framework for Node</p>
+<p>TypeSafe Micro Services for Node</p>
 
-<img src='https://github.com/sinclairzx81/sidewinder/blob/master/build/assets/sidewinder.png?raw=true' />
+<img src='./build/assets/sidewinder.png' />
 
 <br />
 <br />
