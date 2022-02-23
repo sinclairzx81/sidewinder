@@ -155,7 +155,7 @@ database.collection('users').insertOne({
 })
 ```
 
-## Uint8Buffer
+## Uint8Array
 
 Sidewinder Mongo supports automatic encode and decode of JavaScript `Uint8Array` buffers only. This can be used to read and write binary property values into Mongo.
 
