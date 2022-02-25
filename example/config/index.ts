@@ -1,16 +1,17 @@
-import { Type, ConfigurationResolver } from '@sidewinder/config'
+import { Type, Configuration } from '@sidewinder/config'
 
-const resolver = new ConfigurationResolver(Type.Object({
-    port: Type.Number(),
+
+
+const configuration = Configuration(Type.Object({
+    port: Type.Integer({ default: 5000, description: 'Server port'  }),
     mongo: Type.Object({
-        host: Type.String({}),
-        port: Type.Integer()
+        host: Type.String({ description: 'Mongo host'}),
+        port: Type.Integer({ description: 'Mongo port' })
+    }),
+    redis: Type.Object({
+        host: Type.String({ default: 'localhost', description: 'Redis host' }),
+        port: Type.Integer({ default: '6379', description: 'Redis port' })
     })
-}), {
-    MONGO_PORT: 1000,
-    PORT: 5000
-}, [
-    '--mongo-host', 'mongoi'
-])
+}))
 
-console.log(resolver.resolve())
+console.log(configuration.resolve())

@@ -48,10 +48,7 @@ export class ConfigurationResolver<Schema extends TObject> {
 
   private exitWithResult(result: ValidateResult, object: unknown) {
     const documentation = Documentation.resolve(this.schema)
-    const error = result.errorText
-      .replace('data must', 'configuration must')
-      .replace(/data\//g, 'configuration.')
-      .replace(/\//g, '.')
+    const error = result.errorText.replace(/\//g, '.')
     console.log(documentation)
     console.log()
     console.log('Error:', error)
@@ -80,7 +77,7 @@ export class ConfigurationResolver<Schema extends TObject> {
 
   /** Resolves the configuration object */
   public resolve(configFileOrObject?: string | Partial<Static<Schema>>): Static<Schema> {
-    // Detect caller request for help
+    // Check for help
     if (this.shouldHelp()) {
       console.log(Documentation.resolve(this.schema))
       return process.exit(0) as never

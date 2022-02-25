@@ -18,7 +18,7 @@ This package enables type safe configuation resolution using Sidewinder Types. I
 - [Example](#Example)
 - [Environment Variables](#EnvironmentVariables)
 - [Commmand Line Arguments](#CommandLineArguments)
-- [Documentation](#Documentation)
+- [Documentation and Help](#Documentation)
 
 ## Example
 
@@ -66,6 +66,16 @@ const config = configuration.resolve('config.json')
 Environment Variables are sourced from capitalized property names with an underscore `_` used to seperate object context. Only JavaScript string, number, boolean values can be sourced from Environment Variable. Consider the following.
 
 ```typescript
+
+// Configurations will be resolved from the process.env object. If using
+// libraries such as dotenv to source development, staging and production
+// environments, ensure you assign these environment variables prior to
+// calling Configuration(...).
+
+process.env.MONGO_HOST = 'localhost'
+process.env.MONGO_PORT = '6379'
+process.env.PORT       = '5000'
+
 const configuration = Configuration(Type.Object({
     port: Type.Integer({ default: 5000 }),
     mongo: Type.Object({
@@ -80,7 +90,7 @@ const configuration = Configuration(Type.Object({
 
 ```
 
-Which will source the following Environment Variables.
+Which will source for the following environment variables.
 
 ```bash
 ENABLED
@@ -92,7 +102,7 @@ REDIS_PORT
 
 ## Command Line Arguments
 
-Command line arguments are sourced from lowercase `--` prefixed property names with a dash `-` used to seperate object context. Only JavaScript string, number, boolean values can be sourced from Environment Variable. Consider the following.
+Command line arguments are sourced from `process.argv' using lowercase `--`prefixed property names with a dash`-` used to seperate object context. Only JavaScript string, number, boolean values can be sourced from Environment Variable. Consider the following.
 
 ```typescript
 const configuration = Configuration(Type.Object({
@@ -109,38 +119,42 @@ const configuration = Configuration(Type.Object({
 
 ```
 
-Which will source the following command line arguments.
+Which will source from the following environment variables.
 
 ```bash
 $ node index.js --port 5000 --redis-host localhost --redis-port 6379
 ```
 
-## Documentation
+## Documentation and Help
 
-If the configuration `.resolve()` function cannot resolve a fully construct object matching the given Type schema, or the CLI user specifies `--help` as a command line argument. The process will immediately exit and display help documentation and error message as to what went wrong. You can specify optional `description` and `default` properties for each value expected.
+In the instance the `.resolve()` function cannot resolve an object matching the given configuration type, the process will immediately exit with an non-zero exit code and display help documentation giving hints as to what went wrong. Additionally, help information can be displayed by specifying a `--help` option as a command line argument to the process.
+
+You can specify optional `description` and `default` properties for each expected value.
 
 ```typescript
-const configuration = Configuration(Type.Object({
-    port: Type.Integer({ default: 5000, description: 'server listening port'  }),
+const configuration = Configuration(
+  Type.Object({
+    port: Type.Integer({ default: 5000, description: 'Server port' }),
     mongo: Type.Object({
-        host: Type.String()
-        port: Type.Integer()
+      host: Type.String({ description: 'Mongo host' }),
+      port: Type.Integer({ description: 'Mongo port' }),
     }),
     redis: Type.Object({
-        host: Type.Optional(Type.String({ default: 'redis://localhost:6379' }))
-        port: Type.Integer()
-    })
-}))
+      host: Type.String({ default: 'localhost', description: 'Redis host' }),
+      port: Type.Integer({ default: '6379', description: 'Redis port' }),
+    }),
+  }),
+)
 ```
 
-Displays the following in the terminal
+Which produces the following help documentation
 
 ```bash
-Configuration Options:
+Options:
 
-  --port PORT integer server listening port
-  --mongo-host MONGO_HOST string
-  --mongo-port MONGO_PORT number
-  --redis-host REDIS_HOST string (optional)
-  --redis-port REDIS_PORT number
+  --port         PORT         integer?  Server port
+  --mongo-host   MONGO_HOST   string    Mongo host
+  --mongo-port   MONGO_PORT   integer   Mongo port
+  --redis-host   REDIS_HOST   string?   Redis host
+  --redis-port   REDIS_PORT   integer?  Redis port
 ```

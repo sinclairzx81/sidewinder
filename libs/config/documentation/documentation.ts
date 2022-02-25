@@ -30,13 +30,16 @@ import { TObject, TSchema } from '@sidewinder/type'
 
 export namespace Documentation {
   function argName(path: string[]) {
-    return (
+    const gray = '\x1b[90m'
+    const esc = `\x1b[0m`
+    return `${gray}${
       '--' +
       path
         .map((part) => part.toLowerCase())
         .join('-')
         .trim()
-    )
+        .padEnd(12)
+    }${esc}`
   }
 
   function envName(path: string[]) {
@@ -44,8 +47,13 @@ export namespace Documentation {
       .map((part) => part.toUpperCase())
       .join('_')
       .trim()
+      .padEnd(12)
   }
-
+  function typeName(type: string, optional: boolean) {
+    const blue = '\x1b[36m'
+    const esc = `\x1b[0m`
+    return `${blue}${type}${optional ? '?' : ''}${esc}`.padEnd(18)
+  }
   function* object(key: string, path: string[], schema: TSchema): Iterable<string> {
     for (const [key, propertySchema] of Object.entries(schema.properties)) {
       yield* visit(key, [...path, key], propertySchema as TSchema)
@@ -53,12 +61,10 @@ export namespace Documentation {
   }
 
   function* primitive(key: string, path: string[], schema: TSchema): Iterable<string> {
-    const gray = '\x1b[90m'
-    const blue = '\x1b[36m'
-    const esc = `\x1b[0m`
-    const optional = schema.modifier === 'Optional' || schema.modifier === 'ReadonlyOptional' ? '(optional)' : ''
+    const optional = schema.default !== undefined || schema.modifier === 'Optional' || schema.modifier === 'ReadonlyOptional'
     const description = schema.description !== undefined ? schema.description : ''
-    yield `  ${gray}${argName(path)}${esc} ${envName(path)} ${blue}${schema.type}${esc} ${optional} ${description}`
+    const line = [`${argName(path)}`, `${envName(path)}`, `${typeName(schema.type, optional)}`, `${description}`].filter((segment) => segment.length > 0).join(' ')
+    yield `  ${line}`
   }
 
   function* visit(key: string, path: string[], schema: TSchema): Iterable<string> {
@@ -88,6 +94,6 @@ export namespace Documentation {
   }
 
   export function resolve(schema: TObject): string {
-    return ['Configuration Options:', '', ...gather(schema)].join('\n')
+    return ['Options:', '', ...gather(schema)].join('\n')
   }
 }
