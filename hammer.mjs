@@ -9,6 +9,7 @@ const packages = [
     ['async',     version, 'Sidewinder Async'],
     ['channel',   version, 'Sidewinder Channel'],
     ['client',    version, 'Sidewinder Client'],
+    ['config',    version, 'Sidewinder Config'],
     ['contract',  version, 'Sidewinder Contract'],
     ['events',    version, 'Sidewinder Events'],
     ['hash',      version, 'Sidewinder Hashing'],
