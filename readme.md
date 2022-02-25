@@ -77,6 +77,7 @@ $ npm install @sidewinder/hash       # Hashing Functions
 $ npm install @sidewinder/token      # Type Safe Json Web Token
 
 # Environment
+$ npm install @sidewinder/config     # Type Safe Configurations
 $ npm install @sidewinder/platform   # JavaScript Runtime Environment Checks
 ```
 
