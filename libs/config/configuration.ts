@@ -34,85 +34,85 @@ import { JsonPointer } from './pointer/index'
 import { Descriptors } from './descriptors/index'
 
 export class ConfigurationResolver<Schema extends TObject> {
-    private readonly environmentResolver: EnvironmentResolver
-    private readonly argumentResolver: ArgumentsResolver
-    private readonly documentResolver: DocumentResolver
-    private readonly validator: Validator<Schema>
+  private readonly environmentResolver: EnvironmentResolver
+  private readonly argumentResolver: ArgumentsResolver
+  private readonly documentResolver: DocumentResolver
+  private readonly validator: Validator<Schema>
 
-    constructor(private readonly schema: Schema, private readonly env: object, private readonly argv: string[]) {
-        this.environmentResolver = new EnvironmentResolver(this.env)
-        this.argumentResolver = new ArgumentsResolver(this.argv)
-        this.documentResolver = new DocumentResolver()
-        this.validator = new Validator(this.schema)
+  constructor(private readonly schema: Schema, private readonly env: object, private readonly argv: string[]) {
+    this.environmentResolver = new EnvironmentResolver(this.env)
+    this.argumentResolver = new ArgumentsResolver(this.argv)
+    this.documentResolver = new DocumentResolver()
+    this.validator = new Validator(this.schema)
+  }
+
+  private exitWithResult(result: ValidateResult, object: unknown) {
+    const documentation = Documentation.resolve(this.schema)
+    const value = JSON.stringify(object, null, 2)
+    const error = result.errorText
+      .replace('data must', 'configuration must')
+      .replace(/data\//g, 'configuration.')
+      .replace(/\//g, '.')
+
+    console.log(documentation)
+    console.log()
+    console.log('Resolved:', value)
+    console.log()
+    console.log('Error:', error)
+    console.log()
+    process.exit(1)
+  }
+
+  public resolveInitial(configFileOrObject?: string | object) {
+    if (typeof configFileOrObject === 'string') {
+      return this.documentResolver.resolve(configFileOrObject)
+    }
+    if (typeof configFileOrObject === 'object') {
+      return configFileOrObject
+    }
+    return {}
+  }
+
+  /**
+   * Resolves configuration from the environment or command line arguments. If passing a
+   * string value, a json configuration file will be loaded, if passing an object, the object
+   * will be used as configuration.
+   */
+  public resolve(configFileOrObject?: string | Partial<Static<Schema>>): Static<Schema> {
+    // Resolve Initial
+    const object = this.resolveInitial(configFileOrObject)
+
+    // Resolve Defaults
+    const defaultOptions = { format: (name) => name, prefix: '', seperator: '' }
+    for (const descriptor of Descriptors.resolve(this.schema, defaultOptions)) {
+      if (descriptor.default === undefined) continue
+      JsonPointer.set(object, descriptor.pointer, descriptor.default)
     }
 
-    private exitWithResult(result: ValidateResult, object: unknown) {
-        const documentation = Documentation.resolve(this.schema)
-        const value = JSON.stringify(object, null, 2)
-        const error = result.errorText
-            .replace('data must', 'configuration must')
-            .replace(/data\//g, 'configuration.')
-            .replace(/\//g, '.')
-
-        console.log(documentation)
-        console.log()
-        console.log('Resolved:', value)
-        console.log()
-        console.log('Error:', error)
-        console.log()
-        process.exit(1)
+    // Resolve Environment Variables
+    const environmentOptions = { format: (name) => name.toUpperCase(), prefix: '', seperator: '_' }
+    for (const descriptor of Descriptors.resolve(this.schema, environmentOptions)) {
+      const value = this.environmentResolver.resolve(descriptor)
+      if (value === undefined) continue
+      JsonPointer.set(object, descriptor.pointer, value)
     }
 
-    public resolveInitial(configFileOrObject?: string | object) {
-        if(typeof configFileOrObject === 'string') {
-            return this.documentResolver.resolve(configFileOrObject)
-        } 
-        if(typeof configFileOrObject === 'object') {
-            return configFileOrObject
-        }
-        return {}
+    // Resolve Command Line Arguments
+    const argumentOptions = { format: (name) => name.toLowerCase(), prefix: '--', seperator: '-' }
+    for (const descriptor of Descriptors.resolve(this.schema, argumentOptions)) {
+      const value = this.argumentResolver.resolve(descriptor)
+      if (value === undefined) continue
+      JsonPointer.set(object, descriptor.pointer, value)
     }
 
-    /** 
-     * Resolves configuration from the environment or command line arguments. If passing a 
-     * string value, a json configuration file will be loaded, if passing an object, the object
-     * will be used as configuration.
-    */
-    public resolve(configFileOrObject?: string | Partial<Static<Schema>>): Static<Schema> {
-        // Resolve Initial
-        const object = this.resolveInitial(configFileOrObject)
-
-        // Resolve Defaults
-        const defaultOptions = { format: name => name, prefix: '', seperator: '' }
-        for (const descriptor of Descriptors.resolve(this.schema, defaultOptions)) {
-            if (descriptor.default === undefined) continue
-            JsonPointer.set(object, descriptor.pointer, descriptor.default)
-        }
-
-        // Resolve Environment Variables
-        const environmentOptions = { format: name => name.toUpperCase(), prefix: '', seperator: '_' }
-        for (const descriptor of Descriptors.resolve(this.schema, environmentOptions)) {
-            const value = this.environmentResolver.resolve(descriptor)
-            if (value === undefined) continue
-            JsonPointer.set(object, descriptor.pointer, value)
-        }
-
-        // Resolve Command Line Arguments
-        const argumentOptions = { format: name => name.toLowerCase(), prefix: '--', seperator: '-' }
-        for (const descriptor of Descriptors.resolve(this.schema, argumentOptions)) {
-            const value = this.argumentResolver.resolve(descriptor)
-            if (value === undefined) continue
-            JsonPointer.set(object, descriptor.pointer, value)
-        }
-
-        // Check Object
-        const result = this.validator.check(object)
-        if (result.success) return object as Static<Schema>
-        this.exitWithResult(result, object)
-    }
+    // Check Object
+    const result = this.validator.check(object)
+    if (result.success) return object as Static<Schema>
+    this.exitWithResult(result, object)
+  }
 }
 
 /** Resolves Configuration from the Environment */
 export function Configuration<Schema extends TObject>(schema: Schema): ConfigurationResolver<Schema> {
-    return new ConfigurationResolver<Schema>(schema, process.env, process.argv.slice(2))
+  return new ConfigurationResolver<Schema>(schema, process.env, process.argv.slice(2))
 }

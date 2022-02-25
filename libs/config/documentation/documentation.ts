@@ -29,51 +29,65 @@ THE SOFTWARE.
 import { TObject, TSchema } from '@sidewinder/type'
 
 export namespace Documentation {
+  function argName(path: string[]) {
+    return (
+      '--' +
+      path
+        .map((part) => part.toLowerCase())
+        .join('-')
+        .trim()
+    )
+  }
 
-    function argName(path: string[]) {
-        return '--' + path.map(part => part.toLowerCase()).join('-').trim()
-    }
+  function envName(path: string[]) {
+    return path
+      .map((part) => part.toUpperCase())
+      .join('_')
+      .trim()
+  }
 
-    function envName(path: string[]) {
-        return path.map(part => part.toUpperCase()).join('_').trim()
+  function* object(key: string, path: string[], schema: TSchema): Iterable<string> {
+    for (const [key, propertySchema] of Object.entries(schema.properties)) {
+      yield* visit(key, [...path, key], propertySchema as TSchema)
     }
+  }
 
-    function* object(key: string, path: string[],  schema: TSchema): Iterable<string> {
-        for (const [key, propertySchema] of Object.entries(schema.properties)) {
-            yield* visit(key, [...path, key], propertySchema as TSchema)
-        }
-    }
+  function* primitive(key: string, path: string[], schema: TSchema): Iterable<string> {
+    const gray = '\x1b[90m'
+    const blue = '\x1b[36m'
+    const esc = `\x1b[0m`
+    const optional = schema.modifier === 'Optional' || schema.modifier === 'ReadonlyOptional' ? '(optional)' : ''
+    const description = schema.description !== undefined ? schema.description : ''
+    yield `  ${gray}${argName(path)}${esc} ${envName(path)} ${blue}${schema.type}${esc} ${optional} ${description}`
+  }
 
-    function* primitive(key: string, path: string[], schema: TSchema): Iterable<string> {
-        const gray = '\x1b[90m'
-        const blue = '\x1b[36m'
-        const esc = `\x1b[0m`
-        const optional = schema.modifier === 'Optional' || schema.modifier === 'ReadonlyOptional' ? '(optional)' : ''
-        const description = schema.description !== undefined ? schema.description : ''
-        yield `  ${gray}${argName(path)}${esc} ${envName(path)} ${blue}${schema.type}${esc} ${optional} ${description}`
+  function* visit(key: string, path: string[], schema: TSchema): Iterable<string> {
+    switch (schema.kind) {
+      case 'Object':
+        return yield* object(key, path, schema)
+      case 'Number':
+        return yield* primitive(key, path, schema)
+      case 'Integer':
+        return yield* primitive(key, path, schema)
+      case 'String':
+        return yield* primitive(key, path, schema)
+      case 'Boolean':
+        return yield* primitive(key, path, schema)
+      case 'RegEx':
+        return yield* primitive(key, path, schema)
+      case 'Null':
+        return yield* primitive(key, path, schema)
     }
+  }
 
-    function* visit(key: string, path: string[], schema: TSchema): Iterable<string> {
-        switch (schema.kind) {
-            case 'Object': return yield* object(key, path, schema)
-            case 'Number': return yield* primitive(key, path, schema)
-            case 'Integer': return yield* primitive(key, path, schema)
-            case 'String': return yield* primitive(key, path, schema)
-            case 'Boolean': return yield* primitive(key, path, schema)
-        }
+  // Resolves property descriptors from the given schema.
+  export function* gather(schema: TObject): Iterable<string> {
+    for (const [key, propertySchema] of Object.entries(schema.properties)) {
+      yield* visit(key, [key], propertySchema)
     }
-    // Resolves property descriptors from the given schema.
-    export function* gather(schema: TObject): Iterable<string> {
-        for (const [key, propertySchema] of Object.entries(schema.properties)) {
-            yield* visit(key, [key], propertySchema)
-        }
-    }
+  }
 
-    export function resolve(schema: TObject): string {
-        return [
-            'Configuration Options:',
-            '',
-            ...gather(schema)
-        ].join('\n')
-    }
+  export function resolve(schema: TObject): string {
+    return ['Configuration Options:', '', ...gather(schema)].join('\n')
+  }
 }

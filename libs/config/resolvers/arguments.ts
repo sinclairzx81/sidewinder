@@ -30,62 +30,61 @@ import { Descriptor } from '../descriptors/descriptors'
 
 /** Resolves command line variables */
 export class ArgumentsResolver {
+  constructor(private readonly argv: string[]) {}
 
-    constructor(private readonly argv: string[]) { }
+  private has(name: string) {
+    const index = this.argv.indexOf(name)
+    return index !== -1
+  }
 
-    private has(name: string) {
-        const index = this.argv.indexOf(name)
-        return (index !== -1)
-    }
+  private string(name: string) {
+    if (!this.has(name)) return undefined
+    const index = this.argv.indexOf(name) + 1
+    if (!(index < this.argv.length)) return undefined
+    const value = this.argv[index].toString()
+    if (value.indexOf('--') === 0) return undefined
+    return value
+  }
 
-    private string(name: string) {
-        if(!this.has(name)) return undefined
-        const index = this.argv.indexOf(name) + 1
-        if (!(index < this.argv.length)) return undefined
-        const value = this.argv[index].toString()
-        if (value.indexOf('--') === 0) return undefined
-        return value
-    }
+  private number(name: string) {
+    if (!this.has(name)) return undefined
+    const index = this.argv.indexOf(name) + 1
+    if (!(index < this.argv.length)) return undefined
+    const value = this.argv[index]
+    return parseFloat(value)
+  }
 
-    private number(name: string) {
-        if(!this.has(name)) return undefined
-        const index = this.argv.indexOf(name) + 1
-        if (!(index < this.argv.length)) return undefined
-        const value = this.argv[index]
-        return parseFloat(value)
-    }
-    
-    private integer(name: string) {
-        if(!this.has(name)) return undefined
-        const index = this.argv.indexOf(name) + 1
-        if (!(index < this.argv.length)) return undefined
-        const value = this.argv[index]
-        return parseInt(value)
-    }
+  private integer(name: string) {
+    if (!this.has(name)) return undefined
+    const index = this.argv.indexOf(name) + 1
+    if (!(index < this.argv.length)) return undefined
+    const value = this.argv[index]
+    return parseInt(value)
+  }
 
-    private boolean(name: string) {
-        if(!this.has(name)) return undefined
-        const index = this.argv.indexOf(name) + 1
-        if (!(index < this.argv.length)) return true
-        const value = this.argv[index].toString()
-        if (value.indexOf('--') === 0) return true
-        const test = value.toLowerCase()
-        if (test === 'true') return true
-        if (test === 'false') return false
-        return true
-    }
+  private boolean(name: string) {
+    if (!this.has(name)) return undefined
+    const index = this.argv.indexOf(name) + 1
+    if (!(index < this.argv.length)) return true
+    const value = this.argv[index].toString()
+    if (value.indexOf('--') === 0) return true
+    const test = value.toLowerCase()
+    if (test === 'true') return true
+    if (test === 'false') return false
+    return true
+  }
 
-    public resolve(descriptor: Descriptor): unknown {
-        if (descriptor.type === 'string') {
-            return this.string(descriptor.name)
-        } else if (descriptor.type === 'number') {
-            return this.number(descriptor.name)
-        } else if (descriptor.type === 'integer') {
-            return this.integer(descriptor.name)
-        } else if (descriptor.type === 'boolean') {
-            return this.boolean(descriptor.name)
-        } else { 
-            return undefined
-        }
+  public resolve(descriptor: Descriptor): unknown {
+    if (descriptor.type === 'string') {
+      return this.string(descriptor.name)
+    } else if (descriptor.type === 'number') {
+      return this.number(descriptor.name)
+    } else if (descriptor.type === 'integer') {
+      return this.integer(descriptor.name)
+    } else if (descriptor.type === 'boolean') {
+      return this.boolean(descriptor.name)
+    } else {
+      return undefined
     }
+  }
 }

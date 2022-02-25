@@ -29,13 +29,13 @@ THE SOFTWARE.
 import * as fs from 'fs'
 
 export class DocumentResolver {
-    constructor() { }
+  constructor() {}
 
-    public resolve(filePath: string): unknown {
-        if(!fs.existsSync(filePath)) throw Error(`Configuration: No such path '${filePath}'`)
-        const content = fs.readFileSync(filePath, 'utf8').trim()
-        if(content.indexOf('{') !== 0) throw Error('Invalid configuration document')
-        const func = new Function(`return ${content}`)
-        return func()
-    }
+  public resolve(filePath: string): unknown {
+    if (!fs.existsSync(filePath)) throw Error(`Configuration: No such path '${filePath}'`)
+    const content = fs.readFileSync(filePath, 'utf8').trim()
+    if (content.indexOf('{') !== 0) throw Error('Invalid configuration document')
+    const func = new Function(`return ${content}`)
+    return func()
+  }
 }

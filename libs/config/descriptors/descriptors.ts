@@ -29,45 +29,52 @@ THE SOFTWARE.
 import { TObject, TSchema } from '@sidewinder/type'
 
 export interface Descriptor {
-    pointer: string
-    type:    'string' | 'number' | 'integer' | 'boolean'
-    name:    string
-    default: unknown
+  pointer: string
+  type: 'string' | 'number' | 'integer' | 'boolean'
+  name: string
+  default: unknown
 }
 
 export interface DescriptorOptions {
-    format:    (input: string) => string
-    prefix:    string
-    seperator: string
+  format: (input: string) => string
+  prefix: string
+  seperator: string
 }
 
 export namespace Descriptors {
-    function* object(path: string, name: string, schema: TSchema, options: DescriptorOptions): Iterable<Descriptor> {
-        for (const [key, propertySchema] of Object.entries(schema.properties)) {
-            yield* visit(`${path}/${key}`, `${name}${options.seperator}${options.format(key)}`, propertySchema as TSchema, options)
-        }
+  function* object(path: string, name: string, schema: TSchema, options: DescriptorOptions): Iterable<Descriptor> {
+    for (const [key, propertySchema] of Object.entries(schema.properties)) {
+      yield* visit(`${path}/${key}`, `${name}${options.seperator}${options.format(key)}`, propertySchema as TSchema, options)
     }
+  }
 
-    function* primitive(path: string, name: string, schema: TSchema, options: DescriptorOptions): Iterable<Descriptor> {
-        yield { type: schema.type, name: options.format(name), pointer: path, default: schema.default }
-    }
+  function* primitive(path: string, name: string, schema: TSchema, options: DescriptorOptions): Iterable<Descriptor> {
+    yield { type: schema.type, name: options.format(name), pointer: path, default: schema.default }
+  }
 
-    function* visit(path: string, name: string, schema: TSchema, options: DescriptorOptions): Iterable<Descriptor> {
-        switch (schema.kind) {
-            case 'Object': return yield* object(path, name, schema, options)
-            case 'Number': return yield* primitive(path, name, schema, options)
-            case 'Integer': return yield* primitive(path, name, schema, options)
-            case 'String': return yield* primitive(path, name, schema, options)
-            case 'Boolean': return yield* primitive(path, name, schema, options)
-            case 'RegEx': return yield* primitive(path, name, schema, options)
-            case 'Null': return yield* primitive(path, name, schema, options)
-        }
+  function* visit(path: string, name: string, schema: TSchema, options: DescriptorOptions): Iterable<Descriptor> {
+    switch (schema.kind) {
+      case 'Object':
+        return yield* object(path, name, schema, options)
+      case 'Number':
+        return yield* primitive(path, name, schema, options)
+      case 'Integer':
+        return yield* primitive(path, name, schema, options)
+      case 'String':
+        return yield* primitive(path, name, schema, options)
+      case 'Boolean':
+        return yield* primitive(path, name, schema, options)
+      case 'RegEx':
+        return yield* primitive(path, name, schema, options)
+      case 'Null':
+        return yield* primitive(path, name, schema, options)
     }
+  }
 
-    // Resolves property descriptors from the given schema.
-    export function* resolve(schema: TObject, options: DescriptorOptions): Iterable<Descriptor> {
-        for (const [key, propertySchema] of Object.entries(schema.properties)) {
-            yield* visit(`/${key}`, `${options.prefix}${key}`, propertySchema, options)
-        }
+  // Resolves property descriptors from the given schema.
+  export function* resolve(schema: TObject, options: DescriptorOptions): Iterable<Descriptor> {
+    for (const [key, propertySchema] of Object.entries(schema.properties)) {
+      yield* visit(`/${key}`, `${options.prefix}${key}`, propertySchema, options)
     }
+  }
 }
