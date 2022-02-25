@@ -43,19 +43,19 @@ await client.connect()
 // ---------------------------------------------------------
 
 const User = Type.Object({
-  _id:     Type.ObjectId(),
-  name:    Type.String(),
-  email:   Type.String({ format: 'email' }),
+  _id: Type.ObjectId(),
+  name: Type.String(),
+  email: Type.String({ format: 'email' }),
   created: Type.Integer(),
   updated: Type.Integer(),
 })
 
 const Record = Type.Object({
-  _id:      Type.ObjectId(),
+  _id: Type.ObjectId(),
   _user_id: Type.ObjectId(),
-  created:  Type.Integer(),
-  updated:  Type.Integer(),
-  value:    Type.Number(),
+  created: Type.Integer(),
+  updated: Type.Integer(),
+  value: Type.Number(),
 })
 
 const Schema = Type.Database({
@@ -76,9 +76,9 @@ const database = new MongoDatabase(Schema, client.db())
 const user_id = database.id()
 
 await database.collection('users').insertOne({
-  _id:     user_id,
-  name:    'dave',
-  email:   'dave@domain.com',
+  _id: user_id,
+  name: 'dave',
+  email: 'dave@domain.com',
   created: Date.now(),
   updated: Date.now(),
 })

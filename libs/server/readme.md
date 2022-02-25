@@ -95,28 +95,21 @@ import { Host } from '@sidewinder/service'
 
 const host = new Host({
     /**
-     * Load balancer keep alive. Transmits a `ping` signal to each connected
-     * web socket to prevent inactive sockets being terminated by the balancer.
+     * Sends a `ping` signal to each connected socket to prevent inactive sockets being terminated by a load balancer.
      *
      * (Default is 8000)
      */
      keepAliveTimeout: number
 
      /**
-      * Disables client message compression. By default, browsers will compress web
-      * socket frames which the server needs to decompress on a per message basis.
-      * Setting this value to false means the server can skip frame decompression
-      * (reducing CPU overhead) but at the expense of adding IO / Network overhead.
+      * Disables client message compression.
       *
       * (Default is false)
       */
      disableFrameCompression: boolean
 
      /**
-      * Sets an upper limit for the number of concurrent web sockets allowed on the
-      * host. This can be useful for autoscaling scenarios where the AWS ALB will
-      * limited connections to around 4075, but where autoscaling may be dependent on
-      * service latency.
+      * Sets the maximum number of concurrent Web Sockets able to connect to this Host.
       *
       * (Default is 16384)
       */
