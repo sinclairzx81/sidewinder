@@ -112,3 +112,32 @@ Which will source the following command line arguments.
 ```bash
 $ node index.js --port 5000 --redis-host localhost --redis-port 6379 
 ```
+
+## Documentation
+
+If the configuration `.resolve()` function cannot resolve a fully construct object matching the given Type schema, or the CLI user specifies `--help` as a command line argument. The process will immediately exit and display help documentation and error message as to what went wrong. You can specify optional `description` and `default` properties for each value expected.
+
+```typescript
+const configuration = Configuration(Type.Object({
+    port: Type.Integer({ default: 5000, description: 'server listening port'  }),
+    mongo: Type.Object({
+        host: Type.String()
+        port: Type.Integer()
+    }),
+    redis: Type.Object({
+        host: Type.Optional(Type.String({ default: 'redis://localhost:6379' }))
+        port: Type.Integer()
+    })
+}))
+```
+Displays the following in the terminal
+
+```bash
+Configuration Options:
+
+  --port PORT integer server listening port
+  --mongo-host MONGO_HOST string
+  --mongo-port MONGO_PORT number
+  --redis-host REDIS_HOST string (optional)
+  --redis-port REDIS_PORT number
+```

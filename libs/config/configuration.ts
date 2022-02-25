@@ -56,8 +56,8 @@ export class ConfigurationResolver<Schema extends TObject> {
 
     console.log(documentation)
     console.log()
-    console.log('Resolved:', value)
-    console.log()
+    // console.log('Resolved:', value)
+    // console.log()
     console.log('Error:', error)
     console.log()
     process.exit(1)
