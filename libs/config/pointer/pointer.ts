@@ -82,7 +82,7 @@ export namespace JsonPointer {
   export function get(target: unknown, pointer: string) {
     if (pointer === '/') return (target as any)['']
     if (pointer === '') return target
-    let current:any = target
+    let current: any = target
     const path = format(pointer)
     while (path.length > 1) {
       const next = path.shift()!
