@@ -10,7 +10,7 @@
 
 ## Overview
 
-The enables type safe configuation resolution using Sidewinder Types. It is able to resolve configuration settings from environment variables, command line arguments or json configuration files.
+This package enables type safe configuation resolution using Sidewinder Types. It is able to resolve configuration settings from environment variables, command line arguments or json configuration files.
 
 ## Contents
 
