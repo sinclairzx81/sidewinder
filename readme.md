@@ -2,7 +2,7 @@
 
 <h1>Sidewinder</h1>
 
-<p>TypeSafe Micro Services for Node</p>
+<p>Type Safe Micro Services for Node</p>
 
 <img src='./build/assets/sidewinder.png' />
 
