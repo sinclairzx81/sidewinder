@@ -63,6 +63,10 @@ export class ConfigurationResolver<Schema extends TObject> {
     process.exit(1)
   }
 
+  public shouldHelp() {
+    return process.argv.includes('--help')
+  }
+
   public resolveInitial(configFileOrObject?: string | object) {
     if (typeof configFileOrObject === 'string') {
       return this.documentResolver.resolve(configFileOrObject)
@@ -79,18 +83,24 @@ export class ConfigurationResolver<Schema extends TObject> {
    * will be used as configuration.
    */
   public resolve(configFileOrObject?: string | Partial<Static<Schema>>): Static<Schema> {
+    // Detect caller request for help
+    if (this.shouldHelp()) {
+      console.log(Documentation.resolve(this.schema))
+      return process.exit(0) as never
+    }
+
     // Resolve Initial
     const object = this.resolveInitial(configFileOrObject)
 
     // Resolve Defaults
-    const defaultOptions = { format: (name) => name, prefix: '', seperator: '' }
+    const defaultOptions = { format: (name: string) => name, prefix: '', seperator: '' }
     for (const descriptor of Descriptors.resolve(this.schema, defaultOptions)) {
       if (descriptor.default === undefined) continue
       JsonPointer.set(object, descriptor.pointer, descriptor.default)
     }
 
     // Resolve Environment Variables
-    const environmentOptions = { format: (name) => name.toUpperCase(), prefix: '', seperator: '_' }
+    const environmentOptions = { format: (name: string) => name.toUpperCase(), prefix: '', seperator: '_' }
     for (const descriptor of Descriptors.resolve(this.schema, environmentOptions)) {
       const value = this.environmentResolver.resolve(descriptor)
       if (value === undefined) continue
@@ -98,7 +108,7 @@ export class ConfigurationResolver<Schema extends TObject> {
     }
 
     // Resolve Command Line Arguments
-    const argumentOptions = { format: (name) => name.toLowerCase(), prefix: '--', seperator: '-' }
+    const argumentOptions = { format: (name: string) => name.toLowerCase(), prefix: '--', seperator: '-' }
     for (const descriptor of Descriptors.resolve(this.schema, argumentOptions)) {
       const value = this.argumentResolver.resolve(descriptor)
       if (value === undefined) continue
@@ -108,7 +118,7 @@ export class ConfigurationResolver<Schema extends TObject> {
     // Check Object
     const result = this.validator.check(object)
     if (result.success) return object as Static<Schema>
-    this.exitWithResult(result, object)
+    return this.exitWithResult(result, object) as never
   }
 }
 
