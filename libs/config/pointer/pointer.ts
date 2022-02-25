@@ -38,57 +38,57 @@ export namespace JsonPointer {
 
   /** Sets the value at the given pointer. If the pointer does not exist it is created. */
   export function set(target: unknown, pointer: string, value: unknown) {
-    if (pointer === '/') return target['']
+    if (pointer === '/') return (target as any)['']
     if (pointer === '') return target
     const path = format(pointer)
-    let current = target
+    let current: any = target
     while (path.length > 1) {
-      const next = path.shift()
+      const next = path.shift()!
       if (current[next] === undefined) current[next] = {}
       current = current[next]
     }
-    current[path.shift()] = value
+    current[path.shift()!] = value
   }
 
   /** Deletes a value at the given pointer. */
   export function del(target: unknown, pointer: string) {
-    if (pointer === '/') return target['']
+    if (pointer === '/') return (target as any)['']
     if (pointer === '') return target
-    let current = target
+    let current: any = target
     const path = format(pointer)
     while (path.length > 1) {
-      const next = path.shift()
+      const next = path.shift()!
       if (current[next] === undefined) return
       current = current[next]
     }
-    delete current[path.shift()]
+    delete current[path.shift()!]
   }
 
   /** True if a value exists at the given pointer */
   export function has(target: unknown, pointer: string) {
-    if (pointer === '/') return target['']
+    if (pointer === '/') return (target as any)['']
     if (pointer === '') return target
-    let current = target
+    let current: any = target
     const path = format(pointer)
     while (path.length > 1) {
-      const next = path.shift()
+      const next = path.shift()!
       if (current[next] === undefined) return false
       current = current[next]
     }
-    return current[path.shift()] !== undefined
+    return current[path.shift()!] !== undefined
   }
 
   /** Gets the value at the given pointer */
   export function get(target: unknown, pointer: string) {
-    if (pointer === '/') return target['']
+    if (pointer === '/') return (target as any)['']
     if (pointer === '') return target
-    let current = target
+    let current:any = target
     const path = format(pointer)
     while (path.length > 1) {
-      const next = path.shift()
+      const next = path.shift()!
       if (current[next] === undefined) return undefined
       current = current[next]
     }
-    return current[path.shift()]
+    return current[path.shift()!]
   }
 }

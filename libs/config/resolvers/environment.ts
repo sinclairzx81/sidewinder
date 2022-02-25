@@ -32,23 +32,23 @@ export class EnvironmentResolver {
   constructor(private readonly env: object) {}
 
   private string(name: string) {
-    if (this.env[name] === undefined) return undefined
-    return this.env[name].toString()
+    if ((this.env as any)[name] === undefined) return undefined
+    return (this.env as any)[name].toString()
   }
 
   private number(name: string) {
-    if (this.env[name] === undefined) return undefined
-    return parseFloat(this.env[name].toString())
+    if ((this.env as any)[name] === undefined) return undefined
+    return parseFloat((this.env as any)[name].toString())
   }
 
   private integer(name: string) {
-    if (this.env[name] === undefined) return undefined
-    return parseInt(this.env[name].toString())
+    if ((this.env as any)[name] === undefined) return undefined
+    return parseInt((this.env as any)[name].toString())
   }
 
   private boolean(name: string) {
-    if (this.env[name] === undefined) return undefined
-    const value = this.env[name].toString().toLowerCase()
+    if ((this.env as any)[name] === undefined) return undefined
+    const value = (this.env as any)[name].toString().toLowerCase()
     if (value === 'true') return true
     if (value === 'false') return false
     return true
