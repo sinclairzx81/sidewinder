@@ -11,6 +11,7 @@
             "@sidewinder/async":     ["libs/async/index.ts"],
             "@sidewinder/channel":   ["libs/channel/index.ts"],
             "@sidewinder/client":    ["libs/client/index.ts"],
+            "@sidewinder/config":    ["libs/config/index.ts"],
             "@sidewinder/contract":  ["libs/contract/index.ts"],
             "@sidewinder/events":    ["libs/events/index.ts"],
             "@sidewinder/hash":      ["libs/hash/index.ts"],

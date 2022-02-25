@@ -1,6 +1,7 @@
 import './async/index'
 import './channel/index'
 import './client/index'
+import './config/index'
 import './contract/index'
 import './events/index'
 import './mongo/index'

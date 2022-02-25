@@ -48,26 +48,22 @@ export class ConfigurationResolver<Schema extends TObject> {
 
   private exitWithResult(result: ValidateResult, object: unknown) {
     const documentation = Documentation.resolve(this.schema)
-    const value = JSON.stringify(object, null, 2)
     const error = result.errorText
       .replace('data must', 'configuration must')
       .replace(/data\//g, 'configuration.')
       .replace(/\//g, '.')
-
     console.log(documentation)
     console.log()
-    // console.log('Resolved:', value)
-    // console.log()
     console.log('Error:', error)
     console.log()
     process.exit(1)
   }
 
-  public shouldHelp() {
-    return process.argv.includes('--help')
+  private shouldHelp() {
+    return this.argv.includes('--help')
   }
 
-  public resolveInitial(configFileOrObject?: string | object) {
+  private resolveInitial(configFileOrObject?: string | object) {
     if (typeof configFileOrObject === 'string') {
       return this.documentResolver.resolve(configFileOrObject)
     }
@@ -77,11 +73,12 @@ export class ConfigurationResolver<Schema extends TObject> {
     return {}
   }
 
-  /**
-   * Resolves configuration from the environment or command line arguments. If passing a
-   * string value, a json configuration file will be loaded, if passing an object, the object
-   * will be used as configuration.
-   */
+  /** Returns configuration help information as a string */
+  public help() {
+    return Documentation.resolve(this.schema)
+  }
+
+  /** Resolves the configuration object */
   public resolve(configFileOrObject?: string | Partial<Static<Schema>>): Static<Schema> {
     // Detect caller request for help
     if (this.shouldHelp()) {

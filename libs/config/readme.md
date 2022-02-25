@@ -42,9 +42,9 @@ const configuration = Configuration(Type.Object({
     })
 }))
 
-// Resolves configurations from command line arguments and environment 
-// variable or process.exit(1) with error message. If this function 
-// succeeds then the application can trust the config object is of 
+// Resolves configurations from command line arguments and environment
+// variable or process.exit(1) with error message. If this function
+// succeeds then the application can trust the config object is of
 // the expected type.
 const config = configuration.resolve('config.json')
 
@@ -79,7 +79,9 @@ const configuration = Configuration(Type.Object({
 }))
 
 ```
+
 Which will source the following Environment Variables.
+
 ```bash
 ENABLED
 MONGO_HOST
@@ -110,7 +112,7 @@ const configuration = Configuration(Type.Object({
 Which will source the following command line arguments.
 
 ```bash
-$ node index.js --port 5000 --redis-host localhost --redis-port 6379 
+$ node index.js --port 5000 --redis-host localhost --redis-port 6379
 ```
 
 ## Documentation
@@ -130,6 +132,7 @@ const configuration = Configuration(Type.Object({
     })
 }))
 ```
+
 Displays the following in the terminal
 
 ```bash
