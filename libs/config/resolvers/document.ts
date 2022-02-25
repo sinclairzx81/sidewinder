@@ -32,10 +32,11 @@ export class DocumentResolver {
   constructor() {}
 
   public resolve(filePath: string): unknown {
-    if (!fs.existsSync(filePath)) throw Error(`Configuration: No such path '${filePath}'`)
+    if (!fs.existsSync(filePath)) {
+      console.error(`Configuration: No such path '${filePath}'`)
+      process.exit(1)
+    }
     const content = fs.readFileSync(filePath, 'utf8').trim()
-    if (content.indexOf('{') !== 0) throw Error('Invalid configuration document')
-    const func = new Function(`return ${content}`)
-    return func()
+    return JSON.parse(content)
   }
 }
