@@ -35,7 +35,7 @@ import { Request } from './request/index'
 export class WebClient<Contract extends TContract> {
   private readonly encoder: Encoder
 
-  constructor(public readonly contract: Contract, public readonly endpoint: string, public readonly additionalHeaders: Record<string, string> = {}) {
+  constructor(private readonly contract: Contract, private readonly endpoint: string, private readonly additionalHeaders: Record<string, string> = {}) {
     this.encoder = contract.format === 'json' ? new JsonEncoder() : new MsgPackEncoder()
   }
 
