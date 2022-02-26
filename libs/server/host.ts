@@ -38,20 +38,19 @@ import { v4 } from 'uuid'
 import ws from 'ws'
 
 export interface AutoScalingOptions {
-  
   /**
    * Sets an http GET endpoint that can be inspected by an auto scaling process. This endpoint
    * will return a response indicating if this host is oversaturated as indicated by the
-   * this threshold property. If connections exceed the configured threshold this endpoint 
+   * this threshold property. If connections exceed the configured threshold this endpoint
    * will respond with status 500, otherwise 200.
    */
-   endpoint: string
+  endpoint: string
 
-   /**
-    * The maximum number of connections before the auto scaling endpoint begins returning
-    * 500 status response codes. This is only used if `healthEnabled` is set to true.
-    */
-   threshold: number
+  /**
+   * The maximum number of connections before the auto scaling endpoint begins returning
+   * 500 status response codes. This is only used if `healthEnabled` is set to true.
+   */
+  threshold: number
 }
 
 export interface HostOptions {
@@ -76,14 +75,12 @@ export interface HostOptions {
    */
   maxSocketCount: number
 
-
   /**
    * Configuration options for auto scaling web processes in load balanced in environments.
-   * 
+   *
    * (Default is undefined)
    */
   autoScaling?: AutoScalingOptions
-
 }
 
 function defaultHostOptions(options: Partial<HostOptions>): HostOptions {
@@ -124,7 +121,7 @@ export class Host {
     this.socketCount = 0
     this.listening = false
     this.disposed = false
-    this.configureHealthEndpoint()
+    this.configureAutoScaling()
   }
 
   /** Uses a WebSocketService to the specified path  */
@@ -248,7 +245,7 @@ export class Host {
     }
   }
 
-  private configureHealthEndpoint() {
+  private configureAutoScaling() {
     if (this.options.autoScaling === undefined) return
     this.application.get(this.options.autoScaling.endpoint, (_, res) => {
       const status = this.socketCount >= this.options.autoScaling!.threshold ? 500 : 200
