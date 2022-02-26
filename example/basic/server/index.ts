@@ -18,7 +18,6 @@ service.method('sub',    (context, a, b) => a - b)
 service.method('mul',    (context, a, b) => a * b)
 service.method('div',    (context, a, b) => a / b)
 
-
 const host = new Host()
 host.use(cors())
 host.use('/math', service)
@@ -31,6 +30,6 @@ async function clientTest() {
     await client.call('add', 1, 2)
     await client.call('add', 1, 2)
     client.close()
-    console.log('RESULT', result)
+    console.log('client-result:', result)
 }
 clientTest().catch(error => console.log(error))

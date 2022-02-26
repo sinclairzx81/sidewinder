@@ -37,6 +37,23 @@ import express from 'express'
 import { v4 } from 'uuid'
 import ws from 'ws'
 
+export interface AutoScalingOptions {
+  
+  /**
+   * Sets an http GET endpoint that can be inspected by an auto scaling process. This endpoint
+   * will return a response indicating if this host is oversaturated as indicated by the
+   * this threshold property. If connections exceed the configured threshold this endpoint 
+   * will respond with status 500, otherwise 200.
+   */
+   endpoint: string
+
+   /**
+    * The maximum number of connections before the auto scaling endpoint begins returning
+    * 500 status response codes. This is only used if `healthEnabled` is set to true.
+    */
+   threshold: number
+}
+
 export interface HostOptions {
   /**
    * Sends a `ping` signal to each connected socket to prevent inactive sockets being terminated by a load balancer.
@@ -58,6 +75,24 @@ export interface HostOptions {
    * (Default is 16384)
    */
   maxSocketCount: number
+
+
+  /**
+   * Configuration options for auto scaling web processes in load balanced in environments.
+   * 
+   * (Default is undefined)
+   */
+  autoScaling?: AutoScalingOptions
+
+}
+
+function defaultHostOptions(options: Partial<HostOptions>): HostOptions {
+  return {
+    keepAliveTimeout: options.keepAliveTimeout !== undefined ? options.keepAliveTimeout : 8000,
+    disableFrameCompression: options.disableFrameCompression !== undefined ? options.disableFrameCompression : false,
+    maxSocketCount: options.maxSocketCount !== undefined ? options.maxSocketCount : 16384,
+    autoScaling: options.autoScaling !== undefined ? options.autoScaling : undefined,
+  }
 }
 
 /**
@@ -67,7 +102,7 @@ export interface HostOptions {
  */
 export class Host {
   private server!: Server // deferred till listen
-
+  private readonly options: HostOptions
   private readonly wsserver: WebSocketServer
   private readonly application: Application
   private readonly services: Map<string, WebSocketService<any>>
@@ -78,13 +113,8 @@ export class Host {
   private listening: boolean
   private disposed: boolean
 
-  constructor(
-    private readonly options: HostOptions = {
-      keepAliveTimeout: 8000,
-      disableFrameCompression: false,
-      maxSocketCount: 16384,
-    },
-  ) {
+  constructor(options: Partial<HostOptions> = {}) {
+    this.options = defaultHostOptions(options)
     this.services = new Map<string, WebSocketService<any>>()
     this.sockets = new Map<number, ws.WebSocket>()
     this.application = express()
@@ -94,6 +124,7 @@ export class Host {
     this.socketCount = 0
     this.listening = false
     this.disposed = false
+    this.configureHealthEndpoint()
   }
 
   /** Uses a WebSocketService to the specified path  */
@@ -215,6 +246,14 @@ export class Host {
       socket.write('HTTP/1.1 500 Internal Server Error\r\n\r\n')
       socket.destroy()
     }
+  }
+
+  private configureHealthEndpoint() {
+    if (this.options.autoScaling === undefined) return
+    this.application.get(this.options.autoScaling.endpoint, (_, res) => {
+      const status = this.socketCount >= this.options.autoScaling!.threshold ? 500 : 200
+      res.status(status).json({ status })
+    })
   }
 
   private keepAlive() {
