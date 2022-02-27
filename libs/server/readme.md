@@ -250,7 +250,7 @@ client.call('task')
 
 ## Authorization
 
-Sidewinder Services provide two levels of authorization; Service level and Method level. Both WebService and WebSocketService service types implement the same authorization levels, with authorization happening on a per request basic for WebServices and one for WebSocketServices. The following sections show their usage.
+Sidewinder Services offers two levels of authorization; Service level and Method level. Service level authorization controls access to all methods of a Service while Method level authorization can control access or map custom users contexts on a per method basis.
 
 ### Service Level
 

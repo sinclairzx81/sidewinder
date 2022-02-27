@@ -52,7 +52,7 @@ export class MongoDatabase<Schema extends TDatabase = TDatabase> {
   public static async connect<Schema extends TDatabase = TDatabase>(schema: Schema, url: string, options?: MongoClientOptions | undefined): Promise<MongoDatabase<Schema>> {
     const client = new MongoClient(url, options)
     await client.connect()
-    const database = await client.db('test')
+    const database = await client.db()
     return new MongoDatabase<Schema>(schema, database)
   }
 }
