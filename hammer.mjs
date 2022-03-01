@@ -4,7 +4,7 @@ import { compilePackage, packPackage } from './build/index'
 // Packages
 // -------------------------------------------------------------
 
-const version = '0.8.44'
+const version = '0.8.45'
 const packages = [
     ['async',     version, 'Sidewinder Async'],
     ['channel',   version, 'Sidewinder Channel'],
