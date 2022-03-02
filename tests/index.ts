@@ -1,4 +1,5 @@
 import './async/index'
+import './buffer/index'
 import './channel/index'
 import './client/index'
 import './config/index'
