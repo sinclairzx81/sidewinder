@@ -31,6 +31,7 @@ import { Platform } from '@sidewinder/platform'
 import { Validator } from '@sidewinder/validator'
 import { ServiceMethods, RpcErrorCode, RpcProtocol, RpcRequest, RpcResponse } from './methods/index'
 import { Encoder, JsonEncoder, MsgPackEncoder } from './encoder/index'
+import { Request } from './request'
 import { IncomingMessage, ServerResponse } from 'http'
 
 // --------------------------------------------------------------------------
@@ -66,7 +67,7 @@ class PipelineResult<Value> {
 // WebService
 // --------------------------------------------------------------------------
 
-export type WebServiceAuthorizeCallback<Context> = (clientId: string, request: IncomingMessage) => Promise<Context> | Context
+export type WebServiceAuthorizeCallback<Context> = (clientId: string, request: Request) => Promise<Context> | Context
 export type WebServiceConnectCallback<Context> = (context: Context) => Promise<void> | void
 export type WebServiceCloseCallback<Context> = (context: Context) => Promise<void> | void
 export type WebServiceErrorCallback = (clientId: string, error: unknown) => Promise<void> | void
@@ -246,7 +247,7 @@ export class WebService<Contract extends TContract, Context extends TSchema = TS
 
   private async readRpcContext(clientId: string, request: IncomingMessage): Promise<PipelineResult<Context['$static']>> {
     try {
-      const context = await this.onAuthorizeCallback(clientId, request)
+      const context = await this.onAuthorizeCallback(clientId, new Request(request))
       return PipelineResult.ok(context)
     } catch (error) {
       return PipelineResult.error(error as Error)

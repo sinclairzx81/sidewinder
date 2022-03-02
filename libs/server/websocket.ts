@@ -30,10 +30,11 @@ import { Exception, Type, TSchema, TString, TContract, TFunction, AuthorizeFunct
 import { Validator } from '@sidewinder/validator'
 import { ServiceMethods, Responder, RpcErrorCode, RpcProtocol, RpcRequest, RpcResponse } from './methods/index'
 import { Encoder, JsonEncoder, MsgPackEncoder } from './encoder/index'
+import { Request } from './request'
 import { WebSocket, MessageEvent, CloseEvent, ErrorEvent } from 'ws'
 import { IncomingMessage } from 'http'
 
-export type WebSocketServiceAuthorizeCallback<Context> = (clientId: string, request: IncomingMessage) => Promise<Context> | Context
+export type WebSocketServiceAuthorizeCallback<Context> = (clientId: string, request: Request) => Promise<Context> | Context
 export type WebSocketServiceConnectCallback<Context> = (context: Context) => Promise<unknown> | unknown
 export type WebSocketServiceCloseCallback<Context> = (context: Context) => Promise<unknown> | unknown
 export type WebSocketServiceErrorCallback = (context: string, error: unknown) => Promise<unknown> | unknown
@@ -200,7 +201,7 @@ export class WebSocketService<Contract extends TContract, Context extends TSchem
 
   public async upgrade(clientId: string, request: IncomingMessage): Promise<boolean> {
     try {
-      const context = await this.onAuthorizeCallback(clientId, request)
+      const context = await this.onAuthorizeCallback(clientId, new Request(request))
       this.contextValidator.assert(context)
       this.contexts.set(clientId, context)
       return true

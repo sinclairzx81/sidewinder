@@ -8,11 +8,11 @@ const service = new WebSocketService(Contract, Type.Object({
     name:     Type.String(),
     roles:    Type.Array(Type.String())
 }))
-
-service.event('authorize', (clientId, request) => ({ clientId, name: 'dave', roles: ['admin'] }))
-service.event('connect',   (context) => console.log('server:connect', context))
-service.event('close',     (context) => console.log('server:close',   context))
-
+service.event('authorize', (clientId, request) => {
+    return { clientId, name: 'dave', roles: [] }
+})
+service.event('connect', (context) => console.log('server:connect', context))
+service.event('close',   (context) => console.log('server:close',   context))
 service.method('add',    (context, a, b) => a + b)
 service.method('sub',    (context, a, b) => a - b)
 service.method('mul',    (context, a, b) => a * b)
@@ -24,12 +24,12 @@ host.use('/math', service)
 host.listen(5001).then(() => console.log('service running on port 5001'))
 
 async function clientTest() {
-    const client = new WebSocketClient(Contract, 'ws://localhost:5001/math')
-    const result = await client.call('add', 1, 2)
-    await client.call('add', 1, 2)
-    await client.call('add', 1, 2)
-    await client.call('add', 1, 2)
+    const client = new WebSocketClient(Contract, 'ws://localhost:5001/math?token=123')
+    const result0 = await client.call('add', 1, 2)
+    const result1 = await client.call('sub', 1, 2)
+    const result2 = await client.call('mul', 1, 2)
+    const result3 = await client.call('div', 1, 2)
     client.close()
-    console.log('client-result:', result)
+    console.log('client-results:', result0, result1, result2, result3)
 }
 clientTest().catch(error => console.log(error))
