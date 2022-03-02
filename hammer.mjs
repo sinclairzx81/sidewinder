@@ -7,6 +7,7 @@ import { compilePackage, packPackage } from './build/index'
 const version = '0.8.45'
 const packages = [
     ['async',     version, 'Sidewinder Async'],
+    ['buffer',    version, 'Sidewinder Buffer'],
     ['channel',   version, 'Sidewinder Channel'],
     ['client',    version, 'Sidewinder Client'],
     ['config',    version, 'Sidewinder Config'],
