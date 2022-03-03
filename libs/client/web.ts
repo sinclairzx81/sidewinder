@@ -26,7 +26,7 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-import { Exception, TContract, ContractMethodParamters, ContractMethodReturnType } from '@sidewinder/contract'
+import { Exception, Static, TContract, ContractMethodParamters, ContractMethodReturnType } from '@sidewinder/contract'
 import { RpcProtocol } from './methods/index'
 import { Encoder, MsgPackEncoder, JsonEncoder } from './encoder/index'
 import { Request } from './request/index'
@@ -41,9 +41,9 @@ export class WebClient<Contract extends TContract> {
 
   /** Calls a remote service method */
   public async call<
-    Method extends keyof Contract['$static']['server'] extends infer R ? (R extends string ? R : never) : never,
-    Parameters extends ContractMethodParamters<Contract['$static']['server'][Method]>,
-    ReturnType extends ContractMethodReturnType<Contract['$static']['server'][Method]>,
+    Method extends keyof Static<Contract>['server'] extends infer R ? (R extends string ? R : never) : never,
+    Parameters extends ContractMethodParamters<Static<Contract>['server'][Method]>,
+    ReturnType extends ContractMethodReturnType<Static<Contract>['server'][Method]>,
   >(method: Method, ...params: Parameters): Promise<ReturnType> {
     this.assertMethodExists(method as string)
     const request = RpcProtocol.encodeRequest('unknown', method as string, params)
@@ -63,7 +63,7 @@ export class WebClient<Contract extends TContract> {
   }
 
   /** Sends a message to a remote service method and ignores the result */
-  public send<Method extends keyof Contract['$static']['server'], Parameters extends ContractMethodParamters<Contract['$static']['server'][Method]>>(method: Method, ...params: Parameters) {
+  public send<Method extends keyof Static<Contract>['server'], Parameters extends ContractMethodParamters<Static<Contract>['server'][Method]>>(method: Method, ...params: Parameters) {
     this.assertMethodExists(method as string)
     const request = RpcProtocol.encodeRequest('unknown', method as string, params)
     const encoded = this.encoder.encode(request)

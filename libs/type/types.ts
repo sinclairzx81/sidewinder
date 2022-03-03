@@ -766,9 +766,7 @@ export class TypeBuilder {
     const additionalItems = false
     const minItems = items.length
     const maxItems = items.length
-    const schema = (
-      items.length > 0 ? { ...options, kind: 'Tuple', type: 'array', items, additionalItems, minItems, maxItems } : { ...options, kind: 'Tuple', type: 'array', minItems, maxItems }
-    ) as any
+    const schema = (items.length > 0 ? { ...options, kind: 'Tuple', type: 'array', items, additionalItems, minItems, maxItems } : { ...options, kind: 'Tuple', type: 'array', minItems, maxItems }) as any
     return this.Create(schema)
   }
 

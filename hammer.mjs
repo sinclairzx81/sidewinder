@@ -4,7 +4,7 @@ import { compilePackage, packPackage } from './build/index'
 // Packages
 // -------------------------------------------------------------
 
-const version = '0.8.47'
+const version = '0.8.48'
 const packages = [
     ['async',     version, 'Sidewinder Async'],
     ['buffer',    version, 'Sidewinder Buffer'],
@@ -37,7 +37,7 @@ export async function clean() {
 // -------------------------------------------------------------
 
 export async function format() {
-    await shell('prettier --no-semi --single-quote --print-width 200 --trailing-comma all --write libs tests')
+    await shell('prettier --no-semi --single-quote --print-width 240 --trailing-comma all --write libs tests')
 }
 
 // -------------------------------------------------------------

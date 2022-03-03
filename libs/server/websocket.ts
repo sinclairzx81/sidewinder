@@ -26,7 +26,7 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-import { Exception, Type, TSchema, TString, TContract, TFunction, AuthorizeFunction, AuthorizeFunctionReturnType, ContractMethodParamters, ContractMethodReturnType } from '@sidewinder/contract'
+import { Exception, Static, Type, TSchema, TString, TContract, TFunction, AuthorizeFunction, AuthorizeFunctionReturnType, ContractMethodParamters, ContractMethodReturnType } from '@sidewinder/contract'
 import { Validator } from '@sidewinder/validator'
 import { ServiceMethods, Responder, RpcErrorCode, RpcProtocol, RpcRequest, RpcResponse } from './methods/index'
 import { Encoder, JsonEncoder, MsgPackEncoder } from './encoder/index'
@@ -46,13 +46,13 @@ export type WebSocketServiceErrorCallback = (context: string, error: unknown) =>
  * clients.
  */
 export class WebSocketService<Contract extends TContract, Context extends TSchema = TString> {
-  private onAuthorizeCallback: WebSocketServiceAuthorizeCallback<Context['$static']>
-  private onConnectCallback: WebSocketServiceConnectCallback<Context['$static']>
-  private onCloseCallback: WebSocketServiceCloseCallback<Context['$static']>
+  private onAuthorizeCallback: WebSocketServiceAuthorizeCallback<Static<Context>>
+  private onConnectCallback: WebSocketServiceConnectCallback<Static<Context>>
+  private onCloseCallback: WebSocketServiceCloseCallback<Static<Context>>
   private onErrorCallback: WebSocketServiceErrorCallback
 
   private readonly contextValidator: Validator<Context>
-  private readonly contexts: Map<string, Context['$static']>
+  private readonly contexts: Map<string, Static<Context>>
   private readonly sockets: Map<string, WebSocket>
   private readonly encoder: Encoder
   private readonly responder: Responder
@@ -65,11 +65,11 @@ export class WebSocketService<Contract extends TContract, Context extends TSchem
    */
   constructor(private readonly contract: Contract, private readonly context: Context = Type.String() as any) {
     this.contextValidator = new Validator(this.context)
-    this.onAuthorizeCallback = (clientId: string) => clientId as unknown
+    this.onAuthorizeCallback = (clientId: string) => clientId as any
     this.onConnectCallback = () => {}
     this.onErrorCallback = () => {}
     this.onCloseCallback = () => {}
-    this.contexts = new Map<string, Context['$static']>()
+    this.contexts = new Map<string, Static<Context>>()
     this.sockets = new Map<string, WebSocket>()
     this.encoder = this.contract.format === 'json' ? new JsonEncoder() : new MsgPackEncoder()
     this.responder = new Responder()
@@ -83,20 +83,20 @@ export class WebSocketService<Contract extends TContract, Context extends TSchem
    * that conforms to the services context or throw if the user is not authorized. This context is reused for
    * subsequence calls on this service.
    */
-  public event(event: 'authorize', callback: WebSocketServiceAuthorizeCallback<Context['$static']>): WebSocketServiceAuthorizeCallback<Context['$static']>
+  public event(event: 'authorize', callback: WebSocketServiceAuthorizeCallback<Static<Context>>): WebSocketServiceAuthorizeCallback<Static<Context>>
 
   /**
    * Subscribes to connect events. This event is raised immediately following a successful 'authorize' event only.
    * This event receives the context returned from a successful authorization.
    */
-  public event(event: 'connect', callback: WebSocketServiceConnectCallback<Context['$static']>): WebSocketServiceConnectCallback<Context['$static']>
+  public event(event: 'connect', callback: WebSocketServiceConnectCallback<Static<Context>>): WebSocketServiceConnectCallback<Static<Context>>
 
   /**
    * Subscribes to close events. This event is raised whenever the remote WebSocket disconnects from the service.
    * Callers should use this event to clean up any associated state created for the connection. This event receives
    * the context returned from a successful authorization.
    */
-  public event(event: 'close', callback: WebSocketServiceCloseCallback<Context['$static']>): WebSocketServiceCloseCallback<Context['$static']>
+  public event(event: 'close', callback: WebSocketServiceCloseCallback<Static<Context>>): WebSocketServiceCloseCallback<Static<Context>>
 
   /**
    * Subcribes to error events. This event is raised for any socket transport errors and is usually following
@@ -135,22 +135,18 @@ export class WebSocketService<Contract extends TContract, Context extends TSchem
 
   /** Defines a server method implementation with method level authorization */
   public method<
-    Method extends keyof Contract['$static']['server'] extends infer R ? (R extends string ? R : never) : never,
-    Parameters extends ContractMethodParamters<Contract['$static']['server'][Method]>,
-    ReturnType extends ContractMethodReturnType<Contract['$static']['server'][Method]>,
-    Authorize extends AuthorizeFunction<Context['$static'], any>,
-  >(
-    method: Method,
-    authorize: Authorize,
-    callback: (context: AuthorizeFunctionReturnType<Authorize>, ...params: Parameters) => Promise<ReturnType> | ReturnType,
-  ): (context: Context['$static'], ...params: Parameters) => Promise<ReturnType>
+    Method extends keyof Static<Contract>['server'] extends infer R ? (R extends string ? R : never) : never,
+    Parameters extends ContractMethodParamters<Static<Contract>['server'][Method]>,
+    ReturnType extends ContractMethodReturnType<Static<Contract>['server'][Method]>,
+    Authorize extends AuthorizeFunction<Static<Context>, any>,
+  >(method: Method, authorize: Authorize, callback: (context: AuthorizeFunctionReturnType<Authorize>, ...params: Parameters) => Promise<ReturnType> | ReturnType): (context: Static<Context>, ...params: Parameters) => Promise<ReturnType>
 
   /** Defines a server method implementation */
   public method<
-    Method extends keyof Contract['$static']['server'] extends infer R ? (R extends string ? R : never) : never,
-    Parameters extends ContractMethodParamters<Contract['$static']['server'][Method]>,
-    ReturnType extends ContractMethodReturnType<Contract['$static']['server'][Method]>,
-  >(method: Method, callback: (context: Context['$static'], ...params: Parameters) => Promise<ReturnType> | ReturnType): (context: Context['$static'], ...params: Parameters) => Promise<ReturnType>
+    Method extends keyof Static<Contract>['server'] extends infer R ? (R extends string ? R : never) : never,
+    Parameters extends ContractMethodParamters<Static<Contract>['server'][Method]>,
+    ReturnType extends ContractMethodReturnType<Static<Contract>['server'][Method]>,
+  >(method: Method, callback: (context: Static<Context>, ...params: Parameters) => Promise<ReturnType> | ReturnType): (context: Static<Context>, ...params: Parameters) => Promise<ReturnType>
 
   /** Defines a server method implementation */
   public method(...args: any[]): any {
@@ -158,14 +154,14 @@ export class WebSocketService<Contract extends TContract, Context extends TSchem
     const target = (this.contract.server as any)[method] as TFunction | undefined
     if (target === undefined) throw Error(`Cannot define method '${method}' as it does not exist in contract`)
     this.methods.register(method, target, authorize, callback)
-    return async (context: Context['$static'], ...params: any[]) => await this.methods.execute(context, method, params)
+    return async (context: Static<Context>, ...params: any[]) => await this.methods.execute(context, method, params)
   }
 
   /** Calls a remote client method */
   public async call<
-    Method extends keyof Contract['$static']['client'] extends infer R ? (R extends string ? R : never) : never,
-    Parameters extends ContractMethodParamters<Contract['$static']['client'][Method]>,
-    ReturnType extends ContractMethodReturnType<Contract['$static']['client'][Method]>,
+    Method extends keyof Static<Contract>['client'] extends infer R ? (R extends string ? R : never) : never,
+    Parameters extends ContractMethodParamters<Static<Contract>['client'][Method]>,
+    ReturnType extends ContractMethodReturnType<Static<Contract>['client'][Method]>,
   >(clientId: string, method: Method, ...params: Parameters): Promise<ReturnType> {
     if (!this.sockets.has(clientId)) throw new Error('ClientId not found')
     const handle = this.responder.register(clientId)
@@ -177,10 +173,11 @@ export class WebSocketService<Contract extends TContract, Context extends TSchem
   }
 
   /** Sends a message to a remote client method and ignores the result */
-  public send<
-    Method extends keyof Contract['$static']['client'] extends infer R ? (R extends string ? R : never) : never,
-    Parameters extends ContractMethodParamters<Contract['$static']['client'][Method]>,
-  >(clientId: string, method: Method, ...params: Parameters): void {
+  public send<Method extends keyof Static<Contract>['client'] extends infer R ? (R extends string ? R : never) : never, Parameters extends ContractMethodParamters<Static<Contract>['client'][Method]>>(
+    clientId: string,
+    method: Method,
+    ...params: Parameters
+  ): void {
     if (!this.sockets.has(clientId)) return
     const socket = this.sockets.get(clientId)!
     const request = RpcProtocol.encodeRequest(undefined, method, params)

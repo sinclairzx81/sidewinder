@@ -39,7 +39,6 @@ export class MathService extends WebSocketService<typeof MathServiceContract, ty
     // -----------------------------------------------------------------
     // Methods
     // -----------------------------------------------------------------
-
     add = this.method('add', (context, a, b) => a + b)
     sub = this.method('sub', (context, a, b) => a - b)
     mul = this.method('mul', (context, a, b) => a * b)
@@ -65,6 +64,8 @@ async function clientTest() {
     const sub = await client.call('sub', 1, 2)
     const mul = await client.call('mul', 1, 2)
     const div = await client.call('div', 1, 2)
+
+    
     console.log('client:', add, sub, mul, div)
 }
 clientTest().catch(error => console.log(error))

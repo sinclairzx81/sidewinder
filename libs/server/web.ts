@@ -26,7 +26,7 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-import { Exception, Type, TSchema, TString, TContract, TFunction, AuthorizeFunction, AuthorizeFunctionReturnType, ContractMethodParamters, ContractMethodReturnType } from '@sidewinder/contract'
+import { Exception, Static, Type, TSchema, TString, TContract, TFunction, AuthorizeFunction, AuthorizeFunctionReturnType, ContractMethodParamters, ContractMethodReturnType } from '@sidewinder/contract'
 import { Platform } from '@sidewinder/platform'
 import { Validator } from '@sidewinder/validator'
 import { ServiceMethods, RpcErrorCode, RpcProtocol, RpcRequest, RpcResponse } from './methods/index'
@@ -74,9 +74,9 @@ export type WebServiceErrorCallback = (clientId: string, error: unknown) => Prom
 
 /** A JSON RPC 2.0 based HTTP service that supports remote method invocation via HTTP POST requests. */
 export class WebService<Contract extends TContract, Context extends TSchema = TString> {
-  private onAuthorizeCallback: WebServiceAuthorizeCallback<Context['$static']>
-  private onConnectCallback: WebServiceConnectCallback<Context['$static']>
-  private onCloseCallback: WebServiceCloseCallback<Context['$static']>
+  private onAuthorizeCallback: WebServiceAuthorizeCallback<Static<Context>>
+  private onConnectCallback: WebServiceConnectCallback<Static<Context>>
+  private onCloseCallback: WebServiceCloseCallback<Static<Context>>
   private onErrorCallback: WebServiceErrorCallback
   private readonly contextValidator: Validator<Context>
   private readonly methods: ServiceMethods
@@ -89,7 +89,7 @@ export class WebService<Contract extends TContract, Context extends TSchema = TS
    */
   constructor(private readonly contract: Contract, private readonly context: Context = Type.String() as any) {
     this.contextValidator = new Validator(this.context)
-    this.onAuthorizeCallback = (clientId: string) => clientId as unknown
+    this.onAuthorizeCallback = (clientId: string) => clientId as any
     this.onConnectCallback = () => {}
     this.onErrorCallback = () => {}
     this.onCloseCallback = () => {}
@@ -103,20 +103,20 @@ export class WebService<Contract extends TContract, Context extends TSchema = TS
    * this event is mandatory if the service provides a context schema. The authorize event must return a value
    * that conforms to the services context or throw if the user is not authorized.
    */
-  public event(event: 'authorize', callback: WebServiceAuthorizeCallback<Context['$static']>): WebServiceAuthorizeCallback<Context['$static']>
+  public event(event: 'authorize', callback: WebServiceAuthorizeCallback<Static<Context>>): WebServiceAuthorizeCallback<Static<Context>>
 
   /**
    * Subscribes to connect events. This event is raised immediately following a successful 'authorize' event only.
    * This event receives the context returned from a successful authorization.
    */
-  public event(event: 'connect', callback: WebServiceConnectCallback<Context['$static']>): WebServiceConnectCallback<Context['$static']>
+  public event(event: 'connect', callback: WebServiceConnectCallback<Static<Context>>): WebServiceConnectCallback<Static<Context>>
 
   /**
    * Subscribes to close events. This event is raised whenever the remote Http request is about to close.
    * Callers should use this event to clean up any associated state created for the request. This event receives
    * the context returned from a successful authorization.
    */
-  public event(event: 'close', callback: WebServiceCloseCallback<Context['$static']>): WebServiceCloseCallback<Context['$static']>
+  public event(event: 'close', callback: WebServiceCloseCallback<Static<Context>>): WebServiceCloseCallback<Static<Context>>
 
   /**
    * Subscribes to error events. This event is raised if there are any http transport errors. This event
@@ -151,22 +151,18 @@ export class WebService<Contract extends TContract, Context extends TSchema = TS
 
   /** Defines a server method implementation with method level authorization */
   public method<
-    Method extends keyof Contract['$static']['server'] extends infer R ? (R extends string ? R : never) : never,
-    Parameters extends ContractMethodParamters<Contract['$static']['server'][Method]>,
-    ReturnType extends ContractMethodReturnType<Contract['$static']['server'][Method]>,
-    Authorize extends AuthorizeFunction<Context['$static'], any>,
-  >(
-    method: Method,
-    authorize: Authorize,
-    callback: (context: AuthorizeFunctionReturnType<Authorize>, ...params: Parameters) => Promise<ReturnType> | ReturnType,
-  ): (context: Context['$static'], ...params: Parameters) => Promise<ReturnType>
+    Method extends keyof Static<Contract>['server'] extends infer R ? (R extends string ? R : never) : never,
+    Parameters extends ContractMethodParamters<Static<Contract>['server'][Method]>,
+    ReturnType extends ContractMethodReturnType<Static<Contract>['server'][Method]>,
+    Authorize extends AuthorizeFunction<Static<Context>, any>,
+  >(method: Method, authorize: Authorize, callback: (context: AuthorizeFunctionReturnType<Authorize>, ...params: Parameters) => Promise<ReturnType> | ReturnType): (context: Static<Context>, ...params: Parameters) => Promise<ReturnType>
 
   /** Defines a server method implementation */
   public method<
-    Method extends keyof Contract['$static']['server'] extends infer R ? (R extends string ? R : never) : never,
-    Parameters extends ContractMethodParamters<Contract['$static']['server'][Method]>,
-    ReturnType extends ContractMethodReturnType<Contract['$static']['server'][Method]>,
-  >(method: Method, callback: (context: Context['$static'], ...params: Parameters) => Promise<ReturnType> | ReturnType): (context: Context['$static'], ...params: Parameters) => Promise<ReturnType>
+    Method extends keyof Static<Contract>['server'] extends infer R ? (R extends string ? R : never) : never,
+    Parameters extends ContractMethodParamters<Static<Contract>['server'][Method]>,
+    ReturnType extends ContractMethodReturnType<Static<Contract>['server'][Method]>,
+  >(method: Method, callback: (context: Static<Context>, ...params: Parameters) => Promise<ReturnType> | ReturnType): (context: Static<Context>, ...params: Parameters) => Promise<ReturnType>
 
   /** Defines a server method implementation */
   public method(...args: any[]): any {
@@ -174,7 +170,7 @@ export class WebService<Contract extends TContract, Context extends TSchema = TS
     const target = (this.contract.server as any)[method] as TFunction | undefined
     if (target === undefined) throw Error(`Cannot define method '${method}' as it does not exist in contract`)
     this.methods.register(method, target, authorize, callback)
-    return async (context: Context['$static'], ...params: any[]) => await this.methods.execute(context, method, params)
+    return async (context: Static<Context>, ...params: any[]) => await this.methods.execute(context, method, params)
   }
 
   // ---------------------------------------------------------------------
@@ -245,7 +241,7 @@ export class WebService<Contract extends TContract, Context extends TSchema = TS
   // Context
   // ---------------------------------------------------------------------
 
-  private async readRpcContext(clientId: string, request: IncomingMessage): Promise<PipelineResult<Context['$static']>> {
+  private async readRpcContext(clientId: string, request: IncomingMessage): Promise<PipelineResult<Static<Context>>> {
     try {
       const context = await this.onAuthorizeCallback(clientId, new Request(request))
       return PipelineResult.ok(context)
@@ -254,7 +250,7 @@ export class WebService<Contract extends TContract, Context extends TSchema = TS
     }
   }
 
-  private checkRpcContext(rpcContext: Context['$static']): PipelineResult<null> {
+  private checkRpcContext(rpcContext: Static<Context>): PipelineResult<null> {
     const result = this.contextValidator.check(rpcContext)
     if (result.success) return PipelineResult.ok(null)
     return PipelineResult.error(new Error('Rpc Context is invalid'))
@@ -347,7 +343,7 @@ export class WebService<Contract extends TContract, Context extends TSchema = TS
   // Execute
   // ------------------------------------------------------------------------
 
-  private async executeRpcRequest(rpcContext: Context['$static'], rpcRequest: RpcRequest): Promise<PipelineResult<any>> {
+  private async executeRpcRequest(rpcContext: Static<Context>, rpcRequest: RpcRequest): Promise<PipelineResult<any>> {
     try {
       const result = await this.methods.execute(rpcContext, rpcRequest.method, rpcRequest.params)
       return PipelineResult.ok(result)

@@ -26,7 +26,7 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-import { Exception, TContract, ContractMethodParamters, ContractMethodReturnType, TFunction } from '@sidewinder/contract'
+import { Exception, Static, TContract, ContractMethodParamters, ContractMethodReturnType, TFunction } from '@sidewinder/contract'
 import { ClientMethods, Responder, RpcErrorCode, RpcProtocol, RpcRequest, RpcResponse } from './methods/index'
 import { Encoder, MsgPackEncoder, JsonEncoder } from './encoder/index'
 import { Barrier } from '@sidewinder/async'
@@ -146,9 +146,9 @@ export class WebSocketClient<Contract extends TContract> {
 
   /** Defines a client method implementation */
   public method<
-    Method extends keyof Contract['$static']['client'] extends infer R ? (R extends string ? R : never) : never,
-    Parameters extends ContractMethodParamters<Contract['$static']['client'][Method]>,
-    ReturnType extends ContractMethodReturnType<Contract['$static']['client'][Method]>,
+    Method extends keyof Static<Contract>['client'] extends infer R ? (R extends string ? R : never) : never,
+    Parameters extends ContractMethodParamters<Static<Contract>['client'][Method]>,
+    ReturnType extends ContractMethodReturnType<Static<Contract>['client'][Method]>,
   >(method: Method, callback: (...params: Parameters) => Promise<ReturnType> | ReturnType) {
     const target = (this.contract.client as any)[method] as TFunction | undefined
     if (target === undefined) throw Error(`Cannot define method '${method}' as it does not exist in contract`)
@@ -158,9 +158,9 @@ export class WebSocketClient<Contract extends TContract> {
 
   /** Calls a remote service method */
   public async call<
-    Method extends keyof Contract['$static']['server'] extends infer R ? (R extends string ? R : never) : never,
-    Parameters extends ContractMethodParamters<Contract['$static']['server'][Method]>,
-    ReturnType extends ContractMethodReturnType<Contract['$static']['server'][Method]>,
+    Method extends keyof Static<Contract>['server'] extends infer R ? (R extends string ? R : never) : never,
+    Parameters extends ContractMethodParamters<Static<Contract>['server'][Method]>,
+    ReturnType extends ContractMethodReturnType<Static<Contract>['server'][Method]>,
   >(method: Method, ...params: Parameters): Promise<ReturnType> {
     await this.barrier.wait()
     this.assertMethodExists(method)
@@ -173,10 +173,10 @@ export class WebSocketClient<Contract extends TContract> {
   }
 
   /** Sends a message to a remote service method and ignores the result */
-  public send<
-    Method extends keyof Contract['$static']['server'] extends infer R ? (R extends string ? R : never) : never,
-    Parameters extends ContractMethodParamters<Contract['$static']['server'][Method]>,
-  >(method: Method, ...params: Parameters): void {
+  public send<Method extends keyof Static<Contract>['server'] extends infer R ? (R extends string ? R : never) : never, Parameters extends ContractMethodParamters<Static<Contract>['server'][Method]>>(
+    method: Method,
+    ...params: Parameters
+  ): void {
     this.assertMethodExists(method as string)
     into(async () => {
       try {
