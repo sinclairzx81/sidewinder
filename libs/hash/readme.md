@@ -22,9 +22,9 @@ The ValueHash utility will generate a sha1 hash of any valid JavaScript value. T
 import { ValidHash } from '@sidewinder/hash'
 
 const value = {
-    a: 1,
-    b: true,
-    c: 'hello'
+  a: 1,
+  b: true,
+  c: 'hello',
 }
 
 const hash = ValueHash.hash(value)
