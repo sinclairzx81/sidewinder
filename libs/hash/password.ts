@@ -26,6 +26,18 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-export * from './equal'
-export * from './password'
-export * from './value'
+import bcrypt from 'bcryptjs'
+
+/** Hashing utility specific to passwords Uses bcrypt as the hashing algorithm. */
+export namespace PasswordHash {
+  /** Compares the password against the given hash. Returns true if match. */
+  export async function compare(password: string, hash: string) {
+    return await bcrypt.compare(password, hash)
+  }
+
+  /** Hashes the given password with the given number salt of iterations. */
+  export async function hash(password: string, rounds: number = 8) {
+    const salt = await bcrypt.genSalt(rounds)
+    return await bcrypt.hash(password, salt)
+  }
+}
