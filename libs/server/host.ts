@@ -31,6 +31,7 @@ import { createServer as createHttpsServer, ServerOptions } from 'https'
 import { Application, RequestHandler } from 'express'
 import { Socket } from 'net'
 import { WebSocketServer } from 'ws'
+import { HttpService } from './http'
 import { WebSocketService } from './websocket'
 import { WebService } from './web'
 import express from 'express'
@@ -130,6 +131,9 @@ export class Host {
   /** Uses a WebService to the specified path  */
   public use(path: string, service: WebService<any, any>): void
 
+  /** Uses a HttpService to the specified path  */
+  public use(path: string, service: HttpService): void
+
   /** Uses express middleware on the specified path  */
   public use(path: string, service: RequestHandler): void
 
@@ -139,32 +143,25 @@ export class Host {
   /** Uses a WebService */
   public use(service: WebService<any, any>): void
 
+  /** Uses a HttpService */
+  public use(service: HttpService): void
+
   /** Uses express middleware */
   public use(middleware: RequestHandler): void
 
   /** Uses a service */
   public use(...args: any[]): void {
     this.assertDisposed()
-    if (args.length === 2) {
-      const [path, service] = [args[0], args[1]]
-      if (service instanceof WebSocketService) {
-        this.services.set(path, service)
-      } else if (service instanceof WebService) {
-        this.application.post(path, (req, res) => service.accept(v4(), req, res))
-      } else {
-        this.application.use(path, service)
-      }
-    } else if (args.length === 1) {
-      const service = args[0]
-      if (service instanceof WebSocketService) {
-        this.services.set('/', service)
-      } else if (service instanceof WebService) {
-        this.application.post('/', (req, res) => service.accept(v4(), req, res))
-      } else {
-        this.application.use(service)
-      }
+    if (args.length > 2 || args.length < 1) throw Error('Invalid parameters on use()')
+    const [path, service] = args.length === 2 ? [args[0], args[1]] : ['/', args[0]]
+    if (service instanceof WebSocketService) {
+      this.services.set(path, service)
+    } else if (service instanceof WebService) {
+      this.application.post(path, (req, res) => service.accept(v4(), req, res))
+    } else if (service instanceof HttpService) {
+      this.application.use(path, (req, res) => service.accept(v4(), req, res))
     } else {
-      throw Error('Invalid parameters on use()')
+      this.application.use(path, service)
     }
   }
 

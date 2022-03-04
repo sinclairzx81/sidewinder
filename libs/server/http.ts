@@ -26,10 +26,11 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-export * from '@sidewinder/contract'
-export * from './encoder/index'
-export * from './methods/index'
-export * from './http'
-export * from './host'
-export * from './web'
-export * from './websocket'
+import { IncomingMessage, ServerResponse } from 'http'
+
+/** Raw Http Service. Accepts all Http requests for any Http method. */
+export class HttpService {
+  public accept(clientId: string, request: IncomingMessage, response: ServerResponse) {
+    response.end('HttpService: accept() method not implemented')
+  }
+}

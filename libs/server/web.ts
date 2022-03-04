@@ -31,6 +31,7 @@ import { Platform } from '@sidewinder/platform'
 import { Validator } from '@sidewinder/validator'
 import { ServiceMethods, RpcErrorCode, RpcProtocol, RpcRequest, RpcResponse } from './methods/index'
 import { Encoder, JsonEncoder, MsgPackEncoder } from './encoder/index'
+import { HttpService } from './http'
 import { Request } from './request'
 import { IncomingMessage, ServerResponse } from 'http'
 
@@ -73,7 +74,7 @@ export type WebServiceCloseCallback<Context> = (context: Context) => Promise<voi
 export type WebServiceErrorCallback = (clientId: string, error: unknown) => Promise<void> | void
 
 /** A JSON RPC 2.0 based HTTP service that supports remote method invocation via HTTP POST requests. */
-export class WebService<Contract extends TContract, Context extends TSchema = TString> {
+export class WebService<Contract extends TContract, Context extends TSchema = TString> extends HttpService {
   private onAuthorizeCallback: WebServiceAuthorizeCallback<Static<Context>>
   private onConnectCallback: WebServiceConnectCallback<Static<Context>>
   private onCloseCallback: WebServiceCloseCallback<Static<Context>>
@@ -88,6 +89,7 @@ export class WebService<Contract extends TContract, Context extends TSchema = TS
    * @param context The context this service should use.
    */
   constructor(private readonly contract: Contract, private readonly context: Context = Type.String() as any) {
+    super()
     this.contextValidator = new Validator(this.context)
     this.onAuthorizeCallback = (clientId: string) => clientId as any
     this.onConnectCallback = () => {}
