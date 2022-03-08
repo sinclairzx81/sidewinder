@@ -34,7 +34,9 @@ export class MongoEncoder {
 
   /** Decodes mongo records to plain JavaScript objects */
   public decode(value: any): any {
-    if (value instanceof Mongo.ObjectId) {
+    if (value === null) {
+      return value
+    } else if (value instanceof Mongo.ObjectId) {
       return value.toHexString()
     } else if (value instanceof Mongo.Binary) {
       return new Uint8Array(value.buffer)
@@ -51,7 +53,9 @@ export class MongoEncoder {
 
   /** Encodes plain JavaScript objects into Mongo records */
   public encode(value: any): any {
-    if (typeof value === 'string' && value.match(/^[0-9a-fA-F]{24}$/)) {
+    if (value === null) {
+      return value
+    } else if (typeof value === 'string' && value.match(/^[0-9a-fA-F]{24}$/)) {
       return new Mongo.ObjectId(value)
     } else if (value instanceof Uint8Array) {
       return new Mongo.Binary(Buffer.from(value))
