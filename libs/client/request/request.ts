@@ -35,12 +35,6 @@ export namespace Request {
     return { 'Content-Type': contentType, 'Content-Length': body.length.toString() }
   }
 
-  function assertResponseOk(endpoint: string, ok: boolean) {
-    if (!ok) {
-      throw Error(`Endpoint '${endpoint}' unreachable`)
-    }
-  }
-
   function assertResponseType(contract: TContract, endpoint: string, contentType: string) {
     const expectedContentType = contract.format === 'json' ? 'application/json' : 'application/x-msgpack'
     if (contentType !== expectedContentType) {
@@ -52,7 +46,6 @@ export namespace Request {
     const requiredHeaders = createRequiredHeader(contract, body)
     const headers = { ...additionalHeaders, ...requiredHeaders }
     const response = await fetch(endpoint, { method: 'POST', body, headers })
-    assertResponseOk(endpoint, response.ok)
     assertResponseType(contract, endpoint, response.headers.get('Content-Type') as string)
     const arraybuffer = await response.arrayBuffer()
     return new Uint8Array(arraybuffer)
