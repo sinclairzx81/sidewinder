@@ -4,7 +4,7 @@ import { compilePackage, packPackage } from './build/index'
 // Packages
 // -------------------------------------------------------------
 
-const version = '0.8.51'
+const version = '0.8.52'
 const packages = [
     ['async',     version, 'Sidewinder Async'],
     ['buffer',    version, 'Sidewinder Buffer'],
@@ -14,6 +14,7 @@ const packages = [
     ['contract',  version, 'Sidewinder Contract'],
     ['events',    version, 'Sidewinder Events'],
     ['hash',      version, 'Sidewinder Hashing'],
+    ['mime',      version, 'Sidewinder Mime'],
     ['mongo',     version, 'Sidewinder Mongo'],
     ['path',      version, 'Sidewinder Path'],
     ['platform',  version, 'Sidewinder Platform'],
