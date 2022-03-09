@@ -48,7 +48,7 @@ export class WebClient<Contract extends TContract> {
     this.assertMethodExists(method as string)
     const request = RpcProtocol.encodeRequest('unknown', method as string, params)
     const encoded = this.encoder.encode(request)
-    const decoded = this.encoder.decode(await Request.call(this.contract, this.endpoint, {}, encoded))
+    const decoded = this.encoder.decode(await Request.call(this.contract, this.endpoint, this.additionalHeaders, encoded))
     const message = RpcProtocol.decodeAny(decoded)
     if (message === undefined) throw Error('Unable to decode response')
     if (message.type !== 'response') throw Error('Server responded with an invalid protocol response')
