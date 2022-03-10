@@ -51,6 +51,7 @@ License MIT
 - [Token](libs/token)
 - [Type](libs/type)
 - [Validator](libs/validator)
+- [Web](libs/web)
 
 ## Install
 
