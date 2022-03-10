@@ -26,11 +26,11 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
+import { RetryWebSocket, WebSocket } from '@sidewinder/web'
 import { Exception, Static, TContract, ContractMethodParamters, ContractMethodReturnType, TFunction } from '@sidewinder/contract'
 import { ClientMethods, Responder, RpcErrorCode, RpcProtocol, RpcRequest, RpcResponse } from './methods/index'
 import { Encoder, MsgPackEncoder, JsonEncoder } from './encoder/index'
 import { Barrier } from '@sidewinder/async'
-import { RetryWebSocket, UnifiedWebSocket } from './sockets'
 
 export type WebSocketClientConnectCallback = () => void
 export type WebSocketClientErrorCallback = (error: any) => void
@@ -85,7 +85,7 @@ export class WebSocketClient<Contract extends TContract> {
 
   private readonly encoder: Encoder
   private readonly methods: ClientMethods
-  private readonly socket: RetryWebSocket | UnifiedWebSocket
+  private readonly socket: RetryWebSocket | WebSocket
   private readonly options: WebSocketClientOptions
   private readonly responder: Responder
   private readonly barrier: Barrier
@@ -106,7 +106,7 @@ export class WebSocketClient<Contract extends TContract> {
           autoReconnectBuffer: this.options.autoReconnectBuffer,
           autoReconnectTimeout: this.options.autoReconnectTimeout,
         })
-      : new UnifiedWebSocket(this.endpoint, {
+      : new WebSocket(this.endpoint, {
           binaryType: 'arraybuffer',
         })
     this.socket.on('open', () => this.onOpen())

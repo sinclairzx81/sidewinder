@@ -22,7 +22,8 @@ const packages = [
     ['server',    version, 'Sidewinder Server'],
     ['token',     version, 'Sidewinder Token'],
     ['type',      version, 'Sidewinder Type'],
-    ['validator', version, 'Sidewinder Validator']
+    ['validator', version, 'Sidewinder Validator'],
+    ['web',       version, 'Sidewinder Web'],
 ]
 
 // -------------------------------------------------------------

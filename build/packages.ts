@@ -65,6 +65,7 @@ export function getDependencies(directory: string, version: string) {
            set.add(name)
         }
     }
+    
     return [...set].map(name => packages.find(p => p.name === name)!).sort((a, b) => {
        return a.name.localeCompare(b.name)
     })

@@ -1,6 +1,6 @@
 /*--------------------------------------------------------------------------
 
-@sidewinder/socket
+@sidewinder/web
 
 The MIT License (MIT)
 
@@ -30,31 +30,31 @@ import { Platform } from '@sidewinder/platform'
 import { Events, EventHandler, EventListener } from '@sidewinder/events'
 import type * as ws from 'ws'
 
-export interface UnifiedWebSocketOptions {
+export interface WebSocketOptions {
   binaryType: BinaryType
 }
 /**
  * A unified client web socket that can run in both Node and Browser environments.
  */
-export class UnifiedWebSocket {
-  private readonly socket: WebSocket | ws.WebSocket
+export class WebSocket {
+  private readonly socket: globalThis.WebSocket | ws.WebSocket
   private readonly events: Events
   constructor(
     private readonly endpoint: string,
-    private readonly options: UnifiedWebSocketOptions = {
+    private readonly options: WebSocketOptions = {
       binaryType: 'blob',
     },
   ) {
     this.events = new Events()
     if (Platform.platform() === 'browser') {
-      this.socket = new WebSocket(this.endpoint)
+      this.socket = new globalThis.WebSocket(this.endpoint)
       this.socket.binaryType = this.options.binaryType
       this.socket.addEventListener('open', () => this.onOpen())
       this.socket.addEventListener('message', (event) => this.onMessage(event))
       this.socket.addEventListener('error', (event) => this.onError(event))
       this.socket.addEventListener('close', () => this.onClose())
     } else {
-      const WebSocket = Platform.dynamicImport('ws').WebSocket
+      const WebSocket = Platform.dynamicRequire('ws').WebSocket
       this.socket = new WebSocket(this.endpoint) as ws.WebSocket
       this.socket.binaryType = this.options.binaryType as any
       this.socket.addEventListener('open', () => this.onOpen())

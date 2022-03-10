@@ -1,6 +1,6 @@
 /*--------------------------------------------------------------------------
 
-@sidewinder/socket
+@sidewinder/web
 
 The MIT License (MIT)
 
@@ -26,5 +26,5 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-export * from './retry'
-export * from './socket'
+export * from './fetch'
+export * from './websocket'

@@ -1,5 +1,5 @@
-import { Type, Host, WebSocketService } from '@sidewinder/server'
-import { WebSocketClient } from '@sidewinder/client'
+import { Type, Host, WebService } from '@sidewinder/server'
+import { WebClient } from '@sidewinder/client'
 import { MathServiceContract } from '../shared/index'
 import cors from 'cors'
 
@@ -13,7 +13,7 @@ export const MathServiceContext = Type.Object({
     roles:    Type.Array(Type.String())
 })
 
-export class MathService extends WebSocketService<typeof MathServiceContract, typeof MathServiceContext> {
+export class MathService extends WebService<typeof MathServiceContract, typeof MathServiceContext> {
 
     constructor() {
         super(MathServiceContract, MathServiceContext)
@@ -59,13 +59,11 @@ host.listen(5001)
 // -----------------------------------------------------------------
 
 async function clientTest() {
-    const client = new WebSocketClient(MathServiceContract, 'ws://localhost:5001/math?token=<signed-token>')
+    const client = new WebClient(MathServiceContract, 'http://localhost:5001/math?token=<signed-token>')
     const add = await client.call('add', 1, 2)
     const sub = await client.call('sub', 1, 2)
     const mul = await client.call('mul', 1, 2)
     const div = await client.call('div', 1, 2)
-
-    
     console.log('client:', add, sub, mul, div)
 }
 clientTest().catch(error => console.log(error))

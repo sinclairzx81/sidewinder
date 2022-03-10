@@ -24,7 +24,8 @@
             "@sidewinder/server":    ["libs/server/index.ts"],
             "@sidewinder/token":     ["libs/token/index.ts"],
             "@sidewinder/type":      ["libs/type/index.ts"],
-            "@sidewinder/validator": ["libs/validator/index.ts"]
+            "@sidewinder/validator": ["libs/validator/index.ts"],
+            "@sidewinder/web":       ["libs/web/index.ts"]
         }
     }
 }

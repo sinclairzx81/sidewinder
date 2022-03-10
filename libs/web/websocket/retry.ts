@@ -1,6 +1,6 @@
 /*--------------------------------------------------------------------------
 
-@sidewinder/socket
+@sidewinder/web
 
 The MIT License (MIT)
 
@@ -28,7 +28,7 @@ THE SOFTWARE.
 
 import { Events, EventHandler, EventListener } from '@sidewinder/events'
 import { Barrier, Delay } from '@sidewinder/async'
-import { UnifiedWebSocket } from './socket'
+import { WebSocket } from './socket'
 
 export interface RetryWebSocketOptions {
   /** The web socket binary type */
@@ -50,7 +50,7 @@ export interface RetryWebSocketOptions {
 export class RetryWebSocket {
   private readonly barrier: Barrier
   private readonly events: Events
-  private socket: UnifiedWebSocket | null
+  private socket: WebSocket | null
   private explicitClosed: boolean
 
   constructor(
@@ -177,9 +177,9 @@ export class RetryWebSocket {
     }
   }
 
-  private async connect(): Promise<UnifiedWebSocket> {
-    return new Promise<UnifiedWebSocket>((resolve, reject) => {
-      const socket = new UnifiedWebSocket(this.endpoint)
+  private async connect(): Promise<WebSocket> {
+    return new Promise<WebSocket>((resolve, reject) => {
+      const socket = new WebSocket(this.endpoint)
       socket.binaryType = this.options.binaryType
       socket.once('open', () => resolve(socket))
       socket.once('error', () => {})

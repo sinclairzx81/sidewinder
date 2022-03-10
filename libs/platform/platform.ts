@@ -34,14 +34,14 @@ export namespace Platform {
     revision: string
   }
 
-  /**
-   * Dynamically imports the given module. This is used by packages that run in both browser
-   * and node environments. It is used primarily to omit node specific packages used to polyfill
-   * browser API's, specifically to allow downstream bundlers to omit the node specific code
-   * when bundling for browser environments.
-   */
-  export function dynamicImport<T = any>(name: string): T {
+  /** Dynamically requires the given module. This is used to prevent bundlers including node imports in browser bundles */
+  export function dynamicRequire<T = any>(name: string): T {
     return new Function('require', 'name', 'return require(name)')(require, name)
+  }
+  
+  /** Dynamically imports the given ESM module. This is used to prevent bundlers including node imports in browser bundles */
+  export function dynamicImport<T = any>(name: string): Promise<T> {
+    return new Function('name', 'return import(name)')(name)
   }
 
   /** Returns the JavaScript runtime environment. Either `node` or `browser`. */
