@@ -26,9 +26,10 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
+import type WS from 'ws' // note: required for build dependency check
 import { Platform } from '@sidewinder/platform'
 import { Events, EventHandler, EventListener } from '@sidewinder/events'
-import type * as ws from 'ws'
+
 
 export interface WebSocketOptions {
   binaryType: BinaryType
@@ -37,7 +38,7 @@ export interface WebSocketOptions {
  * A unified client web socket that can run in both Node and Browser environments.
  */
 export class WebSocket {
-  private readonly socket: globalThis.WebSocket | ws.WebSocket
+  private readonly socket: globalThis.WebSocket | WS.WebSocket
   private readonly events: Events
   constructor(
     private readonly endpoint: string,
@@ -55,7 +56,7 @@ export class WebSocket {
       this.socket.addEventListener('close', () => this.onClose())
     } else {
       const WebSocket = Platform.dynamicRequire('ws').WebSocket
-      this.socket = new WebSocket(this.endpoint) as ws.WebSocket
+      this.socket = new WebSocket(this.endpoint) as WS.WebSocket
       this.socket.binaryType = this.options.binaryType as any
       this.socket.addEventListener('open', () => this.onOpen())
       this.socket.addEventListener('message', (event) => this.onMessage(event as any))
@@ -94,12 +95,12 @@ export class WebSocket {
   }
   public ping(data?: any, mask?: boolean) {
     if (Platform.platform() === 'browser') return
-    const socket = this.socket as ws.WebSocket
+    const socket = this.socket as WS.WebSocket
     socket.ping(data, mask)
   }
   public pong(data?: any, mask?: boolean) {
     if (Platform.platform() === 'browser') return
-    const socket = this.socket as ws.WebSocket
+    const socket = this.socket as WS.WebSocket
     socket.pong(data, mask)
   }
   public send(data: any) {
