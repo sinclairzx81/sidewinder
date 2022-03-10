@@ -26,8 +26,8 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-import { Platform } from '@sidewinder/platform'
 import { TContract } from '@sidewinder/contract'
+import { fetch } from '@sidewinder/web'
 
 export namespace Request {
   function createRequiredHeader(contract: TContract, body: Uint8Array) {
@@ -42,50 +42,12 @@ export namespace Request {
     }
   }
 
-  async function browser(contract: TContract, endpoint: string, additionalHeaders: Record<string, string>, body: Uint8Array) {
+  export async function call(contract: TContract, endpoint: string, additionalHeaders: Record<string, string>, body: Uint8Array): Promise<Uint8Array> {
     const requiredHeaders = createRequiredHeader(contract, body)
     const headers = { ...additionalHeaders, ...requiredHeaders }
     const response = await fetch(endpoint, { method: 'POST', body, headers })
     assertResponseType(contract, endpoint, response.headers.get('Content-Type') as string)
     const arraybuffer = await response.arrayBuffer()
     return new Uint8Array(arraybuffer)
-  }
-
-  /**
-   * NodeJS Fallback. We use the core API to carry out the request as pretty much
-   * every fetch polyfill library for node breaks esbuild dependency resolution. We
-   * use lazy require() in this function to avoid esbuild inserting these imports
-   * when bundling. Replace with actual fetch in Node v18.x
-   */
-  function node(contract: TContract, endpoint: string, additionalHeaders: Record<string, string>, body: Uint8Array) {
-    return new Promise<Uint8Array>((resolve, reject) => {
-      const urlObject = Platform.dynamicImport('url').parse(endpoint)
-      const http = urlObject.protocol === 'https:' ? Platform.dynamicImport('https') : Platform.dynamicImport('http')
-      const requiredHeaders = createRequiredHeader(contract, body)
-      const headers = { ...additionalHeaders, ...requiredHeaders }
-      const request = http.request({ method: 'POST', headers, ...urlObject }, (res: any) => {
-        try {
-          assertResponseType(contract, endpoint, res.headers['content-type'])
-        } catch (error) {
-          return reject(error)
-        }
-        const buffers: Buffer[] = []
-        res.on('data', (buffer: Buffer) => buffers.push(buffer))
-        res.on('error', (error: Error) => reject(error))
-        res.on('end', () => resolve(Buffer.concat(buffers)))
-      })
-      request.on('error', (error: Error) => reject(error))
-      const version = Platform.version()
-      if (version.major < 16) {
-        // Node 14: Fallback
-        request.end(Buffer.from(body))
-      } else {
-        request.end(body)
-      }
-    })
-  }
-
-  export async function call(contract: TContract, endpoint: string, additionalHeaders: Record<string, string>, body: Uint8Array): Promise<Uint8Array> {
-    return Platform.platform() === 'browser' ? await browser(contract, endpoint, additionalHeaders, body) : await node(contract, endpoint, additionalHeaders, body)
   }
 }
