@@ -1,6 +1,6 @@
 {
     "files.exclude": {
-        "node_modules": false,
+        "node_modules": true,
         "package-lock.json": true
     }
 }
