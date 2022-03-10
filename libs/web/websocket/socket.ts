@@ -30,7 +30,6 @@ import type WS from 'ws' // note: required for build dependency check
 import { Platform } from '@sidewinder/platform'
 import { Events, EventHandler, EventListener } from '@sidewinder/events'
 
-
 export interface WebSocketOptions {
   binaryType: BinaryType
 }

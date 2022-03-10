@@ -38,7 +38,7 @@ export namespace Platform {
   export function dynamicRequire<T = any>(name: string): T {
     return new Function('require', 'name', 'return require(name)')(require, name)
   }
-  
+
   /** Dynamically imports the given ESM module. This is used to prevent bundlers including node imports in browser bundles */
   export function dynamicImport<T = any>(name: string): Promise<T> {
     return new Function('name', 'return import(name)')(name)

@@ -31,15 +31,15 @@ import { Platform } from '@sidewinder/platform'
 
 /** Browser and Node compatible Fetch */
 export async function fetch(input: RequestInfo, init?: RequestInit | undefined) {
-    if(Platform.platform() === 'browser') {
-        return globalThis.fetch(input, init)
-    } else {
-        // ----------------------------------------------------------------------
-        // Note: If we observe a problem here, it's likely due to issues with
-        // using `import` over `require` in downstream bundlers. If problems
-        // arise, consider downgrading node-fetch to version 2.0.
-        // ----------------------------------------------------------------------
-        const fetch = await Platform.dynamicImport('node-fetch')
-        return fetch.default(input, init)
-    }
+  if (Platform.platform() === 'browser') {
+    return globalThis.fetch(input, init)
+  } else {
+    // ----------------------------------------------------------------------
+    // Note: If we observe a problem here, it's likely due to issues with
+    // using `import` over `require` in downstream bundlers. If problems
+    // arise, consider downgrading node-fetch to version 2.0.
+    // ----------------------------------------------------------------------
+    const fetch = await Platform.dynamicImport('node-fetch')
+    return fetch.default(input, init)
+  }
 }
