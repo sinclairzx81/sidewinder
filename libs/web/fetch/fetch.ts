@@ -30,7 +30,7 @@ import type Fetch from 'node-fetch' // note: required for build dependency check
 import { Platform } from '@sidewinder/platform'
 
 /** Browser and Node compatible Fetch */
-export async function fetch(input: RequestInfo, init?: RequestInit | undefined) {
+export async function fetch(input: RequestInfo, init?: RequestInit | undefined): Promise<Response> {
   if (Platform.platform() === 'browser') {
     return globalThis.fetch(input, init)
   } else {
