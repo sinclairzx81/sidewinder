@@ -210,9 +210,9 @@ export class WebSocketService<Contract extends TContract, Context extends TSchem
   public async accept(clientId: string, socket: WebSocket) {
     this.sockets.set(clientId, socket)
     socket.binaryType = 'arraybuffer'
-    socket.addEventListener('message', (event) => this.onMessage(clientId, socket, event))
-    socket.addEventListener('error', (event) => this.onError(clientId, event))
-    socket.addEventListener('close', (event) => this.onClose(clientId, event))
+    socket.addEventListener('message', (event) => this.onMessageHandler(clientId, socket, event))
+    socket.addEventListener('error', (event) => this.onErrorHandler(clientId, event))
+    socket.addEventListener('close', (event) => this.onCloseHandler(clientId, event))
     const context = this.resolveContext(clientId)
     await this.onConnectCallback(context)
   }
@@ -271,7 +271,7 @@ export class WebSocketService<Contract extends TContract, Context extends TSchem
   // Socket Events
   // -------------------------------------------------------------------------------------------
 
-  private async onMessage(clientId: string, socket: WebSocket, event: MessageEvent) {
+  private async onMessageHandler(clientId: string, socket: WebSocket, event: MessageEvent) {
     try {
       const message = RpcProtocol.decodeAny(this.encoder.decode(event.data as Uint8Array))
       if (message === undefined) return
@@ -286,11 +286,11 @@ export class WebSocketService<Contract extends TContract, Context extends TSchem
     }
   }
 
-  private onError(clientId: string, event: ErrorEvent) {
+  private onErrorHandler(clientId: string, event: ErrorEvent) {
     this.onErrorCallback(clientId, event)
   }
 
-  private onClose(clientId: string, event: CloseEvent) {
+  private onCloseHandler(clientId: string, event: CloseEvent) {
     this.responder.rejectFor(clientId, new Error('Client disconnected'))
     const context = this.resolveContext(clientId)
     this.contexts.delete(clientId)
@@ -301,7 +301,7 @@ export class WebSocketService<Contract extends TContract, Context extends TSchem
   // -------------------------------------------------------------------------------------------
   // Utility
   // -------------------------------------------------------------------------------------------
-
+  
   private resolveContext(clientId: string) {
     if (!this.contexts.has(clientId)) throw Error(`Critical: Cannot locate associated context for clientId '${clientId}'`)
     return this.contexts.get(clientId)!
