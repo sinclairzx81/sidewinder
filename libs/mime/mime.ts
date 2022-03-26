@@ -30,7 +30,7 @@ import { Path } from '@sidewinder/path'
 
 export namespace Mime {
   export function lookup(path: string) {
-    switch (Path.extname(path)) {
+    switch (Path.extname(path).toLowerCase()) {
       case '.123':
         return 'application/vnd.lotus-1-2-3'
       case '.3dml':
