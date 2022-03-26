@@ -49,6 +49,7 @@ export interface SchemaOptions {
   description?: string
   default?: any
   examples?: any
+  design?: any
   [prop: string]: any
 }
 

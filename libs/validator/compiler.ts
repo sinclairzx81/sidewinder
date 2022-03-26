@@ -77,6 +77,7 @@ export namespace Compiler {
     .addKeyword('minByteLength')
     .addKeyword('modifier')
     .addKeyword('kind')
+    .addKeyword('design')
 
   /** Formats errors given by the ValidateFunction on validation fail. */
   export function errorsText(errors: ErrorObject[]) {
