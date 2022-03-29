@@ -27,7 +27,7 @@ THE SOFTWARE.
 ---------------------------------------------------------------------------*/
 
 import { Exception, Static, Type, TSchema, TString, TContract, TFunction, AuthorizeFunction, AuthorizeFunctionReturnType, ContractMethodParamters, ContractMethodReturnType } from '@sidewinder/contract'
-import type { WebSocket, MessageEvent, CloseEvent, ErrorEvent } from 'ws'
+import type { MessageEvent, CloseEvent, ErrorEvent } from 'ws'
 import type { IncomingMessage } from 'http'
 
 import { Validator } from '@sidewinder/validator'
@@ -209,12 +209,12 @@ export class WebSocketService<Contract extends TContract, Context extends TSchem
     }
   }
 
-  public async accept(clientId: string, socket: WebSocket) {
+  public async accept(clientId: string, socket: any /** WebSocket */) { // Do not want to force downstream implementations into requiring esModuleInterop */
     this.sockets.set(clientId, socket)
     socket.binaryType = 'arraybuffer'
-    socket.addEventListener('message', (event) => this.onMessageHandler(clientId, socket, event))
-    socket.addEventListener('error', (event) => this.onErrorHandler(clientId, event))
-    socket.addEventListener('close', (event) => this.onCloseHandler(clientId, event))
+    socket.addEventListener('message', (event: MessageEvent) => this.onMessageHandler(clientId, socket, event))
+    socket.addEventListener('error', (event: ErrorEvent) => this.onErrorHandler(clientId, event))
+    socket.addEventListener('close', (event: CloseEvent) => this.onCloseHandler(clientId, event))
     const context = this.resolveContext(clientId)
     await this.onConnectCallback(context)
   }
