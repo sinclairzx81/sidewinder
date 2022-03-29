@@ -26,6 +26,8 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
+import type { IncomingMessage, ServerResponse } from 'http'
+
 import { Exception, Static, Type, TSchema, TString, TContract, TFunction, AuthorizeFunction, AuthorizeFunctionReturnType, ContractMethodParamters, ContractMethodReturnType } from '@sidewinder/contract'
 import { Platform } from '@sidewinder/platform'
 import { Validator } from '@sidewinder/validator'
@@ -33,7 +35,7 @@ import { ServiceMethods, RpcErrorCode, RpcProtocol, RpcRequest, RpcResponse } fr
 import { Encoder, JsonEncoder, MsgPackEncoder } from './encoder/index'
 import { HttpService } from './http'
 import { Request } from './request'
-import { IncomingMessage, ServerResponse } from 'http'
+
 
 // --------------------------------------------------------------------------
 // WebService Request Pipeline

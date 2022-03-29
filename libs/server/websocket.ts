@@ -27,12 +27,14 @@ THE SOFTWARE.
 ---------------------------------------------------------------------------*/
 
 import { Exception, Static, Type, TSchema, TString, TContract, TFunction, AuthorizeFunction, AuthorizeFunctionReturnType, ContractMethodParamters, ContractMethodReturnType } from '@sidewinder/contract'
+import type { WebSocket, MessageEvent, CloseEvent, ErrorEvent } from 'ws'
+import type { IncomingMessage } from 'http'
+
 import { Validator } from '@sidewinder/validator'
 import { ServiceMethods, Responder, RpcErrorCode, RpcProtocol, RpcRequest, RpcResponse } from './methods/index'
 import { Encoder, JsonEncoder, MsgPackEncoder } from './encoder/index'
 import { Request } from './request'
-import { WebSocket, MessageEvent, CloseEvent, ErrorEvent } from 'ws'
-import { IncomingMessage } from 'http'
+
 
 export type WebSocketServiceAuthorizeCallback<Context> = (clientId: string, request: Request) => Promise<Context> | Context
 export type WebSocketServiceConnectCallback<Context> = (context: Context) => Promise<unknown> | unknown
