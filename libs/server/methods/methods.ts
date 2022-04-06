@@ -88,7 +88,7 @@ export class ServiceMethods {
   private validateMethodParameters(entry: RegisteredServerMethod, method: string, params: unknown[]) {
     const check = entry.paramsValidator.check(params)
     if (!check.success) {
-      throw new Exception(`Parameters for method '${method}' are invalid`, RpcErrorCode.InvalidParams, check.success)
+      throw new Exception(`Invalid parameters for method ${method}(...). ${check.errorText}`, RpcErrorCode.InvalidParams, check.success)
     }
   }
 
