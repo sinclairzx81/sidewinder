@@ -27,6 +27,7 @@ THE SOFTWARE.
 ---------------------------------------------------------------------------*/
 
 export * from './barrier'
+export * from './debounce'
 export * from './deferred'
 export * from './delay'
 export * from './semaphore'

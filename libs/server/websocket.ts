@@ -35,7 +35,6 @@ import { ServiceMethods, Responder, RpcErrorCode, RpcProtocol, RpcRequest, RpcRe
 import { Encoder, JsonEncoder, MsgPackEncoder } from './encoder/index'
 import { Request } from './request'
 
-
 export type WebSocketServiceAuthorizeCallback<Context> = (clientId: string, request: Request) => Promise<Context> | Context
 export type WebSocketServiceConnectCallback<Context> = (context: Context) => Promise<unknown> | unknown
 export type WebSocketServiceCloseCallback<Context> = (context: Context) => Promise<unknown> | unknown
@@ -209,7 +208,8 @@ export class WebSocketService<Contract extends TContract, Context extends TSchem
     }
   }
 
-  public async accept(clientId: string, socket: any /** WebSocket */) { // Do not want to force downstream implementations into requiring esModuleInterop */
+  public async accept(clientId: string, socket: any /** WebSocket */) {
+    // Do not want to force downstream implementations into requiring esModuleInterop */
     this.sockets.set(clientId, socket)
     socket.binaryType = 'arraybuffer'
     socket.addEventListener('message', (event: MessageEvent) => this.onMessageHandler(clientId, socket, event))
@@ -303,7 +303,7 @@ export class WebSocketService<Contract extends TContract, Context extends TSchem
   // -------------------------------------------------------------------------------------------
   // Utility
   // -------------------------------------------------------------------------------------------
-  
+
   private resolveContext(clientId: string) {
     if (!this.contexts.has(clientId)) throw Error(`Critical: Cannot locate associated context for clientId '${clientId}'`)
     return this.contexts.get(clientId)!

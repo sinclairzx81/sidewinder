@@ -38,7 +38,7 @@ export namespace RedisConnect {
   export function connect(options: RedisOptions): Promise<Redis>
   export async function connect(...args: any[]): Promise<any> {
     const redis = new IORedis(...args)
-    await Timeout.run(8000, async () => await redis.echo('echo'), new Error('Connection to Redis timed out'))
+    await Timeout.run(async () => await redis.echo('echo'), 8000, new Error('Connection to Redis timed out'))
     return redis
   }
 }

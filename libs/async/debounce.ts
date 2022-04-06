@@ -26,59 +26,55 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-interface SemaphoreAwaiter<T = any> {
-  executor(): Promise<T> | T
-  resolve(value: T): void
-  reject(error: Error): void
-}
+export type DebounceCallback = () => Promise<unknown> | unknown
 
-export class Semaphore {
-  private readonly awaiters: Array<SemaphoreAwaiter>
-  private running: number
+export class Debounce {
+  private callback: DebounceCallback | null
+  private waiting: boolean
   
   /**
-   * Creates a new Semaphore
-   * @param concurrency The maximum concurrency for this semaphore
-   * @param delay A millisecond delay in which to schedule a new executor
+   * Creates a new Debounce
+   * @param millisecond The maximum millisecond window for this debounce
+   * @param deferred Should the debounce defer the last callback to execute once a debounce window ends
    */
-  constructor(private readonly concurrency: number = 1, private readonly delay: number = 0) {
-    this.awaiters = []
-    this.running = 0
+  constructor(private readonly millisecond: number, private readonly deferred: boolean = false) {
+    this.callback = null
+    this.waiting = false
   }
 
-  public run<T = any>(executor: () => Promise<T> | T): Promise<T> {
-    return new Promise<T>((resolve, reject) => {
-      this.awaiters.push({ executor, resolve, reject })
-      this.dispatch()
-    })
+  public async run(callback: DebounceCallback) {
+    if (this.deferred) {
+      this.runDeferred(callback)
+    } else {
+      this.runDefault(callback)
+    }
   }
 
-  private increment() {
-    this.running += 1
-  }
-
-  private decrement() {
-    this.running -= 1
-  }
-
-  private resume() {
-    setTimeout(() => {
-      this.decrement()
-      this.dispatch()
-    }, this.delay)
-  }
-
-  private async dispatch(): Promise<any> {
-    if (this.awaiters.length === 0 || this.running >= this.concurrency) {
+  private async runDeferred(callback: DebounceCallback) {
+    if(this.waiting) {
+      this.callback = callback
       return
     }
-    const awaiter = this.awaiters.shift()!
-    this.increment()
-    try {
-      awaiter.resolve(await awaiter.executor())
-    } catch (error) {
-      awaiter.reject(error as any)
+    this.waiting = true
+    callback()
+    await this.delay()
+    while (this.callback !== null) {
+      this.callback()
+      this.callback = null
+      await this.delay()
     }
-    this.resume()
+    this.waiting = false
+  }
+
+  private async runDefault(callback: DebounceCallback) {
+    if (this.waiting) return
+    this.waiting = true
+    callback()
+    await this.delay()
+    this.waiting = false
+  }
+
+  private delay() {
+    return new Promise((resolve) => setTimeout(resolve, this.millisecond))
   }
 }

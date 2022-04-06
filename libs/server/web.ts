@@ -36,7 +36,6 @@ import { Encoder, JsonEncoder, MsgPackEncoder } from './encoder/index'
 import { HttpService } from './http'
 import { Request } from './request'
 
-
 // --------------------------------------------------------------------------
 // WebService Request Pipeline
 // --------------------------------------------------------------------------
