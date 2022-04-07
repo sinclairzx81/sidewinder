@@ -26,5 +26,5 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-export * from './default'
-export * from './types'
+export * from './value'
+export * from './type'

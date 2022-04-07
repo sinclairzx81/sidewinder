@@ -30,7 +30,7 @@ export namespace Delay {
   /**
    * Returns a Promise that resolves once the given milliseconds have elapsed.
    * @param millisecond The number of milliseconds to wait
-   * @returns 
+   * @returns
    */
   export function wait(millisecond: number): Promise<void> {
     return new Promise<void>((resolve) => setTimeout(resolve, millisecond))

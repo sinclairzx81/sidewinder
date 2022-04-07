@@ -31,7 +31,7 @@ export type DebounceCallback = () => Promise<unknown> | unknown
 export class Debounce {
   private callback: DebounceCallback | null
   private waiting: boolean
-  
+
   /**
    * Creates a new Debounce
    * @param millisecond The maximum millisecond window for this debounce
@@ -51,7 +51,7 @@ export class Debounce {
   }
 
   private async runDeferred(callback: DebounceCallback) {
-    if(this.waiting) {
+    if (this.waiting) {
       this.callback = callback
       return
     }

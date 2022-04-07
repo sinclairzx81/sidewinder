@@ -101,7 +101,7 @@ export interface TBoolean extends TSchema {
 
 type StaticConstructorParameters<T extends readonly TSchema[]> = [...{ [K in keyof T]: T[K] extends TSchema ? T[K]['$static'] : never }]
 
-export interface TConstructor<T extends TSchema[] = TSchema[], U extends TSchema = TSchema> extends TSchema {
+export interface TConstructor<T extends TSchema[] = TSchema[], U extends TObject = TObject> extends TSchema {
   $static: new (...param: StaticConstructorParameters<T>) => U['$static']
   kind: 'Constructor'
   type: 'constructor'
@@ -161,17 +161,11 @@ export interface TInteger extends TSchema, IntegerOptions {
 
 type StaticIntersectEvaluate<T extends readonly TSchema[]> = { [K in keyof T]: T[K] extends TSchema ? T[K]['$static'] : never }
 
-type StaticIntersectReduce<I extends unknown, T extends readonly any[]> = T extends [infer A, ...infer B] ? StaticIntersectReduce<I & A, B> : I
+type StaticIntersectReduce<I extends unknown, T extends readonly any[]> = T extends [infer A, ...infer B] ? StaticIntersectReduce<I & A, B> : I extends object ? I : {}
 
-export interface IntersectOptions extends SchemaOptions {
-  unevaluatedProperties?: boolean
-}
-
-export interface TIntersect<T extends TSchema[] = TSchema[]> extends TSchema, IntersectOptions {
+export interface TIntersect<T extends TObject[] = TObject[]> extends TObject, ObjectOptions {
   $static: StaticIntersectReduce<unknown, StaticIntersectEvaluate<T>>
-  kind: 'Intersect'
-  type: 'object'
-  allOf: T
+  properties: Record<keyof StaticIntersectReduce<unknown, StaticIntersectEvaluate<T>>, TSchema>
 }
 
 // --------------------------------------------------------------------------
@@ -280,7 +274,7 @@ export interface TObject<T extends TProperties = TProperties> extends TSchema, O
 // TOmit
 // --------------------------------------------------------------------------
 
-export interface TOmit<T extends TObject, Properties extends Array<keyof T['properties']>> extends TObject {
+export interface TOmit<T extends TObject, Properties extends Array<keyof T['properties']>> extends TObject, ObjectOptions {
   $static: Omit<T['$static'], Properties[number] extends keyof T['$static'] ? Properties[number] : never>
   properties: T extends TObject ? Omit<T['properties'], Properties[number]> : never
 }
@@ -297,7 +291,7 @@ export interface TPartial<T extends TObject | TRef<TObject>> extends TObject {
 // TPick
 // --------------------------------------------------------------------------
 
-export interface TPick<T extends TObject, Properties extends Array<keyof T['properties']>> extends TObject {
+export interface TPick<T extends TObject, Properties extends Array<keyof T['properties']>> extends TObject, ObjectOptions {
   $static: Pick<T['$static'], Properties[number] extends keyof T['$static'] ? Properties[number] : never>
   properties: T extends TObject ? Pick<T['properties'], Properties[number]> : never
 }
@@ -554,7 +548,7 @@ export class TypeBuilder {
   }
 
   /** Creates a constructor type */
-  public Constructor<T extends TSchema[], U extends TSchema>(parameters: [...T], returns: U, options: SchemaOptions = {}): TConstructor<T, U> {
+  public Constructor<T extends TSchema[], U extends TObject>(parameters: [...T], returns: U, options: SchemaOptions = {}): TConstructor<T, U> {
     return this.Create({ ...options, kind: 'Constructor', type: 'constructor', parameters, returns })
   }
 
@@ -578,8 +572,27 @@ export class TypeBuilder {
   }
 
   /** Creates an intersect type. */
-  public Intersect<T extends TSchema[]>(items: [...T], options: IntersectOptions = {}): TIntersect<T> {
-    return this.Create({ ...options, kind: 'Intersect', type: 'object', allOf: items })
+  public Intersect<T extends TObject[]>(objects: [...T], options: ObjectOptions = {}): TIntersect<T> {
+    const isOptional = (schema: TSchema) => (schema.modifier && schema.modifier === 'Optional') || schema.modifier === 'ReadonlyOptional'
+    const [required, optional] = [new Set<string>(), new Set<string>()]
+    for (const object of objects) {
+      for (const [key, schema] of Object.entries(object.properties)) {
+        if (isOptional(schema)) optional.add(key)
+      }
+    }
+    for (const object of objects) {
+      for (const key of Object.keys(object.properties)) {
+        if (!optional.has(key)) required.add(key)
+      }
+    }
+    const properties = {} as Record<string, any>
+    for (const object of objects) {
+      for (const [key, schema] of Object.entries(object.properties)) {
+        delete schema.modifier
+        properties[key] = properties[key] === undefined ? schema : { kind: 'Union', anyOf: [properties[key], { ...schema }] }
+      }
+    }
+    return this.Create({ ...options, type: 'object', kind: 'Object', properties, required: [...required] })
   }
 
   /** Creates a keyof type from the given object */
@@ -623,7 +636,7 @@ export class TypeBuilder {
   }
 
   /** Omits property keys from the given object type */
-  public Omit<T extends TObject, Keys extends Array<keyof T['properties']>>(object: T, keys: [...Keys], options: SchemaOptions = {}): TOmit<T, Keys> {
+  public Omit<T extends TObject, Keys extends Array<keyof T['properties']>>(object: T, keys: [...Keys], options: ObjectOptions = {}): TOmit<T, Keys> {
     const source = this.Deref(object)
     const schema = { ...this.Clone(source), ...options }
     schema.required = schema.required ? schema.required.filter((key: string) => !keys.includes(key as any)) : undefined
@@ -660,7 +673,7 @@ export class TypeBuilder {
   }
 
   /** Picks property keys from the given object type */
-  public Pick<T extends TObject, Keys extends Array<keyof T['properties']>>(object: T, keys: [...Keys], options: SchemaOptions = {}): TPick<T, Keys> {
+  public Pick<T extends TObject, Keys extends Array<keyof T['properties']>>(object: T, keys: [...Keys], options: ObjectOptions = {}): TPick<T, Keys> {
     const source = this.Deref(object)
     const schema = { ...this.Clone(source), ...options }
     schema.required = schema.required ? schema.required.filter((key: any) => keys.includes(key)) : undefined

@@ -35,7 +35,7 @@ interface SemaphoreAwaiter<T = any> {
 export class Semaphore {
   private readonly awaiters: Array<SemaphoreAwaiter>
   private running: number
-  
+
   /**
    * Creates a new Semaphore
    * @param concurrency The maximum concurrency for this semaphore
