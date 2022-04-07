@@ -28,10 +28,9 @@ THE SOFTWARE.
 
 import * as Types from './type'
 
-/** Creates default values from types */
+/** Creates values from types */
 export namespace Value {
-  /** Creates an any value. */
-  export function Any(schema: Types.TAny): unknown {
+  function Any(schema: Types.TAny): any {
     if (schema.default !== undefined) {
       return schema.default
     } else {
@@ -39,8 +38,7 @@ export namespace Value {
     }
   }
 
-  /** Creates an array value */
-  export function Array(schema: Types.TArray): unknown[] {
+  function Array(schema: Types.TArray): any {
     if (schema.default !== undefined) {
       return schema.default
     } else if (schema.minItems !== undefined) {
@@ -50,8 +48,7 @@ export namespace Value {
     }
   }
 
-  /** Creates a boolean value */
-  export function Boolean(schema: Types.TBoolean): unknown {
+  function Boolean(schema: Types.TBoolean): any {
     if (schema.default !== undefined) {
       return schema.default
     } else {
@@ -59,8 +56,7 @@ export namespace Value {
     }
   }
 
-  /** Creates a constructor value */
-  export function Constructor(schema: Types.TConstructor): unknown {
+  function Constructor(schema: Types.TConstructor): any {
     if (schema.default !== undefined) {
       return schema.default
     } else {
@@ -80,8 +76,7 @@ export namespace Value {
     }
   }
 
-  /** Creates an enum value */
-  export function Enum(schema: Types.TEnum<any>): unknown {
+  function Enum(schema: Types.TEnum<any>): any {
     if (schema.default !== undefined) {
       return schema.default
     } else if (schema.anyOf.length === 0) {
@@ -91,8 +86,7 @@ export namespace Value {
     }
   }
 
-  /** Creates a function value */
-  export function Function(schema: Types.TFunction): unknown {
+  function Function(schema: Types.TFunction): any {
     if (schema.default !== undefined) {
       return schema.default
     } else {
@@ -100,8 +94,7 @@ export namespace Value {
     }
   }
 
-  /** Creates a integer value */
-  export function Integer(schema: Types.TInteger): unknown {
+  function Integer(schema: Types.TInteger): any {
     if (schema.default !== undefined) {
       return schema.default
     } else if (schema.minimum) {
@@ -111,8 +104,7 @@ export namespace Value {
     }
   }
 
-  /** Creates a intersect value */
-  export function Intersect(schema: Types.TIntersect): unknown {
+  function Intersect(schema: Types.TIntersect): any {
     if (schema.default !== undefined) {
       return schema.default
     } else {
@@ -125,8 +117,7 @@ export namespace Value {
     }
   }
 
-  /** Creates a keyof value */
-  export function KeyOf(schema: Types.TKeyOf<any>): unknown {
+  function KeyOf(schema: Types.TKeyOf<any>): any {
     if (schema.default !== undefined) {
       return schema.default
     } else {
@@ -134,13 +125,11 @@ export namespace Value {
     }
   }
 
-  /** Creates a literal value */
-  export function Literal(schema: Types.TLiteral): unknown {
+  function Literal(schema: Types.TLiteral): any {
     return schema.const
   }
 
-  /** Creates a namespace value */
-  export function Namespace(schema: Types.TNamespace): unknown {
+  function Namespace(schema: Types.TNamespace): any {
     if (schema.default === undefined) {
       return schema.default
     } else {
@@ -148,13 +137,11 @@ export namespace Value {
     }
   }
 
-  /** Creates a null value */
-  export function Null(schema: Types.TNull): unknown {
+  function Null(schema: Types.TNull): any {
     return null
   }
 
-  /** Creates a number value */
-  export function Number(schema: Types.TNumber): unknown {
+  function Number(schema: Types.TNumber): any {
     if (schema.default !== undefined) {
       return schema.default
     } else if (schema.minimum !== undefined) {
@@ -164,8 +151,7 @@ export namespace Value {
     }
   }
 
-  /** Creates a object value */
-  export function Object(schema: Types.TObject): object {
+  function Object(schema: Types.TObject): any {
     if (schema.default !== undefined) {
       return schema.default
     } else {
@@ -178,8 +164,7 @@ export namespace Value {
     }
   }
 
-  /** Creates a promise value */
-  export function Promise(schema: Types.TSchema) {
+  function Promise(schema: Types.TSchema): any {
     if (schema.default !== undefined) {
       return schema.default
     } else {
@@ -187,8 +172,7 @@ export namespace Value {
     }
   }
 
-  /** Creates a record value */
-  export function Record(schema: Types.TRecord<any, any>): object {
+  function Record(schema: Types.TRecord<any, any>): any {
     if (schema.default !== undefined) {
       return schema.default
     } else {
@@ -196,8 +180,7 @@ export namespace Value {
     }
   }
 
-  /** Creates a recursive value */
-  export function Rec(schema: Types.TRec<any>): unknown {
+  function Rec(schema: Types.TRec<any>): any {
     if (schema.default !== undefined) {
       return schema.default
     } else {
@@ -205,8 +188,7 @@ export namespace Value {
     }
   }
 
-  /** Creates a referenced value */
-  export function Ref(schema: Types.TRef<any>): unknown {
+  function Ref(schema: Types.TRef<any>): any {
     if (schema.default !== undefined) {
       return schema.default
     } else {
@@ -214,8 +196,7 @@ export namespace Value {
     }
   }
 
-  /** Creates a regex value */
-  export function RegEx(schema: Types.TRegEx): unknown {
+  function RegEx(schema: Types.TRegEx): any {
     if (schema.default !== undefined) {
       return schema.default
     } else {
@@ -223,8 +204,7 @@ export namespace Value {
     }
   }
 
-  /** Creates a string value */
-  export function String(schema: Types.TString): unknown {
+  function String(schema: Types.TString): any {
     if (schema.default !== undefined) {
       return schema.default
     } else {
@@ -232,8 +212,7 @@ export namespace Value {
     }
   }
 
-  /** Creates a tuple value */
-  export function Tuple(schema: Types.TTuple<any[]>): unknown[] {
+  function Tuple(schema: Types.TTuple<any[]>): any {
     if (schema.default !== undefined) {
       return schema.default
     } else {
@@ -241,13 +220,11 @@ export namespace Value {
     }
   }
 
-  /** Creates an undefined value */
-  export function Undefined(schema: Types.TUndefined): undefined {
+  function Undefined(schema: Types.TUndefined): any {
     return undefined
   }
 
-  /** Creates a union value */
-  export function Union(schema: Types.TUnion<any[]>): unknown {
+  function Union(schema: Types.TUnion<any[]>): any {
     if (schema.default !== undefined) {
       return schema.default
     } else if (schema.anyOf.length === 0) {
@@ -257,8 +234,7 @@ export namespace Value {
     }
   }
 
-  /** Creates a UInt8Array value */
-  export function Uint8Array(schema: Types.TUint8Array): unknown {
+  function Uint8Array(schema: Types.TUint8Array): any {
     if (schema.default !== undefined) {
       return schema.default
     } else if (schema.minByteLength) {
@@ -267,8 +243,8 @@ export namespace Value {
       return new globalThis.Uint8Array(0)
     }
   }
-  /** Creates an unknown value */
-  export function Unknown(schema: Types.TUnknown): unknown {
+
+  function Unknown(schema: Types.TUnknown): any {
     if (schema.default !== undefined) {
       return schema.default
     } else {
@@ -276,66 +252,79 @@ export namespace Value {
     }
   }
 
-  /** Creates a void value */
-  export function Void(schema: Types.TVoid): null {
+  function Void(schema: Types.TVoid): any {
     return null
   }
 
-  /** Creates a default object for the given schema */
+  /** Checks a values `typeof` result matches the schema type. */
+  export function TypeOf<T extends Types.TSchema>(schema: T, value: any): boolean {
+    if (value === undefined) return false
+    if (schema.type === 'array' && !globalThis.Array.isArray(value)) return false
+    if (schema.type === 'object' && typeof value !== 'object') return false
+    if (schema.type === 'string' && typeof value !== 'string') return false
+    if (schema.type === 'number' && typeof value !== 'number') return false
+    if (schema.type === 'integer' && typeof value !== 'number') return false
+    if (schema.type === 'boolean' && typeof value !== 'boolean') return false
+    if (schema.type === 'null' && value !== null) return false
+    return true
+  }
+
+  /** Creates a value from the given schema. If the schema specifies a default value, then that value is returned. */
   export function Create<T extends Types.TSchema>(schema: T): Types.Static<T> {
+    const anySchema = schema as any
     switch (schema.kind) {
       case 'Any':
-        return Value.Any(schema as any) as any
+        return Any(anySchema)
       case 'Array':
-        return Value.Array(schema as any) as any
+        return Array(anySchema)
       case 'Boolean':
-        return Value.Boolean(schema as any) as any
+        return Boolean(anySchema)
       case 'Constructor':
-        return Value.Constructor(schema as any) as any
+        return Constructor(anySchema)
       case 'Enum':
-        return Value.Enum(schema as any) as any
+        return Enum(anySchema)
       case 'Function':
-        return Value.Function(schema as any) as any
+        return Function(anySchema)
       case 'Integer':
-        return Value.Integer(schema as any) as any
+        return Integer(anySchema)
       case 'Intersect':
-        return Value.Intersect(schema as any) as any
+        return Intersect(anySchema)
       case 'KeyOf':
-        return Value.KeyOf(schema as any) as any
+        return KeyOf(anySchema)
       case 'Literal':
-        return Value.Literal(schema as any) as any
+        return Literal(anySchema)
       case 'Namespace':
-        return Value.Namespace(schema as any) as any
+        return Namespace(anySchema)
       case 'Null':
-        return Value.Null(schema as any) as any
+        return Null(anySchema)
       case 'Number':
-        return Value.Number(schema as any) as any
+        return Number(anySchema)
       case 'Object':
-        return Value.Object(schema as any) as any
+        return Object(anySchema)
       case 'Promise':
-        return Value.Promise(schema as any) as any
+        return Promise(anySchema)
       case 'Record':
-        return Value.Record(schema as any) as any
+        return Record(anySchema)
       case 'Rec':
-        return Value.Rec(schema as any) as any
+        return Rec(anySchema)
       case 'Ref':
-        return Value.Ref(schema as any) as any
+        return Ref(anySchema)
       case 'RegEx':
-        return Value.RegEx(schema as any) as any
+        return RegEx(anySchema)
       case 'String':
-        return Value.String(schema as any) as any
+        return String(anySchema)
       case 'Tuple':
-        return Value.Tuple(schema as any) as any
+        return Tuple(anySchema)
       case 'Undefined':
-        return Value.Undefined(schema as any) as any
+        return Undefined(anySchema)
       case 'Union':
-        return Value.Union(schema as any) as any
+        return Union(anySchema)
       case 'Uint8Array':
-        return Value.Uint8Array(schema as any) as any
+        return Uint8Array(anySchema)
       case 'Unknown':
-        return Value.Unknown(schema as any) as any
+        return Unknown(anySchema)
       case 'Void':
-        return Value.Void(schema as any) as any
+        return Void(anySchema)
       default:
         throw Error(`Unknown schema kind '${schema.kind}'`)
     }
