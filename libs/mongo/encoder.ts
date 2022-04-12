@@ -40,6 +40,8 @@ export class MongoEncoder {
       return value.toHexString()
     } else if (value instanceof Mongo.Binary) {
       return new Uint8Array(value.buffer)
+    } else if (value instanceof RegExp) {
+      return value
     } else if (typeof value === 'object' && !Array.isArray(value)) {
       return Object.entries(value).reduce((acc, [key, value]) => {
         return { ...acc, [key]: this.decode(value) }
@@ -59,6 +61,8 @@ export class MongoEncoder {
       return new Mongo.ObjectId(value)
     } else if (value instanceof Uint8Array) {
       return new Mongo.Binary(Buffer.from(value))
+    } else if (value instanceof RegExp) {
+      return value
     } else if (typeof value === 'object' && !Array.isArray(value)) {
       return Object.entries(value).reduce((acc, [key, value]) => {
         return { ...acc, [key]: this.encode(value) }
