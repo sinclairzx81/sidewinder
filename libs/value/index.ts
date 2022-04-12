@@ -1,6 +1,6 @@
 /*--------------------------------------------------------------------------
 
-@sidewinder/type
+@sidewinder/value
 
 The MIT License (MIT)
 
@@ -26,4 +26,5 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-export * from './type'
+export * from '@sidewinder/type'
+export * from './value'

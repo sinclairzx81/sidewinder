@@ -452,7 +452,7 @@ export interface TUnion<T extends TSchema[] = TSchema[]> extends TSchema {
 // TUint8Array
 // -------------------------------------------------------------------------
 
-export interface TypedArrayOptions {
+export interface TypedArrayOptions extends SchemaOptions {
   maxByteLength?: number
   minByteLength?: number
 }

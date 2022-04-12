@@ -1,6 +1,6 @@
 /*--------------------------------------------------------------------------
 
-@sidewinder/type
+@sidewinder/value
 
 The MIT License (MIT)
 
@@ -26,4 +26,24 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-export * from './type'
+import { TSchema, Static } from '@sidewinder/type'
+import { CreateValue } from './create'
+import { PatchValue } from './patch'
+import { CheckValue } from './check'
+
+export namespace Value {
+  /** Creates a default value from the given schema type */
+  export function Create<T extends TSchema>(schema: T): Static<T> {
+    return CreateValue.Create(schema)
+  }
+
+  /** Patches a value to match the given schema while preserving as much information in the value as possible. */
+  export function Patch<T extends TSchema>(schema: T, value: any): Static<T> {
+    return PatchValue.Create(schema, value)
+  }
+
+  /** Checks if the given value matches the given schema */
+  export function Check<T extends TSchema>(schema: T, value: any): value is Static<T> {
+    return CheckValue.Check(schema, value)
+  }
+}

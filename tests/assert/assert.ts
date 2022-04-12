@@ -28,6 +28,10 @@ export namespace Assert {
   }
 
   export function deepEqual(actual: unknown, expect: unknown) {
+    if (actual instanceof Uint8Array && expect instanceof Uint8Array) {
+      assert.equal(actual.length, expect.length)
+      for (let i = 0; i < actual.length; i++) assert.equal(actual[i], expect[i])
+    }
     return assert.deepEqual(actual, expect)
   }
 
