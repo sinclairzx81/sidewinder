@@ -1,3 +1,5 @@
-import './create'
 import './check'
-import './patch'
+import './clone'
+import './create'
+import './delta'
+import './upgrade'

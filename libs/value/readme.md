@@ -83,7 +83,7 @@ const T = Type.Object({
   x: Type.Number({ default: 0 }),
   y: Type.Number({ default: 0 }),
   z: Type.Number({ default: 0 }),
-  w: Type.Number({ default: 1 })
+  w: Type.Number({ default: 1 }),
 })
 
 // const value = { x: 0, y: 0, z: 0, w: 1 }
@@ -101,7 +101,7 @@ const T = Type.Object({
   x: Type.Number({ default: 0 }),
   y: Type.Number({ default: 0 }),
   z: Type.Number({ default: 0 }),
-  w: Type.Number({ default: 1 })
+  w: Type.Number({ default: 1 }),
 })
 
 // const check = true

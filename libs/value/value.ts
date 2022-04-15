@@ -28,22 +28,39 @@ THE SOFTWARE.
 
 import { TSchema, Static } from '@sidewinder/type'
 import { CreateValue } from './create'
-import { PatchValue } from './patch'
 import { CheckValue } from './check'
+import { CloneValue } from './clone'
+import { DeltaValue, Edit } from './delta'
+import { UpgradeValue } from './upgrade'
 
 export namespace Value {
-  /** Creates a default value from the given schema type */
+  /** Returns true if the value conforms to the given schema */
+  export function Check<T extends TSchema>(schema: T, value: any): value is Static<T> {
+    return CheckValue.Check(schema, value)
+  }
+
+  /** Returns a deep clone of the given value */
+  export function Clone<T>(value: T): T {
+    return CloneValue.Create(value)
+  }
+
+  /** Creates a value from the given schema type */
   export function Create<T extends TSchema>(schema: T): Static<T> {
     return CreateValue.Create(schema)
   }
 
-  /** Patches a value to match the given schema while preserving as much information in the value as possible. */
-  export function Patch<T extends TSchema>(schema: T, value: any): Static<T> {
-    return PatchValue.Create(schema, value)
+  /** Diffs the value and produces edits to transform the value into the next value */
+  export function Diff(value: any, next: any): Edit[] {
+    return DeltaValue.Diff(value, next)
   }
 
-  /** Checks if the given value matches the given schema */
-  export function Check<T extends TSchema>(schema: T, value: any): value is Static<T> {
-    return CheckValue.Check(schema, value)
+  /** Patches a value by applying a series of edits */
+  export function Patch(value: any, edits: Edit[]): any {
+    return DeltaValue.Edit(value, edits)
+  }
+
+  /** Upgrades an existing value to match a schema while preserving as much information from the original value as possible. */
+  export function Upgrade<T extends TSchema>(schema: T, value: any): Static<T> {
+    return UpgradeValue.Create(schema, value)
   }
 }
