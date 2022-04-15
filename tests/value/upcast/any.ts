@@ -2,46 +2,46 @@ import { Value } from '@sidewinder/value'
 import { Type } from '@sidewinder/type'
 import { Assert } from '../../assert/index'
 
-describe('value/upgrade/Any', () => {
+describe('value/upcast/Any', () => {
   const T = Type.Any()
-  it('Should upgrade from string', () => {
+  it('Should upcast from string', () => {
     const value = 'hello'
-    const result = Value.Upgrade(T, value)
+    const result = Value.Upcast(T, value)
     Assert.deepEqual(result, value)
   })
-  it('Should upgrade from number', () => {
+  it('Should upcast from number', () => {
     const value = 1
-    const result = Value.Upgrade(T, value)
+    const result = Value.Upcast(T, value)
     Assert.deepEqual(result, value)
   })
-  it('Should upgrade from boolean', () => {
+  it('Should upcast from boolean', () => {
     const value = false
-    const result = Value.Upgrade(T, value)
+    const result = Value.Upcast(T, value)
     Assert.deepEqual(result, value)
   })
-  it('Should upgrade from object', () => {
+  it('Should upcast from object', () => {
     const value = {}
-    const result = Value.Upgrade(T, value)
+    const result = Value.Upcast(T, value)
     Assert.deepEqual(result, value)
   })
-  it('Should upgrade from array', () => {
+  it('Should upcast from array', () => {
     const value = [1]
-    const result = Value.Upgrade(T, value)
+    const result = Value.Upcast(T, value)
     Assert.deepEqual(result, value)
   })
-  it('Should upgrade from undefined', () => {
+  it('Should upcast from undefined', () => {
     const value = undefined
-    const result = Value.Upgrade(T, value)
+    const result = Value.Upcast(T, value)
     Assert.deepEqual(result, value)
   })
-  it('Should upgrade from null', () => {
+  it('Should upcast from null', () => {
     const value = null
-    const result = Value.Upgrade(T, value)
+    const result = Value.Upcast(T, value)
     Assert.deepEqual(result, value)
   })
   it('Should preserve', () => {
     const value = { a: 1, b: 2 }
-    const result = Value.Upgrade(T, value)
+    const result = Value.Upcast(T, value)
     Assert.deepEqual(result, { a: 1, b: 2 })
   })
 })

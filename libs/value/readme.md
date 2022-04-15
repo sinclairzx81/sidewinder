@@ -2,7 +2,7 @@
 
 <h1>Sidewinder Value</h1>
 
-<p>Constructs Values from Sidewinder Types</p>
+<p>Operations on dynamic JavaScript values</p>
 
 [<img src="https://img.shields.io/npm/v/@sidewinder/value?label=%40sidewinder%2Fvalue">](https://www.npmjs.com/package/@sidewinder/value)
 
@@ -12,7 +12,7 @@
 
 ## Overview
 
-Sidewinder Value is a library that constructs values from Sidewinder Types. It can build new values from scratch using an existing Sidewinder Type or patch an existing value to match type while preserving values. It offers lightweight runtime type checking.
+Sidewinder Value is a library that provides advanced operations on JavaScript values. It offers functionality ranging from creating values from Sidewinder types, upcasting values from types and diffing and patching values. All functions of this library are immutable.
 
 License MIT
 
@@ -21,9 +21,12 @@ License MIT
 - [Overview](#Overview)
 - [Install](#Install)
 - [Usage](#Usage)
+- [Clone](#Clone)
 - [Create](#Create)
 - [Check](#Check)
+- [Diff](#Diff)
 - [Patch](#Patch)
+- [Upcast](#Upcast)
 
 ## Install
 
@@ -31,50 +34,23 @@ License MIT
 $ npm install @sidewinder/value
 ```
 
-## Usage
+## Clone
 
-The following shows general usage
+The clone function will deep clone a JavaScript value.
 
 ```typescript
-import { Type, Value } from '@sidewinder/value'
+import { Value } from '@sidewinder/value'
 
-// ------------------------------------------------------
-// Create
-// ------------------------------------------------------
-
-const A = Type.Object({
-  x: Type.Number(),
-  y: Type.Number(),
-})
-
-// const vector2 = { x: 0, y: 0 }
-const a = Value.Create(A)
-a.x = 1
-a.y = 2
-
-// ------------------------------------------------------
-// Check
-// ------------------------------------------------------
-
-Value.Check(A, a) // true
-
-// ------------------------------------------------------
-// Patch
-// ------------------------------------------------------
-
-const B = Type.Object({
-  x: Type.Number(),
-  y: Type.Number(),
-  z: Type.Number(),
-})
-
-// const b = { x: 1, y: 2, z: 0 }
-const b = Value.Patch(B, a)
+const A = Value.Clone(1) // 1
+const B = Value.Clone(true) // true
+const C = Value.Clone('hello') // hello
+const D = Value.Clone([1, 2, 3]) // [1, 2, 3]
+const E = Value.Clone({ x: 1, y: 1 }) // { x: 1, y: 1}
 ```
 
 ## Create
 
-Sidewinder Value can construct JavaScript values for any given Sidewinder Type. You can use the `default` option to override the value.
+The create function will create a JavaScript value from a Sidewinder type. If the type provides a default value, this value will be used to create the associated value.
 
 ```typescript
 import { Value, Type } from '@sidewinder/type'
@@ -92,7 +68,7 @@ const value = Value.Create(T)
 
 ## Check
 
-You can check a value matches a given type using the `Value.Check(...)` function.
+The check function performs a fast runtime type check on a given value. Note that this function checks based on the `kind` property of the type, and is not a JSON schema check.
 
 ```typescript
 import { Value, Type } from '@sidewinder/type'
@@ -108,9 +84,36 @@ const T = Type.Object({
 const check = Value.Check({ x: 1, y: 1, z: 1, w: 2 })
 ```
 
+## Diff
+
+The diff function will produce a series of operational edits to transform one value into another. This function is used with the patch function to apply patches to JavaScript values where.
+
+```typescript
+import { Value } from '@sidewinder/type'
+
+const A = { x: 1, y: 1 }
+const B = { x: 2, y: 2, z: 2 }
+
+const E = Value.Diff(A, B) // Edit[]
+```
+
 ## Patch
 
-It can be helpful to patch values that only partially matche a target type. The `Value.Patch(...)` function will accept both a type and value, and attempt to patch the value to conform to the target schema while preserving as much information as possible in the original value. The following updates the type to include an `id` property and removes the `w` property. The `Value.Patch(...)` function will add a default `id` and omit the `w` property in the resulting value.
+The diff function will produce a series of operational edits to transform one value into another. This function is used with the patch function to apply patches to JavaScript values where.
+
+```typescript
+import { Value } from '@sidewinder/type'
+const A = { x: 1, y: 1 }
+const B = { x: 2, y: 2, z: 2 }
+const E = Value.Diff(A, B)
+const C = Value.Patch(A, E)
+
+assert.deepEqual(B, C)
+```
+
+## Upcast
+
+The upcast function will attempt to cast an existing value to the target type while preserving as much information as possible.
 
 ```typescript
 import { Value, Type } from '@sidewinder/type'
@@ -123,5 +126,5 @@ const T = Type.Object({
 })
 
 // const value = { id: '', x: 1, y: 1, z: 1 }
-const value = Value.Patch(T, { x: 1, y: 1, z: 1, w: 2 })
+const value = Value.Upcast(T, { x: 1, y: 1, z: 1, w: 2 })
 ```

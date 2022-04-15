@@ -31,7 +31,9 @@ import { CreateValue } from './create'
 import { CheckValue } from './check'
 import { CloneValue } from './clone'
 import { DeltaValue, Edit } from './delta'
-import { UpgradeValue } from './upgrade'
+import { UpcastValue } from './upcast'
+
+export { Edit, EditType } from './delta'
 
 export namespace Value {
   /** Returns true if the value conforms to the given schema */
@@ -59,8 +61,8 @@ export namespace Value {
     return DeltaValue.Edit(value, edits)
   }
 
-  /** Upgrades an existing value to match a schema while preserving as much information from the original value as possible. */
-  export function Upgrade<T extends TSchema>(schema: T, value: any): Static<T> {
-    return UpgradeValue.Create(schema, value)
+  /** Upcasts a value to match a schema while preserving as much information from the original value as possible. */
+  export function Upcast<T extends TSchema>(schema: T, value: any): Static<T> {
+    return UpcastValue.Create(schema, value)
   }
 }

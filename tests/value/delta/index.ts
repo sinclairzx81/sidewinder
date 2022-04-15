@@ -1,2 +1,2 @@
-import './diff/index'
-import './patch/index'
+import './diff'
+import './patch'

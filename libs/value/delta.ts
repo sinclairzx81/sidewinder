@@ -32,11 +32,8 @@ import { CloneValue } from './clone'
 
 // --------------------------------------------------------------------------
 // FlatValue
-//
-// Flattens a value into a Iterator of [PointerRef, FlatValueEntry]. This
-// is used to construct a Map<PointerRef, FlatValueEntry> for computing
-// deltas between values.
 // --------------------------------------------------------------------------
+
 type PointerRef = string
 
 type FlatValueEntry = {
@@ -109,37 +106,41 @@ namespace FlatValue {
   }
 }
 
-export type Insert = { type: 'insert'; key: string; value: any }
-export type Update = { type: 'update'; key: string; value: any }
-export type Delete = { type: 'delete'; key: string }
+export enum EditType {
+  Delete,
+  Update,
+  Insert,
+}
 export type Edit = Insert | Update | Delete
+export type Update = [EditType.Update, string, any]
+export type Insert = [EditType.Insert, string, any]
+export type Delete = [EditType.Delete, string]
 
 export namespace DeltaValue {
-  function IsRootUpdate(operations: Edit[]): operations is [Update] {
-    return operations.length > 0 && operations[0].key === '' && operations[0].type === 'update'
+  function IsRootUpdate(edits: Edit[]): edits is [Update] {
+    return edits.length > 0 && edits[0][0] === EditType.Update && edits[0][1] === ''
   }
-  function IsNullUpdate(operations: Edit[]) {
-    return operations.length === 0
+  function IsNullUpdate(edits: Edit[]) {
+    return edits.length === 0
   }
   function* Updates(mapA: Map<string, FlatValueEntry>, mapB: Map<string, FlatValueEntry>): Iterable<Update> {
-    for (const [key, entry] of mapB) {
-      if (!mapA.has(key)) continue
-      const entryA = mapA.get(key)!
-      const entryB = entry
+    for (const [keyB, entryB] of mapB) {
+      if (!mapA.has(keyB)) continue
+      const entryA = mapA.get(keyB)!
       if (entryA.value === entryB.value) continue
       if (entryA.type === 'object' && entryB.type === 'object') continue
       if (entryA.type === 'array' && entryB.type === 'array') continue
-      yield { type: 'update', key, value: entry.value }
+      yield [EditType.Update, keyB, entryB.value]
     }
   }
   function* Inserts(mapA: Map<string, FlatValueEntry>, mapB: Map<string, FlatValueEntry>, updates: Update[]): Iterable<Insert> {
     const discards = [] as string[]
     for (const [keyB, entryB] of mapB) {
       if (discards.some((ignore) => keyB.indexOf(ignore) === 0)) continue
-      if (updates.some((update) => keyB.indexOf(update.key) === 0)) continue
+      if (updates.some((update) => keyB.indexOf(update[1]) === 0)) continue
       if (mapA.has(keyB)) continue
       if (entryB.type === 'object' || entryB.type === 'array') discards.push(keyB)
-      yield { type: 'insert', key: keyB, value: entryB.value }
+      yield [EditType.Insert, keyB, entryB.value]
     }
   }
   function* Deletes(mapA: Map<string, FlatValueEntry>, mapB: Map<string, FlatValueEntry>): Iterable<Delete> {
@@ -148,41 +149,43 @@ export namespace DeltaValue {
       if (discards.some((discard) => keyA.indexOf(discard) === 0)) continue
       if (mapB.has(keyA)) continue
       if (entryA.type === 'object' || entryA.type === 'array') discards.push(keyA)
-      yield { type: 'delete', key: keyA }
+      yield [EditType.Delete, keyA]
     }
   }
-  export function Diff(a: any, b: any): Edit[] {
-    const mapA = new Map(FlatValue.Create(a))
-    const mapB = new Map(FlatValue.Create(b))
+
+  export function Diff(valueA: any, valueB: any): Edit[] {
+    const mapA = new Map(FlatValue.Create(valueA))
+    const mapB = new Map(FlatValue.Create(valueB))
     const updates = [...Updates(mapA, mapB)]
     const inserts = [...Inserts(mapA, mapB, updates)]
     const deletes = [...Deletes(mapA, mapB)].reverse()
     return [...updates, ...inserts, ...deletes]
   }
-  export function Edit(current: any, operations: Edit[]) {
+
+  export function Edit(valueA: any, operations: Edit[]) {
     if (IsRootUpdate(operations)) {
-      return CloneValue.Create(operations[0].value)
+      return CloneValue.Create(operations[0][2])
     }
     if (IsNullUpdate(operations)) {
-      return CloneValue.Create(current)
+      return CloneValue.Create(valueA)
     }
-    const patch = CloneValue.Create(current)
+    const clone = CloneValue.Create(valueA)
     for (const operation of operations) {
-      switch (operation.type) {
-        case 'insert': {
-          Pointer.Set(patch, operation.key, operation.value)
+      switch (operation[0]) {
+        case EditType.Insert: {
+          Pointer.Set(clone, operation[1], operation[2])
           break
         }
-        case 'update': {
-          Pointer.Set(patch, operation.key, operation.value)
+        case EditType.Update: {
+          Pointer.Set(clone, operation[1], operation[2])
           break
         }
-        case 'delete': {
-          Pointer.Delete(patch, operation.key)
+        case EditType.Delete: {
+          Pointer.Delete(clone, operation[1])
           break
         }
       }
     }
-    return patch
+    return clone
   }
 }

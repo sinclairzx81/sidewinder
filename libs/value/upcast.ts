@@ -42,7 +42,7 @@ import { CheckValue } from './check'
 // union if other properties overlap and match.
 // --------------------------------------------------------------------------
 
-namespace UpgradeUnionValue {
+namespace UpcastUnionValue {
   function Score<T extends Types.TSchema>(schema: T, value: any): number {
     let score = 0
     if (schema.kind === 'Object' && typeof value === 'object' && value !== null) {
@@ -65,11 +65,11 @@ namespace UpgradeUnionValue {
     return select
   }
   export function Create<T extends Types.TUnion<any[]>>(schema: T, value: any) {
-    return CheckValue.Check(schema, value) ? value : UpgradeValue.Create(Select(schema, value), value)
+    return CheckValue.Check(schema, value) ? value : UpcastValue.Create(Select(schema, value), value)
   }
 }
 
-export namespace UpgradeValue {
+export namespace UpcastValue {
   function Any(schema: Types.TAny, value: any): any {
     return CheckValue.Check(schema, value) ? value : CreateValue.Create(schema)
   }
@@ -186,7 +186,7 @@ export namespace UpgradeValue {
   }
 
   function Union(schema: Types.TUnion<any[]>, value: any): any {
-    return UpgradeUnionValue.Create(schema, value)
+    return UpcastUnionValue.Create(schema, value)
   }
 
   function Uint8Array(schema: Types.TUint8Array, value: any): any {

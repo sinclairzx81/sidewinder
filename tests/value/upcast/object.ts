@@ -2,7 +2,7 @@ import { Value } from '@sidewinder/value'
 import { Type } from '@sidewinder/type'
 import { Assert } from '../../assert/index'
 
-describe('value/upgrade/Object', () => {
+describe('value/upcast/Object', () => {
   const T = Type.Object({
     a: Type.Number({ default: 'a' }),
     b: Type.Number({ default: 'b' }),
@@ -20,48 +20,48 @@ describe('value/upgrade/Object', () => {
     c: 'c',
   }
 
-  it('Should upgrade from string', () => {
+  it('Should upcast from string', () => {
     const value = 'hello'
-    const result = Value.Upgrade(T, value)
+    const result = Value.Upcast(T, value)
     Assert.deepEqual(result, E)
   })
-  it('Should upgrade from number', () => {
+  it('Should upcast from number', () => {
     const value = E
-    const result = Value.Upgrade(T, value)
+    const result = Value.Upcast(T, value)
     Assert.deepEqual(result, E)
   })
-  it('Should upgrade from boolean', () => {
+  it('Should upcast from boolean', () => {
     const value = true
-    const result = Value.Upgrade(T, value)
+    const result = Value.Upcast(T, value)
     Assert.deepEqual(result, E)
   })
 
-  it('Should upgrade from object', () => {
+  it('Should upcast from object', () => {
     const value = {}
-    const result = Value.Upgrade(T, value)
+    const result = Value.Upcast(T, value)
     Assert.deepEqual(result, E)
   })
 
-  it('Should upgrade from array', () => {
+  it('Should upcast from array', () => {
     const value = [1]
-    const result = Value.Upgrade(T, value)
+    const result = Value.Upcast(T, value)
     Assert.deepEqual(result, E)
   })
 
-  it('Should upgrade from undefined', () => {
+  it('Should upcast from undefined', () => {
     const value = undefined
-    const result = Value.Upgrade(T, value)
+    const result = Value.Upcast(T, value)
     Assert.deepEqual(result, E)
   })
 
-  it('Should upgrade from null', () => {
+  it('Should upcast from null', () => {
     const value = null
-    const result = Value.Upgrade(T, value)
+    const result = Value.Upcast(T, value)
     Assert.deepEqual(result, E)
   })
   it('Should preserve', () => {
     const value = { x: 7, y: 8, z: 9, a: 10, b: 11, c: 12 }
-    const result = Value.Upgrade(T, value)
+    const result = Value.Upcast(T, value)
     Assert.deepEqual(result, {
       x: 7,
       y: 8,
@@ -71,9 +71,9 @@ describe('value/upgrade/Object', () => {
       c: 12,
     })
   })
-  it('Should upgrade and preserve partial object', () => {
+  it('Should upcast and preserve partial object', () => {
     const value = { x: 7, y: 8, z: 9 }
-    const result = Value.Upgrade(T, value)
+    const result = Value.Upcast(T, value)
     Assert.deepEqual(result, {
       x: 7,
       y: 8,
@@ -84,9 +84,9 @@ describe('value/upgrade/Object', () => {
     })
   })
 
-  it('Should upgrade and preserve partial object with incorrect properties', () => {
+  it('Should upcast and preserve partial object with incorrect properties', () => {
     const value = { x: true, y: 8, z: 9 }
-    const result = Value.Upgrade(T, value)
+    const result = Value.Upcast(T, value)
     Assert.deepEqual(result, {
       x: 0,
       y: 8,
@@ -97,9 +97,9 @@ describe('value/upgrade/Object', () => {
     })
   })
 
-  it('Should upgrade and preserve partial object and omit unknown properties', () => {
+  it('Should upcast and preserve partial object and omit unknown properties', () => {
     const value = { x: 7, y: 8, z: 9, unknown: 'foo' }
-    const result = Value.Upgrade(T, value)
+    const result = Value.Upcast(T, value)
     Assert.deepEqual(result, {
       x: 7,
       y: 8,

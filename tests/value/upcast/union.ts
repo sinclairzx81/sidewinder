@@ -2,7 +2,7 @@ import { Value } from '@sidewinder/value'
 import { Type } from '@sidewinder/type'
 import { Assert } from '../../assert/index'
 
-describe('value/upgrade/Union', () => {
+describe('value/upcast/Union', () => {
   const A = Type.Object({
     type: Type.Literal('A'),
     x: Type.Number(),
@@ -24,78 +24,78 @@ describe('value/upgrade/Union', () => {
     z: 0,
   }
 
-  it('Should upgrade from string', () => {
+  it('Should upcast from string', () => {
     const value = 'hello'
-    const result = Value.Upgrade(T, value)
+    const result = Value.Upcast(T, value)
     Assert.deepEqual(result, E)
   })
 
-  it('Should upgrade from number', () => {
+  it('Should upcast from number', () => {
     const value = 1
-    const result = Value.Upgrade(T, value)
+    const result = Value.Upcast(T, value)
     Assert.deepEqual(result, E)
   })
-  it('Should upgrade from boolean', () => {
+  it('Should upcast from boolean', () => {
     const value = true
-    const result = Value.Upgrade(T, value)
+    const result = Value.Upcast(T, value)
     Assert.deepEqual(result, E)
   })
-  it('Should upgrade from object', () => {
+  it('Should upcast from object', () => {
     const value = {}
-    const result = Value.Upgrade(T, value)
+    const result = Value.Upcast(T, value)
     Assert.deepEqual(result, E)
   })
-  it('Should upgrade from array', () => {
+  it('Should upcast from array', () => {
     const value = [1]
-    const result = Value.Upgrade(T, value)
+    const result = Value.Upcast(T, value)
     Assert.deepEqual(result, E)
   })
 
-  it('Should upgrade from undefined', () => {
+  it('Should upcast from undefined', () => {
     const value = undefined
-    const result = Value.Upgrade(T, value)
+    const result = Value.Upcast(T, value)
     Assert.deepEqual(result, E)
   })
 
-  it('Should upgrade from null', () => {
+  it('Should upcast from null', () => {
     const value = null
-    const result = Value.Upgrade(T, value)
+    const result = Value.Upcast(T, value)
     Assert.deepEqual(result, E)
   })
 
   it('Should preserve A', () => {
     const value = { type: 'A', x: 1, y: 2, z: 3 }
-    const result = Value.Upgrade(T, value)
+    const result = Value.Upcast(T, value)
     Assert.deepEqual(result, value)
   })
 
   it('Should preserve B', () => {
     const value = { type: 'B', a: 'a', b: 'b', c: 'c' }
-    const result = Value.Upgrade(T, value)
+    const result = Value.Upcast(T, value)
     Assert.deepEqual(result, value)
   })
 
   it('Should infer A into B through heuristics', () => {
     const value = { type: 'A', a: 'a', b: 'b', c: 'c' }
-    const result = Value.Upgrade(T, value)
+    const result = Value.Upcast(T, value)
     Assert.deepEqual(result, { type: 'B', a: 'a', b: 'b', c: 'c' })
   })
 
   it('Should infer B into A through heuristics', () => {
     const value = { type: 'B', x: 1, y: 2, z: 3 }
-    const result = Value.Upgrade(T, value)
+    const result = Value.Upcast(T, value)
     Assert.deepEqual(result, { type: 'A', x: 1, y: 2, z: 3 })
   })
 
   it('Should infer A into B through heuristics and fix property', () => {
     const value = { type: 'A', a: 'a', b: 'b', c: true }
-    const result = Value.Upgrade(T, value)
+    const result = Value.Upcast(T, value)
     Assert.deepEqual(result, { type: 'B', a: 'a', b: 'b', c: '' })
   })
 
   it('Should infer B into A through heuristics and fix property', () => {
     const value = { type: 'B', x: 1, y: 2, z: true }
-    const result = Value.Upgrade(T, value)
+    const result = Value.Upcast(T, value)
     Assert.deepEqual(result, { type: 'A', x: 1, y: 2, z: 0 })
   })
 })
