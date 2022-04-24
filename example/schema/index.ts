@@ -1,17 +1,16 @@
+import { Value } from '@sidewinder/value'
 import { Type, Static } from '@sidewinder/type'
-
-const T = Type.Tuple([Type.Number()])
 
 const Node = Type.Rec(Self => Type.Object({
     id: Type.String(),
-    nodes: Type.Array(Type.Number())
+    nodes: Type.Array(Self)
 }))
 
-// const Node = Type.String()
+// console.log(JSON.stringify(Node, null, 2))
+ 
+const V = Value.Create(Node)
+V.nodes.push({ id: '', nodes: [{ id: 'a', nodes: []}]})
 
-type Node = Static<typeof Node>
+console.log(Value.Check(Node, V))
+console.log(V)
 
-
-
-
-console.log(JSON.stringify(T, null, 2))

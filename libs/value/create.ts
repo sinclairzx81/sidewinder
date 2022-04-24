@@ -131,6 +131,16 @@ export namespace CreateValue {
     }
   }
   function Object(schema: Types.TObject): any {
+    // -------------------------------------------------------------
+    // StackOverflow Prevention
+    // -------------------------------------------------------------
+    if(schema['$dynamicAnchor'] !== undefined) {
+      for(const [key, value] of globalThis.Object.entries(schema.properties)) {
+        if(value['$dynamicRef'] !== undefined && schema.required && schema.required.includes(key)) {
+          throw Error(`Cannot create recursive object with immediate recursive property.`)
+        }
+      }
+    }
     if (schema.default !== undefined) {
       return schema.default
     } else {
@@ -214,6 +224,7 @@ export namespace CreateValue {
       return new globalThis.Uint8Array(0)
     }
   }
+
   function Unknown(schema: Types.TUnknown): any {
     if (schema.default !== undefined) {
       return schema.default
@@ -221,6 +232,7 @@ export namespace CreateValue {
       return {}
     }
   }
+
   function Void(schema: Types.TVoid): any {
     return null
   }
@@ -277,6 +289,8 @@ export namespace CreateValue {
         return Unknown(anySchema)
       case 'Void':
         return Void(anySchema)
+      case 'Self':
+        return undefined // TODO: Consider tracking dynamicRef
       default:
         throw Error(`Unknown schema kind '${schema.kind}'`)
     }

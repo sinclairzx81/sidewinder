@@ -45,17 +45,17 @@ export class TokenEncoder<Claims extends TObject> {
     this.tokenValidator = new Validator(this.schema)
   }
 
-  private validateType(token: Claims['$static']) {
+  private validateType(token: Claims['static']) {
     const check = this.tokenValidator.check(token)
     if (!check.success) {
       throw new TokenEncoderTypeError(check.errors, check.errorText)
     } else {
-      return token as Claims['$static'] & { iat: number }
+      return token as Claims['static'] & { iat: number }
     }
   }
 
   /** Encodes the given claims and returns a string token */
-  public encode(claims: Claims['$static']): string {
+  public encode(claims: Claims['static']): string {
     const checked = this.validateType(claims)
     return sign(checked, this.privateKey, { algorithm: 'RS256' })
   }

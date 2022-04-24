@@ -61,17 +61,17 @@ export class TokenDecoder<Claims extends TObject> {
   }
 
   /** Validates the given token is of the correct type */
-  private validateType(verified: unknown): Claims['$static'] & { iat: number } {
+  private validateType(verified: unknown): Claims['static'] & { iat: number } {
     const check = this.tokenValidator.check(verified)
     if (!check.success) {
       throw new TokenDecoderTypeError(check.errors, check.errorText)
     } else {
-      return verified as Claims['$static'] & { iat: number }
+      return verified as Claims['static'] & { iat: number }
     }
   }
 
   /** Decodes the given token and returns the token type */
-  public decode(token: string): Claims['$static'] & { iat: number } {
+  public decode(token: string): Claims['static'] & { iat: number } {
     const verified = this.validateToken(token)
     return this.validateType(verified)
   }

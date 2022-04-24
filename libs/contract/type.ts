@@ -63,19 +63,19 @@ export interface ContractOptions {
 }
 
 export interface TContract<Options extends ContractOptions = ContractOptions> extends TSchema {
-  $static: {
+  static: {
     /** The encoding format for this contract. The default is 'json' */
     format: ContractFormat<Options['format']>
     /** The server interface methods */
     server: DefinedOr<Options['server'], {}> extends infer Interface
       ? {
-          [K in keyof Interface]: Interface[K] extends TFunction<any[], any> ? Interface[K]['$static'] : never
+          [K in keyof Interface]: Interface[K] extends TFunction<any[], any> ? Interface[K]['static'] : never
         }
       : {}
     /** The client interface methods */
     client: DefinedOr<Options['client'], {}> extends infer Interface
       ? {
-          [K in keyof Interface]: Interface[K] extends TFunction<any[], any> ? Interface[K]['$static'] : never
+          [K in keyof Interface]: Interface[K] extends TFunction<any[], any> ? Interface[K]['static'] : never
         }
       : {}
   }
@@ -95,7 +95,7 @@ export class ContractTypeBuilder extends TypeBuilder {
     const format = options.format || 'json'
     const server = options.server || {}
     const client = options.client || {}
-    return this.AssertCreate({ type: 'contract', kind: 'Contract', format, server, client })
+    return this.Assert({ type: 'contract', kind: 'Contract', format, server, client })
   }
 }
 

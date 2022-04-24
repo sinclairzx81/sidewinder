@@ -36,11 +36,11 @@ type RemapWebProxyCallMethods<T extends object> = {
 
 /** Extracts the server contract and remaps each method to return a promise. */
 export type WebProxy<T> = T extends WebSocketClient<infer Contract>
-  ? RemapWebProxyCallMethods<Contract['$static']['server']> extends infer I
+  ? RemapWebProxyCallMethods<Contract['static']['server']> extends infer I
     ? { [K in keyof I]: I[K] }
     : never
   : T extends WebClient<infer Contract>
-  ? RemapWebProxyCallMethods<Contract['$static']['server']> extends infer I
+  ? RemapWebProxyCallMethods<Contract['static']['server']> extends infer I
     ? { [K in keyof I]: I[K] }
     : never
   : never

@@ -29,6 +29,11 @@ THE SOFTWARE.
 import * as Types from '@sidewinder/type'
 
 export namespace CheckValue {
+  // ---------------------------------------------
+  // Used to check recursive object references.
+  // ---------------------------------------------
+  const dynamicAnchors = new Map<string, Types.TObject>()
+
   function Any(schema: Types.TAny, value: any): boolean {
     return true
   }
@@ -87,6 +92,7 @@ export namespace CheckValue {
     if (typeof value !== 'object') return false
     if (value === null) return false
     const required = new Set<string>(schema.required || [])
+    if(schema['$dynamicAnchor'] !== undefined) dynamicAnchors.set(schema['$dynamicAnchor'], schema)
     return globalThis.Object.entries(schema.properties).every(([key, schema]) => {
       if (!required.has(key) && value[key] === undefined) return true
       return Check(schema, value[key])
@@ -149,6 +155,11 @@ export namespace CheckValue {
   function Void(schema: Types.TVoid, value: any): any {
     return value === null
   }
+  
+  function Self(schema: Types.TSelf, value: any): any {
+    const resolve = dynamicAnchors.get(schema.$dynamicRef.replace('#/', ''))!
+    return Check(resolve, value)
+  }
 
   export function Check<T extends Types.TSchema>(schema: T, value: any): boolean {
     const anySchema = schema as any
@@ -201,6 +212,8 @@ export namespace CheckValue {
         return Unknown(anySchema, value)
       case 'Void':
         return Void(anySchema, value)
+      case 'Self':
+        return Self(anySchema, value)
       default:
         throw Error(`Unknown schema kind '${schema.kind}'`)
     }

@@ -45,7 +45,7 @@ export interface TDatabaseOptions {
 }
 
 export interface TDatabase<DatabaseOptions extends TDatabaseOptions = TDatabaseOptions> extends TSchema {
-  $static: unknown
+  static: unknown
   type: 'object'
   kind: 'RedisDatabase'
   arrays: DefinedOr<DatabaseOptions['arrays'], TObject>
@@ -63,7 +63,7 @@ export class RedisTypeBuilder extends TypeBuilder {
     const arrays = options.arrays || {}
     const maps = options.maps || {}
     const sets = options.sets || {}
-    return this.AssertCreate({ type: 'object', kind: 'RedisDatabase', arrays, maps, sets })
+    return this.Assert({ type: 'object', kind: 'RedisDatabase', arrays, maps, sets })
   }
 }
 
