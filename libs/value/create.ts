@@ -118,13 +118,6 @@ export namespace CreateValue {
   function Literal(schema: Types.TLiteral): any {
     return schema.const
   }
-  function Namespace(schema: Types.TNamespace): any {
-    if (schema.default === undefined) {
-      return schema.default
-    } else {
-      throw new Error('Namespace types require a default value')
-    }
-  }
   function Null(schema: Types.TNull): any {
     return null
   }
@@ -178,25 +171,26 @@ export namespace CreateValue {
       throw new Error('Ref types require a default value')
     }
   }
-  function RegEx(schema: Types.TRegEx): any {
-    if (schema.default !== undefined) {
-      return schema.default
-    } else {
-      throw new Error('RegEx types require a default value')
-    }
-  }
   function String(schema: Types.TString): any {
-    if (schema.default !== undefined) {
-      return schema.default
+    if (schema.pattern !== undefined) {
+      if (schema.default === undefined) {
+        throw Error('String types with patterns must specify a default value')
+      } else {
+        return schema.default
+      }
     } else {
-      return ''
+      if (schema.default !== undefined) {
+        return schema.default
+      } else {
+        return ''
+      }
     }
   }
   function Tuple(schema: Types.TTuple<any[]>): any {
     if (schema.default !== undefined) {
       return schema.default
     } else {
-      return globalThis.Array.from({ length: schema.minItems }).map((_, index) => CreateValue.Create((schema.items as any[])[index]))
+      return globalThis.Array.from({ length: schema.minItems }).map((_, index) => CreateValue.Create((schema.prefixItems as any[])[index]))
     }
   }
   function Undefined(schema: Types.TUndefined): any {
@@ -255,8 +249,6 @@ export namespace CreateValue {
         return KeyOf(anySchema)
       case 'Literal':
         return Literal(anySchema)
-      case 'Namespace':
-        return Namespace(anySchema)
       case 'Null':
         return Null(anySchema)
       case 'Number':
@@ -271,8 +263,6 @@ export namespace CreateValue {
         return Rec(anySchema)
       case 'Ref':
         return Ref(anySchema)
-      case 'RegEx':
-        return RegEx(anySchema)
       case 'String':
         return String(anySchema)
       case 'Tuple':

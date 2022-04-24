@@ -26,7 +26,7 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-import Ajv, { ErrorObject, ValidateFunction } from 'ajv/dist/2019'
+import Ajv, { ErrorObject, ValidateFunction } from 'ajv/dist/2020'
 import { TSchema, Static, TUint8Array } from '@sidewinder/type'
 import addFormats from 'ajv-formats'
 export { ValidateFunction } from 'ajv'

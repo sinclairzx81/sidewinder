@@ -63,7 +63,7 @@ export class RedisTypeBuilder extends TypeBuilder {
     const arrays = options.arrays || {}
     const maps = options.maps || {}
     const sets = options.sets || {}
-    return this.Create({ type: 'object', kind: 'RedisDatabase', arrays, maps, sets })
+    return this.AssertCreate({ type: 'object', kind: 'RedisDatabase', arrays, maps, sets })
   }
 }
 

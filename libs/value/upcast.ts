@@ -119,10 +119,6 @@ export namespace UpcastValue {
     return CheckValue.Check(schema, value) ? value : CreateValue.Create(schema)
   }
 
-  function Namespace(schema: Types.TNamespace, value: any): any {
-    throw new Error('Cannot patch namespace')
-  }
-
   function Null(schema: Types.TNull, value: any): any {
     return CheckValue.Check(schema, value) ? value : CreateValue.Create(schema)
   }
@@ -167,18 +163,14 @@ export namespace UpcastValue {
     throw Error('Cannot patch referenced schemas')
   }
 
-  function RegEx(schema: Types.TRegEx, value: any): any {
-    return CheckValue.Check(schema, value) ? value : CreateValue.Create(schema)
-  }
-
   function String(schema: Types.TString, value: any): any {
     return CheckValue.Check(schema, value) ? value : CreateValue.Create(schema)
   }
 
   function Tuple(schema: Types.TTuple<any[]>, value: any): any {
     if (CheckValue.Check(schema, value)) return value
-    if (!globalThis.Array.isArray(value) || schema.items === undefined) return CreateValue.Create(schema)
-    return schema.items.map((schema, index) => Create(schema, value[index]))
+    if (!globalThis.Array.isArray(value)) return CreateValue.Create(schema)
+    return schema.prefixItems.map((schema, index) => Create(schema, value[index]))
   }
 
   function Undefined(schema: Types.TUndefined, value: any): any {
@@ -224,8 +216,6 @@ export namespace UpcastValue {
         return KeyOf(anySchema, value)
       case 'Literal':
         return Literal(anySchema, value)
-      case 'Namespace':
-        return Namespace(anySchema, value)
       case 'Null':
         return Null(anySchema, value)
       case 'Number':
@@ -240,8 +230,6 @@ export namespace UpcastValue {
         return Rec(anySchema, value)
       case 'Ref':
         return Ref(anySchema, value)
-      case 'RegEx':
-        return RegEx(anySchema, value)
       case 'String':
         return String(anySchema, value)
       case 'Tuple':
