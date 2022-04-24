@@ -70,6 +70,11 @@ namespace UpcastUnionValue {
 }
 
 export namespace UpcastValue {
+  // -----------------------------------------------------
+  // Required to defer recursive type validation
+  // -----------------------------------------------------
+  const dynamicAnchors = new Map<string, Types.TObject>()
+
   function Any(schema: Types.TAny, value: any): any {
     return CheckValue.Check(schema, value) ? value : CreateValue.Create(schema)
   }
@@ -87,7 +92,7 @@ export namespace UpcastValue {
   function Constructor(schema: Types.TConstructor, value: any): any {
     if (CheckValue.Check(schema, value)) return CreateValue.Create(schema)
     const required = new Set(schema.returns.required || [])
-    const result = function () {}
+    const result = function () { }
     for (const [key, property] of globalThis.Object.entries(schema.returns.properties)) {
       if (!required.has(key) && value.prototype[key] === undefined) continue
       result.prototype[key] = Create(property, value.prototype[key])
@@ -130,6 +135,7 @@ export namespace UpcastValue {
   function Object(schema: Types.TObject, value: any): any {
     if (CheckValue.Check(schema, value)) return value
     if (value === null || typeof value !== 'object') return CreateValue.Create(schema)
+    if (schema['$dynamicAnchor'] !== undefined) dynamicAnchors.set(schema['$dynamicAnchor'], schema)
     const required = new Set(schema.required || [])
     const result = {} as Record<string, any>
     for (const [key, property] of globalThis.Object.entries(schema.properties)) {
@@ -161,6 +167,13 @@ export namespace UpcastValue {
 
   function Ref(schema: Types.TRef<any>, value: any): any {
     throw Error('Cannot patch referenced schemas')
+  }
+
+  function Self(schema: Types.TSelf, value: any): any {
+    const dynamicAnchor = schema.$dynamicRef.replace('#/', '')
+    if (!dynamicAnchors.has(dynamicAnchor)) throw new Error('Cannot locate dynamic anchor for self referenced type')
+    const self = dynamicAnchors.get(dynamicAnchor)!
+    return Object(self, value)
   }
 
   function String(schema: Types.TString, value: any): any {
@@ -230,6 +243,8 @@ export namespace UpcastValue {
         return Rec(anySchema, value)
       case 'Ref':
         return Ref(anySchema, value)
+      case 'Self':
+        return Self(anySchema, value)
       case 'String':
         return String(anySchema, value)
       case 'Tuple':

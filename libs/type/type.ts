@@ -468,9 +468,9 @@ export type Static<T extends TSchema, P extends unknown[] = []> = (T & { params:
 // --------------------------------------------------------------------------
 
 export class TypeBuilder {
-  private $dynamicAnchorIdentifier: number
+  private $dynamicAnchorOrdinal: number
   constructor() {
-    this.$dynamicAnchorIdentifier = 0
+    this.$dynamicAnchorOrdinal = 0
   }
 
   // ----------------------------------------------------------------------
@@ -662,7 +662,7 @@ export class TypeBuilder {
 
   /** Creates a recursive object type */
   public Rec<T extends TObject>(callback: (self: TSelf) => T, options: SchemaOptions = {}): TRec<T> {
-    const $dynamicAnchor = `anchor${this.$dynamicAnchorIdentifier++}`
+    const $dynamicAnchor = `dynamic-anchor-${this.$dynamicAnchorOrdinal++}`
     const self = callback({ kind: 'Self', $dynamicRef: `#/${$dynamicAnchor}` } as any)
     return this.Assert({ ...options, ...self, $dynamicAnchor } as any)
   }

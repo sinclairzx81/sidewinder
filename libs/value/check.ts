@@ -29,9 +29,9 @@ THE SOFTWARE.
 import * as Types from '@sidewinder/type'
 
 export namespace CheckValue {
-  // ---------------------------------------------
-  // Used to check recursive object references.
-  // ---------------------------------------------
+  // -----------------------------------------------------
+  // Required to defer recursive type validation
+  // -----------------------------------------------------
   const dynamicAnchors = new Map<string, Types.TObject>()
 
   function Any(schema: Types.TAny, value: any): boolean {
@@ -119,6 +119,13 @@ export namespace CheckValue {
     throw new Error('Cannot typeof reference types')
   }
 
+  function Self(schema: Types.TSelf, value: any): any {
+    const dynamicAnchor = schema.$dynamicRef.replace('#/', '')
+    if (!dynamicAnchors.has(dynamicAnchor)) throw new Error('Cannot locate dynamic anchor for self referenced type')
+    const self = dynamicAnchors.get(dynamicAnchor)!
+    return Object(self, value)
+  }
+
   function String(schema: Types.TString, value: any): boolean {
     if (typeof value !== 'string') return false
     if (schema.pattern !== undefined) {
@@ -154,11 +161,6 @@ export namespace CheckValue {
 
   function Void(schema: Types.TVoid, value: any): any {
     return value === null
-  }
-
-  function Self(schema: Types.TSelf, value: any): any {
-    const resolve = dynamicAnchors.get(schema.$dynamicRef.replace('#/', ''))!
-    return Check(resolve, value)
   }
 
   export function Check<T extends Types.TSchema>(schema: T, value: any): boolean {
@@ -198,6 +200,8 @@ export namespace CheckValue {
         return Rec(anySchema, value)
       case 'Ref':
         return Ref(anySchema, value)
+      case 'Self':
+        return Self(anySchema, value)
       case 'String':
         return String(anySchema, value)
       case 'Tuple':
@@ -212,8 +216,6 @@ export namespace CheckValue {
         return Unknown(anySchema, value)
       case 'Void':
         return Void(anySchema, value)
-      case 'Self':
-        return Self(anySchema, value)
       default:
         throw Error(`Unknown schema kind '${schema.kind}'`)
     }
