@@ -2,119 +2,40 @@ import { Type } from '@sidewinder/type'
 import { ok, fail } from './validate'
 
 describe('type/Rec', () => {
-  it('Should validate recursive Node type', () => {
+  it('Should validate node type', () => {
     const Node = Type.Rec((Self) =>
       Type.Object(
         {
-          nodeId: Type.String(),
+          id: Type.String(),
           nodes: Type.Array(Self),
-        },
-        { additionalProperties: false },
+        }
       ),
     )
-    ok(Node, { nodeId: '1', nodes: [] })
     ok(Node, {
-      nodeId: '1',
+      id: 'A',
       nodes: [
-        { nodeId: '2', nodes: [] },
-        { nodeId: '3', nodes: [] },
-        { nodeId: '4', nodes: [] },
-        { nodeId: '5', nodes: [] },
-      ],
-    })
-  })
-  it('Should validate recursive Node type with an $id', () => {
-    const Node = Type.Rec(
-      (Self) =>
-        Type.Object(
-          {
-            nodeId: Type.String(),
-            nodes: Type.Array(Self),
-          },
-          { additionalProperties: false },
-        ),
-      { $id: 'Node' },
-    )
-    ok(Node, { nodeId: '1', nodes: [] })
-    ok(Node, {
-      nodeId: '1',
-      nodes: [
-        { nodeId: '2', nodes: [] },
-        { nodeId: '3', nodes: [] },
-        { nodeId: '4', nodes: [] },
-        { nodeId: '5', nodes: [] },
-      ],
-    })
-  })
-  it('Should not validate recursive Node type with missing properties', () => {
-    const Node = Type.Rec((Self) =>
-      Type.Object(
-        {
-          nodeId: Type.String(),
-          nodes: Type.Array(Self),
-        },
-        { additionalProperties: false },
-      ),
-    )
-    fail(Node, {
-      nodes: [
-        { nodeId: '2', nodes: [] },
-        { nodeId: '3', nodes: [] },
-        { nodeId: '4', nodes: [] },
-        { nodeId: '5', nodes: [] },
+        { id: 'B', nodes: [] },
+        { id: 'C', nodes: [] },
       ],
     })
   })
 
-  it('Should not validate recursive Node type with additionalProperties', () => {
-    const Node = Type.Rec((Self) =>
-      Type.Object(
-        {
-          nodeId: Type.String(),
-          nodes: Type.Array(Self),
-        },
-        { additionalProperties: false },
-      ),
-    )
-    fail(Node, {
-      nodeId: '1',
-      nodes: [
-        { nodeId: '2', nodes: [] },
-        { nodeId: '3', nodes: [] },
-        { nodeId: '4', nodes: [] },
-        { nodeId: '5', nodes: [] },
-      ],
-      additional: 1,
-    })
-  })
-
-  // it('Should validate with JSON pointer references to sub schema', () => {
-  //     const Element = Type.Rec('Element', Self => Type.Object({
-  //         elementId: Type.String(),
-  //         elements: Type.Array(Self)
-  //     }, { additionalProperties: false }))
-
-  //     const Node = Type.Rec('Node', Self => Type.Object({
-  //         nodeId: Type.String(),
+  // https://github.com/ajv-validator/ajv/issues/1964
+  // it('Should validate wrapped node type', () => {
+  //   const Node = Type.Tuple([Type.Rec((Self) =>
+  //     Type.Object(
+  //       {
+  //         id: Type.String(),
   //         nodes: Type.Array(Self),
-  //         element: Element
-  //     }, { additionalProperties: false }))
-
-  //     ok(Node, {
-  //         nodeId: '1',
-  //         nodes: [
-  //             { nodeId: '2', nodes: [] },
-  //             { nodeId: '3', nodes: [] },
-  //             { nodeId: '4', nodes: [] },
-  //             { nodeId: '5', nodes: [] }
-  //         ],
-  //         element: {
-  //             elementId: '1',
-  //             elements: [{
-  //                 elementId: '1',
-  //                 elements: []
-  //             }]
-  //         }
-  //     })
+  //       }
+  //     ),
+  //   )])
+  //   ok(Node, [{
+  //     id: 'A',
+  //     nodes: [
+  //       { id: 'B', nodes: [] },
+  //       { id: 'C', nodes: [] },
+  //     ],
+  //   }])
   // })
 })

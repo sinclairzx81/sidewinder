@@ -29,6 +29,11 @@ THE SOFTWARE.
 import * as Types from '@sidewinder/type'
 
 export namespace CheckValue {
+  // ---------------------------------------------
+  // Used to check recursive object references.
+  // ---------------------------------------------
+  const dynamicAnchors = new Map<string, Types.TObject>()
+
   function Any(schema: Types.TAny, value: any): boolean {
     return true
   }
@@ -75,10 +80,6 @@ export namespace CheckValue {
     return schema.const === value
   }
 
-  function Namespace(schema: Types.TNamespace, value: any): boolean {
-    throw new Error('Cannot check namespace')
-  }
-
   function Null(schema: Types.TNull, value: any): boolean {
     return value === null
   }
@@ -91,6 +92,7 @@ export namespace CheckValue {
     if (typeof value !== 'object') return false
     if (value === null) return false
     const required = new Set<string>(schema.required || [])
+    if (schema['$dynamicAnchor'] !== undefined) dynamicAnchors.set(schema['$dynamicAnchor'], schema)
     return globalThis.Object.entries(schema.properties).every(([key, schema]) => {
       if (!required.has(key) && value[key] === undefined) return true
       return Check(schema, value[key])
@@ -117,22 +119,21 @@ export namespace CheckValue {
     throw new Error('Cannot typeof reference types')
   }
 
-  function RegEx(schema: Types.TRegEx, value: any): boolean {
-    if (typeof value !== 'string') return false
-    const regex = new RegExp(schema.pattern)
-    return value.match(regex) !== null
-  }
-
   function String(schema: Types.TString, value: any): boolean {
-    return typeof value === 'string'
+    if (typeof value !== 'string') return false
+    if (schema.pattern !== undefined) {
+      const regex = new RegExp(schema.pattern)
+      return value.match(regex) !== null
+    }
+    return true
   }
 
   function Tuple(schema: Types.TTuple<any[]>, value: any): boolean {
     if (typeof value !== 'object' || !globalThis.Array.isArray(value)) return false
-    if (schema.items === undefined && value.length === 0) return true
-    if (schema.items === undefined) return false
+    if (schema.prefixItems === undefined && value.length === 0) return true
+    if (schema.prefixItems === undefined) return false
     if (value.length < schema.minItems || value.length > schema.maxItems) return false
-    return schema.items.every((schema, index) => Check(schema, value[index]))
+    return schema.prefixItems.every((schema, index) => Check(schema, value[index]))
   }
 
   function Undefined(schema: Types.TUndefined, value: any): boolean {
@@ -153,6 +154,11 @@ export namespace CheckValue {
 
   function Void(schema: Types.TVoid, value: any): any {
     return value === null
+  }
+
+  function Self(schema: Types.TSelf, value: any): any {
+    const resolve = dynamicAnchors.get(schema.$dynamicRef.replace('#/', ''))!
+    return Check(resolve, value)
   }
 
   export function Check<T extends Types.TSchema>(schema: T, value: any): boolean {
@@ -178,8 +184,6 @@ export namespace CheckValue {
         return KeyOf(anySchema, value)
       case 'Literal':
         return Literal(anySchema, value)
-      case 'Namespace':
-        return Namespace(anySchema, value)
       case 'Null':
         return Null(anySchema, value)
       case 'Number':
@@ -194,8 +198,6 @@ export namespace CheckValue {
         return Rec(anySchema, value)
       case 'Ref':
         return Ref(anySchema, value)
-      case 'RegEx':
-        return RegEx(anySchema, value)
       case 'String':
         return String(anySchema, value)
       case 'Tuple':
@@ -210,6 +212,8 @@ export namespace CheckValue {
         return Unknown(anySchema, value)
       case 'Void':
         return Void(anySchema, value)
+      case 'Self':
+        return Self(anySchema, value)
       default:
         throw Error(`Unknown schema kind '${schema.kind}'`)
     }

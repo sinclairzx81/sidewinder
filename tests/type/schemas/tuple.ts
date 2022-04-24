@@ -1,5 +1,6 @@
 import { Type } from '@sidewinder/type'
 import { ok, fail } from './validate'
+import { Assert } from '../../assert'
 
 describe('type/Tuple', () => {
   it('Should validate tuple of [string, number]', () => {
@@ -16,13 +17,18 @@ describe('type/Tuple', () => {
     fail(T, [42, 'hello'])
   })
 
-  it('Should validate empty tuple []', () => {
+  it('Should validate with empty tuple', () => {
     const T = Type.Tuple([])
     ok(T, [])
   })
 
-  it('Should not validate empty tuple [] with one or more elements', () => {
+  it('Should not validate with empty tuple with more items', () => {
     const T = Type.Tuple([])
+    fail(T, [1])
+  })
+
+  it('Should not validate with empty tuple with less items', () => {
+    const T = Type.Tuple([Type.Number(), Type.Number()])
     fail(T, [1])
   })
 

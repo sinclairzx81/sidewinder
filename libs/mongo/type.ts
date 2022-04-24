@@ -34,7 +34,7 @@ export interface TDatabaseOptions {
 }
 
 export interface TDatabase<Collections extends TDatabaseOptions = TDatabaseOptions> {
-  $static: { [K in keyof Collections['collections']]: Static<Collections['collections'][K]> }
+  static: { [K in keyof Collections['collections']]: Static<Collections['collections'][K]> }
   kind: 'Database'
   type: 'object'
   collections: Collections
@@ -43,7 +43,7 @@ export interface TDatabase<Collections extends TDatabaseOptions = TDatabaseOptio
 export class DatabaseTypeBuilder extends TypeBuilder {
   /** Creates a database schematic type */
   public Database<DatabaseOptions extends TDatabaseOptions>(options: DatabaseOptions): TDatabase<DatabaseOptions> {
-    return this.Create({ kind: 'Database', type: 'object', collections: options })
+    return this.Assert({ kind: 'Database', type: 'object', collections: options })
   }
 
   /** Creates a Mongo identifier type */

@@ -47,11 +47,11 @@ describe('type/Required', () => {
     strictEqual(T.additionalPropeties, false)
   })
 
-  it('Should construct new object when targetting reference', () => {
-    const T = Type.Object({ a: Type.String(), b: Type.String() }, { $id: 'T' })
-    const R = Type.Ref(T)
-    const P = Type.Required(R)
-    strictEqual(P.properties.a.type, 'string')
-    strictEqual(P.properties.b.type, 'string')
-  })
+  // it('Should construct new object when targetting reference', () => {
+  //   const T = Type.Object({ a: Type.String(), b: Type.String() }, { $id: 'T' })
+  //   const R = Type.Ref(T)
+  //   const P = Type.Required(R)
+  //   strictEqual(P.properties.a.type, 'string')
+  //   strictEqual(P.properties.b.type, 'string')
+  // })
 })

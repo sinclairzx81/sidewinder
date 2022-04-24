@@ -49,14 +49,4 @@ describe('type/KeyOf', () => {
     fail(T, 'y')
     ok(T, 'z')
   })
-
-  it('Should construct new object when targetting reference', () => {
-    const T = Type.Object({ a: Type.String(), b: Type.String() }, { $id: 'T' })
-    const R = Type.Ref(T)
-    const P = Type.KeyOf(R, [])
-    // @ts-ignore
-    strictEqual(P.enum[0], 'a')
-    // @ts-ignore
-    strictEqual(P.enum[1], 'b')
-  })
 })
