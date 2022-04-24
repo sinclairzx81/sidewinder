@@ -92,7 +92,7 @@ export namespace UpcastValue {
   function Constructor(schema: Types.TConstructor, value: any): any {
     if (CheckValue.Check(schema, value)) return CreateValue.Create(schema)
     const required = new Set(schema.returns.required || [])
-    const result = function () { }
+    const result = function () {}
     for (const [key, property] of globalThis.Object.entries(schema.returns.properties)) {
       if (!required.has(key) && value.prototype[key] === undefined) continue
       result.prototype[key] = Create(property, value.prototype[key])
