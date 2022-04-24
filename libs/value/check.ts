@@ -92,7 +92,7 @@ export namespace CheckValue {
     if (typeof value !== 'object') return false
     if (value === null) return false
     const required = new Set<string>(schema.required || [])
-    if(schema['$dynamicAnchor'] !== undefined) dynamicAnchors.set(schema['$dynamicAnchor'], schema)
+    if (schema['$dynamicAnchor'] !== undefined) dynamicAnchors.set(schema['$dynamicAnchor'], schema)
     return globalThis.Object.entries(schema.properties).every(([key, schema]) => {
       if (!required.has(key) && value[key] === undefined) return true
       return Check(schema, value[key])
@@ -155,7 +155,7 @@ export namespace CheckValue {
   function Void(schema: Types.TVoid, value: any): any {
     return value === null
   }
-  
+
   function Self(schema: Types.TSelf, value: any): any {
     const resolve = dynamicAnchors.get(schema.$dynamicRef.replace('#/', ''))!
     return Check(resolve, value)

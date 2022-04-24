@@ -310,8 +310,8 @@ export interface TRecord<K extends TRecordKey, T extends TSchema> extends TSchem
 // --------------------------------------------------------------------------
 
 export interface TSelf extends TSchema {
-  static: this['params'][0],
-  kind: 'Self',
+  static: this['params'][0]
+  kind: 'Self'
   $dynamicAnchor: string
 }
 
@@ -726,7 +726,6 @@ export class TypeBuilder {
     const minContains = 0
     const maxContains = 0
     return this.Assert({ ...options, type, kind: 'Tuple', contains: {}, minContains, maxContains })
-
   }
 
   /** Creates a undefined type. This type cannot be used in service contracts and is non-validatable over the network. */
@@ -747,7 +746,6 @@ export class TypeBuilder {
   /** Creates an unknown type */
   public Unknown(options: SchemaOptions = {}): TUnknown {
     return this.Assert<TUnknown>({ ...options, kind: 'Unknown' })
-
   }
 
   /** An unsafe type is the same as `any` but infers as the generic argument T. */
@@ -784,7 +782,7 @@ export class TypeBuilder {
       return object
     }
   }
-  
+
   /** Accepts a schema and asserts on the properties excluding phantom static and params  */
   protected Assert<T>(schema: Omit<T, 'static' | 'params'>): T {
     return schema as any as T
