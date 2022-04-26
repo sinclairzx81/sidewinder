@@ -75,8 +75,8 @@ export interface TAny extends TSchema {
 
 export interface ArrayOptions extends SchemaOptions {
   uniqueItems?: boolean
-  minContains?: number
-  maxContains?: number
+  minItems?: number
+  maxItems?: number
 }
 
 export interface TArray<T extends TSchema = TSchema> extends TSchema, ArrayOptions {
@@ -312,7 +312,7 @@ export interface TRecord<K extends TRecordKey, T extends TSchema> extends TSchem
 export interface TSelf extends TSchema {
   static: this['params'][0]
   kind: 'Self'
-  $dynamicAnchor: string
+  $ref: string
 }
 
 export type TRecReduce<T extends TSchema> = Static<T, [TRecReduce<T>]>
@@ -384,10 +384,10 @@ export interface TString extends TSchema, StringOptions<string> {
 
 export interface TTuple<T extends TSchema[] = TSchema[]> extends TSchema {
   static: { [K in keyof T]: T[K] extends TSchema ? Static<T[K], this['params']> : T[K] }
-  type: 'array'
   kind: 'Tuple'
-  prefixItems: T
-  items: false
+  type: 'array'
+  items?: T
+  additionalItems?: false
   minItems: number
   maxItems: number
 }
@@ -467,12 +467,9 @@ export type Static<T extends TSchema, P extends unknown[] = []> = (T & { params:
 // TypeBuilder
 // --------------------------------------------------------------------------
 
-export class TypeBuilder {
-  private $dynamicAnchorOrdinal: number
-  constructor() {
-    this.$dynamicAnchorOrdinal = 0
-  }
+let TypeOrdinal = 0
 
+export class TypeBuilder {
   // ----------------------------------------------------------------------
   // Modifiers
   // ----------------------------------------------------------------------
@@ -498,22 +495,22 @@ export class TypeBuilder {
 
   /** Creates a any type */
   public Any(options: SchemaOptions = {}): TAny {
-    return this.Assert<TAny>({ ...options, kind: 'Any' })
+    return this.Create<TAny>({ ...options, kind: 'Any' })
   }
 
   /** Creates a array type */
   public Array<T extends TSchema>(items: T, options: ArrayOptions = {}): TArray<T> {
-    return this.Assert<TArray<T>>({ ...options, kind: 'Array', type: 'array', items })
+    return this.Create<TArray<T>>({ ...options, kind: 'Array', type: 'array', items })
   }
 
   /** Creates a boolean type */
   public Boolean(options: SchemaOptions = {}): TBoolean {
-    return this.Assert({ ...options, kind: 'Boolean', type: 'boolean' })
+    return this.Create({ ...options, kind: 'Boolean', type: 'boolean' })
   }
 
   /** Creates a constructor type */
   public Constructor<T extends TSchema[], U extends TObject>(parameters: [...T], returns: U, options: SchemaOptions = {}): TConstructor<T, U> {
-    return this.Assert({ ...options, kind: 'Constructor', type: 'constructor', parameters, returns })
+    return this.Create({ ...options, kind: 'Constructor', type: 'constructor', parameters, returns })
   }
 
   /** Creates a enum type */
@@ -522,17 +519,17 @@ export class TypeBuilder {
       .filter((key) => isNaN(key as any))
       .map((key) => item[key]) as T[keyof T][]
     const anyOf = values.map((value) => (typeof value === 'string' ? { type: 'string' as const, const: value } : { type: 'number' as const, const: value }))
-    return this.Assert({ ...options, kind: 'Enum', anyOf })
+    return this.Create({ ...options, kind: 'Enum', anyOf })
   }
 
   /** Creates a function type */
   public Function<T extends readonly TSchema[], U extends TSchema>(parameters: [...T], returns: U, options: SchemaOptions = {}): TFunction<T, U> {
-    return this.Assert({ ...options, kind: 'Function', type: 'function', parameters, returns })
+    return this.Create({ ...options, kind: 'Function', type: 'function', parameters, returns })
   }
 
   /** Creates a integer type */
   public Integer(options: IntegerOptions = {}): TInteger {
-    return this.Assert({ ...options, kind: 'Integer', type: 'integer' })
+    return this.Create({ ...options, kind: 'Integer', type: 'integer' })
   }
 
   /** Creates a intersect type. */
@@ -556,28 +553,28 @@ export class TypeBuilder {
         properties[key] = properties[key] === undefined ? schema : { kind: 'Union', anyOf: [properties[key], { ...schema }] }
       }
     }
-    return this.Assert({ ...options, type: 'object', kind: 'Object', properties, required: [...required] })
+    return this.Create({ ...options, type: 'object', kind: 'Object', properties, required: [...required] })
   }
 
   /** Creates a keyof type */
   public KeyOf<T extends TObject>(object: T, options: SchemaOptions = {}): TKeyOf<T> {
     const keys = Object.keys(object.properties)
-    return this.Assert({ ...options, kind: 'KeyOf', type: 'string', enum: keys })
+    return this.Create({ ...options, kind: 'KeyOf', type: 'string', enum: keys })
   }
 
   /** Creates a literal type. */
   public Literal<T extends TLiteralValue>(value: T, options: SchemaOptions = {}): TLiteral<T> {
-    return this.Assert({ ...options, kind: 'Literal', const: value, type: typeof value as 'string' | 'number' | 'boolean' })
+    return this.Create({ ...options, kind: 'Literal', const: value, type: typeof value as 'string' | 'number' | 'boolean' })
   }
 
   /** Creates a null type */
   public Null(options: SchemaOptions = {}): TNull {
-    return this.Assert({ ...options, kind: 'Null', type: 'null' })
+    return this.Create({ ...options, kind: 'Null', type: 'null' })
   }
 
   /** Creates a number type */
   public Number(options: NumberOptions = {}): TNumber {
-    return this.Assert({ ...options, kind: 'Number', type: 'number' })
+    return this.Create({ ...options, kind: 'Number', type: 'number' })
   }
 
   /** Creates an object type with the given properties */
@@ -590,7 +587,7 @@ export class TypeBuilder {
     })
     const required_names = property_names.filter((name) => !optional.includes(name))
     const required = required_names.length > 0 ? required_names : undefined
-    return this.Assert(required ? { ...options, kind: 'Object', type: 'object', properties, required } : { ...options, kind: 'Object', type: 'object', properties })
+    return this.Create(required ? { ...options, kind: 'Object', type: 'object', properties, required } : { ...options, kind: 'Object', type: 'object', properties })
   }
 
   /** Creates a new object whose properties are omitted from the given object */
@@ -600,7 +597,7 @@ export class TypeBuilder {
     for (const key of Object.keys(next.properties)) {
       if (keys.includes(key as any)) delete next.properties[key]
     }
-    return this.Assert(next)
+    return this.Create(next)
   }
 
   /** Creates a partial type from an existing object */
@@ -625,7 +622,7 @@ export class TypeBuilder {
           break
       }
     }
-    return this.Assert(next as unknown as TPartial<T>)
+    return this.Create(next as unknown as TPartial<T>)
   }
 
   /** Creates a new object whose properties are picked from the given object */
@@ -635,12 +632,12 @@ export class TypeBuilder {
     for (const key of Object.keys(next.properties)) {
       if (!keys.includes(key as any)) delete next.properties[key]
     }
-    return this.Assert(next)
+    return this.Create(next)
   }
 
   /** Creates a promise type. This type cannot be represented in schema. */
   public Promise<T extends TSchema>(item: T, options: SchemaOptions = {}): TPromise<T> {
-    return this.Assert({ ...options, kind: 'Promise', type: 'promise', item })
+    return this.Create({ ...options, kind: 'Promise', type: 'promise', item })
   }
 
   /** Creates a record type */
@@ -657,25 +654,26 @@ export class TypeBuilder {
           throw Error('Invalid Record Key')
       }
     })()
-    return this.Assert({ ...options, kind: 'Record', type: 'object', patternProperties: { [pattern]: value } })
+    return this.Create({ ...options, kind: 'Record', type: 'object', patternProperties: { [pattern]: value } })
   }
 
   /** Creates a recursive object type */
-  public Rec<T extends TObject>(callback: (self: TSelf) => T, options: SchemaOptions = {}): TRec<T> {
-    const $dynamicAnchor = `dynamic-anchor-${this.$dynamicAnchorOrdinal++}`
-    const self = callback({ kind: 'Self', $dynamicRef: `#/${$dynamicAnchor}` } as any)
-    return this.Assert({ ...options, ...self, $dynamicAnchor } as any)
+  public Rec<T extends TSchema>(callback: (self: TSelf) => T, options: SchemaOptions = {}): TRec<T> {
+    if (options.$id === undefined) options.$id = `type-${TypeOrdinal++}`
+    const self = callback({ kind: 'Self', $ref: `${options.$id}` } as any)
+    self.$id = options.$id
+    return this.Create({ ...options, ...self } as any)
   }
 
   /** Creates a reference schema */
   public Ref<T extends TSchema>(schema: T): TRef<T> {
     if (schema.$id === undefined) throw Error('Cannot reference schema as it has no Id')
-    return this.Assert({ $ref: schema.$id! })
+    return this.Create({ $ref: schema.$id! })
   }
 
   /** Creates a string type from a regular expression */
   public RegEx(regex: RegExp, options: SchemaOptions = {}): TString {
-    return this.Assert({ ...options, kind: 'String', type: 'string', pattern: regex.source })
+    return this.Create({ ...options, kind: 'String', type: 'string', pattern: regex.source })
   }
 
   /** Makes all properties in the given object type required */
@@ -700,62 +698,51 @@ export class TypeBuilder {
           break
       }
     }
-    return this.Assert(next as unknown as TRequired<T>)
+    return this.Create(next as unknown as TRequired<T>)
   }
 
   /** Creates a string type */
   public String<TCustomFormatOption extends string>(options: StringOptions<StringFormatOption | TCustomFormatOption> = {}): TString {
-    return this.Assert({ ...options, kind: 'String', type: 'string' })
+    return this.Create({ ...options, kind: 'String', type: 'string' })
   }
 
   /** Creates a type type */
-  public Tuple<T extends TSchema[]>(prefixItems: [...T], options: SchemaOptions = {}): TTuple<T> {
-    if (prefixItems.length > 0) {
-      const type = 'array'
-      const items = false
-      const minItems = prefixItems.length
-      const maxItems = prefixItems.length
-      return this.Assert<TTuple<T>>({ ...options, type, kind: 'Tuple', minItems, maxItems, prefixItems, items })
-    }
-    // -----------------------------------------------------------------------
-    // 2020-12 does not support empty tuple types, however empty tuple types
-    // are possible in TypeScript. Here we default to an empty array which
-    // allows AJV to test for the empty array. This could use a review.
-    // -----------------------------------------------------------------------
-    const type = 'array'
-    const minContains = 0
-    const maxContains = 0
-    return this.Assert({ ...options, type, kind: 'Tuple', contains: {}, minContains, maxContains })
+  public Tuple<T extends TSchema[]>(items: [...T], options: SchemaOptions = {}): TTuple<T> {
+    const additionalItems = false
+    const minItems = items.length
+    const maxItems = items.length
+    const schema = (items.length > 0 ? { ...options, kind: 'Tuple', type: 'array', items, additionalItems, minItems, maxItems } : { ...options, kind: 'Tuple', type: 'array', minItems, maxItems }) as any
+    return this.Create(schema)
   }
 
   /** Creates a undefined type. This type cannot be used in service contracts and is non-validatable over the network. */
   public Undefined(options: SchemaOptions = {}): TUndefined {
-    return this.Assert<TUndefined>({ ...options, kind: 'Undefined', type: 'object', specialized: 'Undefined' })
+    return this.Create<TUndefined>({ ...options, kind: 'Undefined', type: 'object', specialized: 'Undefined' })
   }
 
   /** Creates a union type */
   public Union<T extends TSchema[]>(items: [...T], options: SchemaOptions = {}): TUnion<T> {
-    return this.Assert<TUnion<T>>({ ...options, kind: 'Union', anyOf: items })
+    return this.Create<TUnion<T>>({ ...options, kind: 'Union', anyOf: items })
   }
 
   /** Creates a Uint8Array type. This type is only supported for binary message formats. */
   public Uint8Array(options: TypedArrayOptions = {}): TUint8Array {
-    return this.Assert<TUint8Array>({ ...options, kind: 'Uint8Array', type: 'object', specialized: 'Uint8Array' })
+    return this.Create<TUint8Array>({ ...options, kind: 'Uint8Array', type: 'object', specialized: 'Uint8Array' })
   }
 
   /** Creates an unknown type */
   public Unknown(options: SchemaOptions = {}): TUnknown {
-    return this.Assert<TUnknown>({ ...options, kind: 'Unknown' })
+    return this.Create<TUnknown>({ ...options, kind: 'Unknown' })
   }
 
   /** An unsafe type is the same as `any` but infers as the generic argument T. */
   public Unsafe<T>(options: SchemaOptions = {}): TUnsafe<T> {
-    return this.Assert({ ...options, kind: 'Any' })
+    return this.Create({ ...options, kind: 'Any' })
   }
 
   /** Creates a void type. This type creates a `null` schema but infers as void */
   public Void(options: SchemaOptions = {}): TVoid {
-    return this.Assert({ ...options, kind: 'Void', type: 'null' })
+    return this.Create({ ...options, kind: 'Void', type: 'null' })
   }
 
   /** Clones the given object */
@@ -784,8 +771,8 @@ export class TypeBuilder {
   }
 
   /** Accepts a schema and asserts on the properties excluding phantom static and params  */
-  protected Assert<T>(schema: Omit<T, 'static' | 'params'>): T {
-    return schema as any as T
+  protected Create<T>(schema: Omit<T, 'static' | 'params'>): T {
+    return schema as any
   }
 }
 

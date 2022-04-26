@@ -70,10 +70,7 @@ namespace UpcastUnionValue {
 }
 
 export namespace UpcastValue {
-  // -----------------------------------------------------
-  // Required to defer recursive type validation
-  // -----------------------------------------------------
-  const dynamicAnchors = new Map<string, Types.TObject>()
+  const ids = new Map<string, Types.TObject>()
 
   function Any(schema: Types.TAny, value: any): any {
     return CheckValue.Check(schema, value) ? value : CreateValue.Create(schema)
@@ -135,7 +132,7 @@ export namespace UpcastValue {
   function Object(schema: Types.TObject, value: any): any {
     if (CheckValue.Check(schema, value)) return value
     if (value === null || typeof value !== 'object') return CreateValue.Create(schema)
-    if (schema['$dynamicAnchor'] !== undefined) dynamicAnchors.set(schema['$dynamicAnchor'], schema)
+    ids.set(schema.$id!, schema)
     const required = new Set(schema.required || [])
     const result = {} as Record<string, any>
     for (const [key, property] of globalThis.Object.entries(schema.properties)) {
@@ -170,10 +167,8 @@ export namespace UpcastValue {
   }
 
   function Self(schema: Types.TSelf, value: any): any {
-    const dynamicAnchor = schema.$dynamicRef.replace('#/', '')
-    if (!dynamicAnchors.has(dynamicAnchor)) throw new Error('Cannot locate dynamic anchor for self referenced type')
-    const self = dynamicAnchors.get(dynamicAnchor)!
-    return Object(self, value)
+    if (!ids.has(schema.$ref)) throw new Error(`Upcast: Cannot locate schema with $id '${schema.$id}' for referenced type`)
+    return Object(ids.get(schema.$ref)!, value)
   }
 
   function String(schema: Types.TString, value: any): any {
@@ -183,7 +178,8 @@ export namespace UpcastValue {
   function Tuple(schema: Types.TTuple<any[]>, value: any): any {
     if (CheckValue.Check(schema, value)) return value
     if (!globalThis.Array.isArray(value)) return CreateValue.Create(schema)
-    return schema.prefixItems.map((schema, index) => Create(schema, value[index]))
+    if (schema.items === undefined) return []
+    return schema.items.map((schema, index) => Create(schema, value[index]))
   }
 
   function Undefined(schema: Types.TUndefined, value: any): any {

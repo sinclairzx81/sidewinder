@@ -32,7 +32,7 @@ export namespace CheckValue {
   // -----------------------------------------------------
   // Required to defer recursive type validation
   // -----------------------------------------------------
-  const dynamicAnchors = new Map<string, Types.TObject>()
+  const ids = new Map<string, Types.TObject>()
 
   function Any(schema: Types.TAny, value: any): boolean {
     return true
@@ -92,7 +92,7 @@ export namespace CheckValue {
     if (typeof value !== 'object') return false
     if (value === null) return false
     const required = new Set<string>(schema.required || [])
-    if (schema['$dynamicAnchor'] !== undefined) dynamicAnchors.set(schema['$dynamicAnchor'], schema)
+    ids.set(schema.$id!, schema)
     return globalThis.Object.entries(schema.properties).every(([key, schema]) => {
       if (!required.has(key) && value[key] === undefined) return true
       return Check(schema, value[key])
@@ -120,10 +120,8 @@ export namespace CheckValue {
   }
 
   function Self(schema: Types.TSelf, value: any): any {
-    const dynamicAnchor = schema.$dynamicRef.replace('#/', '')
-    if (!dynamicAnchors.has(dynamicAnchor)) throw new Error('Cannot locate dynamic anchor for self referenced type')
-    const self = dynamicAnchors.get(dynamicAnchor)!
-    return Object(self, value)
+    if (!ids.has(schema.$ref)) throw new Error(`Check: Cannot locate schema with $id '${schema.$id}' for referenced type`)
+    return Object(ids.get(schema.$ref)!, value)
   }
 
   function String(schema: Types.TString, value: any): boolean {
@@ -137,10 +135,10 @@ export namespace CheckValue {
 
   function Tuple(schema: Types.TTuple<any[]>, value: any): boolean {
     if (typeof value !== 'object' || !globalThis.Array.isArray(value)) return false
-    if (schema.prefixItems === undefined && value.length === 0) return true
-    if (schema.prefixItems === undefined) return false
+    if (schema.items === undefined && value.length === 0) return true
+    if (schema.items === undefined) return false
     if (value.length < schema.minItems || value.length > schema.maxItems) return false
-    return schema.prefixItems.every((schema, index) => Check(schema, value[index]))
+    return schema.items.every((schema, index) => Check(schema, value[index]))
   }
 
   function Undefined(schema: Types.TUndefined, value: any): boolean {

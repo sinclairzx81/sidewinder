@@ -35,6 +35,7 @@ export class ValidateError extends Error {
     super('Data did not to validate')
   }
 }
+
 /** The return type for validate check. */
 export interface ValidateResult {
   success: boolean
@@ -44,18 +45,18 @@ export interface ValidateResult {
 
 /** Provides runtime validation for Sidewinder Types */
 export class Validator<T extends TSchema> {
-  private readonly validateFunction: ValidateFunction<unknown>
-  constructor(private readonly schema: T) {
-    this.validateFunction = Compiler.compile(this.schema)
+  private readonly compiler: Compiler<T>
+  constructor(private readonly schema: T, private readonly referencedSchemas: TSchema[] = []) {
+    this.compiler = new Compiler<T>(this.schema, this.referencedSchemas)
   }
 
   /** Check if the given data conforms to this validators schema. */
   public check(data: unknown): ValidateResult {
     try {
-      const result = this.validateFunction(data)
+      const result = this.compiler.validate(data)
       if (!result) {
-        const errors = this.validateFunction.errors ? this.validateFunction.errors : []
-        const errorText = Compiler.errorsText(errors)
+        const errors = this.compiler.errors()!
+        const errorText = this.compiler.errorsText()
         return { success: false, errors, errorText }
       } else {
         return { success: true, errors: [], errorText: '' }

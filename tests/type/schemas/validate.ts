@@ -1,9 +1,8 @@
-import { Compiler, Validator } from '@sidewinder/validator'
+import { Validator } from '@sidewinder/validator'
 import { TSchema } from '@sidewinder/type'
 
 export function ok<T extends TSchema>(type: T, data: unknown, additional: any[] = []) {
-  Compiler.addSchema(additional)
-  const validator = new Validator(type)
+  const validator = new Validator(type, additional)
   const result = validator.check(data)
   if (!result.success) {
     console.log('---------------------------')
@@ -23,8 +22,7 @@ export function ok<T extends TSchema>(type: T, data: unknown, additional: any[] 
 }
 
 export function fail<T extends TSchema>(type: T, data: unknown, additional: any[] = []) {
-  Compiler.addSchema(additional)
-  const validator = new Validator(type)
+  const validator = new Validator(type, additional)
   const result = validator.check(data)
   if (result.success) {
     console.log('---------------------------')
