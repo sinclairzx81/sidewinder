@@ -39,9 +39,7 @@ export class MongoCollection<T extends TObject<TProperties> = TObject<TPropertie
   private readonly encoder: MongoEncoder
 
   constructor(public readonly schema: T, public readonly collection: Mongo.Collection) {
-    // Note: Omit the partial schemas $id to prevent primary schema compile overlap
-    const { $id, ...partialSchema } = schema as TObject
-    this.validatePartial = new Validator(Type.Partial(partialSchema))
+    this.validatePartial = new Validator(Type.Partial(schema))
     this.validate = new Validator(schema)
     this.encoder = new MongoEncoder(schema)
   }

@@ -46,6 +46,7 @@ export class MongoDatabase<Schema extends TDatabase = TDatabase> {
   /** Returns a collection with the given name */
   public collection<CollectionName extends keyof Schema['collections']>(collectionName: CollectionName): MongoCollection<Schema['collections'][CollectionName]> {
     const collectionKey = collectionName as string
+    // As collections require schema compilation, we need to cache the collection for subsequent requests.
     if (!this.collections.has(collectionKey)) {
       if (this.schema['collections'][collectionKey] === undefined) throw new Error(`Collection name '${collectionKey}' not defined in schema`)
       const schema = this.schema['collections'][collectionKey]
