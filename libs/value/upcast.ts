@@ -70,7 +70,6 @@ namespace UpcastUnionValue {
 }
 
 export namespace UpcastValue {
-
   const ids = new Map<string, Types.TObject>()
 
   function Any(schema: Types.TAny, value: any): any {
@@ -179,7 +178,7 @@ export namespace UpcastValue {
   function Tuple(schema: Types.TTuple<any[]>, value: any): any {
     if (CheckValue.Check(schema, value)) return value
     if (!globalThis.Array.isArray(value)) return CreateValue.Create(schema)
-    if(schema.items === undefined) return []
+    if (schema.items === undefined) return []
     return schema.items.map((schema, index) => Create(schema, value[index]))
   }
 

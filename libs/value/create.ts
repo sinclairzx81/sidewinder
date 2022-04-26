@@ -216,7 +216,7 @@ export namespace CreateValue {
     if (schema.default !== undefined) {
       return schema.default
     }
-    if(schema.items === undefined) {
+    if (schema.items === undefined) {
       return []
     } else {
       return globalThis.Array.from({ length: schema.minItems }).map((_, index) => CreateValue.Create((schema.items as any[])[index]))

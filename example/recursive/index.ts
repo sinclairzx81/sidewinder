@@ -5,10 +5,12 @@ import { WebClient } from '@sidewinder/client'
 // Node
 // -----------------------------------------------------------
 
-const Node = Type.Rec(Self => Type.Object({
-    id: Type.String(),
-    nodes: Type.Array(Self)
-}), { $id: 'what' })
+const Node = Type.Tuple([
+    Type.Rec(Self => Type.Object({
+        id: Type.String(),
+        nodes: Type.Array(Self)
+    }))
+])
 
 // -----------------------------------------------------------
 // Contract
@@ -30,7 +32,6 @@ export class GraphService extends WebService<typeof GraphContract> {
     }
 
     public echo = super.method('echo', (context, node) => {
-        console.log(node)
         return node
     })
 }
@@ -50,18 +51,24 @@ host.listen(5000)
 // -----------------------------------------------------------
 
 async function start() {
-    
+
     const client = new WebClient(GraphContract, 'http://localhost:5000/graph')
 
-    const result = await client.call('echo', {
+    const result = await client.call('echo', [{
         id: 'A',
         nodes: [
-            { id: 'B', nodes: [] },
+            { id: 'B', nodes: [{
+                id: 'A',
+                nodes: [
+                    { id: 'B', nodes: [] },
+                    { id: 'C', nodes: [] },
+                ]
+            }] },
             { id: 'C', nodes: [] },
         ]
-    })
-
-    console.log(result)
+    }])
+    
+    console.log(JSON.stringify(result, null, 2)) 
 }
 
 start()
