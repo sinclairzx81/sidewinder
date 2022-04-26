@@ -35,6 +35,7 @@ export class ValidateError extends Error {
     super('Data did not to validate')
   }
 }
+
 /** The return type for validate check. */
 export interface ValidateResult {
   success: boolean

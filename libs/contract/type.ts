@@ -95,7 +95,7 @@ export class ContractTypeBuilder extends TypeBuilder {
     const format = options.format || 'json'
     const server = options.server || {}
     const client = options.client || {}
-    return this.Assert({ type: 'contract', kind: 'Contract', format, server, client })
+    return this.Create({ type: 'contract', kind: 'Contract', format, server, client })
   }
 }
 

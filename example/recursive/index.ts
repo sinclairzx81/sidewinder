@@ -8,7 +8,7 @@ import { WebClient } from '@sidewinder/client'
 const Node = Type.Rec(Self => Type.Object({
     id: Type.String(),
     nodes: Type.Array(Self)
-}))
+}), { $id: 'what' })
 
 // -----------------------------------------------------------
 // Contract

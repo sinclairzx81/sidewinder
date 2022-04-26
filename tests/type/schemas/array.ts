@@ -30,7 +30,7 @@ describe('type/Array', () => {
   it('Should validate for an array of intersection types', () => {
     const A = Type.Object({ a: Type.String() })
     const B = Type.Object({ b: Type.String() })
-    const C = Type.Intersect([A, B], { unevaluatedProperties: false })
+    const C = Type.Intersect([A, B])
     const T = Type.Array(C)
     ok(T, [
       { a: 'hello', b: 'hello' },
@@ -39,10 +39,10 @@ describe('type/Array', () => {
     ])
   })
 
-  it('Should not validate for an array of intersection types when passing unevaluated property', () => {
+  it('Should not validate for an array of intersection types when passing additionalProperties false', () => {
     const A = Type.Object({ a: Type.String() })
     const B = Type.Object({ b: Type.String() })
-    const C = Type.Intersect([A, B], { unevaluatedProperties: false })
+    const C = Type.Intersect([A, B], { additionalProperties: false })
     const T = Type.Array(C)
     fail(T, [
       { a: 'hello', b: 'hello' },

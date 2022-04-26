@@ -43,21 +43,4 @@ describe('type/Ref', () => {
       [T],
     )
   })
-
-  it('Should throw when not specifying an $id on target schema', () => {
-    try {
-      const T = Type.Object(
-        {
-          x: Type.Number(),
-          y: Type.Number(),
-          z: Type.Number(),
-        },
-        {},
-      )
-      const R = Type.Ref(T)
-    } catch {
-      return
-    }
-    throw Error('Expected throw')
-  })
 })

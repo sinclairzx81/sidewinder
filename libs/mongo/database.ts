@@ -32,8 +32,11 @@ import { MongoCollection } from './collection'
 
 /** TypeSafe database with JSON Schema validation built in */
 export class MongoDatabase<Schema extends TDatabase = TDatabase> {
-  constructor(private readonly schema: Schema, public readonly db: Db) {}
-
+  private readonly collections: Map<string, MongoCollection>
+  constructor(private readonly schema: Schema, public readonly db: Db) {
+    this.collections = new Map<string, MongoCollection>()
+  }
+  
   /** Generates a new 24 character mongo identifier string */
   public id(): string {
     const objectId = new ObjectId()
@@ -42,10 +45,14 @@ export class MongoDatabase<Schema extends TDatabase = TDatabase> {
 
   /** Returns a collection with the given name */
   public collection<CollectionName extends keyof Schema['collections']>(collectionName: CollectionName): MongoCollection<Schema['collections'][CollectionName]> {
-    if (this.schema['collections'][collectionName as string] === undefined) throw new Error(`Collection name '${collectionName}' not defined in schema`)
-    const schema = this.schema['collections'][collectionName as string]
-    const collection = this.db.collection(collectionName as string)
-    return new MongoCollection<Schema['collections'][CollectionName]>(schema as any, collection)
+    const collectionKey = collectionName as string
+    if(!this.collections.has(collectionKey)) {
+      if (this.schema['collections'][collectionKey] === undefined) throw new Error(`Collection name '${collectionKey}' not defined in schema`)
+      const schema = this.schema['collections'][collectionKey]
+      const collection = this.db.collection(collectionKey)
+      this.collections.set(collectionKey, new MongoCollection<Schema['collections'][CollectionName]>(schema as any, collection))
+    }
+    return this.collections.get(collectionKey)! as MongoCollection<Schema['collections'][CollectionName]>
   }
 
   /** Opens a database with the given url and options. */

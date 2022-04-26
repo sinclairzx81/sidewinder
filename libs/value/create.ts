@@ -36,6 +36,7 @@ export namespace CreateValue {
       return {}
     }
   }
+
   function Array(schema: Types.TArray): any {
     if (schema.default !== undefined) {
       return schema.default
@@ -45,6 +46,7 @@ export namespace CreateValue {
       return []
     }
   }
+
   function Boolean(schema: Types.TBoolean): any {
     if (schema.default !== undefined) {
       return schema.default
@@ -52,6 +54,7 @@ export namespace CreateValue {
       return false
     }
   }
+
   function Constructor(schema: Types.TConstructor): any {
     if (schema.default !== undefined) {
       return schema.default
@@ -71,6 +74,7 @@ export namespace CreateValue {
       }
     }
   }
+
   function Enum(schema: Types.TEnum<any>): any {
     if (schema.default !== undefined) {
       return schema.default
@@ -80,6 +84,7 @@ export namespace CreateValue {
       return schema.anyOf[0].const
     }
   }
+
   function Function(schema: Types.TFunction): any {
     if (schema.default !== undefined) {
       return schema.default
@@ -87,6 +92,7 @@ export namespace CreateValue {
       return () => CreateValue.Create(schema.returns)
     }
   }
+
   function Integer(schema: Types.TInteger): any {
     if (schema.default !== undefined) {
       return schema.default
@@ -96,6 +102,7 @@ export namespace CreateValue {
       return 0
     }
   }
+
   function Intersect(schema: Types.TIntersect): any {
     if (schema.default !== undefined) {
       return schema.default
@@ -108,6 +115,7 @@ export namespace CreateValue {
       )
     }
   }
+
   function KeyOf(schema: Types.TKeyOf<any>): any {
     if (schema.default !== undefined) {
       return schema.default
@@ -115,12 +123,15 @@ export namespace CreateValue {
       return (schema.enum as any)[0]
     }
   }
+
   function Literal(schema: Types.TLiteral): any {
     return schema.const
   }
+
   function Null(schema: Types.TNull): any {
     return null
   }
+
   function Number(schema: Types.TNumber): any {
     if (schema.default !== undefined) {
       return schema.default
@@ -130,6 +141,7 @@ export namespace CreateValue {
       return 0
     }
   }
+
   function Object(schema: Types.TObject): any {
     if (schema.default !== undefined) {
       return schema.default
@@ -151,6 +163,7 @@ export namespace CreateValue {
       )
     }
   }
+
   function Promise(schema: Types.TPromise<any>): any {
     if (schema.default !== undefined) {
       return schema.default
@@ -158,6 +171,7 @@ export namespace CreateValue {
       return globalThis.Promise.resolve(CreateValue.Create(schema.item))
     }
   }
+
   function Record(schema: Types.TRecord<any, any>): any {
     if (schema.default !== undefined) {
       return schema.default
@@ -165,6 +179,7 @@ export namespace CreateValue {
       return {}
     }
   }
+
   function Rec(schema: Types.TRec<any>): any {
     if (schema.default !== undefined) {
       return schema.default
@@ -172,6 +187,7 @@ export namespace CreateValue {
       throw new Error('Rec types require a default value')
     }
   }
+
   function Ref(schema: Types.TRef<any>): any {
     if (schema.default !== undefined) {
       return schema.default
@@ -179,6 +195,7 @@ export namespace CreateValue {
       throw new Error('Ref types require a default value')
     }
   }
+
   function String(schema: Types.TString): any {
     if (schema.pattern !== undefined) {
       if (schema.default === undefined) {
@@ -194,16 +211,22 @@ export namespace CreateValue {
       }
     }
   }
+
   function Tuple(schema: Types.TTuple<any[]>): any {
     if (schema.default !== undefined) {
       return schema.default
+    }
+    if(schema.items === undefined) {
+      return []
     } else {
-      return globalThis.Array.from({ length: schema.minItems }).map((_, index) => CreateValue.Create((schema.prefixItems as any[])[index]))
+      return globalThis.Array.from({ length: schema.minItems }).map((_, index) => CreateValue.Create((schema.items as any[])[index]))
     }
   }
+
   function Undefined(schema: Types.TUndefined): any {
     return undefined
   }
+
   function Union(schema: Types.TUnion<any[]>): any {
     if (schema.default !== undefined) {
       return schema.default

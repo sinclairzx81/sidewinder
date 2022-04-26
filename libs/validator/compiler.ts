@@ -26,7 +26,7 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-import Ajv, { ErrorObject, ValidateFunction } from 'ajv/dist/2020'
+import Ajv, { ErrorObject, ValidateFunction } from 'ajv'
 import { TSchema, Static, TUint8Array } from '@sidewinder/type'
 import addFormats from 'ajv-formats'
 export { ValidateFunction } from 'ajv'
@@ -91,6 +91,7 @@ export namespace Compiler {
 
   /** Compiles the given schema and returns a validate function. */
   export function compile<T extends TSchema>(schema: T): ValidateFunction<Static<T>> {
+    
     return ajv.compile(schema)
   }
 }
