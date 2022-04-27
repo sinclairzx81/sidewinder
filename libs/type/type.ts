@@ -61,10 +61,10 @@ export interface SchemaOptions {
 }
 
 export interface TSchema extends SchemaOptions {
-  params: unknown[]
-  static: unknown
   [Kind]: string
   [Modifier]?: string
+  params: unknown[]
+  static: unknown
 }
 
 // --------------------------------------------------------------------------
@@ -72,8 +72,8 @@ export interface TSchema extends SchemaOptions {
 // --------------------------------------------------------------------------
 
 export interface TAny extends TSchema {
-  static: any
   [Kind]: 'Any'
+  static: any
 }
 
 // --------------------------------------------------------------------------
@@ -87,8 +87,8 @@ export interface ArrayOptions extends SchemaOptions {
 }
 
 export interface TArray<T extends TSchema = TSchema> extends TSchema, ArrayOptions {
-  static: Array<Static<T, this['params']>>
   [Kind]: 'Array'
+  static: Array<Static<T, this['params']>>
   type: 'array'
   items: T
 }
@@ -98,8 +98,8 @@ export interface TArray<T extends TSchema = TSchema> extends TSchema, ArrayOptio
 // --------------------------------------------------------------------------
 
 export interface TBoolean extends TSchema {
-  static: boolean
   [Kind]: 'Boolean'
+  static: boolean
   type: 'boolean'
 }
 
@@ -110,8 +110,8 @@ export interface TBoolean extends TSchema {
 type TContructorParameters<T extends readonly TSchema[], P extends unknown[]> = [...{ [K in keyof T]: T[K] extends TSchema ? Static<T[K], P> : never }]
 
 export interface TConstructor<T extends TSchema[] = TSchema[], U extends TObject = TObject> extends TSchema {
-  static: new (...param: TContructorParameters<T, this['params']>) => Static<U, this['params']>
   [Kind]: 'Constructor'
+  static: new (...param: TContructorParameters<T, this['params']>) => Static<U, this['params']>
   type: 'constructor'
   parameters: T
   returns: U
@@ -127,8 +127,8 @@ export interface TEnumOption<T> {
 }
 
 export interface TEnum<T extends Record<string, string | number>> extends TSchema {
-  static: T[keyof T]
   [Kind]: 'Enum'
+  static: T[keyof T]
   anyOf: TEnumOption<T>[]
 }
 
@@ -139,8 +139,8 @@ export interface TEnum<T extends Record<string, string | number>> extends TSchem
 export type TFunctionParameters<T extends readonly TSchema[], P extends unknown[]> = [...{ [K in keyof T]: T[K] extends TSchema ? Static<T[K], P> : never }]
 
 export interface TFunction<T extends readonly TSchema[] = TSchema[], U extends TSchema = TSchema> extends TSchema {
-  static: (...param: TFunctionParameters<T, this['params']>) => Static<U, this['params']>
   [Kind]: 'Function'
+  static: (...param: TFunctionParameters<T, this['params']>) => Static<U, this['params']>
   type: 'function'
   parameters: T
   returns: U
@@ -159,8 +159,8 @@ export interface IntegerOptions extends SchemaOptions {
 }
 
 export interface TInteger extends TSchema, IntegerOptions {
-  static: number
   [Kind]: 'Integer'
+  static: number
   type: 'integer'
 }
 // --------------------------------------------------------------------------
@@ -177,14 +177,14 @@ export interface TIntersect<T extends TObject[] = TObject[]> extends TObject {
 }
 
 // --------------------------------------------------------------------------
-// KeyOf
+// KeyOf: Implemented by way of Union<TLiteral<string>>
 // --------------------------------------------------------------------------
 
-export interface TKeyOf<T extends TObject> extends TSchema {
-  static: ObjectPropertyKeys<T>
-  [Kind]: 'KeyOf'
-  enum: ObjectPropertyKeys<T>[]
-}
+type UnionToIntersect<U> = (U extends unknown ? (arg: U) => 0 : never) extends (arg: infer I) => 0 ? I : never
+type UnionLast<U> = UnionToIntersect<U extends unknown ? (x: U) => 0 : never> extends (x: infer L) => 0 ? L : never
+type UnionToTuple<U, L = UnionLast<U>> = [U] extends [never] ? [] : [...UnionToTuple<Exclude<U, L>>, L]
+
+export type TKeyOf<T extends TObject> = { [K in ObjectPropertyKeys<T>]: TLiteral<K> } extends infer R ? UnionToTuple<R[keyof R]> : never
 
 // --------------------------------------------------------------------------
 // Literal
@@ -193,8 +193,8 @@ export interface TKeyOf<T extends TObject> extends TSchema {
 export type TLiteralValue = string | number | boolean
 
 export interface TLiteral<T extends TLiteralValue = TLiteralValue> extends TSchema {
-  static: T
   [Kind]: 'Literal'
+  static: T
   const: T
 }
 
@@ -203,8 +203,8 @@ export interface TLiteral<T extends TLiteralValue = TLiteralValue> extends TSche
 // --------------------------------------------------------------------------
 
 export interface TNull extends TSchema {
-  static: null
   [Kind]: 'Null'
+  static: null
   type: 'null'
 }
 
@@ -221,8 +221,8 @@ export interface NumberOptions extends SchemaOptions {
 }
 
 export interface TNumber extends TSchema, NumberOptions {
-  static: number
   [Kind]: 'Number'
+  static: number
   type: 'number'
 }
 
@@ -255,8 +255,8 @@ export interface ObjectOptions extends SchemaOptions {
 }
 
 export interface TObject<T extends TProperties = TProperties> extends TSchema {
-  static: PropertiesReduce<T, this['params']>
   [Kind]: 'Object'
+  static: PropertiesReduce<T, this['params']>
   type: 'object'
   properties: T
   required?: string[]
@@ -293,8 +293,8 @@ export interface TPick<T extends TObject, Properties extends ObjectPropertyKeys<
 // --------------------------------------------------------------------------
 
 export interface TPromise<T extends TSchema> extends TSchema {
-  static: Promise<Static<T, this['params']>>
   [Kind]: 'Promise'
+  static: Promise<Static<T, this['params']>>
   type: 'promise'
   item: TSchema
 }
@@ -303,11 +303,11 @@ export interface TPromise<T extends TSchema> extends TSchema {
 // Record
 // --------------------------------------------------------------------------
 
-export type TRecordKey = TString | TNumber | TUnion<TLiteral<string>[]>
+export type TRecordKey = TString | TNumber | TUnion<TLiteral<any>[]>
 
 export interface TRecord<K extends TRecordKey, T extends TSchema> extends TSchema {
-  static: Record<Static<K>, Static<T, this['params']>>
   [Kind]: 'Record'
+  static: Record<Static<K>, Static<T, this['params']>>
   type: 'object'
   patternProperties: { [pattern: string]: T }
 }
@@ -317,8 +317,8 @@ export interface TRecord<K extends TRecordKey, T extends TSchema> extends TSchem
 // --------------------------------------------------------------------------
 
 export interface TSelf extends TSchema {
-  static: this['params'][0]
   [Kind]: 'Self'
+  static: this['params'][0]
   $ref: string
 }
 
@@ -333,8 +333,8 @@ export interface TRec<T extends TSchema> extends TSchema {
 // --------------------------------------------------------------------------
 
 export interface TRef<T extends TSchema> extends TSchema {
-  static: Static<T, this['params']>
   [Kind]: 'Ref'
+  static: Static<T, this['params']>
   $ref: string
 }
 
@@ -380,8 +380,8 @@ export interface StringOptions<TFormat extends string> extends SchemaOptions {
 }
 
 export interface TString extends TSchema, StringOptions<string> {
-  static: string
   [Kind]: 'String'
+  static: string
   type: 'string'
 }
 
@@ -390,8 +390,8 @@ export interface TString extends TSchema, StringOptions<string> {
 // --------------------------------------------------------------------------
 
 export interface TTuple<T extends TSchema[] = TSchema[]> extends TSchema {
-  static: { [K in keyof T]: T[K] extends TSchema ? Static<T[K], this['params']> : T[K] }
   [Kind]: 'Tuple'
+  static: { [K in keyof T]: T[K] extends TSchema ? Static<T[K], this['params']> : T[K] }
   type: 'array'
   items?: T
   additionalItems?: false
@@ -404,9 +404,9 @@ export interface TTuple<T extends TSchema[] = TSchema[]> extends TSchema {
 // --------------------------------------------------------------------------
 
 export interface TUndefined extends TSchema {
-  static: undefined
-  specialized: 'Undefined'
   [Kind]: 'Undefined'
+  specialized: 'Undefined'
+  static: undefined
   type: 'object'
 }
 
@@ -415,8 +415,8 @@ export interface TUndefined extends TSchema {
 // --------------------------------------------------------------------------
 
 export interface TUnion<T extends TSchema[] = TSchema[]> extends TSchema {
-  static: { [K in keyof T]: T[K] extends TSchema ? Static<T[K], this['params']> : never }[number]
   [Kind]: 'Union'
+  static: { [K in keyof T]: T[K] extends TSchema ? Static<T[K], this['params']> : never }[number]
   anyOf: T
 }
 
@@ -430,9 +430,9 @@ export interface TypedArrayOptions extends SchemaOptions {
 }
 
 export interface TUint8Array extends TSchema, TypedArrayOptions {
+  [Kind]: 'Uint8Array'
   static: Uint8Array
   specialized: 'Uint8Array'
-  [Kind]: 'Uint8Array'
   type: 'object'
 }
 
@@ -441,8 +441,8 @@ export interface TUint8Array extends TSchema, TypedArrayOptions {
 // --------------------------------------------------------------------------
 
 export interface TUnknown extends TSchema {
-  static: unknown
   [Kind]: 'Unknown'
+  static: unknown
 }
 
 // --------------------------------------------------------------------------
@@ -450,8 +450,8 @@ export interface TUnknown extends TSchema {
 // --------------------------------------------------------------------------
 
 export interface TUnsafe<T> extends TSchema {
-  static: T
   [Kind]: 'Unknown'
+  static: T
 }
 
 // --------------------------------------------------------------------------
@@ -459,8 +459,8 @@ export interface TUnsafe<T> extends TSchema {
 // --------------------------------------------------------------------------
 
 export interface TVoid extends TSchema {
-  static: void
   [Kind]: 'Void'
+  static: void
   type: 'null'
 }
 
@@ -477,7 +477,6 @@ export type Static<T extends TSchema, P extends unknown[] = []> = (T & { params:
 let TypeOrdinal = 0
 
 export class TypeBuilder {
-
   // ----------------------------------------------------------------------
   // Modifiers
   // ----------------------------------------------------------------------
@@ -565,9 +564,9 @@ export class TypeBuilder {
   }
 
   /** Creates a keyof type */
-  public KeyOf<T extends TObject>(object: T, options: SchemaOptions = {}): TKeyOf<T> {
-    const keys = Object.keys(object.properties)
-    return this.Create({ ...options, [Kind]: 'KeyOf', type: 'string', enum: keys })
+  public KeyOf<T extends TObject>(object: T, options: SchemaOptions = {}): TUnion<TKeyOf<T>> {
+    const items = Object.keys(object.properties).map((key) => this.Create({ ...options, [Kind]: 'Literal', type: 'string', const: key }))
+    return this.Create({ ...options, [Kind]: 'Union', anyOf: items })
   }
 
   /** Creates a literal type. */
@@ -608,7 +607,7 @@ export class TypeBuilder {
     return this.Create(next)
   }
 
-  /** Creates a partial type from an existing object */
+  /** Creates an object type whose properties are all optional */
   public Partial<T extends TObject>(schema: T, options: ObjectOptions = {}): TPartial<T> {
     const next = { ...(this.Clone(schema) as T), ...options }
     delete next.required
@@ -684,7 +683,7 @@ export class TypeBuilder {
     return this.Create({ ...options, [Kind]: 'String', type: 'string', pattern: regex.source })
   }
 
-  /** Makes all properties in the given object type required */
+  /** Creates an object type whose properties are all required */
   public Required<T extends TObject>(schema: T, options: SchemaOptions = {}): TRequired<T> {
     const next = { ...(this.Clone(schema) as T), ...options }
     next.required = Object.keys(next.properties)
@@ -708,7 +707,7 @@ export class TypeBuilder {
     }
     return this.Create(next)
   }
-  
+
   /** Removes Kind and Modifier symbols from this schema */
   public Strict<T extends TSchema>(schema: TSchema): T {
     return JSON.parse(JSON.stringify(schema))
@@ -719,7 +718,7 @@ export class TypeBuilder {
     return this.Create({ ...options, [Kind]: 'String', type: 'string' })
   }
 
-  /** Creates a type type */
+  /** Creates a tuple type */
   public Tuple<T extends TSchema[]>(items: [...T], options: SchemaOptions = {}): TTuple<T> {
     const additionalItems = false
     const minItems = items.length
@@ -728,7 +727,7 @@ export class TypeBuilder {
     return this.Create(schema)
   }
 
-  /** Creates a undefined type. This type cannot be used in service contracts and is non-validatable over the network. */
+  /** Creates a undefined type */
   public Undefined(options: SchemaOptions = {}): TUndefined {
     return this.Create({ ...options, [Kind]: 'Undefined', type: 'object', specialized: 'Undefined' })
   }
@@ -738,7 +737,7 @@ export class TypeBuilder {
     return this.Create({ ...options, [Kind]: 'Union', anyOf: items })
   }
 
-  /** Creates a Uint8Array type. This type is only supported for binary message formats. */
+  /** Creates a Uint8Array type */
   public Uint8Array(options: TypedArrayOptions = {}): TUint8Array {
     return this.Create({ ...options, [Kind]: 'Uint8Array', type: 'object', specialized: 'Uint8Array' })
   }
@@ -753,39 +752,39 @@ export class TypeBuilder {
     return this.Create({ ...options, [Kind]: 'Unknown' })
   }
 
-  /** Creates a void type. This type creates a `null` schema but infers as void */
+  /** Creates a void type */
   public Void(options: SchemaOptions = {}): TVoid {
     return this.Create({ ...options, [Kind]: 'Void', type: 'null' })
   }
 
-  /** Clones the given object */
-  protected Clone(object: any): any {
+  /** Use this function to return TSchema with static and params omitted */
+  protected Create<T extends TSchema>(schema: Omit<T, 'static' | 'params'>): T {
+    return schema as any
+  }
+
+  /** Clones the given value */
+  protected Clone(value: any): any {
     const isObject = (object: any): object is Record<string | symbol, any> => typeof object === 'object' && object !== null && !Array.isArray(object)
     const isArray = (object: any): object is any[] => typeof object === 'object' && object !== null && Array.isArray(object)
-    if (isObject(object)) {
-      return Object.keys(object).reduce(
+    if (isObject(value)) {
+      return Object.keys(value).reduce(
         (acc, key) => ({
           ...acc,
-          [key]: this.Clone(object[key]),
+          [key]: this.Clone(value[key]),
         }),
-        Object.getOwnPropertySymbols(object).reduce(
+        Object.getOwnPropertySymbols(value).reduce(
           (acc, key) => ({
             ...acc,
-            [key]: this.Clone(object[key]),
+            [key]: this.Clone(value[key]),
           }),
           {},
         ),
       )
-    } else if (isArray(object)) {
-      return object.map((item: any) => this.Clone(item))
+    } else if (isArray(value)) {
+      return value.map((item: any) => this.Clone(item))
     } else {
-      return object
+      return value
     }
-  }
-
-  /** Accepts T with static and params omitted, but returns T */
-  protected Create<T>(schema: Omit<T, 'static' | 'params'>): T {
-    return schema as any
   }
 }
 
