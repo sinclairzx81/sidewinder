@@ -71,11 +71,6 @@ export namespace CheckValue {
     return Object(schema, value)
   }
 
-  function KeyOf(schema: Types.TKeyOf<any>, value: any): boolean {
-    const keys = schema.enum as any as any[]
-    return keys.includes(value)
-  }
-
   function Literal(schema: Types.TLiteral, value: any): boolean {
     return schema.const === value
   }
@@ -163,7 +158,7 @@ export namespace CheckValue {
 
   export function Check<T extends Types.TSchema>(schema: T, value: any): boolean {
     const anySchema = schema as any
-    switch (anySchema.kind) {
+    switch (anySchema[Types.Kind]) {
       case 'Any':
         return Any(anySchema, value)
       case 'Array':
@@ -180,8 +175,6 @@ export namespace CheckValue {
         return Integer(anySchema, value)
       case 'Intersect':
         return Intersect(anySchema, value)
-      case 'KeyOf':
-        return KeyOf(anySchema, value)
       case 'Literal':
         return Literal(anySchema, value)
       case 'Null':

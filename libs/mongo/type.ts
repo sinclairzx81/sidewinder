@@ -26,7 +26,7 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-import { Static, SchemaOptions, TObject, TypeBuilder } from '@sidewinder/type'
+import { TypeBuilder, Kind, Static, SchemaOptions, TObject } from '@sidewinder/type'
 export * from '@sidewinder/type'
 
 export interface TDatabaseOptions {
@@ -35,7 +35,7 @@ export interface TDatabaseOptions {
 
 export interface TDatabase<Collections extends TDatabaseOptions = TDatabaseOptions> {
   static: { [K in keyof Collections['collections']]: Static<Collections['collections'][K]> }
-  kind: 'Database'
+  [Kind]: 'Database'
   type: 'object'
   collections: Collections
 }
@@ -43,7 +43,7 @@ export interface TDatabase<Collections extends TDatabaseOptions = TDatabaseOptio
 export class DatabaseTypeBuilder extends TypeBuilder {
   /** Creates a database schematic type */
   public Database<DatabaseOptions extends TDatabaseOptions>(options: DatabaseOptions): TDatabase<DatabaseOptions> {
-    return this.Create({ kind: 'Database', type: 'object', collections: options })
+    return this.Create({ [Kind]: 'Database', type: 'object', collections: options })
   }
 
   /** Creates a Mongo identifier type */

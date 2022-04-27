@@ -1,4 +1,4 @@
-import { Type } from '@sidewinder/type'
+import { Type, Modifier } from '@sidewinder/type'
 import { ok, fail } from './validate'
 import { strictEqual } from 'assert'
 
@@ -27,10 +27,10 @@ describe('type/Required', () => {
       w: Type.Number(),
     })
     const T = Type.Required(A)
-    strictEqual(T.properties.x.modifier, 'Readonly')
-    strictEqual(T.properties.y.modifier, 'Readonly')
-    strictEqual(T.properties.z.modifier, undefined)
-    strictEqual(T.properties.w.modifier, undefined)
+    strictEqual(T.properties.x[Modifier], 'Readonly')
+    strictEqual(T.properties.y[Modifier], 'Readonly')
+    strictEqual(T.properties.z[Modifier], undefined)
+    strictEqual(T.properties.w[Modifier], undefined)
   })
 
   it('Should inherit options from the source object', () => {

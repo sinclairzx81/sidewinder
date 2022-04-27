@@ -116,14 +116,6 @@ export namespace CreateValue {
     }
   }
 
-  function KeyOf(schema: Types.TKeyOf<any>): any {
-    if (schema.default !== undefined) {
-      return schema.default
-    } else {
-      return (schema.enum as any)[0]
-    }
-  }
-
   function Literal(schema: Types.TLiteral): any {
     return schema.const
   }
@@ -261,7 +253,7 @@ export namespace CreateValue {
   /** Creates a value from the given schema. If the schema specifies a default value, then that value is returned. */
   export function Create<T extends Types.TSchema>(schema: T): Types.Static<T> {
     const anySchema = schema as any
-    switch (anySchema.kind) {
+    switch (anySchema[Types.Kind]) {
       case 'Any':
         return Any(anySchema)
       case 'Array':
@@ -278,8 +270,6 @@ export namespace CreateValue {
         return Integer(anySchema)
       case 'Intersect':
         return Intersect(anySchema)
-      case 'KeyOf':
-        return KeyOf(anySchema)
       case 'Literal':
         return Literal(anySchema)
       case 'Null':

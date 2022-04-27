@@ -1,3 +1,8 @@
+// -----------------------------------------------------------------
+// This example tests recursive type inference and validation
+// through sidewinder services.
+// -----------------------------------------------------------------
+
 import { Type, Host, WebService } from '@sidewinder/server'
 import { WebClient } from '@sidewinder/client'
 
@@ -72,7 +77,3 @@ async function start() {
 }
 
 start()
-
-
-
-

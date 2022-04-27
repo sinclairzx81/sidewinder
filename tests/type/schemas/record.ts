@@ -59,15 +59,25 @@ describe('type/Record', () => {
     fail(T, { a: 1, b: 2, c: 3, d: 'hello' })
   })
 
-  // it('Should validate for keyof records', () => {
-  //   const T = Type.Object({
-  //     a: Type.String(),
-  //     b: Type.Number(),
-  //     c: Type.String(),
-  //   })
-  //   const R = Type.Record(Type.KeyOf(T), Type.Number())
-  //   ok(R, { a: 1, b: 2, c: 3 })
-  // })
+  it('Should validate for keyof records', () => {
+    const T = Type.Object({
+      a: Type.String(),
+      b: Type.Number(),
+      c: Type.String(),
+    })
+    const R = Type.Record(Type.KeyOf(T), Type.Number())
+    ok(R, { a: 1, b: 2, c: 3 })
+  })
+
+  it('Should not validate for unknown key with additionalProperties false', () => {
+    const T = Type.Object({
+      a: Type.String(),
+      b: Type.Number(),
+      c: Type.String(),
+    })
+    const R = Type.Record(Type.KeyOf(T), Type.Number(), { additionalProperties: false })
+    fail(R, { a: 1, b: 2, c: 3, d: 4 })
+  })
 
   it('Should should validate when specifying regular expressions', () => {
     const K = Type.RegEx(/^op_.*$/)

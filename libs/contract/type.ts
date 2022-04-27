@@ -26,7 +26,7 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-import { TypeBuilder, TSchema, TFunction } from '@sidewinder/type'
+import { TypeBuilder, Kind, TSchema, TFunction } from '@sidewinder/type'
 export * from '@sidewinder/type'
 
 // --------------------------------------------------------------------------
@@ -80,7 +80,7 @@ export interface TContract<Options extends ContractOptions = ContractOptions> ex
       : {}
   }
   type: 'contract'
-  kind: 'Contract'
+  [Kind]: 'Contract'
   /** The encoding format for this contract. The default is 'json' */
   format: ContractFormat<Options['format']>
   /** The server interface methods */
@@ -95,7 +95,7 @@ export class ContractTypeBuilder extends TypeBuilder {
     const format = options.format || 'json'
     const server = options.server || {}
     const client = options.client || {}
-    return this.Create({ type: 'contract', kind: 'Contract', format, server, client })
+    return this.Create({ type: 'contract', [Kind]: 'Contract', format, server, client })
   }
 }
 

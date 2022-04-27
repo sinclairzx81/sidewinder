@@ -45,7 +45,7 @@ import { CheckValue } from './check'
 namespace UpcastUnionValue {
   function Score<T extends Types.TSchema>(schema: T, value: any): number {
     let score = 0
-    if (schema.kind === 'Object' && typeof value === 'object' && value !== null) {
+    if (schema[Types.Kind] === 'Object' && typeof value === 'object' && value !== null) {
       const objectSchema: Types.TObject = schema as any
       const entries = globalThis.Object.entries(objectSchema.properties)
       score += entries.reduce((acc, [key, schema]) => acc + (CheckValue.Check(schema, value[key]) ? 1 : 0), 0)
@@ -111,10 +111,6 @@ export namespace UpcastValue {
 
   function Intersect(schema: Types.TIntersect, value: any): any {
     return Object(schema, value)
-  }
-
-  function KeyOf(schema: Types.TKeyOf<any>, value: any): any {
-    return CheckValue.Check(schema, value) ? value : CreateValue.Create(schema)
   }
 
   function Literal(schema: Types.TLiteral, value: any): any {
@@ -204,7 +200,7 @@ export namespace UpcastValue {
 
   export function Create<T extends Types.TSchema>(schema: T, value: any): Types.Static<T> {
     const anySchema = schema as any
-    switch (schema.kind) {
+    switch (schema[Types.Kind]) {
       case 'Any':
         return Any(anySchema, value)
       case 'Array':
@@ -221,8 +217,6 @@ export namespace UpcastValue {
         return Integer(anySchema, value)
       case 'Intersect':
         return Intersect(anySchema, value)
-      case 'KeyOf':
-        return KeyOf(anySchema, value)
       case 'Literal':
         return Literal(anySchema, value)
       case 'Null':
