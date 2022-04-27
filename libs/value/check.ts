@@ -163,7 +163,7 @@ export namespace CheckValue {
 
   export function Check<T extends Types.TSchema>(schema: T, value: any): boolean {
     const anySchema = schema as any
-    switch (anySchema.kind) {
+    switch (anySchema[Types.Kind]) {
       case 'Any':
         return Any(anySchema, value)
       case 'Array':

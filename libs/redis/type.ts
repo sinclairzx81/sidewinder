@@ -26,7 +26,7 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-import { TypeBuilder, TSchema, TObject, TString, TNumber } from '@sidewinder/type'
+import { TypeBuilder, Kind, TSchema, TObject } from '@sidewinder/type'
 export * from '@sidewinder/type'
 
 type DefinedOr<T, Or> = keyof T extends never ? Or : T
@@ -47,7 +47,7 @@ export interface TDatabaseOptions {
 export interface TDatabase<DatabaseOptions extends TDatabaseOptions = TDatabaseOptions> extends TSchema {
   static: unknown
   type: 'object'
-  kind: 'RedisDatabase'
+  [Kind]: 'RedisDatabase'
   arrays: DefinedOr<DatabaseOptions['arrays'], TObject>
   maps: DefinedOr<DatabaseOptions['maps'], TObject>
   sets: DefinedOr<DatabaseOptions['sets'], TObject>
@@ -63,7 +63,7 @@ export class RedisTypeBuilder extends TypeBuilder {
     const arrays = options.arrays || {}
     const maps = options.maps || {}
     const sets = options.sets || {}
-    return this.Create({ type: 'object', kind: 'RedisDatabase', arrays, maps, sets })
+    return this.Create({ type: 'object', [Kind]: 'RedisDatabase', arrays, maps, sets })
   }
 }
 

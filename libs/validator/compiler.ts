@@ -77,8 +77,6 @@ export class Compiler<T extends TSchema> {
       .addKeyword({ keyword: 'specialized', type: 'object', validate: validateSpecialized })
       .addKeyword('maxByteLength')
       .addKeyword('minByteLength')
-      .addKeyword('modifier')
-      .addKeyword('kind')
       .addKeyword('design')
     for (const referencedSchema of this.referencedSchemas) {
       this.ajv.addSchema(referencedSchema)

@@ -45,7 +45,7 @@ import { CheckValue } from './check'
 namespace UpcastUnionValue {
   function Score<T extends Types.TSchema>(schema: T, value: any): number {
     let score = 0
-    if (schema.kind === 'Object' && typeof value === 'object' && value !== null) {
+    if (schema[Types.Kind] === 'Object' && typeof value === 'object' && value !== null) {
       const objectSchema: Types.TObject = schema as any
       const entries = globalThis.Object.entries(objectSchema.properties)
       score += entries.reduce((acc, [key, schema]) => acc + (CheckValue.Check(schema, value[key]) ? 1 : 0), 0)
@@ -204,7 +204,7 @@ export namespace UpcastValue {
 
   export function Create<T extends Types.TSchema>(schema: T, value: any): Types.Static<T> {
     const anySchema = schema as any
-    switch (schema.kind) {
+    switch (schema[Types.Kind]) {
       case 'Any':
         return Any(anySchema, value)
       case 'Array':

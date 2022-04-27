@@ -261,7 +261,7 @@ export namespace CreateValue {
   /** Creates a value from the given schema. If the schema specifies a default value, then that value is returned. */
   export function Create<T extends Types.TSchema>(schema: T): Types.Static<T> {
     const anySchema = schema as any
-    switch (anySchema.kind) {
+    switch (anySchema[Types.Kind]) {
       case 'Any':
         return Any(anySchema)
       case 'Array':
