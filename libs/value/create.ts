@@ -116,14 +116,6 @@ export namespace CreateValue {
     }
   }
 
-  function KeyOf(schema: Types.TKeyOf<any>): any {
-    if (schema.default !== undefined) {
-      return schema.default
-    } else {
-      return (schema.enum as any)[0]
-    }
-  }
-
   function Literal(schema: Types.TLiteral): any {
     return schema.const
   }
@@ -278,8 +270,6 @@ export namespace CreateValue {
         return Integer(anySchema)
       case 'Intersect':
         return Intersect(anySchema)
-      case 'KeyOf':
-        return KeyOf(anySchema)
       case 'Literal':
         return Literal(anySchema)
       case 'Null':

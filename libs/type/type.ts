@@ -758,7 +758,7 @@ export class TypeBuilder {
   }
 
   /** Use this function to return TSchema with static and params omitted */
-  protected Create<T extends TSchema>(schema: Omit<T, 'static' | 'params'>): T {
+  protected Create<T>(schema: Omit<T, 'static' | 'params'>): T {
     return schema as any
   }
 

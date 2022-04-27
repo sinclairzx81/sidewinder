@@ -113,10 +113,6 @@ export namespace UpcastValue {
     return Object(schema, value)
   }
 
-  function KeyOf(schema: Types.TKeyOf<any>, value: any): any {
-    return CheckValue.Check(schema, value) ? value : CreateValue.Create(schema)
-  }
-
   function Literal(schema: Types.TLiteral, value: any): any {
     return CheckValue.Check(schema, value) ? value : CreateValue.Create(schema)
   }
@@ -221,8 +217,6 @@ export namespace UpcastValue {
         return Integer(anySchema, value)
       case 'Intersect':
         return Intersect(anySchema, value)
-      case 'KeyOf':
-        return KeyOf(anySchema, value)
       case 'Literal':
         return Literal(anySchema, value)
       case 'Null':
