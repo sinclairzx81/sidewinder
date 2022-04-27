@@ -250,7 +250,7 @@ export namespace UpcastValue {
       case 'Void':
         return Void(anySchema, value)
       default:
-        throw Error(`Unknown schema kind '${schema.kind}'`)
+        throw Error(`Unknown schema kind '${schema[Types.Kind]}'`)
     }
   }
 }

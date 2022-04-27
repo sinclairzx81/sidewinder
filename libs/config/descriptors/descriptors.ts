@@ -26,7 +26,7 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-import { TObject, TSchema } from '@sidewinder/type'
+import { TObject, TSchema, Kind } from '@sidewinder/type'
 
 export interface Descriptor {
   pointer: string
@@ -53,7 +53,7 @@ export namespace Descriptors {
   }
 
   function* visit(path: string, name: string, schema: TSchema, options: DescriptorOptions): Iterable<Descriptor> {
-    switch (schema.kind) {
+    switch (schema[Kind]) {
       case 'Object':
         return yield* object(path, name, schema, options)
       case 'Number':

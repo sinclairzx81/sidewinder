@@ -303,7 +303,7 @@ export namespace CreateValue {
       case 'Self':
         return undefined // TODO: Consider tracking dynamicRef
       default:
-        throw Error(`Unknown schema kind '${schema.kind}'`)
+        throw Error(`Unknown schema kind '${schema[Types.Kind]}'`)
     }
   }
 }

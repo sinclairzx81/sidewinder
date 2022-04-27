@@ -26,7 +26,7 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-import { TObject, TSchema } from '@sidewinder/type'
+import { TObject, TSchema, Kind } from '@sidewinder/type'
 
 export namespace Documentation {
   function argName(path: string[]) {
@@ -68,7 +68,7 @@ export namespace Documentation {
   }
 
   function* visit(key: string, path: string[], schema: TSchema): Iterable<string> {
-    switch (schema.kind) {
+    switch (schema[Kind]) {
       case 'Object':
         return yield* object(key, path, schema)
       case 'Number':
