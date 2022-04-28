@@ -28,7 +28,6 @@ THE SOFTWARE.
 
 import * as Types from './type'
 
-/** ExtendsResult */
 export enum ExtendsResult {
   True,
   False,
@@ -41,9 +40,9 @@ export namespace Extends {
 
   function Any<Left extends Types.TAnySchema, Right extends Types.TAnySchema>(left: Left, right: Right): ExtendsResult {
     // https://github.com/microsoft/TypeScript/issues/48871
+    if(right[Types.Kind] === 'Union' && right.anyOf.some((schema: Types.TSchema) => schema[Types.Kind] === 'Any' ||  schema[Types.Kind] === 'Unknown')) return ExtendsResult.True
     if(right[Types.Kind] === 'Unknown') return ExtendsResult.True
     if(right[Types.Kind] === 'Any') return ExtendsResult.True
-    
     return ExtendsResult.Both
   }
 
@@ -239,8 +238,7 @@ export namespace Extends {
 
   let recursionDepth = 0
   function Extends<Left extends Types.TAnySchema, Right extends Types.TAnySchema>(left: Left, right: Right): ExtendsResult {
-    if (recursionDepth >= 1000) return ExtendsResult.True
-    recursionDepth += 1
+    recursionDepth += 1; if (recursionDepth >= 1000) return ExtendsResult.True
     if (left.$id !== undefined) referenceMap.set(left.$id!, left)
     if (right.$id !== undefined) referenceMap.set(right.$id!, right)
     const resolvedRight = right[Types.Kind] === 'Self' ? referenceMap.get(right.$ref)! : right
