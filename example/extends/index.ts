@@ -19,3 +19,14 @@ type A = Static<typeof X>
 type X = Extract<{a: number}, { b: string }>
 
 console.log(X)
+
+const T = Type.Rec(Node => Type.Union([
+    Type.String(),
+    Type.Number(),
+    Type.Object({
+        a: Type.String(),
+        nodes: Type.Array(Node)
+    })
+]))
+
+type AA = Static<typeof T>
