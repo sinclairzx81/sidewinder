@@ -181,11 +181,7 @@ export interface TExtract<T extends TSchema, U extends TUnion> extends TUnion {
 // Extends
 // --------------------------------------------------------------------------
 
-export type TExtends<T extends TSchema, U extends TSchema, X extends TSchema, Y extends TSchema> = 
-  T extends TAny ? 
-    U extends TUnknown ? X :  
-    U extends TAny ? X : TUnion<[X, Y]> :
-  T extends U ? X : Y 
+export type TExtends<T extends TSchema, U extends TSchema, X extends TSchema, Y extends TSchema> = T extends TAny ? (U extends TUnknown ? X : U extends TAny ? X : TUnion<[X, Y]>) : T extends U ? X : Y
 
 // --------------------------------------------------------------------------
 // Function
@@ -605,10 +601,13 @@ export class TypeBuilder {
   /** Creates a conditionally mapped type */
   public Extends<T extends TSchema, U extends TSchema, X extends TSchema, Y extends TSchema>(t: T, u: U, x: X, y: Y): TExtends<T, U, X, Y> {
     const result = Extends.Check(t, u)
-    switch(result) {
-      case ExtendsResult.Both: return this.Union([this.Clone(x), this.Clone(y)]) as any as TExtends<T, U, X, Y>
-      case ExtendsResult.True: return this.Clone(x)
-      case ExtendsResult.False: return this.Clone(y)
+    switch (result) {
+      case ExtendsResult.Both:
+        return this.Union([this.Clone(x), this.Clone(y)]) as any as TExtends<T, U, X, Y>
+      case ExtendsResult.True:
+        return this.Clone(x)
+      case ExtendsResult.False:
+        return this.Clone(y)
     }
   }
 
