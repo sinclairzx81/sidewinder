@@ -26,6 +26,32 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
+export type TAnySchema = 
+  | TSchema
+  | TAny
+  | TArray
+  | TBoolean
+  | TConstructor
+  | TEnum
+  | TFunction
+  | TInteger
+  | TLiteral
+  | TNull
+  | TNumber
+  | TObject
+  | TPromise
+  | TRecord
+  | TSelf
+  | TRef
+  | TString
+  | TTuple
+  | TUndefined
+  | TUnion
+  | TUint8Array
+  | TUnknown
+  | TVoid
+
+
 // --------------------------------------------------------------------------
 // Symbols
 // --------------------------------------------------------------------------
@@ -66,6 +92,8 @@ export interface TSchema extends SchemaOptions {
   params: unknown[]
   static: unknown
 }
+
+
 
 // --------------------------------------------------------------------------
 // Any
@@ -126,7 +154,7 @@ export interface TEnumOption<T> {
   const: T
 }
 
-export interface TEnum<T extends Record<string, string | number>> extends TSchema {
+export interface TEnum<T extends Record<string, string | number> = Record<string, string | number>> extends TSchema {
   [Kind]: 'Enum'
   static: T[keyof T]
   anyOf: TEnumOption<T>[]
@@ -292,7 +320,7 @@ export interface TPick<T extends TObject, Properties extends ObjectPropertyKeys<
 // Promise
 // --------------------------------------------------------------------------
 
-export interface TPromise<T extends TSchema> extends TSchema {
+export interface TPromise<T extends TSchema = TSchema> extends TSchema {
   [Kind]: 'Promise'
   static: Promise<Static<T, this['params']>>
   type: 'promise'
@@ -305,7 +333,7 @@ export interface TPromise<T extends TSchema> extends TSchema {
 
 export type TRecordKey = TString | TNumber | TUnion<TLiteral<any>[]>
 
-export interface TRecord<K extends TRecordKey, T extends TSchema> extends TSchema {
+export interface TRecord<K extends TRecordKey = TRecordKey, T extends TSchema = TSchema> extends TSchema {
   [Kind]: 'Record'
   static: Record<Static<K>, Static<T, this['params']>>
   type: 'object'
@@ -332,7 +360,7 @@ export interface TRec<T extends TSchema> extends TSchema {
 // Ref
 // --------------------------------------------------------------------------
 
-export interface TRef<T extends TSchema> extends TSchema {
+export interface TRef<T extends TSchema = TSchema> extends TSchema {
   [Kind]: 'Ref'
   static: Static<T, this['params']>
   $ref: string
