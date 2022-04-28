@@ -94,8 +94,6 @@ export interface TSchema extends SchemaOptions {
   static: unknown
 }
 
-
-
 // --------------------------------------------------------------------------
 // Any
 // --------------------------------------------------------------------------
@@ -161,13 +159,12 @@ export interface TEnum<T extends Record<string, string | number> = Record<string
   anyOf: TEnumOption<T>[]
 }
 
-
 // --------------------------------------------------------------------------
 // Exclude
 // --------------------------------------------------------------------------
 
 export interface TExclude<T extends TUnion, U extends TUnion> extends TUnion {
-  [Kind]: 'Union',
+  [Kind]: 'Union'
   static: Exclude<Static<T, this['params']>, Static<U, this['params']>>
 }
 
@@ -176,7 +173,7 @@ export interface TExclude<T extends TUnion, U extends TUnion> extends TUnion {
 // --------------------------------------------------------------------------
 
 export interface TExtract<T extends TSchema, U extends TUnion> extends TUnion {
-  [Kind]: 'Union',
+  [Kind]: 'Union'
   static: Extract<Static<T, this['params']>, Static<U, this['params']>>
 }
 
@@ -532,7 +529,6 @@ export type Static<T extends TSchema, P extends unknown[] = []> = (T & { params:
 let TypeOrdinal = 0
 
 export class TypeBuilder {
-
   // ----------------------------------------------------------------------
   // Modifiers
   // ----------------------------------------------------------------------
@@ -587,7 +583,7 @@ export class TypeBuilder {
 
   /** Constructs a type by excluding from T all union members that are assignable to U */
   public Exclude<T extends TUnion, U extends TUnion>(unionType: T, excludedMembers: U, options: SchemaOptions = {}): TExclude<T, U> {
-    const anyOf = unionType.anyOf.filter((schema: TSchema) => !Extends.Check(schema, excludedMembers)).map(schema => this.Clone(schema))
+    const anyOf = unionType.anyOf.filter((schema: TSchema) => !Extends.Check(schema, excludedMembers)).map((schema) => this.Clone(schema))
     return this.Create({ ...options, [Kind]: 'Union', anyOf })
   }
 
@@ -597,7 +593,7 @@ export class TypeBuilder {
       const anyOf = type.anyOf.filter((schema: TSchema) => Extends.Check(schema, union)).map((schema: TSchema) => this.Clone(schema))
       return this.Create({ ...options, [Kind]: 'Union', anyOf })
     } else {
-      const anyOf = union.anyOf.filter(schema => Extends.Check(type, schema)).map(schema => this.Clone(schema))
+      const anyOf = union.anyOf.filter((schema) => Extends.Check(type, schema)).map((schema) => this.Clone(schema))
       return this.Create({ ...options, [Kind]: 'Union', anyOf })
     }
   }
