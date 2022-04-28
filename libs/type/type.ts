@@ -26,7 +26,30 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-export type TAnySchema = 
+// --------------------------------------------------------------------------
+// Symbols
+// --------------------------------------------------------------------------
+
+export const Kind = Symbol.for('Kind')
+export const Modifier = Symbol.for('Modifier')
+
+// --------------------------------------------------------------------------
+// Modifiers
+// --------------------------------------------------------------------------
+
+export type TModifier = TReadonlyOptional<TSchema> | TOptional<TSchema> | TReadonly<TSchema>
+
+export type TReadonly<T extends TSchema> = T & { [Modifier]: 'Readonly' }
+
+export type TOptional<T extends TSchema> = T & { [Modifier]: 'Optional' }
+
+export type TReadonlyOptional<T extends TSchema> = T & { [Modifier]: 'ReadonlyOptional' }
+
+// --------------------------------------------------------------------------
+// Schema
+// --------------------------------------------------------------------------
+
+export type TAnySchema =
   | TSchema
   | TAny
   | TArray
@@ -50,30 +73,6 @@ export type TAnySchema =
   | TUint8Array
   | TUnknown
   | TVoid
-
-
-// --------------------------------------------------------------------------
-// Symbols
-// --------------------------------------------------------------------------
-
-export const Kind = Symbol.for('Kind')
-export const Modifier = Symbol.for('Modifier')
-
-// --------------------------------------------------------------------------
-// Modifiers
-// --------------------------------------------------------------------------
-
-export type TModifier = TReadonlyOptional<TSchema> | TOptional<TSchema> | TReadonly<TSchema>
-
-export type TReadonly<T extends TSchema> = T & { [Modifier]: 'Readonly' }
-
-export type TOptional<T extends TSchema> = T & { [Modifier]: 'Optional' }
-
-export type TReadonlyOptional<T extends TSchema> = T & { [Modifier]: 'ReadonlyOptional' }
-
-// --------------------------------------------------------------------------
-// Schema
-// --------------------------------------------------------------------------
 
 export interface SchemaOptions {
   $schema?: string
@@ -159,6 +158,12 @@ export interface TEnum<T extends Record<string, string | number> = Record<string
   static: T[keyof T]
   anyOf: TEnumOption<T>[]
 }
+
+// --------------------------------------------------------------------------
+// Extends
+// --------------------------------------------------------------------------
+
+export type TExtends<A extends TSchema, B extends TSchema, C extends TSchema, D extends TSchema> = Static<A> extends Static<B> ? C : D
 
 // --------------------------------------------------------------------------
 // Function
@@ -498,6 +503,277 @@ export interface TVoid extends TSchema {
 
 export type Static<T extends TSchema, P extends unknown[] = []> = (T & { params: P })['static']
 
+
+// --------------------------------------------------------------------------
+// Type Extends Ruleset
+// --------------------------------------------------------------------------
+
+export namespace TypeExtends {
+  const referenceMap = new Map<string, TAnySchema>()
+  let recursionDepth = 0
+
+  function Any<Left extends TAnySchema, Right extends TAnySchema>(left: Left, right: Right) {
+    return true
+  }
+
+  function Array<Left extends TAnySchema, Right extends TAnySchema>(left: Left, right: Right) {
+    if (right[Kind] !== 'Array') return false
+    if (left.items === undefined && right.items !== undefined) return false
+    if (left.items !== undefined && right.items === undefined) return false
+    if (left.items === undefined && right.items === undefined) return true
+    return Extends(left.items, right.items)
+  }
+
+  function Constructor<Left extends TAnySchema, Right extends TAnySchema>(left: Left, right: Right) {
+    if (right[Kind] !== 'Constructor') return false
+    if (left.parameters.length !== right.parameters.length) return false
+    if (!Extends(left.returns, right.returns)) return false
+    for (let i = 0; i < left.parameters.length; i++) {
+      if (!Extends(left.parameters[i], right.parameters[i])) return false
+    }
+    return true
+  }
+
+  function Enum<Left extends TAnySchema, Right extends TAnySchema>(left: Left, right: Right) {
+    if (right[Kind] !== 'Enum') return false
+    if (left.anyOf.length !== right.anyOf.length) return false
+    for (let i = 0; i < left.anyOf.length; i++) {
+      const innerLeft = left.anyOf[i]
+      const innerRight = right.anyOf[i]
+      if (innerLeft.type !== innerRight.type || innerLeft.const !== innerRight.const) return false
+    }
+    return true
+  }
+
+  function Function<Left extends TAnySchema, Right extends TAnySchema>(left: Left, right: Right) {
+    if (right[Kind] !== 'Function') return false
+    if (left.parameters.length !== right.parameters.length) return false
+    if (!Extends(left.returns, right.returns)) return false
+    for (let i = 0; i < left.parameters.length; i++) {
+      if (!Extends(left.parameters[i], right.parameters[i])) return false
+    }
+    return true
+  }
+
+  function Integer<Left extends TAnySchema, Right extends TAnySchema>(left: Left, right: Right) {
+    if (
+      right[Kind] === 'Any' ||
+      right[Kind] === 'Unknown' ||
+      right[Kind] === 'Integer'
+    ) {
+      return true
+    } else if (right[Kind] === 'Union') {
+      for (const inner of right.anyOf) {
+        if (Extends(left, inner)) return true
+      }
+    }
+    return false
+  }
+
+  function Literal<Left extends TAnySchema, Right extends TAnySchema>(left: Left, right: Right) {
+    if (right[Kind] === 'Literal') {
+      return right.const === left.const
+    } else if (
+      right[Kind] === 'Any' ||
+      right[Kind] === 'Unknown'
+    ) {
+      return true
+    } else if (right[Kind] === 'String') {
+      return typeof left.const === 'string'
+    } else if (right[Kind] === 'Number') {
+      return typeof left.const === 'number'
+    } else if (right[Kind] === 'Boolean') {
+      return typeof left.const === 'boolean'
+    } else if (right[Kind] === 'Union') {
+      for (const inner of right.anyOf) {
+        if (Extends(left, inner)) return true
+      }
+    }
+    return false
+  }
+
+  function Number<Left extends TAnySchema, Right extends TAnySchema>(left: Left, right: Right) {
+    if (
+      right[Kind] === 'Any' ||
+      right[Kind] === 'Unknown' ||
+      right[Kind] === 'Number'
+    ) {
+      return true
+    } else if (right[Kind] === 'Union') {
+      for (const inner of right.anyOf) {
+        if (Extends(left, inner)) return true
+      }
+    }
+    return false
+  }
+
+  function Null<Left extends TAnySchema, Right extends TAnySchema>(left: Left, right: Right) {
+    if (
+      right[Kind] === 'Any' ||
+      right[Kind] === 'Unknown' ||
+      right[Kind] === 'Null'
+    ) {
+      return true
+    } else if (right[Kind] === 'Union') {
+      for (const inner of right.anyOf) {
+        if (Extends(left, inner)) return true
+      }
+    }
+    return false
+  }
+
+  function Object<Left extends TAnySchema, Right extends TAnySchema>(left: Left, right: Right) {
+    if (right[Kind] !== 'Object') return false
+    const leftPropertyKeys = globalThis.Object.keys(left.properties)
+    const rightPropertyKeys = globalThis.Object.keys(right.properties)
+    if (rightPropertyKeys.length > leftPropertyKeys.length) return false
+    if (!rightPropertyKeys.every(rightPropertyKey => leftPropertyKeys.includes(rightPropertyKey))) return false
+    for (const rightPropertyKey of rightPropertyKeys) {
+      const innerLeft = left.properties[rightPropertyKey]
+      const innerRight = right.properties[rightPropertyKey]
+      if (!Extends(innerLeft, innerRight)) return false
+
+    }
+    return true
+  }
+
+  function Unknown<Left extends TAnySchema, Right extends TAnySchema>(left: Left, right: Right) {
+    return right[Kind] === 'Unknown' || right[Kind] === 'Any'
+  }
+
+  function Undefined<Left extends TAnySchema, Right extends TAnySchema>(left: Left, right: Right) {
+    if (
+      right[Kind] === 'Any' ||
+      right[Kind] === 'Unknown' ||
+      right[Kind] === 'Undefined'
+    ) {
+      return true
+    } else if (right[Kind] === 'Union') {
+      for (const inner of right.anyOf) {
+        if (Extends(left, inner)) return true
+      }
+    }
+    return false
+  }
+
+  function Boolean<Left extends TAnySchema, Right extends TAnySchema>(left: Left, right: Right) {
+    if (
+      right[Kind] === 'Any' ||
+      right[Kind] === 'Unknown' ||
+      right[Kind] === 'Boolean'
+    ) {
+      return true
+    } else if (right[Kind] === 'Union') {
+      for (const inner of right.anyOf) {
+        if (Extends(left, inner)) return true
+      }
+    }
+    return false
+  }
+
+  function Record<Left extends TAnySchema, Right extends TAnySchema>(left: Left, right: Right) {
+    return false
+  }
+
+  function Ref<Left extends TAnySchema, Right extends TAnySchema>(left: Left, right: Right) {
+    if (!referenceMap.has(left.$ref)) throw Error(`Cannot locate referenced $id '${left.$ref}'`)
+    const resolved = referenceMap.get(left.$ref)!
+    return Extends(resolved, right)
+  }
+
+  function Self<Left extends TAnySchema, Right extends TAnySchema>(left: Left, right: Right) {
+    if (!referenceMap.has(left.$ref)) throw Error(`Cannot locate referenced self $id '${left.$ref}'`)
+    const resolved = referenceMap.get(left.$ref)!
+    return Extends(resolved, right)
+  }
+
+  function String<Left extends TAnySchema, Right extends TAnySchema>(left: Left, right: Right) {
+    if (
+      right[Kind] === 'Any' ||
+      right[Kind] === 'Unknown' ||
+      right[Kind] === 'String'
+    ) {
+      return true
+    } else if (right[Kind] === 'Union') {
+      for (const inner of right.anyOf) {
+        if (Extends(left, inner)) return true
+      }
+    }
+    return false
+  }
+
+  function Tuple<Left extends TAnySchema, Right extends TAnySchema>(left: Left, right: Right) {
+    if (right[Kind] !== 'Tuple') return false
+    if (left.items === undefined && right.items === undefined) return true
+    if (left.items === undefined && right.items !== undefined) return false
+    if (left.items !== undefined && right.items === undefined) return false
+    if (left.items === undefined && right.items === undefined) return true
+    if (left.minItems !== right.minItems || left.maxItems !== right.maxItems) return false
+    for (let i = 0; i < left.items!.length; i++) {
+      if (!Extends(left.items![i], right.items![i])) return false
+    }
+    return true
+  }
+
+  function Uint8Array<Left extends TAnySchema, Right extends TAnySchema>(left: Left, right: Right) {
+    return right[Kind] === 'Uint8Array'
+  }
+
+  function Union<Left extends TAnySchema, Right extends TAnySchema>(left: Left, right: Right) {
+    if (right[Kind] === 'Union') {
+      for (const innerLeft of left.anyOf) {
+        for (const innerRight of right.anyOf) {
+          if (!Extends(innerLeft, innerRight)) return false
+        }
+      }
+    } else {
+      for (const innerLeft of left.anyOf) {
+        if (!Extends(innerLeft, right)) return false
+      }
+    }
+    return true
+  }
+
+  function Extends<Left extends TAnySchema, Right extends TAnySchema>(left: Left, right: Right): boolean {
+    recursionDepth += 1; if (recursionDepth > 512) return true
+
+    if (left.$id !== undefined) referenceMap.set(left.$id!, left)
+    if (right.$id !== undefined) referenceMap.set(right.$id!, right)
+    const resolvedRight = right[Kind] === 'Self' ? referenceMap.get(right.$ref)! : right
+
+    switch (left[Kind]) {
+      case 'Any': return Any(left, resolvedRight)
+      case 'Array': return Array(left, resolvedRight)
+      case 'Boolean': return Boolean(left, resolvedRight)
+      case 'Constructor': return Constructor(left, resolvedRight)
+      case 'Enum': return Enum(left, resolvedRight)
+      case 'Function': return Function(left, resolvedRight)
+      case 'Integer': return Integer(left, resolvedRight)
+      case 'Literal': return Literal(left, resolvedRight)
+      case 'Null': return Null(left, resolvedRight)
+      case 'Number': return Number(left, resolvedRight)
+      case 'Object': return Object(left, resolvedRight)
+      case 'Record': return Record(left, resolvedRight)
+      case 'Ref': return Ref(left, resolvedRight)
+      case 'String': return String(left, resolvedRight)
+      case 'Tuple': return Tuple(left, resolvedRight)
+      case 'Undefined': return Undefined(left, resolvedRight)
+      case 'Uint8Array': return Uint8Array(left, resolvedRight)
+      case 'Union': return Union(left, resolvedRight)
+      case 'Unknown': return Unknown(left, resolvedRight)
+      case 'Self': return Self(left, resolvedRight)
+      default: return false
+    }
+  }
+
+  /** Returns true if the left schema structurally extends the right schema. */
+  export function Check<Left extends TAnySchema, Right extends TAnySchema>(left: Left, right: Right): boolean {
+    referenceMap.clear()
+    recursionDepth = 0
+    return Extends(left, right)
+  }
+}
+
 // --------------------------------------------------------------------------
 // TypeBuilder
 // --------------------------------------------------------------------------
@@ -505,6 +781,7 @@ export type Static<T extends TSchema, P extends unknown[] = []> = (T & { params:
 let TypeOrdinal = 0
 
 export class TypeBuilder {
+
   // ----------------------------------------------------------------------
   // Modifiers
   // ----------------------------------------------------------------------
@@ -555,6 +832,11 @@ export class TypeBuilder {
       .map((key) => item[key]) as T[keyof T][]
     const anyOf = values.map((value) => (typeof value === 'string' ? { type: 'string' as const, const: value } : { type: 'number' as const, const: value }))
     return this.Create({ ...options, [Kind]: 'Enum', anyOf })
+  }
+
+  /** Creates a conditionally mapped schema by returning schema C if schema A extends B */
+  public Extends<A extends TSchema, B extends TSchema, C extends TSchema, D extends TSchema>(a: A, b: B, c: C, d: D): TExtends<A, B, C, D> {
+    return TypeExtends.Check(a, b) ? this.Clone(c) : this.Clone(d)
   }
 
   /** Creates a function type */
