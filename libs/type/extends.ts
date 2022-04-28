@@ -28,212 +28,222 @@ THE SOFTWARE.
 
 import * as Types from './type'
 
+/** ExtendsResult */
+export enum ExtendsResult {
+  True,
+  False,
+  Both
+}
+
+/** Checks if one type structurally extends another type  */
 export namespace Extends {
   const referenceMap = new Map<string, Types.TAnySchema>()
-  let recursionDepth = 0
-
-  function Any<Left extends Types.TAnySchema, Right extends Types.TAnySchema>(left: Left, right: Right) {
-    return true
+  
+  function Any<Left extends Types.TAnySchema, Right extends Types.TAnySchema>(left: Left, right: Right): ExtendsResult {
+    // https://github.com/microsoft/TypeScript/issues/48871
+    if(right[Types.Kind] === 'Unknown') return ExtendsResult.True
+    if(right[Types.Kind] === 'Any') return ExtendsResult.True
+    return ExtendsResult.Both
   }
 
-  function Array<Left extends Types.TAnySchema, Right extends Types.TAnySchema>(left: Left, right: Right) {
-    if (right[Types.Kind] !== 'Array') return false
-    if (left.items === undefined && right.items !== undefined) return false
-    if (left.items !== undefined && right.items === undefined) return false
-    if (left.items === undefined && right.items === undefined) return true
+  function Array<Left extends Types.TAnySchema, Right extends Types.TAnySchema>(left: Left, right: Right): ExtendsResult {
+    if (right[Types.Kind] !== 'Array') return ExtendsResult.False
+    if (left.items === undefined && right.items !== undefined) return ExtendsResult.False
+    if (left.items !== undefined && right.items === undefined) return ExtendsResult.False
+    if (left.items === undefined && right.items === undefined) return ExtendsResult.False
     return Extends(left.items, right.items)
   }
 
-  function Constructor<Left extends Types.TAnySchema, Right extends Types.TAnySchema>(left: Left, right: Right) {
-    if (right[Types.Kind] !== 'Constructor') return false
-    if (left.parameters.length !== right.parameters.length) return false
-    if (!Extends(left.returns, right.returns)) return false
+  function Constructor<Left extends Types.TAnySchema, Right extends Types.TAnySchema>(left: Left, right: Right): ExtendsResult {
+    if (right[Types.Kind] !== 'Constructor') return ExtendsResult.False
+    if (left.parameters.length !== right.parameters.length) return ExtendsResult.False
+    if (!Extends(left.returns, right.returns)) return ExtendsResult.False
     for (let i = 0; i < left.parameters.length; i++) {
-      if (!Extends(left.parameters[i], right.parameters[i])) return false
+      if (!Extends(left.parameters[i], right.parameters[i])) return ExtendsResult.False
     }
-    return true
+    return ExtendsResult.True
   }
 
-  function Enum<Left extends Types.TAnySchema, Right extends Types.TAnySchema>(left: Left, right: Right) {
-    if (right[Types.Kind] !== 'Enum') return false
-    if (left.anyOf.length !== right.anyOf.length) return false
+  function Enum<Left extends Types.TAnySchema, Right extends Types.TAnySchema>(left: Left, right: Right): ExtendsResult {
+    if (right[Types.Kind] !== 'Enum') return ExtendsResult.False
+    if (left.anyOf.length !== right.anyOf.length) return ExtendsResult.False
     for (let i = 0; i < left.anyOf.length; i++) {
       const innerLeft = left.anyOf[i]
       const innerRight = right.anyOf[i]
-      if (innerLeft.type !== innerRight.type || innerLeft.const !== innerRight.const) return false
+      if (innerLeft.type !== innerRight.type || innerLeft.const !== innerRight.const) return ExtendsResult.False
     }
-    return true
+    return ExtendsResult.True
   }
 
-  function Function<Left extends Types.TAnySchema, Right extends Types.TAnySchema>(left: Left, right: Right) {
-    if (right[Types.Kind] !== 'Function') return false
-    if (left.parameters.length !== right.parameters.length) return false
-    if (!Extends(left.returns, right.returns)) return false
+  function Function<Left extends Types.TAnySchema, Right extends Types.TAnySchema>(left: Left, right: Right): ExtendsResult {
+    if (right[Types.Kind] !== 'Function') return ExtendsResult.False
+    if (left.parameters.length !== right.parameters.length) return ExtendsResult.False
+    if (!Extends(left.returns, right.returns)) return ExtendsResult.False
     for (let i = 0; i < left.parameters.length; i++) {
-      if (!Extends(left.parameters[i], right.parameters[i])) return false
+      if (!Extends(left.parameters[i], right.parameters[i])) return ExtendsResult.False
     }
-    return true
+    return ExtendsResult.True
   }
 
-  function Integer<Left extends Types.TAnySchema, Right extends Types.TAnySchema>(left: Left, right: Right) {
+  function Integer<Left extends Types.TAnySchema, Right extends Types.TAnySchema>(left: Left, right: Right): ExtendsResult {
     if (right[Types.Kind] === 'Any' || right[Types.Kind] === 'Unknown' || right[Types.Kind] === 'Integer') {
-      return true
+      return ExtendsResult.True
     } else if (right[Types.Kind] === 'Union') {
       for (const inner of right.anyOf) {
-        if (Extends(left, inner)) return true
+        if (Extends(left, inner)) return ExtendsResult.True
       }
     }
-    return false
+    return ExtendsResult.False
   }
 
-  function Literal<Left extends Types.TAnySchema, Right extends Types.TAnySchema>(left: Left, right: Right) {
+  function Literal<Left extends Types.TAnySchema, Right extends Types.TAnySchema>(left: Left, right: Right): ExtendsResult {
     if (right[Types.Kind] === 'Literal') {
-      return right.const === left.const
+      return (right.const === left.const) ? ExtendsResult.True : ExtendsResult.False
     } else if (right[Types.Kind] === 'Any' || right[Types.Kind] === 'Unknown') {
-      return true
+      return ExtendsResult.True
     } else if (right[Types.Kind] === 'String') {
-      return typeof left.const === 'string'
+      return (typeof left.const === 'string') ? ExtendsResult.True : ExtendsResult.False
     } else if (right[Types.Kind] === 'Number') {
-      return typeof left.const === 'number'
+      return (typeof left.const === 'number') ? ExtendsResult.True : ExtendsResult.False
     } else if (right[Types.Kind] === 'Boolean') {
-      return typeof left.const === 'boolean'
+      return (typeof left.const === 'boolean') ? ExtendsResult.True : ExtendsResult.False
     } else if (right[Types.Kind] === 'Union') {
       for (const inner of right.anyOf) {
-        if (Extends(left, inner)) return true
+        if (Extends(left, inner)) return ExtendsResult.True
       }
     }
-    return false
+    return ExtendsResult.False
   }
 
-  function Number<Left extends Types.TAnySchema, Right extends Types.TAnySchema>(left: Left, right: Right) {
+  function Number<Left extends Types.TAnySchema, Right extends Types.TAnySchema>(left: Left, right: Right): ExtendsResult {
     if (right[Types.Kind] === 'Any' || right[Types.Kind] === 'Unknown' || right[Types.Kind] === 'Number') {
-      return true
+      return ExtendsResult.True
     } else if (right[Types.Kind] === 'Union') {
       for (const inner of right.anyOf) {
-        if (Extends(left, inner)) return true
+        if (Extends(left, inner)) return ExtendsResult.True
       }
     }
-    return false
+    return ExtendsResult.False
   }
 
-  function Null<Left extends Types.TAnySchema, Right extends Types.TAnySchema>(left: Left, right: Right) {
+  function Null<Left extends Types.TAnySchema, Right extends Types.TAnySchema>(left: Left, right: Right): ExtendsResult {
     if (right[Types.Kind] === 'Any' || right[Types.Kind] === 'Unknown' || right[Types.Kind] === 'Null') {
-      return true
+      return ExtendsResult.True
     } else if (right[Types.Kind] === 'Union') {
       for (const inner of right.anyOf) {
-        if (Extends(left, inner)) return true
+        if (Extends(left, inner)) return ExtendsResult.True
       }
     }
-    return false
+    return ExtendsResult.False
   }
 
-  function Object<Left extends Types.TAnySchema, Right extends Types.TAnySchema>(left: Left, right: Right) {
-    if (right[Types.Kind] !== 'Object') return false
+  function Object<Left extends Types.TAnySchema, Right extends Types.TAnySchema>(left: Left, right: Right): ExtendsResult {
+    if (right[Types.Kind] !== 'Object') return ExtendsResult.False
     const leftPropertyKeys = globalThis.Object.keys(left.properties)
     const rightPropertyKeys = globalThis.Object.keys(right.properties)
-    if (rightPropertyKeys.length > leftPropertyKeys.length) return false
-    if (!rightPropertyKeys.every((rightPropertyKey) => leftPropertyKeys.includes(rightPropertyKey))) return false
+    if (rightPropertyKeys.length > leftPropertyKeys.length) return ExtendsResult.False
+    if (!rightPropertyKeys.every((rightPropertyKey) => leftPropertyKeys.includes(rightPropertyKey))) return ExtendsResult.False
     for (const rightPropertyKey of rightPropertyKeys) {
       const innerLeft = left.properties[rightPropertyKey]
       const innerRight = right.properties[rightPropertyKey]
-      if (!Extends(innerLeft, innerRight)) return false
+      if (!Extends(innerLeft, innerRight)) return ExtendsResult.False
     }
-    return true
+    return ExtendsResult.True
   }
 
-  function Unknown<Left extends Types.TAnySchema, Right extends Types.TAnySchema>(left: Left, right: Right) {
-    return right[Types.Kind] === 'Unknown' || right[Types.Kind] === 'Any'
+  function Unknown<Left extends Types.TAnySchema, Right extends Types.TAnySchema>(left: Left, right: Right): ExtendsResult {
+    return (right[Types.Kind] === 'Unknown' || right[Types.Kind] === 'Any') ? ExtendsResult.True : ExtendsResult.False
   }
 
-  function Undefined<Left extends Types.TAnySchema, Right extends Types.TAnySchema>(left: Left, right: Right) {
+  function Undefined<Left extends Types.TAnySchema, Right extends Types.TAnySchema>(left: Left, right: Right): ExtendsResult {
     if (right[Types.Kind] === 'Any' || right[Types.Kind] === 'Unknown' || right[Types.Kind] === 'Undefined') {
-      return true
+      return ExtendsResult.True
     } else if (right[Types.Kind] === 'Union') {
       for (const inner of right.anyOf) {
-        if (Extends(left, inner)) return true
+        if (Extends(left, inner)) return ExtendsResult.True
       }
     }
-    return false
+    return ExtendsResult.False
   }
 
-  function Boolean<Left extends Types.TAnySchema, Right extends Types.TAnySchema>(left: Left, right: Right) {
+  function Boolean<Left extends Types.TAnySchema, Right extends Types.TAnySchema>(left: Left, right: Right): ExtendsResult {
     if (right[Types.Kind] === 'Any' || right[Types.Kind] === 'Unknown' || right[Types.Kind] === 'Boolean') {
-      return true
+      return ExtendsResult.True
     } else if (right[Types.Kind] === 'Union') {
       for (const inner of right.anyOf) {
-        if (Extends(left, inner)) return true
+        if (Extends(left, inner)) return ExtendsResult.True
       }
     }
-    return false
+    return ExtendsResult.False
   }
 
-  function Record<Left extends Types.TAnySchema, Right extends Types.TAnySchema>(left: Left, right: Right) {
-    return false
+  function Record<Left extends Types.TAnySchema, Right extends Types.TAnySchema>(left: Left, right: Right): ExtendsResult {
+    return ExtendsResult.False
   }
 
-  function Ref<Left extends Types.TAnySchema, Right extends Types.TAnySchema>(left: Left, right: Right) {
+  function Ref<Left extends Types.TAnySchema, Right extends Types.TAnySchema>(left: Left, right: Right): ExtendsResult {
     if (!referenceMap.has(left.$ref)) throw Error(`Cannot locate referenced $id '${left.$ref}'`)
     const resolved = referenceMap.get(left.$ref)!
     return Extends(resolved, right)
   }
 
-  function Self<Left extends Types.TAnySchema, Right extends Types.TAnySchema>(left: Left, right: Right) {
+  function Self<Left extends Types.TAnySchema, Right extends Types.TAnySchema>(left: Left, right: Right): ExtendsResult {
     if (!referenceMap.has(left.$ref)) throw Error(`Cannot locate referenced self $id '${left.$ref}'`)
     const resolved = referenceMap.get(left.$ref)!
     return Extends(resolved, right)
   }
 
-  function String<Left extends Types.TAnySchema, Right extends Types.TAnySchema>(left: Left, right: Right) {
+  function String<Left extends Types.TAnySchema, Right extends Types.TAnySchema>(left: Left, right: Right): ExtendsResult {
     if (right[Types.Kind] === 'Any' || right[Types.Kind] === 'Unknown' || right[Types.Kind] === 'String') {
-      return true
+      return ExtendsResult.True
     } else if (right[Types.Kind] === 'Union') {
       for (const inner of right.anyOf) {
-        if (Extends(left, inner)) return true
+        if (Extends(left, inner)) return ExtendsResult.True
       }
     }
-    return false
+    return ExtendsResult.False
   }
 
-  function Tuple<Left extends Types.TAnySchema, Right extends Types.TAnySchema>(left: Left, right: Right) {
-    if (right[Types.Kind] !== 'Tuple') return false
-    if (left.items === undefined && right.items === undefined) return true
-    if (left.items === undefined && right.items !== undefined) return false
-    if (left.items !== undefined && right.items === undefined) return false
-    if (left.items === undefined && right.items === undefined) return true
-    if (left.minItems !== right.minItems || left.maxItems !== right.maxItems) return false
+  function Tuple<Left extends Types.TAnySchema, Right extends Types.TAnySchema>(left: Left, right: Right): ExtendsResult {
+    if (right[Types.Kind] !== 'Tuple') return ExtendsResult.False
+    if (left.items === undefined && right.items === undefined) return ExtendsResult.True
+    if (left.items === undefined && right.items !== undefined) return ExtendsResult.False
+    if (left.items !== undefined && right.items === undefined) return ExtendsResult.False
+    if (left.items === undefined && right.items === undefined) return ExtendsResult.True
+    if (left.minItems !== right.minItems || left.maxItems !== right.maxItems) return ExtendsResult.False
     for (let i = 0; i < left.items!.length; i++) {
-      if (!Extends(left.items![i], right.items![i])) return false
+      if (!Extends(left.items![i], right.items![i])) return ExtendsResult.False
     }
-    return true
+    return ExtendsResult.True
   }
 
-  function Uint8Array<Left extends Types.TAnySchema, Right extends Types.TAnySchema>(left: Left, right: Right) {
-    return right[Types.Kind] === 'Uint8Array'
+  function Uint8Array<Left extends Types.TAnySchema, Right extends Types.TAnySchema>(left: Left, right: Right): ExtendsResult {
+    return right[Types.Kind] === 'Uint8Array' ? ExtendsResult.True : ExtendsResult.False
   }
 
-  function Union<Left extends Types.TAnySchema, Right extends Types.TAnySchema>(left: Left, right: Right) {
+  function Union<Left extends Types.TAnySchema, Right extends Types.TAnySchema>(left: Left, right: Right): ExtendsResult {
     if (right[Types.Kind] === 'Union') {
       for (const innerLeft of left.anyOf) {
         for (const innerRight of right.anyOf) {
-          if (!Extends(innerLeft, innerRight)) return false
+          if (!Extends(innerLeft, innerRight)) return ExtendsResult.False
         }
       }
     } else {
       for (const innerLeft of left.anyOf) {
-        if (!Extends(innerLeft, right)) return false
+        if (!Extends(innerLeft, right)) return ExtendsResult.False
       }
     }
-    return true
+    return ExtendsResult.True
   }
 
-  function Extends<Left extends Types.TAnySchema, Right extends Types.TAnySchema>(left: Left, right: Right): boolean {
+  let recursionDepth = 0
+  function Extends<Left extends Types.TAnySchema, Right extends Types.TAnySchema>(left: Left, right: Right): ExtendsResult {
+    if (recursionDepth >= 1000) return ExtendsResult.True
     recursionDepth += 1
-    if (recursionDepth > 1000) return true
-
+    
     if (left.$id !== undefined) referenceMap.set(left.$id!, left)
     if (right.$id !== undefined) referenceMap.set(right.$id!, right)
     const resolvedRight = right[Types.Kind] === 'Self' ? referenceMap.get(right.$ref)! : right
-
     switch (left[Types.Kind]) {
       case 'Any':
         return Any(left, resolvedRight)
@@ -276,12 +286,12 @@ export namespace Extends {
       case 'Self':
         return Self(left, resolvedRight)
       default:
-        return false
+        return ExtendsResult.False
     }
   }
 
-  /** Returns true if the left schema structurally extends the right schema. */
-  export function Check<Left extends Types.TAnySchema, Right extends Types.TAnySchema>(left: Left, right: Right): boolean {
+  /** Returns ExtendsResult.True if the left schema structurally extends the right schema. */
+  export function Check<Left extends Types.TAnySchema, Right extends Types.TAnySchema>(left: Left, right: Right): ExtendsResult {
     referenceMap.clear()
     recursionDepth = 0
     return Extends(left, right)

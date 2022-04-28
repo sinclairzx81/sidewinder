@@ -26,7 +26,7 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-import { Extends } from './extends'
+import { Extends, ExtendsResult } from './extends'
 
 // --------------------------------------------------------------------------
 // Symbols
@@ -181,7 +181,11 @@ export interface TExtract<T extends TSchema, U extends TUnion> extends TUnion {
 // Extends
 // --------------------------------------------------------------------------
 
-export type TExtends<T extends TSchema, U extends TSchema, X extends TSchema, Y extends TSchema> = Static<T> extends Static<U> ? X : Y
+export type TExtends<T extends TSchema, U extends TSchema, X extends TSchema, Y extends TSchema> = 
+  T extends TAny ? 
+    U extends TUnknown ? X :  
+    U extends TAny ? X : TUnion<[X, Y]> :
+  T extends U ? X : Y 
 
 // --------------------------------------------------------------------------
 // Function
@@ -590,17 +594,22 @@ export class TypeBuilder {
   /** Constructs a type by extracting from T all union members that are assignable to U */
   public Extract<T extends TSchema, U extends TUnion>(type: T, union: U, options: SchemaOptions = {}): TExtract<T, U> {
     if (type[Kind] === 'Union') {
-      const anyOf = type.anyOf.filter((schema: TSchema) => Extends.Check(schema, union)).map((schema: TSchema) => this.Clone(schema))
+      const anyOf = type.anyOf.filter((schema: TSchema) => Extends.Check(schema, union) === ExtendsResult.True).map((schema: TSchema) => this.Clone(schema))
       return this.Create({ ...options, [Kind]: 'Union', anyOf })
     } else {
-      const anyOf = union.anyOf.filter((schema) => Extends.Check(type, schema)).map((schema) => this.Clone(schema))
+      const anyOf = union.anyOf.filter((schema) => Extends.Check(type, schema) === ExtendsResult.True).map((schema) => this.Clone(schema))
       return this.Create({ ...options, [Kind]: 'Union', anyOf })
     }
   }
 
   /** Creates a conditionally mapped type */
   public Extends<T extends TSchema, U extends TSchema, X extends TSchema, Y extends TSchema>(t: T, u: U, x: X, y: Y): TExtends<T, U, X, Y> {
-    return Extends.Check(t, u) ? this.Clone(x) : this.Clone(y)
+    const result = Extends.Check(t, u)
+    switch(result) {
+      case ExtendsResult.Both: return this.Union([this.Clone(x), this.Clone(y)]) as any as TExtends<T, U, X, Y>
+      case ExtendsResult.True: return this.Clone(x)
+      case ExtendsResult.False: return this.Clone(y)
+    }
   }
 
   /** Creates a function type */
