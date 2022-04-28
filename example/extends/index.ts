@@ -1,10 +1,21 @@
 import * as Types from '@sidewinder/type'
-import { Type, TypeExtends } from '@sidewinder/type'
+import { Type, Static, Extends } from '@sidewinder/type'
 
-const A = Type.String()
+const A = Type.Extract(
+    Type.Union([Type.String()]), 
+    Type.Union([Type.String()])
+)
 
-const B = Type.String()
+const X = Type.Exclude(Type.Union([
+    Type.Literal('a'),
+    Type.Literal('b'),
+    Type.Literal('c')
+]), Type.Union([
+    Type.Literal('a')
+]), { $id: 'a'})
 
-const R = Type.Extends(A, B, Type.Literal('true'), Type.Literal('false'))
+type A = Static<typeof X>
 
-console.log(R)
+type X = Extract<{a: number}, { b: string }>
+
+console.log(X)

@@ -159,11 +159,31 @@ export interface TEnum<T extends Record<string, string | number> = Record<string
   anyOf: TEnumOption<T>[]
 }
 
+
+// --------------------------------------------------------------------------
+// Exclude
+// --------------------------------------------------------------------------
+
+export interface TExclude<UnionType extends TUnion, ExcludedMembers extends TUnion> extends TUnion {
+  [Kind]: 'Union',
+  static: Exclude<Static<UnionType, this['params']>, Static<ExcludedMembers, this['params']>>
+}
+
+// --------------------------------------------------------------------------
+// Extract
+// --------------------------------------------------------------------------
+
+export interface TExtract<Type extends TSchema, Union extends TUnion> extends TUnion {
+  [Kind]: 'Union',
+  static: Extract<Static<Type, this['params']>, Static<Union, this['params']>>
+}
+
 // --------------------------------------------------------------------------
 // Extends
 // --------------------------------------------------------------------------
 
 export type TExtends<A extends TSchema, B extends TSchema, C extends TSchema, D extends TSchema> = Static<A> extends Static<B> ? C : D
+
 
 // --------------------------------------------------------------------------
 // Function
@@ -196,6 +216,7 @@ export interface TInteger extends TSchema, IntegerOptions {
   static: number
   type: 'integer'
 }
+
 // --------------------------------------------------------------------------
 // Intersect
 // --------------------------------------------------------------------------
@@ -505,10 +526,10 @@ export type Static<T extends TSchema, P extends unknown[] = []> = (T & { params:
 
 
 // --------------------------------------------------------------------------
-// Type Extends Ruleset
+// Extends Ruleset
 // --------------------------------------------------------------------------
 
-export namespace TypeExtends {
+export namespace Extends {
   const referenceMap = new Map<string, TAnySchema>()
   let recursionDepth = 0
 
@@ -735,7 +756,7 @@ export namespace TypeExtends {
   }
 
   function Extends<Left extends TAnySchema, Right extends TAnySchema>(left: Left, right: Right): boolean {
-    recursionDepth += 1; if (recursionDepth > 512) return true
+    recursionDepth += 1; if (recursionDepth > 1000) return true
 
     if (left.$id !== undefined) referenceMap.set(left.$id!, left)
     if (right.$id !== undefined) referenceMap.set(right.$id!, right)
@@ -834,9 +855,26 @@ export class TypeBuilder {
     return this.Create({ ...options, [Kind]: 'Enum', anyOf })
   }
 
+  /** Constructs a type by excluding from UnionType all union members that are assignable to ExcludedMembers */
+  public Exclude<UnionType extends TUnion, ExcludedMembers extends TUnion>(unionType: UnionType, excludedMembers: ExcludedMembers, options: SchemaOptions = {}): TExclude<UnionType, ExcludedMembers> {
+    const anyOf = unionType.anyOf.filter((schema: TSchema) => !Extends.Check(schema, excludedMembers)).map(schema => this.Clone(schema))
+    return this.Create({ ...options, [Kind]: 'Union', anyOf })
+  }
+
+  /** Constructs a type by extracting from Type all union members that are assignable to Union. */
+  public Extract<Type extends TSchema, Union extends TUnion>(type: Type, union: Union, options: SchemaOptions = {}): TExtract<Type, Union> {
+    if (type[Kind] === 'Union') {
+      const anyOf = type.anyOf.filter((schema: TSchema) => Extends.Check(schema, union)).map((schema: TSchema) => this.Clone(schema))
+      return this.Create({ ...options, [Kind]: 'Union', anyOf })
+    } else {
+      const anyOf = union.anyOf.filter(schema => Extends.Check(type, schema)).map(schema => this.Clone(schema))
+      return this.Create({ ...options, [Kind]: 'Union', anyOf })
+    }
+  }
+
   /** Creates a conditionally mapped schema by returning schema C if schema A extends B */
   public Extends<A extends TSchema, B extends TSchema, C extends TSchema, D extends TSchema>(a: A, b: B, c: C, d: D): TExtends<A, B, C, D> {
-    return TypeExtends.Check(a, b) ? this.Clone(c) : this.Clone(d)
+    return Extends.Check(a, b) ? this.Clone(c) : this.Clone(d)
   }
 
   /** Creates a function type */
