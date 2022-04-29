@@ -82,9 +82,9 @@ export namespace Extends {
       return ExtendsResult.False
     }
     for (let i = 0; i < left.parameters.length; i++) {
-      if (Extends(left.parameters[i], right.parameters[i]) === ExtendsResult.True) {
-        return ExtendsResult.False
-      }
+      // note: right left evaluation order
+      const result = Extends(right.parameters[i], left.parameters[i])
+      if (result === ExtendsResult.False) return ExtendsResult.False
     }
     return ExtendsResult.True
   }
@@ -101,11 +101,16 @@ export namespace Extends {
   }
 
   function Function<Left extends Types.TAnySchema, Right extends Types.TAnySchema>(left: Left, right: Right): ExtendsResult {
+    if (AnyOrUnknownRule(right)) return ExtendsResult.True
     if (right[Types.Kind] !== 'Function') return ExtendsResult.False
-    if (left.parameters.length !== right.parameters.length) return ExtendsResult.False
-    if (!Extends(left.returns, right.returns)) return ExtendsResult.False
+    if (right.parameters.length < left.parameters.length) return ExtendsResult.False
+    if (Extends(left.returns, right.returns) === ExtendsResult.False) {
+      return ExtendsResult.False
+    }
     for (let i = 0; i < left.parameters.length; i++) {
-      if (!Extends(left.parameters[i], right.parameters[i])) return ExtendsResult.False
+      // note: right left evaluation order
+      const result = Extends(right.parameters[i], left.parameters[i])
+      if (result === ExtendsResult.False) return ExtendsResult.False
     }
     return ExtendsResult.True
   }
@@ -178,7 +183,9 @@ export namespace Extends {
   }
 
   function Unknown<Left extends Types.TAnySchema, Right extends Types.TAnySchema>(left: Left, right: Right): ExtendsResult {
-    if(right[Types.Kind] === 'Unknown') {
+    if (right[Types.Kind] === 'Any') {
+      return ExtendsResult.True
+    } else if (right[Types.Kind] === 'Unknown') {
       return ExtendsResult.True
     } else {
       return ExtendsResult.False
@@ -258,9 +265,12 @@ export namespace Extends {
   }
 
   function Union<Left extends Types.TAnySchema, Right extends Types.TAnySchema>(left: Left, right: Right): ExtendsResult {
-    if(left.anyOf.some((left: Types.TSchema) => {
-      return left[Types.Kind] === 'Any'
-    })) return ExtendsResult.Both
+    if (
+      left.anyOf.some((left: Types.TSchema) => {
+        return left[Types.Kind] === 'Any'
+      })
+    )
+      return ExtendsResult.Both
     if (right[Types.Kind] === 'Union') {
       const result = left.anyOf.every((left: Types.TSchema) => right.anyOf.some((right: Types.TSchema) => Extends(left, right) !== ExtendsResult.False))
       return result ? ExtendsResult.True : ExtendsResult.False

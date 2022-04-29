@@ -8,6 +8,12 @@ describe('type/extends/Array', () => {
     Assert.deepEqual(R, ExtendsResult.True)
   })
 
+  it('Should extend Unknown', () => {
+    type T = Array<any> extends unknown ? 1 : 2
+    const R = Extends.Check(Type.Array(Type.Any()), Type.Unknown())
+    Assert.deepEqual(R, ExtendsResult.True)
+  })
+
   it('Should extend String', () => {
     type T = Array<any> extends string ? 1 : 2
     const R = Extends.Check(Type.Array(Type.Any()), Type.String())

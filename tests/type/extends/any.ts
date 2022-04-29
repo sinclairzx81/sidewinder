@@ -7,6 +7,12 @@ describe('type/extends/Any', () => {
     const R = Extends.Check(Type.Any(), Type.Any())
     Assert.deepEqual(R, ExtendsResult.True)
   })
+  it('Should extend Unknown', () => {
+    type T = any extends unknown ? 1 : 2
+    const R = Extends.Check(Type.Any(), Type.Unknown())
+    Assert.deepEqual(R, ExtendsResult.True)
+  })
+
   it('Should extend String', () => {
     type T = any extends string ? 1 : 2
     const R = Extends.Check(Type.Any(), Type.String())
