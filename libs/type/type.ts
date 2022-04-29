@@ -95,6 +95,24 @@ export interface TSchema extends SchemaOptions {
 }
 
 // --------------------------------------------------------------------------
+// TNumeric
+// --------------------------------------------------------------------------
+
+export interface NumericOptions extends SchemaOptions {
+  exclusiveMaximum?: number
+  exclusiveMinimum?: number
+  maximum?: number
+  minimum?: number
+  multipleOf?: number
+}
+
+export interface TNumeric extends TSchema, NumericOptions {
+  [Kind]: 'Number'
+  static: number
+  type: string
+}
+
+// --------------------------------------------------------------------------
 // Any
 // --------------------------------------------------------------------------
 
@@ -201,16 +219,8 @@ export interface TFunction<T extends readonly TSchema[] = TSchema[], U extends T
 // Integer
 // --------------------------------------------------------------------------
 
-export interface IntegerOptions extends SchemaOptions {
-  exclusiveMaximum?: number
-  exclusiveMinimum?: number
-  maximum?: number
-  minimum?: number
-  multipleOf?: number
-}
-
-export interface TInteger extends TSchema, IntegerOptions {
-  [Kind]: 'Integer'
+export interface TInteger extends TNumeric, NumericOptions {
+  [Kind]: 'Number'
   static: number
   type: 'integer'
 }
@@ -264,15 +274,7 @@ export interface TNull extends TSchema {
 // Number
 // --------------------------------------------------------------------------
 
-export interface NumberOptions extends SchemaOptions {
-  exclusiveMaximum?: number
-  exclusiveMinimum?: number
-  maximum?: number
-  minimum?: number
-  multipleOf?: number
-}
-
-export interface TNumber extends TSchema, NumberOptions {
+export interface TNumber extends TNumeric, NumericOptions {
   [Kind]: 'Number'
   static: number
   type: 'number'
@@ -617,8 +619,8 @@ export class TypeBuilder {
   }
 
   /** Creates a integer type */
-  public Integer(options: IntegerOptions = {}): TInteger {
-    return this.Create({ ...options, [Kind]: 'Integer', type: 'integer' })
+  public Integer(options: NumericOptions = {}): TInteger {
+    return this.Create({ ...options, [Kind]: 'Number', type: 'integer' })
   }
 
   /** Creates a intersect type. */
@@ -662,7 +664,7 @@ export class TypeBuilder {
   }
 
   /** Creates a number type */
-  public Number(options: NumberOptions = {}): TNumber {
+  public Number(options: NumericOptions = {}): TNumber {
     return this.Create({ ...options, [Kind]: 'Number', type: 'number' })
   }
 

@@ -51,7 +51,7 @@ export namespace CheckValue {
     const required = new Set(schema.returns.required || [])
     return globalThis.Object.entries(schema.returns.properties).every(([key, schema]) => {
       if (!required.has(key) && value.prototype[key] === undefined) return true
-      return Check(schema, value.prototype[key])
+      return Check(schema as Types.TSchema, value.prototype[key])
     })
   }
 
@@ -61,10 +61,6 @@ export namespace CheckValue {
 
   function Function(schema: Types.TFunction, value: any): boolean {
     return typeof value === 'function'
-  }
-
-  function Integer(schema: Types.TInteger, value: any): boolean {
-    return typeof value === 'number' && globalThis.Number.isInteger(value)
   }
 
   function Intersect(schema: Types.TIntersect, value: any): boolean {
@@ -79,8 +75,14 @@ export namespace CheckValue {
     return value === null
   }
 
-  function Number(schema: Types.TNumber, value: any): boolean {
-    return typeof value === 'number'
+  function Number(schema: Types.TNumeric, value: any): boolean {
+    if (typeof value !== 'number') {
+      return false
+    } else if (schema.type === 'integer') {
+      return typeof value === 'number' && globalThis.Number.isInteger(value)
+    } else {
+      return typeof value === 'number'
+    }
   }
 
   function Object(schema: Types.TObject, value: any): boolean {
@@ -171,8 +173,6 @@ export namespace CheckValue {
         return Enum(anySchema, value)
       case 'Function':
         return Function(anySchema, value)
-      case 'Integer':
-        return Integer(anySchema, value)
       case 'Intersect':
         return Intersect(anySchema, value)
       case 'Literal':

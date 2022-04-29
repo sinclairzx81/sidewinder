@@ -37,7 +37,7 @@ export enum ExtendsResult {
 /** Tests if one type structurally extends another  */
 export namespace Extends {
   const referenceMap = new Map<string, Types.TAnySchema>()
-  
+
   // https://github.com/microsoft/TypeScript/issues/48871
   function AnyOrUnknownRule<Right extends Types.TAnySchema>(right: Right) {
     if (right[Types.Kind] === 'Union' && right.anyOf.some((schema: Types.TSchema) => schema[Types.Kind] === 'Any' || schema[Types.Kind] === 'Unknown')) return true
@@ -45,7 +45,13 @@ export namespace Extends {
     if (right[Types.Kind] === 'Any') return true
     return false
   }
-  
+  function PrimitiveWithObjectRight<Left extends Types.TAnySchema, Right extends Types.TAnySchema>(left: Left, right: Right) {
+    // type A = boolean extends {}     ? 1 : 2 // additionalProperties: false
+    // type B = boolean extends object ? 1 : 2 // additionalProperties: true
+    const additionalProperties = right.additionalProperties
+    const propertyLength = globalThis.Object.keys(right.properties).length
+    return additionalProperties === false && propertyLength === 0
+  }
   function UnionRight<Left extends Types.TAnySchema, Right extends Types.TAnySchema>(left: Left, right: Right): ExtendsResult {
     const result = right.anyOf.some((right: Types.TSchema) => Extends(left, right) !== ExtendsResult.False)
     return result ? ExtendsResult.True : ExtendsResult.False
@@ -105,7 +111,10 @@ export namespace Extends {
   }
 
   function Integer<Left extends Types.TAnySchema, Right extends Types.TAnySchema>(left: Left, right: Right): ExtendsResult {
-    if (right[Types.Kind] === 'Any' || right[Types.Kind] === 'Unknown' || right[Types.Kind] === 'Integer') {
+    if (AnyOrUnknownRule(right)) return ExtendsResult.True
+    if (right[Types.Kind] === 'Object' && PrimitiveWithObjectRight(left, right)) {
+      return ExtendsResult.True
+    } else if (right[Types.Kind] === 'Number') {
       return ExtendsResult.True
     } else if (right[Types.Kind] === 'Union') {
       return UnionRight(left, right)
@@ -134,7 +143,9 @@ export namespace Extends {
 
   function Number<Left extends Types.TAnySchema, Right extends Types.TAnySchema>(left: Left, right: Right): ExtendsResult {
     if (AnyOrUnknownRule(right)) return ExtendsResult.True
-    if (right[Types.Kind] === 'Number') {
+    if (right[Types.Kind] === 'Object' && PrimitiveWithObjectRight(left, right)) {
+      return ExtendsResult.True
+    } else if (right[Types.Kind] === 'Number') {
       return ExtendsResult.True
     } else if (right[Types.Kind] === 'Union') {
       return UnionRight(left, right)
@@ -143,7 +154,8 @@ export namespace Extends {
   }
 
   function Null<Left extends Types.TAnySchema, Right extends Types.TAnySchema>(left: Left, right: Right): ExtendsResult {
-    if (right[Types.Kind] === 'Any' || right[Types.Kind] === 'Unknown' || right[Types.Kind] === 'Null') {
+    if (AnyOrUnknownRule(right)) return ExtendsResult.True
+    if (right[Types.Kind] === 'Null') {
       return ExtendsResult.True
     } else if (right[Types.Kind] === 'Union') {
       return UnionRight(left, right)
@@ -166,11 +178,12 @@ export namespace Extends {
   }
 
   function Unknown<Left extends Types.TAnySchema, Right extends Types.TAnySchema>(left: Left, right: Right): ExtendsResult {
-    return right[Types.Kind] === 'Unknown' || right[Types.Kind] === 'Any' ? ExtendsResult.True : ExtendsResult.False
+    return AnyOrUnknownRule(right) ? ExtendsResult.True : ExtendsResult.Both
   }
 
   function Undefined<Left extends Types.TAnySchema, Right extends Types.TAnySchema>(left: Left, right: Right): ExtendsResult {
-    if (right[Types.Kind] === 'Any' || right[Types.Kind] === 'Unknown' || right[Types.Kind] === 'Undefined') {
+    if (AnyOrUnknownRule(right)) return ExtendsResult.True
+    if (right[Types.Kind] === 'Undefined') {
       return ExtendsResult.True
     } else if (right[Types.Kind] === 'Union') {
       return UnionRight(left, right)
@@ -179,7 +192,10 @@ export namespace Extends {
   }
 
   function Boolean<Left extends Types.TAnySchema, Right extends Types.TAnySchema>(left: Left, right: Right): ExtendsResult {
-    if (right[Types.Kind] === 'Any' || right[Types.Kind] === 'Unknown' || right[Types.Kind] === 'Boolean') {
+    if (AnyOrUnknownRule(right)) return ExtendsResult.True
+    if (right[Types.Kind] === 'Object' && PrimitiveWithObjectRight(left, right)) {
+      return ExtendsResult.True
+    } else if (right[Types.Kind] === 'Boolean') {
       return ExtendsResult.True
     } else if (right[Types.Kind] === 'Union') {
       return UnionRight(left, right)
@@ -205,7 +221,9 @@ export namespace Extends {
 
   function String<Left extends Types.TAnySchema, Right extends Types.TAnySchema>(left: Left, right: Right): ExtendsResult {
     if (AnyOrUnknownRule(right)) return ExtendsResult.True
-    if (right[Types.Kind] === 'Any' || right[Types.Kind] === 'Unknown' || right[Types.Kind] === 'String') {
+    if (right[Types.Kind] === 'Object' && PrimitiveWithObjectRight(left, right)) {
+      return ExtendsResult.True
+    } else if (right[Types.Kind] === 'String') {
       return ExtendsResult.True
     } else if (right[Types.Kind] === 'Union') {
       return UnionRight(left, right)
@@ -234,9 +252,9 @@ export namespace Extends {
     }
     return ExtendsResult.False
   }
-  
+
   function Union<Left extends Types.TAnySchema, Right extends Types.TAnySchema>(left: Left, right: Right): ExtendsResult {
-    if(right[Types.Kind] === 'Union') {
+    if (right[Types.Kind] === 'Union') {
       const result = left.anyOf.every((left: Types.TSchema) => right.anyOf.some((right: Types.TSchema) => Extends(left, right) !== ExtendsResult.False))
       return result ? ExtendsResult.True : ExtendsResult.False
     } else {
