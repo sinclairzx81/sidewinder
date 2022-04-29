@@ -29,21 +29,26 @@ THE SOFTWARE.
 import * as Types from './type'
 
 export enum ExtendsResult {
+  Both,
   True,
   False,
-  Both,
 }
 
 /** Tests if one type structurally extends another  */
 export namespace Extends {
   const referenceMap = new Map<string, Types.TAnySchema>()
-
+  
+  // https://github.com/microsoft/TypeScript/issues/48871
   function AnyOrUnknownRule<Right extends Types.TAnySchema>(right: Right) {
-    // https://github.com/microsoft/TypeScript/issues/48871
     if (right[Types.Kind] === 'Union' && right.anyOf.some((schema: Types.TSchema) => schema[Types.Kind] === 'Any' || schema[Types.Kind] === 'Unknown')) return true
     if (right[Types.Kind] === 'Unknown') return true
     if (right[Types.Kind] === 'Any') return true
     return false
+  }
+  
+  function UnionRight<Left extends Types.TAnySchema, Right extends Types.TAnySchema>(left: Left, right: Right): ExtendsResult {
+    const result = right.anyOf.some((right: Types.TSchema) => Extends(left, right) !== ExtendsResult.False)
+    return result ? ExtendsResult.True : ExtendsResult.False
   }
 
   function Any<Left extends Types.TAnySchema, Right extends Types.TAnySchema>(left: Left, right: Right): ExtendsResult {
@@ -52,7 +57,6 @@ export namespace Extends {
 
   function Array<Left extends Types.TAnySchema, Right extends Types.TAnySchema>(left: Left, right: Right): ExtendsResult {
     if (AnyOrUnknownRule(right)) return ExtendsResult.True
-    // An array can be considered an object under the given critera
     if (right[Types.Kind] === 'Object') {
       if (right.properties['length'] !== undefined && right.properties['length'][Types.Kind] === 'Number') return ExtendsResult.True
       if (globalThis.Object.keys(right.properties).length === 0) return ExtendsResult.True
@@ -67,10 +71,14 @@ export namespace Extends {
   function Constructor<Left extends Types.TAnySchema, Right extends Types.TAnySchema>(left: Left, right: Right): ExtendsResult {
     if (AnyOrUnknownRule(right)) return ExtendsResult.True
     if (right[Types.Kind] !== 'Constructor') return ExtendsResult.False
-    if (left.parameters.length !== right.parameters.length) return ExtendsResult.False
-    if (!Extends(left.returns, right.returns)) return ExtendsResult.False
+    if (right.parameters.length < left.parameters.length) return ExtendsResult.False
+    if (Extends(left.returns, right.returns) === ExtendsResult.False) {
+      return ExtendsResult.False
+    }
     for (let i = 0; i < left.parameters.length; i++) {
-      if (!Extends(left.parameters[i], right.parameters[i])) return ExtendsResult.False
+      if (Extends(left.parameters[i], right.parameters[i]) === ExtendsResult.True) {
+        return ExtendsResult.False
+      }
     }
     return ExtendsResult.True
   }
@@ -100,9 +108,7 @@ export namespace Extends {
     if (right[Types.Kind] === 'Any' || right[Types.Kind] === 'Unknown' || right[Types.Kind] === 'Integer') {
       return ExtendsResult.True
     } else if (right[Types.Kind] === 'Union') {
-      for (const inner of right.anyOf) {
-        if (Extends(left, inner)) return ExtendsResult.True
-      }
+      return UnionRight(left, right)
     }
     return ExtendsResult.False
   }
@@ -127,12 +133,11 @@ export namespace Extends {
   }
 
   function Number<Left extends Types.TAnySchema, Right extends Types.TAnySchema>(left: Left, right: Right): ExtendsResult {
-    if (right[Types.Kind] === 'Any' || right[Types.Kind] === 'Unknown' || right[Types.Kind] === 'Number') {
+    if (AnyOrUnknownRule(right)) return ExtendsResult.True
+    if (right[Types.Kind] === 'Number') {
       return ExtendsResult.True
     } else if (right[Types.Kind] === 'Union') {
-      for (const inner of right.anyOf) {
-        if (Extends(left, inner)) return ExtendsResult.True
-      }
+      return UnionRight(left, right)
     }
     return ExtendsResult.False
   }
@@ -141,20 +146,18 @@ export namespace Extends {
     if (right[Types.Kind] === 'Any' || right[Types.Kind] === 'Unknown' || right[Types.Kind] === 'Null') {
       return ExtendsResult.True
     } else if (right[Types.Kind] === 'Union') {
-      for (const inner of right.anyOf) {
-        if (Extends(left, inner)) return ExtendsResult.True
-      }
+      return UnionRight(left, right)
     }
     return ExtendsResult.False
   }
 
   function Object<Left extends Types.TAnySchema, Right extends Types.TAnySchema>(left: Left, right: Right): ExtendsResult {
     if (right[Types.Kind] !== 'Object') return ExtendsResult.False
-    const leftPropertyKeys = globalThis.Object.keys(left.properties)
-    const rightPropertyKeys = globalThis.Object.keys(right.properties)
-    if (rightPropertyKeys.length > leftPropertyKeys.length) return ExtendsResult.False
-    if (!rightPropertyKeys.every((rightPropertyKey) => leftPropertyKeys.includes(rightPropertyKey))) return ExtendsResult.False
-    for (const rightPropertyKey of rightPropertyKeys) {
+    const leftKeys = globalThis.Object.keys(left.properties)
+    const rightKeys = globalThis.Object.keys(right.properties)
+    if (rightKeys.length > leftKeys.length) return ExtendsResult.False
+    if (!rightKeys.every((rightPropertyKey) => leftKeys.includes(rightPropertyKey))) return ExtendsResult.False
+    for (const rightPropertyKey of rightKeys) {
       const innerLeft = left.properties[rightPropertyKey]
       const innerRight = right.properties[rightPropertyKey]
       if (!Extends(innerLeft, innerRight)) return ExtendsResult.False
@@ -170,9 +173,7 @@ export namespace Extends {
     if (right[Types.Kind] === 'Any' || right[Types.Kind] === 'Unknown' || right[Types.Kind] === 'Undefined') {
       return ExtendsResult.True
     } else if (right[Types.Kind] === 'Union') {
-      for (const inner of right.anyOf) {
-        if (Extends(left, inner)) return ExtendsResult.True
-      }
+      return UnionRight(left, right)
     }
     return ExtendsResult.False
   }
@@ -181,9 +182,7 @@ export namespace Extends {
     if (right[Types.Kind] === 'Any' || right[Types.Kind] === 'Unknown' || right[Types.Kind] === 'Boolean') {
       return ExtendsResult.True
     } else if (right[Types.Kind] === 'Union') {
-      for (const inner of right.anyOf) {
-        if (Extends(left, inner)) return ExtendsResult.True
-      }
+      return UnionRight(left, right)
     }
     return ExtendsResult.False
   }
@@ -205,12 +204,11 @@ export namespace Extends {
   }
 
   function String<Left extends Types.TAnySchema, Right extends Types.TAnySchema>(left: Left, right: Right): ExtendsResult {
+    if (AnyOrUnknownRule(right)) return ExtendsResult.True
     if (right[Types.Kind] === 'Any' || right[Types.Kind] === 'Unknown' || right[Types.Kind] === 'String') {
       return ExtendsResult.True
     } else if (right[Types.Kind] === 'Union') {
-      for (const inner of right.anyOf) {
-        if (Extends(left, inner)) return ExtendsResult.True
-      }
+      return UnionRight(left, right)
     }
     return ExtendsResult.False
   }
@@ -229,22 +227,22 @@ export namespace Extends {
   }
 
   function Uint8Array<Left extends Types.TAnySchema, Right extends Types.TAnySchema>(left: Left, right: Right): ExtendsResult {
-    return right[Types.Kind] === 'Uint8Array' ? ExtendsResult.True : ExtendsResult.False
-  }
-
-  function Union<Left extends Types.TAnySchema, Right extends Types.TAnySchema>(left: Left, right: Right): ExtendsResult {
-    if (right[Types.Kind] === 'Union') {
-      for (const innerLeft of left.anyOf) {
-        for (const innerRight of right.anyOf) {
-          if (!Extends(innerLeft, innerRight)) return ExtendsResult.False
-        }
-      }
-    } else {
-      for (const innerLeft of left.anyOf) {
-        if (!Extends(innerLeft, right)) return ExtendsResult.False
-      }
+    if (right[Types.Kind] === 'Uint8Array') {
+      return ExtendsResult.True
+    } else if (right[Types.Kind] === 'Union') {
+      return UnionRight(left, right)
     }
-    return ExtendsResult.True
+    return ExtendsResult.False
+  }
+  
+  function Union<Left extends Types.TAnySchema, Right extends Types.TAnySchema>(left: Left, right: Right): ExtendsResult {
+    if(right[Types.Kind] === 'Union') {
+      const result = left.anyOf.every((left: Types.TSchema) => right.anyOf.some((right: Types.TSchema) => Extends(left, right) !== ExtendsResult.False))
+      return result ? ExtendsResult.True : ExtendsResult.False
+    } else {
+      const result = left.anyOf.every((left: Types.TSchema) => Extends(left, right) !== ExtendsResult.False)
+      return result ? ExtendsResult.True : ExtendsResult.False
+    }
   }
 
   let recursionDepth = 0

@@ -1,15 +1,18 @@
 import * as Types from '@sidewinder/type'
 import { Type, Static, Extends, ExtendsResult } from '@sidewinder/type'
+import { Value } from '@sidewinder/value'
 
 
-type T = Array<any> extends  unknown ? 1 : 2
+type A = boolean | boolean
+type B = boolean
+type T = A extends B ? 1 : 2
 
-const A = Type.Any()
+const A = Type.Union([Type.Boolean(), Type.Boolean()])
+const B = Type.Boolean()
 
-const B = Type.Union([Type.Unknown(), Type.String()])
 
-const R = Extends.Check(Type.Array(Type.Any()), Type.Unknown())
 
-console.log(ExtendsResult[R])
+const X = Extends.Check(A, B)
 
+console.log(ExtendsResult[X])
 

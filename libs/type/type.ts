@@ -136,7 +136,7 @@ export interface TBoolean extends TSchema {
 
 type TContructorParameters<T extends readonly TSchema[], P extends unknown[]> = [...{ [K in keyof T]: T[K] extends TSchema ? Static<T[K], P> : never }]
 
-export interface TConstructor<T extends TSchema[] = TSchema[], U extends TObject = TObject> extends TSchema {
+export interface TConstructor<T extends TSchema[] = TSchema[], U extends TSchema = TSchema> extends TSchema {
   [Kind]: 'Constructor'
   static: new (...param: TContructorParameters<T, this['params']>) => Static<U, this['params']>
   type: 'constructor'
@@ -568,7 +568,7 @@ export class TypeBuilder {
   }
 
   /** Creates a constructor type */
-  public Constructor<T extends TSchema[], U extends TObject>(parameters: [...T], returns: U, options: SchemaOptions = {}): TConstructor<T, U> {
+  public Constructor<T extends TSchema[], U extends TSchema>(parameters: [...T], returns: U, options: SchemaOptions = {}): TConstructor<T, U> {
     return this.Create({ ...options, [Kind]: 'Constructor', type: 'constructor', parameters, returns })
   }
 
@@ -598,7 +598,7 @@ export class TypeBuilder {
     }
   }
 
-  /** Creates a conditionally mapped type */
+  /** Creates a conditional type of the form T extends U ? X : Y. For extending or composing objects use Type.Intersect([...]) */
   public Extends<T extends TSchema, U extends TSchema, X extends TSchema, Y extends TSchema>(t: T, u: U, x: X, y: Y): TExtends<T, U, X, Y> {
     const result = Extends.Check(t, u)
     switch (result) {
