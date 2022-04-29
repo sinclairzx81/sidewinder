@@ -29,7 +29,7 @@ describe('type/extends/String', () => {
   it('Should extend Integer', () => {
     type T = string extends number ? 1 : 2
     const R = Extends.Check(Type.String(), Type.Integer())
-    Assert.deepEqual(R, ExtendsResult.False) // number & integer distinct
+    Assert.deepEqual(R, ExtendsResult.False)
   })
 
   it('Should extend Array', () => {
@@ -72,9 +72,9 @@ describe('type/extends/String', () => {
     Assert.deepEqual(R, ExtendsResult.True)
   })
 
-  it('Should extend Union 2', () => {
+  it('Should extend Union 3', () => {
     type T = number extends boolean | number ? 1 : 2
-    const R = Extends.Check(Type.Number(), Type.Union([Type.Any(), Type.String()]))
+    const R = Extends.Check(Type.Number(), Type.Union([Type.Boolean(), Type.Number()]))
     Assert.deepEqual(R, ExtendsResult.True)
   })
 

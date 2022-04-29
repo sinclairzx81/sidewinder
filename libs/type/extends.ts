@@ -178,7 +178,11 @@ export namespace Extends {
   }
 
   function Unknown<Left extends Types.TAnySchema, Right extends Types.TAnySchema>(left: Left, right: Right): ExtendsResult {
-    return AnyOrUnknownRule(right) ? ExtendsResult.True : ExtendsResult.Both
+    if(right[Types.Kind] === 'Unknown') {
+      return ExtendsResult.True
+    } else {
+      return ExtendsResult.False
+    }
   }
 
   function Undefined<Left extends Types.TAnySchema, Right extends Types.TAnySchema>(left: Left, right: Right): ExtendsResult {
@@ -254,6 +258,9 @@ export namespace Extends {
   }
 
   function Union<Left extends Types.TAnySchema, Right extends Types.TAnySchema>(left: Left, right: Right): ExtendsResult {
+    if(left.anyOf.some((left: Types.TSchema) => {
+      return left[Types.Kind] === 'Any'
+    })) return ExtendsResult.Both
     if (right[Types.Kind] === 'Union') {
       const result = left.anyOf.every((left: Types.TSchema) => right.anyOf.some((right: Types.TSchema) => Extends(left, right) !== ExtendsResult.False))
       return result ? ExtendsResult.True : ExtendsResult.False
