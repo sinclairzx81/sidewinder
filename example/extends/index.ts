@@ -3,16 +3,13 @@ import { Type, Static, Extends, ExtendsResult } from '@sidewinder/type'
 import { Value } from '@sidewinder/value'
 
 
-type A = boolean | boolean
-type B = boolean
-type T = A extends B ? 1 : 2
+// if all properties in Right are in Left, then true
+type T = {  } extends object ? 1 : 2
 
-const A = Type.Union([Type.Boolean(), Type.Boolean()])
-const B = Type.Boolean()
+const A = Type.Object({ a: Type.Number() })//Type.Object({ a: Type.Number(), b: Type.Number() })
+const B = Type.Object({ })
 
-
-
-const X = Extends.Check(A, B)
+const X = Extends.Check(A, B) 
 
 console.log(ExtendsResult[X])
 

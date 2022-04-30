@@ -29,7 +29,7 @@ THE SOFTWARE.
 import * as Types from './type'
 
 export enum ExtendsResult {
-  Both,
+  Union,
   True,
   False,
 }
@@ -45,6 +45,7 @@ export namespace Extends {
     if (right[Types.Kind] === 'Any') return true
     return false
   }
+
   function PrimitiveWithObjectRight<Left extends Types.TAnySchema, Right extends Types.TAnySchema>(left: Left, right: Right) {
     // type A = boolean extends {}     ? 1 : 2 // additionalProperties: false
     // type B = boolean extends object ? 1 : 2 // additionalProperties: true
@@ -58,7 +59,7 @@ export namespace Extends {
   }
 
   function Any<Left extends Types.TAnySchema, Right extends Types.TAnySchema>(left: Left, right: Right): ExtendsResult {
-    return AnyOrUnknownRule(right) ? ExtendsResult.True : ExtendsResult.Both
+    return AnyOrUnknownRule(right) ? ExtendsResult.True : ExtendsResult.Union
   }
 
   function Array<Left extends Types.TAnySchema, Right extends Types.TAnySchema>(left: Left, right: Right): ExtendsResult {
@@ -82,7 +83,6 @@ export namespace Extends {
       return ExtendsResult.False
     }
     for (let i = 0; i < left.parameters.length; i++) {
-      // note: right left evaluation order
       const result = Extends(right.parameters[i], left.parameters[i])
       if (result === ExtendsResult.False) return ExtendsResult.False
     }
@@ -108,7 +108,6 @@ export namespace Extends {
       return ExtendsResult.False
     }
     for (let i = 0; i < left.parameters.length; i++) {
-      // note: right left evaluation order
       const result = Extends(right.parameters[i], left.parameters[i])
       if (result === ExtendsResult.False) return ExtendsResult.False
     }
@@ -159,7 +158,6 @@ export namespace Extends {
   }
 
   function Null<Left extends Types.TAnySchema, Right extends Types.TAnySchema>(left: Left, right: Right): ExtendsResult {
-    if (AnyOrUnknownRule(right)) return ExtendsResult.True
     if (right[Types.Kind] === 'Null') {
       return ExtendsResult.True
     } else if (right[Types.Kind] === 'Union') {
@@ -167,17 +165,20 @@ export namespace Extends {
     }
     return ExtendsResult.False
   }
-
+  // if all properties in Right are in Left, then true
   function Object<Left extends Types.TAnySchema, Right extends Types.TAnySchema>(left: Left, right: Right): ExtendsResult {
+    if (AnyOrUnknownRule(right)) return ExtendsResult.True
     if (right[Types.Kind] !== 'Object') return ExtendsResult.False
     const leftKeys = globalThis.Object.keys(left.properties)
     const rightKeys = globalThis.Object.keys(right.properties)
     if (rightKeys.length > leftKeys.length) return ExtendsResult.False
     if (!rightKeys.every((rightPropertyKey) => leftKeys.includes(rightPropertyKey))) return ExtendsResult.False
     for (const rightPropertyKey of rightKeys) {
-      const innerLeft = left.properties[rightPropertyKey]
-      const innerRight = right.properties[rightPropertyKey]
-      if (!Extends(innerLeft, innerRight)) return ExtendsResult.False
+      const propertyLeft = left.properties[rightPropertyKey]
+      const propertyRight = right.properties[rightPropertyKey]
+      if (Extends(propertyLeft, propertyRight) === ExtendsResult.False) {
+        return ExtendsResult.False
+      }
     }
     return ExtendsResult.True
   }
@@ -270,7 +271,7 @@ export namespace Extends {
         return left[Types.Kind] === 'Any'
       })
     )
-      return ExtendsResult.Both
+      return ExtendsResult.Union
     if (right[Types.Kind] === 'Union') {
       const result = left.anyOf.every((left: Types.TSchema) => right.anyOf.some((right: Types.TSchema) => Extends(left, right) !== ExtendsResult.False))
       return result ? ExtendsResult.True : ExtendsResult.False

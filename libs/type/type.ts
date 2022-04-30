@@ -604,7 +604,7 @@ export class TypeBuilder {
   public Extends<T extends TSchema, U extends TSchema, X extends TSchema, Y extends TSchema>(t: T, u: U, x: X, y: Y): TExtends<T, U, X, Y> {
     const result = Extends.Check(t, u)
     switch (result) {
-      case ExtendsResult.Both:
+      case ExtendsResult.Union:
         return this.Union([this.Clone(x), this.Clone(y)]) as any as TExtends<T, U, X, Y>
       case ExtendsResult.True:
         return this.Clone(x)
