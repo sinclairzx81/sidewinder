@@ -55,7 +55,8 @@ export namespace Extends {
     // type B = boolean extends object ? 1 : 2 // additionalProperties: true
     const additionalProperties = right.additionalProperties
     const propertyLength = globalThis.Object.keys(right.properties).length
-    return additionalProperties === false && propertyLength === 0
+    const result = additionalProperties === false && propertyLength === 0
+    return result
   }
 
   function UnionRightRule<Left extends Types.TAnySchema, Right extends Types.TAnySchema>(left: Left, right: Right): ExtendsResult {
@@ -175,10 +176,14 @@ export namespace Extends {
     }
     return ExtendsResult.False
   }
-  // if all properties in Right are in Left, then true
+
   function Object<Left extends Types.TAnySchema, Right extends Types.TAnySchema>(left: Left, right: Right): ExtendsResult {
-    if (AnyOrUnknownRule(right)) return ExtendsResult.True
-    if (right[Types.Kind] !== 'Object') return ExtendsResult.False
+    if (AnyOrUnknownRule(right)) {
+      return ExtendsResult.True
+    } else if (right[Types.Kind] !== 'Object') {
+      return ExtendsResult.False
+    } else {
+    }
     const leftKeys = globalThis.Object.keys(left.properties)
     const rightKeys = globalThis.Object.keys(right.properties)
     if (rightKeys.length > leftKeys.length) return ExtendsResult.False
@@ -258,19 +263,41 @@ export namespace Extends {
   }
 
   function Tuple<Left extends Types.TAnySchema, Right extends Types.TAnySchema>(left: Left, right: Right): ExtendsResult {
-    if (right[Types.Kind] !== 'Tuple') return ExtendsResult.False
-    if (left.items === undefined && right.items === undefined) return ExtendsResult.True
-    if (left.items === undefined && right.items !== undefined) return ExtendsResult.False
-    if (left.items !== undefined && right.items === undefined) return ExtendsResult.False
-    if (left.items === undefined && right.items === undefined) return ExtendsResult.True
-    if (left.minItems !== right.minItems || left.maxItems !== right.maxItems) return ExtendsResult.False
-    for (let i = 0; i < left.items!.length; i++) {
-      if (!Extends(left.items![i], right.items![i])) return ExtendsResult.False
+    if (AnyOrUnknownRule(right)) {
+      return ExtendsResult.True
+    } else if (right[Types.Kind] === 'Object') {
+      if (PrimitiveWithObjectRightRule(left, right) || globalThis.Object.keys(right.properties).length === 0) {
+        return ExtendsResult.True
+      } else {
+        return ExtendsResult.False
+      }
+    } else if (right[Types.Kind] === 'Array') {
+      if (right.items === undefined) {
+        return ExtendsResult.False
+      } else if (right.items[Types.Kind] === 'Union') {
+        const result = left.items.every((left: Types.TSchema) => UnionRightRule(left, right.items) !== ExtendsResult.False)
+        return result ? ExtendsResult.True : ExtendsResult.False
+      } else if (right.items[Types.Kind] === 'Any') {
+        return ExtendsResult.True
+      } else {
+        return ExtendsResult.False
+      }
+    } else {
+      if (right[Types.Kind] !== 'Tuple') return ExtendsResult.False
+      if (left.items === undefined && right.items === undefined) return ExtendsResult.True
+      if (left.items === undefined && right.items !== undefined) return ExtendsResult.False
+      if (left.items !== undefined && right.items === undefined) return ExtendsResult.False
+      if (left.items === undefined && right.items === undefined) return ExtendsResult.True
+      if (left.minItems !== right.minItems || left.maxItems !== right.maxItems) return ExtendsResult.False
+      for (let i = 0; i < left.items!.length; i++) {
+        if (Extends(left.items![i], right.items![i]) === ExtendsResult.False) return ExtendsResult.False
+      }
+      return ExtendsResult.True
     }
-    return ExtendsResult.True
   }
 
   function Uint8Array<Left extends Types.TAnySchema, Right extends Types.TAnySchema>(left: Left, right: Right): ExtendsResult {
+    if (AnyOrUnknownRule(right)) return ExtendsResult.True
     if (right[Types.Kind] === 'Uint8Array') {
       return ExtendsResult.True
     } else if (right[Types.Kind] === 'Union') {
