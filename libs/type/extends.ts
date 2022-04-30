@@ -137,22 +137,23 @@ export namespace Extends {
   }
 
   function Literal<Left extends Types.TAnySchema, Right extends Types.TAnySchema>(left: Left, right: Right): ExtendsResult {
-    if (right[Types.Kind] === 'Literal') {
-      return right.const === left.const ? ExtendsResult.True : ExtendsResult.False
-    } else if (right[Types.Kind] === 'Any' || right[Types.Kind] === 'Unknown') {
+    if (AnyOrUnknownRule(right)) {
       return ExtendsResult.True
-    } else if (right[Types.Kind] === 'String') {
-      return typeof left.const === 'string' ? ExtendsResult.True : ExtendsResult.False
-    } else if (right[Types.Kind] === 'Number') {
-      return typeof left.const === 'number' ? ExtendsResult.True : ExtendsResult.False
-    } else if (right[Types.Kind] === 'Boolean') {
-      return typeof left.const === 'boolean' ? ExtendsResult.True : ExtendsResult.False
+    } else if (right[Types.Kind] === 'Object' && PrimitiveWithObjectRightRule(left, right)) {
+      return ExtendsResult.True
+    } else if (right[Types.Kind] === 'Literal' && left.const === right.const) {
+      return ExtendsResult.True
+    } else if (right[Types.Kind] === 'String' && typeof left.const === 'string') {
+      return ExtendsResult.True
+    } else if (right[Types.Kind] === 'Number' && typeof left.const === 'number') {
+      return ExtendsResult.True
+    } else if (right[Types.Kind] === 'Boolean' && typeof left.const === 'boolean') {
+      return ExtendsResult.True
     } else if (right[Types.Kind] === 'Union') {
-      for (const inner of right.anyOf) {
-        if (Extends(left, inner)) return ExtendsResult.True
-      }
+      return UnionRightRule(left, right)
+    } else {
+      return ExtendsResult.False
     }
-    return ExtendsResult.False
   }
 
   function Number<Left extends Types.TAnySchema, Right extends Types.TAnySchema>(left: Left, right: Right): ExtendsResult {
@@ -307,13 +308,9 @@ export namespace Extends {
   }
 
   function Union<Left extends Types.TAnySchema, Right extends Types.TAnySchema>(left: Left, right: Right): ExtendsResult {
-    if (
-      left.anyOf.some((left: Types.TSchema) => {
-        return left[Types.Kind] === 'Any'
-      })
-    )
+    if (left.anyOf.some((left: Types.TSchema) => left[Types.Kind] === 'Any')) {
       return ExtendsResult.Union
-    if (right[Types.Kind] === 'Union') {
+    } else if (right[Types.Kind] === 'Union') {
       const result = left.anyOf.every((left: Types.TSchema) => right.anyOf.some((right: Types.TSchema) => Extends(left, right) !== ExtendsResult.False))
       return result ? ExtendsResult.True : ExtendsResult.False
     } else {
