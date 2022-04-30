@@ -39,6 +39,38 @@ export namespace Extends {
   const referenceMap = new Map<string, Types.TAnySchema>()
 
   // ----------------------------------------------------------------------
+  // Record and Property Extract
+  // ----------------------------------------------------------------------
+
+  function RecordPattern<T extends Types.TRecord>(schema: T) {
+    return globalThis.Object.keys(schema.patternProperties)[0] as string
+  }
+
+  function RecordSchema<T extends Types.TRecord>(schema: T) {
+    const pattern = RecordPattern(schema)
+    return schema.patternProperties[pattern] as Types.TSchema
+  }
+
+  function RecordConstrained<T extends Types.TRecord>(schema: T) {
+    const pattern = RecordPattern(schema)
+    return !(pattern === '^.*$' || pattern === '^(0|[1-9][0-9]*)$')
+  }
+
+  export function ExtractProperties<T extends Types.TObject | Types.TRecord>(schema: T) {
+    const map = new Map<string, Types.TSchema>()
+    if (schema[Types.Kind] === 'Record') {
+      if (!RecordConstrained(schema as Types.TRecord)) throw Error('Cannot extract record properties without property constraints')
+      const propertyPattern = globalThis.Object.keys(schema.patternProperties)[0] as string
+      const propertySchema = schema.patternProperties[propertyPattern] as Types.TSchema
+      const propertyKeys = propertyPattern.slice(1, propertyPattern.length - 1).split('|')
+      propertyKeys.forEach((propertyKey) => map.set(propertyKey, propertySchema))
+    } else {
+      globalThis.Object.entries(schema.properties).forEach(([propertyKey, propertySchema]) => map.set(propertyKey, propertySchema as Types.TSchema))
+    }
+    return map
+  }
+
+  // ----------------------------------------------------------------------
   // Rules
   // ----------------------------------------------------------------------
 
@@ -200,24 +232,30 @@ export namespace Extends {
     }
   }
 
+  function PropertiesOf<Left extends Types.TAnySchema, Right extends Types.TAnySchema>(left: Left, right: Right) {
+    const leftMap = ExtractProperties(left as Types.TObject)
+    const rightMap = ExtractProperties(right as Types.TObject)
+    if (rightMap.size > leftMap.size) return ExtendsResult.False
+    if (![...rightMap.keys()].every((rightKey) => leftMap.has(rightKey))) return ExtendsResult.False
+    for (const rightKey of rightMap.keys()) {
+      const leftProp = leftMap.get(rightKey)!
+      const rightProp = rightMap.get(rightKey)!
+      if (Extends(leftProp, rightProp) === ExtendsResult.False) {
+        return ExtendsResult.False
+      }
+    }
+    return ExtendsResult.True
+  }
+
   function Object<Left extends Types.TAnySchema, Right extends Types.TAnySchema>(left: Left, right: Right): ExtendsResult {
     if (AnyOrUnknownRule(right)) {
       return ExtendsResult.True
-    } else if (right[Types.Kind] !== 'Object') {
-      return ExtendsResult.False
+    } else if (right[Types.Kind] === 'Object') {
+      return PropertiesOf(left, right)
+    } else if (right[Types.Kind] === 'Record' && RecordConstrained(right as Types.TRecord)) {
+      return PropertiesOf(left, right)
     } else {
-      const leftKeys = globalThis.Object.keys(left.properties)
-      const rightKeys = globalThis.Object.keys(right.properties)
-      if (rightKeys.length > leftKeys.length) return ExtendsResult.False
-      if (!rightKeys.every((rightPropertyKey) => leftKeys.includes(rightPropertyKey))) return ExtendsResult.False
-      for (const rightPropertyKey of rightKeys) {
-        const propertyLeft = left.properties[rightPropertyKey]
-        const propertyRight = right.properties[rightPropertyKey]
-        if (Extends(propertyLeft, propertyRight) === ExtendsResult.False) {
-          return ExtendsResult.False
-        }
-      }
-      return ExtendsResult.True
+      return ExtendsResult.False
     }
   }
 
@@ -278,7 +316,23 @@ export namespace Extends {
   }
 
   function Record<Left extends Types.TAnySchema, Right extends Types.TAnySchema>(left: Left, right: Right): ExtendsResult {
-    return ExtendsResult.False
+    if (AnyOrUnknownRule(right)) {
+      return ExtendsResult.True
+    } else if (right[Types.Kind] === 'Object') {
+      return PropertiesOf(left, right)
+    } else if (right[Types.Kind] === 'Record' && RecordConstrained(left as Types.TRecord) && RecordConstrained(right as Types.TRecord)) {
+      return PropertiesOf(left, right)
+    } else if (right[Types.Kind] === 'Record' && !RecordConstrained(left as Types.TRecord) && !RecordConstrained(right as Types.TRecord)) {
+      const leftSchema = RecordSchema(left as Types.TRecord)
+      const rightSchema = RecordSchema(right as Types.TRecord)
+      return Extends(leftSchema, rightSchema)
+    } else if (right[Types.Kind] === 'Record' && RecordConstrained(left as Types.TRecord) && !RecordConstrained(right as Types.TRecord)) {
+      const leftPattern = RecordPattern(left as Types.TRecord)
+      const rightPattern = RecordPattern(right as Types.TRecord)
+      return leftPattern === rightPattern ? ExtendsResult.True : ExtendsResult.False
+    } else {
+      return ExtendsResult.False
+    }
   }
 
   function Ref<Left extends Types.TAnySchema, Right extends Types.TAnySchema>(left: Left, right: Right): ExtendsResult {
