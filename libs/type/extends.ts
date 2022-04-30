@@ -87,7 +87,8 @@ export namespace Extends {
     } else if (left.items === undefined && right.items === undefined) {
       return ExtendsResult.False
     } else {
-      return Extends(left.items, right.items)
+      const result = Extends(left.items, right.items) !== ExtendsResult.False
+      return result ? ExtendsResult.True : ExtendsResult.False
     }
   }
 
@@ -232,7 +233,8 @@ export namespace Extends {
     } else if (right[Types.Kind] !== 'Promise') {
       return ExtendsResult.False
     } else {
-      return Extends(left.item, right.item)
+      const result = Extends(left.item, right.item) !== ExtendsResult.False
+      return result ? ExtendsResult.True : ExtendsResult.False
     }
   }
 

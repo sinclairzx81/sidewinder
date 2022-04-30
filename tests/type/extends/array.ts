@@ -2,6 +2,37 @@ import { Type, Extends, ExtendsResult } from '@sidewinder/type'
 import { Assert } from '../../assert/index'
 
 describe('type/extends/Array', () => {
+  // ----------------------------------------------
+  // Generic Varying
+  // ----------------------------------------------
+
+  it('Should extend Array Varying 1', () => {
+    type T = Array<any> extends Array<any> ? 1 : 2
+    const R = Extends.Check(Type.Array(Type.Any()), Type.Array(Type.Any()))
+    Assert.deepEqual(R, ExtendsResult.True)
+  })
+
+  it('Should extend Array Varying 2', () => {
+    type T = Array<string> extends Array<any> ? 1 : 2
+    const R = Extends.Check(Type.Array(Type.String()), Type.Array(Type.Any()))
+    Assert.deepEqual(R, ExtendsResult.True)
+  })
+
+  it('Should extend Array Varying 3', () => {
+    type T = Array<any> extends Array<string> ? 1 : 2 // 1
+    const R = Extends.Check(Type.Array(Type.Any()), Type.Array(Type.String()))
+    Assert.deepEqual(R, ExtendsResult.True)
+  })
+
+  it('Should extend Array Varying 4', () => {
+    type T = Array<number> extends Array<string> ? 1 : 2
+    const R = Extends.Check(Type.Array(Type.Number()), Type.Array(Type.String()))
+    Assert.deepEqual(R, ExtendsResult.False)
+  })
+
+  // ----------------------------------------------
+  // Any
+  // ----------------------------------------------
   it('Should extend Any', () => {
     type T = Array<any> extends any ? 1 : 2
     const R = Extends.Check(Type.Array(Type.Any()), Type.Any())

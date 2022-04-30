@@ -3,6 +3,34 @@ import { Assert } from '../../assert/index'
 
 describe('type/extends/Promise', () => {
   // ----------------------------------------------
+  // Generic Varying
+  // ----------------------------------------------
+
+  it('Should extend Promise Varying 1', () => {
+    type T = Promise<any> extends Promise<any> ? 1 : 2
+    const R = Extends.Check(Type.Promise(Type.Any()), Type.Promise(Type.Any()))
+    Assert.deepEqual(R, ExtendsResult.True)
+  })
+
+  it('Should extend Promise Varying 2', () => {
+    type T = Promise<string> extends Promise<any> ? 1 : 2
+    const R = Extends.Check(Type.Promise(Type.String()), Type.Promise(Type.Any()))
+    Assert.deepEqual(R, ExtendsResult.True)
+  })
+
+  it('Should extend Promise Varying 3', () => {
+    type T = Promise<any> extends Promise<string> ? 1 : 2 // 1
+    const R = Extends.Check(Type.Promise(Type.Any()), Type.Promise(Type.String()))
+    Assert.deepEqual(R, ExtendsResult.True)
+  })
+
+  it('Should extend Promise Varying 4', () => {
+    type T = Promise<number> extends Promise<string> ? 1 : 2
+    const R = Extends.Check(Type.Promise(Type.Number()), Type.Promise(Type.String()))
+    Assert.deepEqual(R, ExtendsResult.False)
+  })
+
+  // ----------------------------------------------
   // Any
   // ----------------------------------------------
 
