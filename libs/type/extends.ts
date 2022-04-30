@@ -158,6 +158,8 @@ export namespace Extends {
   }
 
   function Null<Left extends Types.TAnySchema, Right extends Types.TAnySchema>(left: Left, right: Right): ExtendsResult {
+    if (AnyOrUnknownRule(right)) return ExtendsResult.True
+    // type T = null extends {} ? 1 : 2
     if (right[Types.Kind] === 'Null') {
       return ExtendsResult.True
     } else if (right[Types.Kind] === 'Union') {
