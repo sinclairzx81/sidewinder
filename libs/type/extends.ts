@@ -190,8 +190,7 @@ export namespace Extends {
   function Null<Left extends Types.TAnySchema, Right extends Types.TAnySchema>(left: Left, right: Right): ExtendsResult {
     if (AnyOrUnknownRule(right)) {
       return ExtendsResult.True
-    }
-    if (right[Types.Kind] === 'Null') {
+    } else if (right[Types.Kind] === 'Null') {
       return ExtendsResult.True
     } else if (right[Types.Kind] === 'Union') {
       return UnionRightRule(left, right)
@@ -218,6 +217,22 @@ export namespace Extends {
         }
       }
       return ExtendsResult.True
+    }
+  }
+
+  function Promise<Left extends Types.TAnySchema, Right extends Types.TAnySchema>(left: Left, right: Right): ExtendsResult {
+    if (AnyOrUnknownRule(right)) {
+      return ExtendsResult.True
+    } else if (right[Types.Kind] === 'Object') {
+      if (PrimitiveWithObjectRightRule(left, right) || globalThis.Object.keys(right.properties).length === 0) {
+        return ExtendsResult.True
+      } else {
+        return ExtendsResult.False
+      }
+    } else if (right[Types.Kind] !== 'Promise') {
+      return ExtendsResult.False
+    } else {
+      return Extends(left.item, right.item)
     }
   }
 
@@ -380,6 +395,8 @@ export namespace Extends {
         return Number(left, resolvedRight)
       case 'Object':
         return Object(left, resolvedRight)
+      case 'Promise':
+        return Promise(left, resolvedRight)
       case 'Record':
         return Record(left, resolvedRight)
       case 'Ref':
