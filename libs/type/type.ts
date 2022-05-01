@@ -583,13 +583,13 @@ export class TypeBuilder {
     return this.Create({ ...options, [Kind]: 'Enum', anyOf })
   }
 
-  /** Constructs a type by excluding from T all union members that are assignable to U */
+  /** Constructs a type by excluding from UnionType all union members that are assignable to ExcludedMembers */
   public Exclude<T extends TUnion, U extends TUnion>(unionType: T, excludedMembers: U, options: SchemaOptions = {}): TExclude<T, U> {
     const anyOf = unionType.anyOf.filter((schema: TSchema) => !Extends.Check(schema, excludedMembers)).map((schema) => this.Clone(schema))
     return this.Create({ ...options, [Kind]: 'Union', anyOf })
   }
 
-  /** Constructs a type by extracting from T all union members that are assignable to U */
+  /** Constructs a type by extracting from Type all union members that are assignable to Union. */
   public Extract<T extends TSchema, U extends TUnion>(type: T, union: U, options: SchemaOptions = {}): TExtract<T, U> {
     if (type[Kind] === 'Union') {
       const anyOf = type.anyOf.filter((schema: TSchema) => Extends.Check(schema, union) === ExtendsResult.True).map((schema: TSchema) => this.Clone(schema))
@@ -600,12 +600,12 @@ export class TypeBuilder {
     }
   }
 
-  /** Creates a conditional type of the form T extends U ? X : Y. For extending or composing objects use Type.Intersect([...]) */
-  public Extends<T extends TSchema, U extends TSchema, X extends TSchema, Y extends TSchema>(t: T, u: U, x: X, y: Y): TExtends<T, U, X, Y> {
-    const result = Extends.Check(t, u)
+  /** If left extends right, return True otherwise False */
+  public Extends<Left extends TSchema, Right extends TSchema, True extends TSchema, False extends TSchema>(left: Left, right: Right, x: True, y: False): TExtends<Left, Right, True, False> {
+    const result = Extends.Check(left, right)
     switch (result) {
       case ExtendsResult.Union:
-        return this.Union([this.Clone(x), this.Clone(y)]) as any as TExtends<T, U, X, Y>
+        return this.Union([this.Clone(x), this.Clone(y)]) as any as TExtends<Left, Right, True, False>
       case ExtendsResult.True:
         return this.Clone(x)
       case ExtendsResult.False:

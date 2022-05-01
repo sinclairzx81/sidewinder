@@ -108,7 +108,7 @@ describe('type/extends/Tuple', () => {
     const R = Extends.Check(Type.String(), Type.Record(Type.Number(), Type.Any()))
     Assert.deepEqual(R, ExtendsResult.True)
   })
-  
+
   it('Should extend Record 2', () => {
     type T = [string, number] extends Record<number, unknown> ? 1 : 2
     const R = Extends.Check(Type.String(), Type.Record(Type.Number(), Type.Unknown()))

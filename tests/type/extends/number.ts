@@ -41,7 +41,7 @@ describe('type/extends/Number', () => {
     const R = Extends.Check(Type.Number(), Type.Array(Type.Any()))
     Assert.deepEqual(R, ExtendsResult.False)
   })
-  
+
   it('Should extend Tuple', () => {
     type T = number extends [number, number] ? 1 : 2
     const R = Extends.Check(Type.Number(), Type.Tuple([Type.Number(), Type.Number()]))

@@ -2,7 +2,6 @@ import { Type, Extends, ExtendsResult } from '@sidewinder/type'
 import { Assert } from '../../assert/index'
 
 describe('type/extends/Function', () => {
-
   it('Should extend Constructor 1', () => {
     type T = (() => number) extends new () => number ? 1 : 2
     const R = Extends.Check(Type.Function([], Type.Number()), Type.Constructor([], Type.Number()))
