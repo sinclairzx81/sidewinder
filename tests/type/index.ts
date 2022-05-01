@@ -1,2 +1,2 @@
-import './defaults'
+import './extends'
 import './schemas'

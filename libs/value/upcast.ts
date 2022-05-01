@@ -92,7 +92,7 @@ export namespace UpcastValue {
     const result = function () {}
     for (const [key, property] of globalThis.Object.entries(schema.returns.properties)) {
       if (!required.has(key) && value.prototype[key] === undefined) continue
-      result.prototype[key] = Create(property, value.prototype[key])
+      result.prototype[key] = Create(property as Types.TSchema, value.prototype[key])
     }
     return result
   }

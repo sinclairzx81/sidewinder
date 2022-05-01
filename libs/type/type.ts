@@ -26,6 +26,8 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
+import { Extends, ExtendsResult } from './extends'
+
 // --------------------------------------------------------------------------
 // Symbols
 // --------------------------------------------------------------------------
@@ -49,6 +51,31 @@ export type TReadonlyOptional<T extends TSchema> = T & { [Modifier]: 'ReadonlyOp
 // Schema
 // --------------------------------------------------------------------------
 
+export type TAnySchema =
+  | TSchema
+  | TAny
+  | TArray
+  | TBoolean
+  | TConstructor
+  | TEnum
+  | TFunction
+  | TInteger
+  | TLiteral
+  | TNull
+  | TNumber
+  | TObject
+  | TPromise
+  | TRecord
+  | TSelf
+  | TRef
+  | TString
+  | TTuple
+  | TUndefined
+  | TUnion
+  | TUint8Array
+  | TUnknown
+  | TVoid
+
 export interface SchemaOptions {
   $schema?: string
   $id?: string
@@ -65,6 +92,24 @@ export interface TSchema extends SchemaOptions {
   [Modifier]?: string
   params: unknown[]
   static: unknown
+}
+
+// --------------------------------------------------------------------------
+// TNumeric
+// --------------------------------------------------------------------------
+
+export interface NumericOptions extends SchemaOptions {
+  exclusiveMaximum?: number
+  exclusiveMinimum?: number
+  maximum?: number
+  minimum?: number
+  multipleOf?: number
+}
+
+export interface TNumeric extends TSchema, NumericOptions {
+  [Kind]: 'Number'
+  static: number
+  type: string
 }
 
 // --------------------------------------------------------------------------
@@ -109,7 +154,7 @@ export interface TBoolean extends TSchema {
 
 type TContructorParameters<T extends readonly TSchema[], P extends unknown[]> = [...{ [K in keyof T]: T[K] extends TSchema ? Static<T[K], P> : never }]
 
-export interface TConstructor<T extends TSchema[] = TSchema[], U extends TObject = TObject> extends TSchema {
+export interface TConstructor<T extends TSchema[] = TSchema[], U extends TSchema = TSchema> extends TSchema {
   [Kind]: 'Constructor'
   static: new (...param: TContructorParameters<T, this['params']>) => Static<U, this['params']>
   type: 'constructor'
@@ -126,11 +171,35 @@ export interface TEnumOption<T> {
   const: T
 }
 
-export interface TEnum<T extends Record<string, string | number>> extends TSchema {
+export interface TEnum<T extends Record<string, string | number> = Record<string, string | number>> extends TSchema {
   [Kind]: 'Enum'
   static: T[keyof T]
   anyOf: TEnumOption<T>[]
 }
+
+// --------------------------------------------------------------------------
+// Exclude
+// --------------------------------------------------------------------------
+
+export interface TExclude<T extends TUnion, U extends TUnion> extends TUnion {
+  [Kind]: 'Union'
+  static: Exclude<Static<T, this['params']>, Static<U, this['params']>>
+}
+
+// --------------------------------------------------------------------------
+// Extract
+// --------------------------------------------------------------------------
+
+export interface TExtract<T extends TSchema, U extends TUnion> extends TUnion {
+  [Kind]: 'Union'
+  static: Extract<Static<T, this['params']>, Static<U, this['params']>>
+}
+
+// --------------------------------------------------------------------------
+// Extends
+// --------------------------------------------------------------------------
+
+export type TExtends<T extends TSchema, U extends TSchema, X extends TSchema, Y extends TSchema> = T extends TAny ? (U extends TUnknown ? X : U extends TAny ? X : TUnion<[X, Y]>) : T extends U ? X : Y
 
 // --------------------------------------------------------------------------
 // Function
@@ -150,19 +219,12 @@ export interface TFunction<T extends readonly TSchema[] = TSchema[], U extends T
 // Integer
 // --------------------------------------------------------------------------
 
-export interface IntegerOptions extends SchemaOptions {
-  exclusiveMaximum?: number
-  exclusiveMinimum?: number
-  maximum?: number
-  minimum?: number
-  multipleOf?: number
-}
-
-export interface TInteger extends TSchema, IntegerOptions {
-  [Kind]: 'Integer'
+export interface TInteger extends TNumeric, NumericOptions {
+  [Kind]: 'Number'
   static: number
   type: 'integer'
 }
+
 // --------------------------------------------------------------------------
 // Intersect
 // --------------------------------------------------------------------------
@@ -212,15 +274,7 @@ export interface TNull extends TSchema {
 // Number
 // --------------------------------------------------------------------------
 
-export interface NumberOptions extends SchemaOptions {
-  exclusiveMaximum?: number
-  exclusiveMinimum?: number
-  maximum?: number
-  minimum?: number
-  multipleOf?: number
-}
-
-export interface TNumber extends TSchema, NumberOptions {
+export interface TNumber extends TNumeric, NumericOptions {
   [Kind]: 'Number'
   static: number
   type: 'number'
@@ -292,7 +346,7 @@ export interface TPick<T extends TObject, Properties extends ObjectPropertyKeys<
 // Promise
 // --------------------------------------------------------------------------
 
-export interface TPromise<T extends TSchema> extends TSchema {
+export interface TPromise<T extends TSchema = TSchema> extends TSchema {
   [Kind]: 'Promise'
   static: Promise<Static<T, this['params']>>
   type: 'promise'
@@ -305,7 +359,7 @@ export interface TPromise<T extends TSchema> extends TSchema {
 
 export type TRecordKey = TString | TNumber | TUnion<TLiteral<any>[]>
 
-export interface TRecord<K extends TRecordKey, T extends TSchema> extends TSchema {
+export interface TRecord<K extends TRecordKey = TRecordKey, T extends TSchema = TSchema> extends TSchema {
   [Kind]: 'Record'
   static: Record<Static<K>, Static<T, this['params']>>
   type: 'object'
@@ -332,7 +386,7 @@ export interface TRec<T extends TSchema> extends TSchema {
 // Ref
 // --------------------------------------------------------------------------
 
-export interface TRef<T extends TSchema> extends TSchema {
+export interface TRef<T extends TSchema = TSchema> extends TSchema {
   [Kind]: 'Ref'
   static: Static<T, this['params']>
   $ref: string
@@ -516,7 +570,7 @@ export class TypeBuilder {
   }
 
   /** Creates a constructor type */
-  public Constructor<T extends TSchema[], U extends TObject>(parameters: [...T], returns: U, options: SchemaOptions = {}): TConstructor<T, U> {
+  public Constructor<T extends TSchema[], U extends TSchema>(parameters: [...T], returns: U, options: SchemaOptions = {}): TConstructor<T, U> {
     return this.Create({ ...options, [Kind]: 'Constructor', type: 'constructor', parameters, returns })
   }
 
@@ -529,14 +583,44 @@ export class TypeBuilder {
     return this.Create({ ...options, [Kind]: 'Enum', anyOf })
   }
 
+  /** Constructs a type by excluding from UnionType all union members that are assignable to ExcludedMembers */
+  public Exclude<T extends TUnion, U extends TUnion>(unionType: T, excludedMembers: U, options: SchemaOptions = {}): TExclude<T, U> {
+    const anyOf = unionType.anyOf.filter((schema: TSchema) => !Extends.Check(schema, excludedMembers)).map((schema) => this.Clone(schema))
+    return this.Create({ ...options, [Kind]: 'Union', anyOf })
+  }
+
+  /** Constructs a type by extracting from Type all union members that are assignable to Union. */
+  public Extract<T extends TSchema, U extends TUnion>(type: T, union: U, options: SchemaOptions = {}): TExtract<T, U> {
+    if (type[Kind] === 'Union') {
+      const anyOf = type.anyOf.filter((schema: TSchema) => Extends.Check(schema, union) === ExtendsResult.True).map((schema: TSchema) => this.Clone(schema))
+      return this.Create({ ...options, [Kind]: 'Union', anyOf })
+    } else {
+      const anyOf = union.anyOf.filter((schema) => Extends.Check(type, schema) === ExtendsResult.True).map((schema) => this.Clone(schema))
+      return this.Create({ ...options, [Kind]: 'Union', anyOf })
+    }
+  }
+
+  /** If left extends right, return True otherwise False */
+  public Extends<Left extends TSchema, Right extends TSchema, True extends TSchema, False extends TSchema>(left: Left, right: Right, x: True, y: False): TExtends<Left, Right, True, False> {
+    const result = Extends.Check(left, right)
+    switch (result) {
+      case ExtendsResult.Union:
+        return this.Union([this.Clone(x), this.Clone(y)]) as any as TExtends<Left, Right, True, False>
+      case ExtendsResult.True:
+        return this.Clone(x)
+      case ExtendsResult.False:
+        return this.Clone(y)
+    }
+  }
+
   /** Creates a function type */
   public Function<T extends readonly TSchema[], U extends TSchema>(parameters: [...T], returns: U, options: SchemaOptions = {}): TFunction<T, U> {
     return this.Create({ ...options, [Kind]: 'Function', type: 'function', parameters, returns })
   }
 
   /** Creates a integer type */
-  public Integer(options: IntegerOptions = {}): TInteger {
-    return this.Create({ ...options, [Kind]: 'Integer', type: 'integer' })
+  public Integer(options: NumericOptions = {}): TInteger {
+    return this.Create({ ...options, [Kind]: 'Number', type: 'integer' })
   }
 
   /** Creates a intersect type. */
@@ -580,7 +664,7 @@ export class TypeBuilder {
   }
 
   /** Creates a number type */
-  public Number(options: NumberOptions = {}): TNumber {
+  public Number(options: NumericOptions = {}): TNumber {
     return this.Create({ ...options, [Kind]: 'Number', type: 'number' })
   }
 

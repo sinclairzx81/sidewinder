@@ -29,6 +29,8 @@ THE SOFTWARE.
 import * as Types from '@sidewinder/type'
 
 export namespace CreateValue {
+  const referenceMap = new Map<string, Types.TSchema>()
+
   function Any(schema: Types.TAny): any {
     if (schema.default !== undefined) {
       return schema.default
@@ -41,7 +43,9 @@ export namespace CreateValue {
     if (schema.default !== undefined) {
       return schema.default
     } else if (schema.minItems !== undefined) {
-      return globalThis.Array.from({ length: schema.minItems }).map((item) => CreateValue.Create(schema.items))
+      return globalThis.Array.from({ length: schema.minItems }).map((item) => {
+        return CreateValue.Create(schema.items)
+      })
     } else {
       return []
     }
@@ -90,16 +94,6 @@ export namespace CreateValue {
       return schema.default
     } else {
       return () => CreateValue.Create(schema.returns)
-    }
-  }
-
-  function Integer(schema: Types.TInteger): any {
-    if (schema.default !== undefined) {
-      return schema.default
-    } else if (schema.minimum) {
-      return Math.floor(schema.minimum)
-    } else {
-      return 0
     }
   }
 
@@ -250,9 +244,13 @@ export namespace CreateValue {
     return null
   }
 
+  let recursionDepth = 0
   /** Creates a value from the given schema. If the schema specifies a default value, then that value is returned. */
-  export function Create<T extends Types.TSchema>(schema: T): Types.Static<T> {
+  export function Visit<T extends Types.TSchema>(schema: T): Types.Static<T> {
+    recursionDepth += 1
+    if (recursionDepth >= 1000) throw new Error('Cannot create value as schema contains a infinite expansion')
     const anySchema = schema as any
+    if (anySchema.$id !== undefined) referenceMap.set(anySchema.$id, anySchema)
     switch (anySchema[Types.Kind]) {
       case 'Any':
         return Any(anySchema)
@@ -266,8 +264,6 @@ export namespace CreateValue {
         return Enum(anySchema)
       case 'Function':
         return Function(anySchema)
-      case 'Integer':
-        return Integer(anySchema)
       case 'Intersect':
         return Intersect(anySchema)
       case 'Literal':
@@ -301,9 +297,13 @@ export namespace CreateValue {
       case 'Void':
         return Void(anySchema)
       case 'Self':
-        return undefined // TODO: Consider tracking dynamicRef
+        return Visit(referenceMap.get(anySchema.$ref)!)
       default:
         throw Error(`Unknown schema kind '${schema[Types.Kind]}'`)
     }
+  }
+  /** Creates a value from the given schema. If the schema specifies a default value, then that value is returned. */
+  export function Create<T extends Types.TSchema>(schema: T): Types.Static<T> {
+    return Visit(schema)
   }
 }
