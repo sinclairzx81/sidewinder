@@ -103,6 +103,42 @@ describe('type/extends/Tuple', () => {
     Assert.deepEqual(R, ExtendsResult.False)
   })
 
+  it('Should extend Record 1', () => {
+    type T = [string, number] extends Record<number, any> ? 1 : 2
+    const R = Extends.Check(Type.String(), Type.Record(Type.Number(), Type.Any()))
+    Assert.deepEqual(R, ExtendsResult.True)
+  })
+  
+  it('Should extend Record 2', () => {
+    type T = [string, number] extends Record<number, unknown> ? 1 : 2
+    const R = Extends.Check(Type.String(), Type.Record(Type.Number(), Type.Unknown()))
+    Assert.deepEqual(R, ExtendsResult.True)
+  })
+
+  it('Should extend Record 3', () => {
+    type T = [string, number] extends Record<number, string> ? 1 : 2
+    const R = Extends.Check(Type.String(), Type.Record(Type.Number(), Type.String()))
+    Assert.deepEqual(R, ExtendsResult.True)
+  })
+
+  it('Should extend Record 4', () => {
+    type T = [string, number] extends Record<number, number> ? 1 : 2
+    const R = Extends.Check(Type.String(), Type.Record(Type.Number(), Type.Number()))
+    Assert.deepEqual(R, ExtendsResult.False)
+  })
+
+  it('Should extend Record 5', () => {
+    type T = [string, number] extends Record<any, number | string> ? 1 : 2
+    const R = Extends.Check(Type.String(), Type.Record(Type.Number(), Type.Union([Type.Number(), Type.String()])))
+    Assert.deepEqual(R, ExtendsResult.False)
+  })
+
+  it('Should extend Record 6', () => {
+    type T = [string, number] extends Record<any, {}> ? 1 : 2
+    const R = Extends.Check(Type.String(), Type.Object({}))
+    Assert.deepEqual(R, ExtendsResult.False)
+  })
+
   it('Should extend Object 1', () => {
     type T = [string, number] extends {} ? 1 : 2
     const R = Extends.Check(Type.Tuple([Type.String(), Type.Number()]), Type.Object({}, { additionalProperties: false }))

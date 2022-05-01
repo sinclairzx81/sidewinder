@@ -76,6 +76,11 @@ export namespace Extends {
     return pattern === '^.*$' || pattern === '^(0|[1-9][0-9]*)$'
   }
 
+  export function RecordValue<T extends Types.TRecord>(schema: T) {
+    const pattern = RecordPattern(schema)
+    return schema.patternProperties[pattern]
+  }
+
   export function RecordKey<T extends Types.TRecord>(schema: T) {
     const pattern = RecordPattern(schema)
     if (pattern === '^.*$') {
@@ -107,6 +112,18 @@ export namespace Extends {
       throw Error(`Cannot create property map from '${schema[Types.Kind]}' types`)
     }
     return comparable
+  }
+
+  // ----------------------------------------------------------------------
+  // Indexable
+  // ----------------------------------------------------------------------
+
+  function Indexable<Left extends Types.TAnySchema, Right extends Types.TAnySchema>(left: Left, right: Right): ExtendsResult {
+    if (right[Types.Kind] === 'Union') {
+      return ExtendsResult.False
+    } else {
+      return Extends(left, right)
+    }
   }
 
   // ----------------------------------------------------------------------
@@ -150,6 +167,7 @@ export namespace Extends {
       return ExtendsResult.False
     }
   }
+
   function Constructor<Left extends Types.TAnySchema, Right extends Types.TAnySchema>(left: Left, right: Right): ExtendsResult {
     if (AnyOrUnknownRule(right)) {
       return ExtendsResult.True
@@ -170,19 +188,22 @@ export namespace Extends {
   }
 
   function Enum<Left extends Types.TAnySchema, Right extends Types.TAnySchema>(left: Left, right: Right): ExtendsResult {
-    if (right[Types.Kind] !== 'Enum') return ExtendsResult.False
-    if (left.anyOf.length !== right.anyOf.length) return ExtendsResult.False
-    for (let i = 0; i < left.anyOf.length; i++) {
-      const innerLeft = left.anyOf[i]
-      const innerRight = right.anyOf[i]
-      if (innerLeft.type !== innerRight.type || innerLeft.const !== innerRight.const) return ExtendsResult.False
+    if (AnyOrUnknownRule(right)) {
+      return ExtendsResult.True
+    } else if (right[Types.Kind] === 'Enum') {
+      return ExtendsResult.False // Cannot check enum as only values are encoded
+    } else {
+      return ExtendsResult.False
     }
-    return ExtendsResult.True
   }
 
   function Function<Left extends Types.TAnySchema, Right extends Types.TAnySchema>(left: Left, right: Right): ExtendsResult {
     if (AnyOrUnknownRule(right)) {
       return ExtendsResult.True
+    } else if (right[Types.Kind] === 'Object') {
+      if (right.properties['length'] !== undefined && right.properties['length'][Types.Kind] === 'Number') return ExtendsResult.True
+      if (globalThis.Object.keys(right.properties).length === 0) return ExtendsResult.True
+      return ExtendsResult.False
     } else if (right[Types.Kind] !== 'Function') {
       return ExtendsResult.False
     } else if (right.parameters.length < left.parameters.length) {
@@ -217,6 +238,12 @@ export namespace Extends {
       return ExtendsResult.True
     } else if (right[Types.Kind] === 'Object' && ObjectRightRule(left, right)) {
       return ExtendsResult.True
+    } else if (right[Types.Kind] === 'Record') {
+      if (typeof left.const === 'string') {
+        return Indexable(left, RecordValue(right as Types.TRecord))
+      } else {
+        return ExtendsResult.False
+      }
     } else if (right[Types.Kind] === 'Literal' && left.const === right.const) {
       return ExtendsResult.True
     } else if (right[Types.Kind] === 'String' && typeof left.const === 'string') {
@@ -362,6 +389,8 @@ export namespace Extends {
       return ExtendsResult.True
     } else if (right[Types.Kind] === 'Object' && ObjectRightRule(left, right)) {
       return ExtendsResult.True
+    } else if (right[Types.Kind] === 'Record') {
+      return Indexable(left, RecordValue(right as Types.TRecord))
     } else if (right[Types.Kind] === 'String') {
       return ExtendsResult.True
     } else if (right[Types.Kind] === 'Union') {
@@ -375,11 +404,10 @@ export namespace Extends {
     if (AnyOrUnknownRule(right)) {
       return ExtendsResult.True
     } else if (right[Types.Kind] === 'Object') {
-      if (ObjectRightRule(left, right) || globalThis.Object.keys(right.properties).length === 0) {
-        return ExtendsResult.True
-      } else {
-        return ExtendsResult.False
-      }
+      const result = ObjectRightRule(left, right) || globalThis.Object.keys(right.properties).length === 0
+      return result ? ExtendsResult.True : ExtendsResult.False
+    } else if (right[Types.Kind] === 'Record') {
+      return Indexable(left, RecordValue(right as Types.TRecord))
     } else if (right[Types.Kind] === 'Array') {
       if (right.items === undefined) {
         return ExtendsResult.False
@@ -410,6 +438,8 @@ export namespace Extends {
       return ExtendsResult.True
     } else if (right[Types.Kind] === 'Object' && ObjectRightRule(left, right)) {
       return ExtendsResult.True
+    } else if (right[Types.Kind] === 'Record') {
+      return Indexable(left, RecordValue(right as Types.TRecord))
     } else if (right[Types.Kind] === 'Uint8Array') {
       return ExtendsResult.True
     } else if (right[Types.Kind] === 'Union') {

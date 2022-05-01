@@ -77,6 +77,7 @@ describe('type/extends/Constructor', () => {
     const R = Extends.Check(Type.Constructor([], Type.Array(Type.String())), Type.Constructor([], Type.Object({})))
     Assert.deepEqual(R, ExtendsResult.True)
   })
+
   it('Should extend Constructor 12', () => {
     type T = (new () => object) extends new () => Array<any> ? 1 : 2
     const R = Extends.Check(Type.Constructor([], Type.Object({})), Type.Constructor([], Type.Array(Type.Any())))
@@ -158,6 +159,12 @@ describe('type/extends/Constructor', () => {
   it('Should extend Tuple', () => {
     type T = (new () => number) extends [number, number] ? 1 : 2
     const R = Extends.Check(Type.Constructor([], Type.Number()), Type.Tuple([Type.Number(), Type.Number()]))
+    Assert.deepEqual(R, ExtendsResult.False)
+  })
+
+  it('Should extend Record', () => {
+    type T = (() => number) extends Record<number, any> ? 1 : 2
+    const R = Extends.Check(Type.Constructor([], Type.Number()), Type.Record(Type.Number(), Type.Any()))
     Assert.deepEqual(R, ExtendsResult.False)
   })
 

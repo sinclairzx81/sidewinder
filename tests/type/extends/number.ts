@@ -41,11 +41,19 @@ describe('type/extends/Number', () => {
     const R = Extends.Check(Type.Number(), Type.Array(Type.Any()))
     Assert.deepEqual(R, ExtendsResult.False)
   })
+  
   it('Should extend Tuple', () => {
     type T = number extends [number, number] ? 1 : 2
     const R = Extends.Check(Type.Number(), Type.Tuple([Type.Number(), Type.Number()]))
     Assert.deepEqual(R, ExtendsResult.False)
   })
+
+  it('Should extend Record', () => {
+    type T = number extends Record<number, any> ? 1 : 2
+    const R = Extends.Check(Type.Number(), Type.Record(Type.Number(), Type.Any()))
+    Assert.deepEqual(R, ExtendsResult.False)
+  })
+
   it('Should extend Object 1', () => {
     type T = number extends {} ? 1 : 2
     const R = Extends.Check(Type.Number(), Type.Object({}, { additionalProperties: false }))

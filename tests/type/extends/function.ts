@@ -2,6 +2,7 @@ import { Type, Extends, ExtendsResult } from '@sidewinder/type'
 import { Assert } from '../../assert/index'
 
 describe('type/extends/Function', () => {
+
   it('Should extend Constructor 1', () => {
     type T = (() => number) extends new () => number ? 1 : 2
     const R = Extends.Check(Type.Function([], Type.Number()), Type.Constructor([], Type.Number()))
@@ -73,6 +74,7 @@ describe('type/extends/Function', () => {
     const R = Extends.Check(Type.Function([], Type.Array(Type.Any())), Type.Function([], Type.Object({})))
     Assert.deepEqual(R, ExtendsResult.True)
   })
+
   it('Should extend Function 11', () => {
     type T = (() => Array<string>) extends () => object ? 1 : 2
     const R = Extends.Check(Type.Function([], Type.Array(Type.String())), Type.Function([], Type.Object({})))
@@ -96,139 +98,148 @@ describe('type/extends/Function', () => {
     const R = Extends.Check(Type.Function([Type.Any()], Type.Number({})), Type.Function([Type.Unknown()], Type.Number({})))
     Assert.deepEqual(R, ExtendsResult.True)
   })
+
   it('Should extend Function 15', () => {
     type T = (() => any) extends () => unknown ? 1 : 2
     const R = Extends.Check(Type.Function([], Type.Any({})), Type.Function([], Type.Unknown({})))
     Assert.deepEqual(R, ExtendsResult.True)
   })
+
   it('Should extend Function 16', () => {
     type T = (() => unknown) extends () => any ? 1 : 2
     const R = Extends.Check(Type.Function([], Type.Unknown({})), Type.Function([], Type.Any({})))
     Assert.deepEqual(R, ExtendsResult.True)
   })
+
   it('Should extend Any', () => {
     type T = (() => number) extends any ? 1 : 2
-    const R = Extends.Check(Type.Constructor([], Type.Number()), Type.Any())
+    const R = Extends.Check(Type.Function([], Type.Number()), Type.Any())
     Assert.deepEqual(R, ExtendsResult.True)
   })
 
   it('Should extend String', () => {
     type T = (() => number) extends string ? 1 : 2
-    const R = Extends.Check(Type.Constructor([], Type.Number()), Type.String())
+    const R = Extends.Check(Type.Function([], Type.Number()), Type.String())
     Assert.deepEqual(R, ExtendsResult.False)
   })
 
   it('Should extend Boolean', () => {
     type T = (() => number) extends boolean ? 1 : 2
-    const R = Extends.Check(Type.Constructor([], Type.Number()), Type.Boolean())
+    const R = Extends.Check(Type.Function([], Type.Number()), Type.Boolean())
     Assert.deepEqual(R, ExtendsResult.False)
   })
 
   it('Should extend Number', () => {
     type T = (() => number) extends number ? 1 : 2
-    const R = Extends.Check(Type.Constructor([], Type.Number()), Type.Number())
+    const R = Extends.Check(Type.Function([], Type.Number()), Type.Number())
     Assert.deepEqual(R, ExtendsResult.False)
   })
 
   it('Should extend Integer', () => {
     type T = (() => number) extends number ? 1 : 2
-    const R = Extends.Check(Type.Constructor([], Type.Number()), Type.Integer())
+    const R = Extends.Check(Type.Function([], Type.Number()), Type.Integer())
     Assert.deepEqual(R, ExtendsResult.False)
   })
 
   it('Should extend Array 1', () => {
     type T = (() => number) extends Array<any> ? 1 : 2
-    const R = Extends.Check(Type.Constructor([], Type.Number()), Type.Array(Type.Any()))
+    const R = Extends.Check(Type.Function([], Type.Number()), Type.Array(Type.Any()))
     Assert.deepEqual(R, ExtendsResult.False)
   })
 
   it('Should extend Array 2', () => {
     type T = (() => number) extends Array<any> ? 1 : 2
-    const R = Extends.Check(Type.Constructor([], Type.Number()), Type.Array(Type.Any()))
+    const R = Extends.Check(Type.Function([], Type.Number()), Type.Array(Type.Any()))
     Assert.deepEqual(R, ExtendsResult.False)
   })
 
   it('Should extend Array 3', () => {
     type T = (() => number) extends Array<string> ? 1 : 2
-    const R = Extends.Check(Type.Constructor([], Type.Number()), Type.Array(Type.Any()))
+    const R = Extends.Check(Type.Function([], Type.Number()), Type.Array(Type.Any()))
     Assert.deepEqual(R, ExtendsResult.False)
   })
 
   it('Should extend Tuple', () => {
     type T = (() => number) extends [number, number] ? 1 : 2
-    const R = Extends.Check(Type.Constructor([], Type.Number()), Type.Tuple([Type.Number(), Type.Number()]))
+    const R = Extends.Check(Type.Function([], Type.Number()), Type.Tuple([Type.Number(), Type.Number()]))
+    Assert.deepEqual(R, ExtendsResult.False)
+  })
+
+  it('Should extend Record', () => {
+    type T = (() => number) extends Record<number, any> ? 1 : 2
+    const R = Extends.Check(Type.Function([], Type.Number()), Type.Record(Type.Number(), Type.Any()))
     Assert.deepEqual(R, ExtendsResult.False)
   })
 
   it('Should extend Object 1', () => {
     type T = (() => number) extends object ? 1 : 2
-    const R = Extends.Check(Type.Constructor([], Type.Number()), Type.Object({}))
-    Assert.deepEqual(R, ExtendsResult.False)
+    const R = Extends.Check(Type.Function([], Type.Number()), Type.Object({}))
+    Assert.deepEqual(R, ExtendsResult.True)
   })
 
   it('Should extend Object 2', () => {
     type T = (() => number) extends {} ? 1 : 2
-    const R = Extends.Check(Type.Constructor([], Type.Number()), Type.Object({}))
-    Assert.deepEqual(R, ExtendsResult.False)
+    const R = Extends.Check(Type.Function([], Type.Number()), Type.Object({}))
+    Assert.deepEqual(R, ExtendsResult.True)
   })
 
   it('Should extend Object 3', () => {
     type T = (() => number) extends { a: number } ? 1 : 2
-    const R = Extends.Check(Type.Constructor([], Type.Number()), Type.Object({ a: Type.Number() }))
+    const R = Extends.Check(Type.Function([], Type.Number()), Type.Object({ a: Type.Number() }))
     Assert.deepEqual(R, ExtendsResult.False)
   })
 
   it('Should extend Object 4', () => {
     type T = (() => number) extends { length: '1' } ? 1 : 2
-    const R = Extends.Check(Type.Constructor([], Type.Number()), Type.Object({ length: Type.Literal('1') }))
+    const R = Extends.Check(Type.Function([], Type.Number()), Type.Object({ length: Type.Literal('1') }))
     Assert.deepEqual(R, ExtendsResult.False)
   })
 
   it('Should extend Object 5', () => {
     type T = (() => number) extends { length: number } ? 1 : 2
-    const R = Extends.Check(Type.Constructor([], Type.Number()), Type.Object({ length: Type.Number() }))
-    Assert.deepEqual(R, ExtendsResult.False)
+    const R = Extends.Check(Type.Function([], Type.Number()), Type.Object({ length: Type.Number() }))
+    Assert.deepEqual(R, ExtendsResult.True)
   })
 
   it('Should extend Union 1', () => {
     type T = (() => number) extends number | string ? 1 : 2
-    const R = Extends.Check(Type.Constructor([], Type.Number()), Type.Union([Type.Null(), Type.String()]))
+    const R = Extends.Check(Type.Function([], Type.Number()), Type.Union([Type.Null(), Type.String()]))
     Assert.deepEqual(R, ExtendsResult.False)
   })
 
   it('Should extend Union 2', () => {
     type T = (() => number) extends any | number ? 1 : 2
-    const R = Extends.Check(Type.Constructor([], Type.Number()), Type.Union([Type.Any(), Type.String()]))
+    const R = Extends.Check(Type.Function([], Type.Number()), Type.Union([Type.Any(), Type.String()]))
     Assert.deepEqual(R, ExtendsResult.True)
   })
 
   it('Should extend Union 3', () => {
     type T = (() => number) extends any | Array<any> ? 1 : 2
-    const R = Extends.Check(Type.Constructor([], Type.Number()), Type.Union([Type.Any(), Type.Array(Type.Any())]))
+    const R = Extends.Check(Type.Function([], Type.Number()), Type.Union([Type.Any(), Type.Array(Type.Any())]))
     Assert.deepEqual(R, ExtendsResult.True)
   })
 
   it('Should extend Union 4', () => {
     type T = (() => number) extends any | Array<any> ? 1 : 2
-    const R = Extends.Check(Type.Constructor([], Type.Number()), Type.Union([Type.Any(), Type.Array(Type.Any())]))
+    const R = Extends.Check(Type.Function([], Type.Number()), Type.Union([Type.Any(), Type.Array(Type.Any())]))
     Assert.deepEqual(R, ExtendsResult.True)
   })
 
   it('Should extend Union 5', () => {
     type T = (() => number) extends any | Array<string> ? 1 : 2
-    const R = Extends.Check(Type.Constructor([], Type.Number()), Type.Union([Type.Any(), Type.Array(Type.String())]))
+    const R = Extends.Check(Type.Function([], Type.Number()), Type.Union([Type.Any(), Type.Array(Type.String())]))
     Assert.deepEqual(R, ExtendsResult.True)
   })
 
   it('Should extend Null', () => {
     type T = (() => number) extends null ? 1 : 2
-    const R = Extends.Check(Type.Constructor([], Type.Number()), Type.Null())
+    const R = Extends.Check(Type.Function([], Type.Number()), Type.Null())
     Assert.deepEqual(R, ExtendsResult.False)
   })
 
   it('Should extend Undefined', () => {
     type T = (() => number) extends undefined ? 1 : 2
-    const R = Extends.Check(Type.Constructor([], Type.Number()), Type.Undefined())
+    const R = Extends.Check(Type.Function([], Type.Number()), Type.Undefined())
     Assert.deepEqual(R, ExtendsResult.False)
   })
 })

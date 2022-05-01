@@ -48,6 +48,13 @@ describe('type/extends/Uint8Array', () => {
     const R = Extends.Check(Type.Uint8Array(), Type.Tuple([Type.Number(), Type.Number()]))
     Assert.deepEqual(R, ExtendsResult.False)
   })
+
+  it('Should extend Record', () => {
+    type T = Uint8Array extends Record<number, any> ? 1 : 2
+    const R = Extends.Check(Type.Uint8Array(), Type.Record(Type.Number(), Type.Any()))
+    Assert.deepEqual(R, ExtendsResult.True)
+  })
+
   it('Should extend Object 1', () => {
     type T = Uint8Array extends {} ? 1 : 2
     const R = Extends.Check(Type.Uint8Array(), Type.Object({}, { additionalProperties: false }))

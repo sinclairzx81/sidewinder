@@ -78,6 +78,13 @@ describe('type/extends/Promise', () => {
     const R = Extends.Check(Type.Promise(Type.Any()), Type.Tuple([Type.Number(), Type.Number()]))
     Assert.deepEqual(R, ExtendsResult.False)
   })
+
+  it('Should extend Record', () => {
+    type T = Promise<any> extends Record<number, any> ? 1 : 2
+    const R = Extends.Check(Type.Promise(Type.Any()), Type.Record(Type.Number(), Type.Any()))
+    Assert.deepEqual(R, ExtendsResult.False)
+  })
+
   it('Should extend Object 1', () => {
     type T = Promise<any> extends {} ? 1 : 2
     const R = Extends.Check(Type.Promise(Type.Any()), Type.Object({}, { additionalProperties: false }))

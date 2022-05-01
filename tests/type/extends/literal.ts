@@ -242,11 +242,31 @@ describe('type/extends/Literal', () => {
     const R = Extends.Check(Type.Literal(true), Type.Array(Type.Any()))
     Assert.deepEqual(R, ExtendsResult.False)
   })
+
   it('Should extend Tuple (Boolean)', () => {
     type T = true extends [number, number] ? 1 : 2
     const R = Extends.Check(Type.Literal(true), Type.Tuple([Type.Number(), Type.Number()]))
     Assert.deepEqual(R, ExtendsResult.False)
   })
+
+  it('Should extend Record 1', () => {
+    type T = 'hello' extends Record<number, any> ? 1 : 2
+    const R = Extends.Check(Type.Literal('hello'), Type.Record(Type.Number(), Type.Any()))
+    Assert.deepEqual(R, ExtendsResult.True)
+  })
+
+  it('Should extend Record 2', () => {
+    type T = 10 extends Record<number, any> ? 1 : 2
+    const R = Extends.Check(Type.Literal(10), Type.Record(Type.Number(), Type.Any()))
+    Assert.deepEqual(R, ExtendsResult.False)
+  })
+
+  it('Should extend Record 3', () => {
+    type T = true extends Record<number, any> ? 1 : 2
+    const R = Extends.Check(Type.Literal(true), Type.Record(Type.Number(), Type.Any()))
+    Assert.deepEqual(R, ExtendsResult.False)
+  })
+
   it('Should extend Object 1 (Boolean)', () => {
     type T = true extends {} ? 1 : 2
     const R = Extends.Check(Type.Literal(true), Type.Object({}, { additionalProperties: false }))

@@ -44,6 +44,12 @@ describe('type/extends/Boolean', () => {
     Assert.deepEqual(R, ExtendsResult.False)
   })
 
+  it('Should extend Record', () => {
+    type T = boolean extends Record<number, any> ? 1 : 2
+    const R = Extends.Check(Type.Number(), Type.Record(Type.Number(), Type.Any()))
+    Assert.deepEqual(R, ExtendsResult.False)
+  })
+
   it('Should extend Object 1', () => {
     type T = boolean extends {} ? 1 : 2
     const R = Extends.Check(Type.Boolean(), Type.Object({}, { additionalProperties: false }))

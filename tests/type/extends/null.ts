@@ -50,6 +50,12 @@ describe('type/extends/Null', () => {
     Assert.deepEqual(R, ExtendsResult.False)
   })
 
+  it('Should extend Record', () => {
+    type T = null extends Record<number, any> ? 1 : 2
+    const R = Extends.Check(Type.Null(), Type.Record(Type.Number(), Type.Any()))
+    Assert.deepEqual(R, ExtendsResult.False)
+  })
+
   it('Should extend Object 1', () => {
     type T = null extends {} ? 1 : 2
     const R = Extends.Check(Type.Null(), Type.Object({}, { additionalProperties: false }))
