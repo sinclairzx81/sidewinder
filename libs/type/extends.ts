@@ -39,35 +39,54 @@ export namespace Extends {
   const referenceMap = new Map<string, Types.TAnySchema>()
 
   // ----------------------------------------------------------------------
-  // Record and Property Extract
+  // Records
   // ----------------------------------------------------------------------
 
   function RecordPattern<T extends Types.TRecord>(schema: T) {
     return globalThis.Object.keys(schema.patternProperties)[0] as string
   }
 
-  function RecordSchema<T extends Types.TRecord>(schema: T) {
+  function RecordNumberOrStringKey<T extends Types.TRecord>(schema: T) {
+    const pattern = RecordPattern(schema)
+    return pattern === '^.*$' || pattern === '^(0|[1-9][0-9]*)$'
+  }
+
+  export function RecordKey<T extends Types.TRecord>(schema: T) {
+    const pattern = RecordPattern(schema)
+    if (pattern === '^.*$') {
+      return Types.Type.String()
+    } else if (pattern === '^(0|[1-9][0-9]*)$') {
+      return Types.Type.Number()
+    } else {
+      const keys = pattern.slice(1, pattern.length - 1).split('|')
+      const schemas = keys.map((key) => (isNaN(+key) ? Types.Type.Literal(key) : Types.Type.Literal(parseFloat(key))))
+      return Types.Type.Union(schemas)
+    }
+  }
+
+  function RecordValue<T extends Types.TRecord>(schema: T) {
     const pattern = RecordPattern(schema)
     return schema.patternProperties[pattern] as Types.TSchema
   }
 
-  function RecordConstrained<T extends Types.TRecord>(schema: T) {
-    const pattern = RecordPattern(schema)
-    return !(pattern === '^.*$' || pattern === '^(0|[1-9][0-9]*)$')
-  }
-
-  export function ExtractProperties<T extends Types.TObject | Types.TRecord>(schema: T) {
-    const map = new Map<string, Types.TSchema>()
+  function PropertyMap<T extends Types.TAnySchema>(schema: T) {
+    const comparable = new Map<string, Types.TSchema>()
     if (schema[Types.Kind] === 'Record') {
-      if (!RecordConstrained(schema as Types.TRecord)) throw Error('Cannot extract record properties without property constraints')
-      const propertyPattern = globalThis.Object.keys(schema.patternProperties)[0] as string
+      const propertyPattern = RecordPattern(schema as Types.TRecord)
+      if (propertyPattern === '^.*$' || propertyPattern === '^(0|[1-9][0-9]*)$') throw Error('Cannot extract record properties without property constraints')
       const propertySchema = schema.patternProperties[propertyPattern] as Types.TSchema
       const propertyKeys = propertyPattern.slice(1, propertyPattern.length - 1).split('|')
-      propertyKeys.forEach((propertyKey) => map.set(propertyKey, propertySchema))
+      propertyKeys.forEach((propertyKey) => {
+        comparable.set(propertyKey, propertySchema)
+      })
+    } else if (schema[Types.Kind] === 'Object') {
+      globalThis.Object.entries(schema.properties).forEach(([propertyKey, propertySchema]) => {
+        comparable.set(propertyKey, propertySchema as Types.TSchema)
+      })
     } else {
-      globalThis.Object.entries(schema.properties).forEach(([propertyKey, propertySchema]) => map.set(propertyKey, propertySchema as Types.TSchema))
+      throw Error(`Cannot create property map from '${schema[Types.Kind]}' types`)
     }
-    return map
+    return comparable
   }
 
   // ----------------------------------------------------------------------
@@ -82,7 +101,7 @@ export namespace Extends {
     return false
   }
 
-  function PrimitiveWithObjectRightRule<Left extends Types.TAnySchema, Right extends Types.TAnySchema>(left: Left, right: Right) {
+  function ObjectRightRule<Left extends Types.TAnySchema, Right extends Types.TAnySchema>(left: Left, right: Right) {
     // type A = boolean extends {}     ? 1 : 2 // additionalProperties: false
     // type B = boolean extends object ? 1 : 2 // additionalProperties: true
     const additionalProperties = right.additionalProperties
@@ -123,7 +142,19 @@ export namespace Extends {
       return result ? ExtendsResult.True : ExtendsResult.False
     }
   }
-
+  function Boolean<Left extends Types.TAnySchema, Right extends Types.TAnySchema>(left: Left, right: Right): ExtendsResult {
+    if (AnyOrUnknownRule(right)) {
+      return ExtendsResult.True
+    } else if (right[Types.Kind] === 'Object' && ObjectRightRule(left, right)) {
+      return ExtendsResult.True
+    } else if (right[Types.Kind] === 'Boolean') {
+      return ExtendsResult.True
+    } else if (right[Types.Kind] === 'Union') {
+      return UnionRightRule(left, right)
+    } else {
+      return ExtendsResult.False
+    }
+  }
   function Constructor<Left extends Types.TAnySchema, Right extends Types.TAnySchema>(left: Left, right: Right): ExtendsResult {
     if (AnyOrUnknownRule(right)) {
       return ExtendsResult.True
@@ -175,7 +206,7 @@ export namespace Extends {
   function Integer<Left extends Types.TAnySchema, Right extends Types.TAnySchema>(left: Left, right: Right): ExtendsResult {
     if (AnyOrUnknownRule(right)) {
       return ExtendsResult.True
-    } else if (right[Types.Kind] === 'Object' && PrimitiveWithObjectRightRule(left, right)) {
+    } else if (right[Types.Kind] === 'Object' && ObjectRightRule(left, right)) {
       return ExtendsResult.True
     } else if (right[Types.Kind] === 'Number') {
       return ExtendsResult.True
@@ -189,7 +220,7 @@ export namespace Extends {
   function Literal<Left extends Types.TAnySchema, Right extends Types.TAnySchema>(left: Left, right: Right): ExtendsResult {
     if (AnyOrUnknownRule(right)) {
       return ExtendsResult.True
-    } else if (right[Types.Kind] === 'Object' && PrimitiveWithObjectRightRule(left, right)) {
+    } else if (right[Types.Kind] === 'Object' && ObjectRightRule(left, right)) {
       return ExtendsResult.True
     } else if (right[Types.Kind] === 'Literal' && left.const === right.const) {
       return ExtendsResult.True
@@ -209,7 +240,7 @@ export namespace Extends {
   function Number<Left extends Types.TAnySchema, Right extends Types.TAnySchema>(left: Left, right: Right): ExtendsResult {
     if (AnyOrUnknownRule(right)) {
       return ExtendsResult.True
-    } else if (right[Types.Kind] === 'Object' && PrimitiveWithObjectRightRule(left, right)) {
+    } else if (right[Types.Kind] === 'Object' && ObjectRightRule(left, right)) {
       return ExtendsResult.True
     } else if (right[Types.Kind] === 'Number') {
       return ExtendsResult.True
@@ -232,14 +263,12 @@ export namespace Extends {
     }
   }
 
-  function PropertiesOf<Left extends Types.TAnySchema, Right extends Types.TAnySchema>(left: Left, right: Right) {
-    const leftMap = ExtractProperties(left as Types.TObject)
-    const rightMap = ExtractProperties(right as Types.TObject)
-    if (rightMap.size > leftMap.size) return ExtendsResult.False
-    if (![...rightMap.keys()].every((rightKey) => leftMap.has(rightKey))) return ExtendsResult.False
-    for (const rightKey of rightMap.keys()) {
-      const leftProp = leftMap.get(rightKey)!
-      const rightProp = rightMap.get(rightKey)!
+  function Properties(left: Map<string, Types.TSchema>, right: Map<string, Types.TSchema>) {
+    if (right.size > left.size) return ExtendsResult.False
+    if (![...right.keys()].every((rightKey) => left.has(rightKey))) return ExtendsResult.False
+    for (const rightKey of right.keys()) {
+      const leftProp = left.get(rightKey)!
+      const rightProp = right.get(rightKey)!
       if (Extends(leftProp, rightProp) === ExtendsResult.False) {
         return ExtendsResult.False
       }
@@ -251,9 +280,13 @@ export namespace Extends {
     if (AnyOrUnknownRule(right)) {
       return ExtendsResult.True
     } else if (right[Types.Kind] === 'Object') {
-      return PropertiesOf(left, right)
-    } else if (right[Types.Kind] === 'Record' && RecordConstrained(right as Types.TRecord)) {
-      return PropertiesOf(left, right)
+      return Properties(PropertyMap(left), PropertyMap(right))
+    } else if (right[Types.Kind] === 'Record') {
+      if (!RecordNumberOrStringKey(right as Types.TRecord)) {
+        return Properties(PropertyMap(left), PropertyMap(right))
+      } else {
+        return ExtendsResult.False
+      }
     } else {
       return ExtendsResult.False
     }
@@ -263,7 +296,7 @@ export namespace Extends {
     if (AnyOrUnknownRule(right)) {
       return ExtendsResult.True
     } else if (right[Types.Kind] === 'Object') {
-      if (PrimitiveWithObjectRightRule(left, right) || globalThis.Object.keys(right.properties).length === 0) {
+      if (ObjectRightRule(left, right) || globalThis.Object.keys(right.properties).length === 0) {
         return ExtendsResult.True
       } else {
         return ExtendsResult.False
@@ -289,47 +322,29 @@ export namespace Extends {
     }
   }
 
-  function Undefined<Left extends Types.TAnySchema, Right extends Types.TAnySchema>(left: Left, right: Right): ExtendsResult {
-    if (AnyOrUnknownRule(right)) {
-      return ExtendsResult.True
-    } else if (right[Types.Kind] === 'Undefined') {
-      return ExtendsResult.True
-    } else if (right[Types.Kind] === 'Union') {
-      return UnionRightRule(left, right)
-    } else {
-      return ExtendsResult.False
-    }
-  }
-
-  function Boolean<Left extends Types.TAnySchema, Right extends Types.TAnySchema>(left: Left, right: Right): ExtendsResult {
-    if (AnyOrUnknownRule(right)) {
-      return ExtendsResult.True
-    } else if (right[Types.Kind] === 'Object' && PrimitiveWithObjectRightRule(left, right)) {
-      return ExtendsResult.True
-    } else if (right[Types.Kind] === 'Boolean') {
-      return ExtendsResult.True
-    } else if (right[Types.Kind] === 'Union') {
-      return UnionRightRule(left, right)
-    } else {
-      return ExtendsResult.False
-    }
-  }
-
   function Record<Left extends Types.TAnySchema, Right extends Types.TAnySchema>(left: Left, right: Right): ExtendsResult {
     if (AnyOrUnknownRule(right)) {
       return ExtendsResult.True
     } else if (right[Types.Kind] === 'Object') {
-      return PropertiesOf(left, right)
-    } else if (right[Types.Kind] === 'Record' && RecordConstrained(left as Types.TRecord) && RecordConstrained(right as Types.TRecord)) {
-      return PropertiesOf(left, right)
-    } else if (right[Types.Kind] === 'Record' && !RecordConstrained(left as Types.TRecord) && !RecordConstrained(right as Types.TRecord)) {
-      const leftSchema = RecordSchema(left as Types.TRecord)
-      const rightSchema = RecordSchema(right as Types.TRecord)
-      return Extends(leftSchema, rightSchema)
-    } else if (right[Types.Kind] === 'Record' && RecordConstrained(left as Types.TRecord) && !RecordConstrained(right as Types.TRecord)) {
-      const leftPattern = RecordPattern(left as Types.TRecord)
-      const rightPattern = RecordPattern(right as Types.TRecord)
-      return leftPattern === rightPattern ? ExtendsResult.True : ExtendsResult.False
+      if (!RecordNumberOrStringKey(left as Types.TRecord)) {
+        return Properties(PropertyMap(left), PropertyMap(right))
+      } else {
+        return globalThis.Object.keys(right.properties).length === 0 ? ExtendsResult.True : ExtendsResult.False
+      }
+    } else if (right[Types.Kind] === 'Record') {
+      if (!RecordNumberOrStringKey(left as Types.TRecord) && !RecordNumberOrStringKey(right as Types.TRecord)) {
+        return Properties(PropertyMap(left), PropertyMap(right))
+      } else if (RecordNumberOrStringKey(left as Types.TRecord) && !RecordNumberOrStringKey(right as Types.TRecord)) {
+        const leftKey = RecordKey(left as Types.TRecord)
+        const rightKey = RecordKey(right as Types.TRecord)
+        if (Extends(rightKey, leftKey) === ExtendsResult.False) {
+          return ExtendsResult.False
+        } else {
+          return ExtendsResult.True
+        }
+      } else {
+        return ExtendsResult.True
+      }
     } else {
       return ExtendsResult.False
     }
@@ -350,7 +365,7 @@ export namespace Extends {
   function String<Left extends Types.TAnySchema, Right extends Types.TAnySchema>(left: Left, right: Right): ExtendsResult {
     if (AnyOrUnknownRule(right)) {
       return ExtendsResult.True
-    } else if (right[Types.Kind] === 'Object' && PrimitiveWithObjectRightRule(left, right)) {
+    } else if (right[Types.Kind] === 'Object' && ObjectRightRule(left, right)) {
       return ExtendsResult.True
     } else if (right[Types.Kind] === 'String') {
       return ExtendsResult.True
@@ -365,7 +380,7 @@ export namespace Extends {
     if (AnyOrUnknownRule(right)) {
       return ExtendsResult.True
     } else if (right[Types.Kind] === 'Object') {
-      if (PrimitiveWithObjectRightRule(left, right) || globalThis.Object.keys(right.properties).length === 0) {
+      if (ObjectRightRule(left, right) || globalThis.Object.keys(right.properties).length === 0) {
         return ExtendsResult.True
       } else {
         return ExtendsResult.False
@@ -398,9 +413,21 @@ export namespace Extends {
   function Uint8Array<Left extends Types.TAnySchema, Right extends Types.TAnySchema>(left: Left, right: Right): ExtendsResult {
     if (AnyOrUnknownRule(right)) {
       return ExtendsResult.True
-    } else if (right[Types.Kind] === 'Object' && PrimitiveWithObjectRightRule(left, right)) {
+    } else if (right[Types.Kind] === 'Object' && ObjectRightRule(left, right)) {
       return ExtendsResult.True
     } else if (right[Types.Kind] === 'Uint8Array') {
+      return ExtendsResult.True
+    } else if (right[Types.Kind] === 'Union') {
+      return UnionRightRule(left, right)
+    } else {
+      return ExtendsResult.False
+    }
+  }
+
+  function Undefined<Left extends Types.TAnySchema, Right extends Types.TAnySchema>(left: Left, right: Right): ExtendsResult {
+    if (AnyOrUnknownRule(right)) {
+      return ExtendsResult.True
+    } else if (right[Types.Kind] === 'Undefined') {
       return ExtendsResult.True
     } else if (right[Types.Kind] === 'Union') {
       return UnionRightRule(left, right)
