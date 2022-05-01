@@ -34,9 +34,34 @@ export enum ExtendsResult {
   False,
 }
 
-/** Tests if one type structurally extends another  */
+/** Tests if one type structurally extends another based on 4.6.3 extends rules */
 export namespace Extends {
   const referenceMap = new Map<string, Types.TAnySchema>()
+
+  // ----------------------------------------------------------------------
+  // Rules
+  // ----------------------------------------------------------------------
+
+  function AnyOrUnknownRule<Right extends Types.TAnySchema>(right: Right) {
+    // https://github.com/microsoft/TypeScript/issues/40049
+    if (right[Types.Kind] === 'Union' && right.anyOf.some((schema: Types.TSchema) => schema[Types.Kind] === 'Any' || schema[Types.Kind] === 'Unknown')) return true
+    if (right[Types.Kind] === 'Unknown') return true
+    if (right[Types.Kind] === 'Any') return true
+    return false
+  }
+
+  function ObjectRightRule<Left extends Types.TAnySchema, Right extends Types.TAnySchema>(left: Left, right: Right) {
+    // type A = boolean extends {}     ? 1 : 2 // additionalProperties: false
+    // type B = boolean extends object ? 1 : 2 // additionalProperties: true
+    const additionalProperties = right.additionalProperties
+    const propertyLength = globalThis.Object.keys(right.properties).length
+    return additionalProperties === false && propertyLength === 0
+  }
+
+  function UnionRightRule<Left extends Types.TAnySchema, Right extends Types.TAnySchema>(left: Left, right: Right): ExtendsResult {
+    const result = right.anyOf.some((right: Types.TSchema) => Extends(left, right) !== ExtendsResult.False)
+    return result ? ExtendsResult.True : ExtendsResult.False
+  }
 
   // ----------------------------------------------------------------------
   // Records
@@ -64,11 +89,6 @@ export namespace Extends {
     }
   }
 
-  function RecordValue<T extends Types.TRecord>(schema: T) {
-    const pattern = RecordPattern(schema)
-    return schema.patternProperties[pattern] as Types.TSchema
-  }
-
   function PropertyMap<T extends Types.TAnySchema>(schema: T) {
     const comparable = new Map<string, Types.TSchema>()
     if (schema[Types.Kind] === 'Record') {
@@ -87,31 +107,6 @@ export namespace Extends {
       throw Error(`Cannot create property map from '${schema[Types.Kind]}' types`)
     }
     return comparable
-  }
-
-  // ----------------------------------------------------------------------
-  // Rules
-  // ----------------------------------------------------------------------
-
-  function AnyOrUnknownRule<Right extends Types.TAnySchema>(right: Right) {
-    // https://github.com/microsoft/TypeScript/issues/48871
-    if (right[Types.Kind] === 'Union' && right.anyOf.some((schema: Types.TSchema) => schema[Types.Kind] === 'Any' || schema[Types.Kind] === 'Unknown')) return true
-    if (right[Types.Kind] === 'Unknown') return true
-    if (right[Types.Kind] === 'Any') return true
-    return false
-  }
-
-  function ObjectRightRule<Left extends Types.TAnySchema, Right extends Types.TAnySchema>(left: Left, right: Right) {
-    // type A = boolean extends {}     ? 1 : 2 // additionalProperties: false
-    // type B = boolean extends object ? 1 : 2 // additionalProperties: true
-    const additionalProperties = right.additionalProperties
-    const propertyLength = globalThis.Object.keys(right.properties).length
-    return additionalProperties === false && propertyLength === 0
-  }
-
-  function UnionRightRule<Left extends Types.TAnySchema, Right extends Types.TAnySchema>(left: Left, right: Right): ExtendsResult {
-    const result = right.anyOf.some((right: Types.TSchema) => Extends(left, right) !== ExtendsResult.False)
-    return result ? ExtendsResult.True : ExtendsResult.False
   }
 
   // ----------------------------------------------------------------------
@@ -285,7 +280,7 @@ export namespace Extends {
       if (!RecordNumberOrStringKey(right as Types.TRecord)) {
         return Properties(PropertyMap(left), PropertyMap(right))
       } else {
-        return ExtendsResult.False
+        return ExtendsResult.True
       }
     } else {
       return ExtendsResult.False

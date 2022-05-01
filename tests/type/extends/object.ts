@@ -2,6 +2,62 @@ import { Type, Extends, ExtendsResult } from '@sidewinder/type'
 import { Assert } from '../../assert/index'
 
 describe('type/extends/Object', () => {
+  // ----------------------------------------------------------
+  // Record
+  // ----------------------------------------------------------
+
+  it('Should extend Record 1', () => {
+    type T = { a: number; b: number } extends Record<'a' | 'b', number> ? 1 : 2
+    const A = Type.Object({ a: Type.Number(), b: Type.Number() })
+    const B = Type.Record(Type.Union([Type.Literal('a'), Type.Literal('b')]), Type.Number())
+    const R = Extends.Check(A, B)
+    Assert.deepEqual(R, ExtendsResult.True)
+  })
+
+  it('Should extend Record 2', () => {
+    type T = { a: number; b: number } extends Record<string, number> ? 1 : 2
+    const A = Type.Object({ a: Type.Number(), b: Type.Number() })
+    const B = Type.Record(Type.String(), Type.Number())
+    const R = Extends.Check(A, B)
+    Assert.deepEqual(R, ExtendsResult.True)
+  })
+
+  it('Should extend Record 3', () => {
+    type T = { a: number; b: number } extends Record<number, number> ? 1 : 2
+    const A = Type.Object({ a: Type.Number(), b: Type.Number() })
+    const B = Type.Record(Type.Number(), Type.Number())
+    const R = Extends.Check(A, B)
+    Assert.deepEqual(R, ExtendsResult.True)
+  })
+
+  it('Should extend Record 4', () => {
+    type T = { a: number; b: number } extends Record<'a' | 'b', number> ? 1 : 2
+    const A = Type.Object({ a: Type.Number(), b: Type.Number() })
+    const B = Type.Record(Type.Union([Type.Literal('a'), Type.Literal('b')]), Type.Number())
+    const R = Extends.Check(A, B)
+    Assert.deepEqual(R, ExtendsResult.True)
+  })
+
+  it('Should extend Record 5', () => {
+    type T = { a: number; b: number } extends Record<'a' | 'b', number> ? 1 : 2
+    const A = Type.Object({ a: Type.Number(), b: Type.Number() })
+    const B = Type.Record(Type.String(), Type.Number())
+    const R = Extends.Check(A, B)
+    Assert.deepEqual(R, ExtendsResult.True)
+  })
+
+  it('Should extend Record 6', () => {
+    type T = { a: number; b: number } extends Record<'a' | 'b', number> ? 1 : 2
+    const A = Type.Object({ a: Type.Number(), b: Type.Number() })
+    const B = Type.Record(Type.Number(), Type.Number())
+    const R = Extends.Check(A, B)
+    Assert.deepEqual(R, ExtendsResult.True)
+  })
+
+  // ----------------------------------------------------------
+  // Standard
+  // ----------------------------------------------------------
+
   it('Should extend Any', () => {
     type T = { a: number } extends any ? 1 : 2
     const R = Extends.Check(Type.Object({ a: Type.Number() }), Type.Any())
