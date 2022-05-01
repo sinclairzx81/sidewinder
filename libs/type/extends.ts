@@ -224,6 +224,8 @@ export namespace Extends {
       return ExtendsResult.True
     } else if (right[Types.Kind] === 'Object' && ObjectRightRule(left, right)) {
       return ExtendsResult.True
+    } else if (right[Types.Kind] === 'Integer') {
+      return ExtendsResult.True
     } else if (right[Types.Kind] === 'Number') {
       return ExtendsResult.True
     } else if (right[Types.Kind] === 'Union') {
@@ -250,6 +252,8 @@ export namespace Extends {
       return ExtendsResult.True
     } else if (right[Types.Kind] === 'Number' && typeof left.const === 'number') {
       return ExtendsResult.True
+    } else if (right[Types.Kind] === 'Integer' && typeof left.const === 'number') {
+      return ExtendsResult.True
     } else if (right[Types.Kind] === 'Boolean' && typeof left.const === 'boolean') {
       return ExtendsResult.True
     } else if (right[Types.Kind] === 'Union') {
@@ -265,6 +269,8 @@ export namespace Extends {
     } else if (right[Types.Kind] === 'Object' && ObjectRightRule(left, right)) {
       return ExtendsResult.True
     } else if (right[Types.Kind] === 'Number') {
+      return ExtendsResult.True
+    } else if (right[Types.Kind] === 'Integer') {
       return ExtendsResult.True
     } else if (right[Types.Kind] === 'Union') {
       return UnionRightRule(left, right)

@@ -97,6 +97,16 @@ export namespace CreateValue {
     }
   }
 
+  function Integer(schema: Types.TNumber): any {
+    if (schema.default !== undefined) {
+      return schema.default
+    } else if (schema.minimum !== undefined) {
+      return schema.minimum
+    } else {
+      return 0
+    }
+  }
+
   function Intersect(schema: Types.TIntersect): any {
     if (schema.default !== undefined) {
       return schema.default
@@ -264,6 +274,8 @@ export namespace CreateValue {
         return Enum(anySchema)
       case 'Function':
         return Function(anySchema)
+      case 'Integer':
+        return Integer(anySchema)
       case 'Intersect':
         return Intersect(anySchema)
       case 'Literal':

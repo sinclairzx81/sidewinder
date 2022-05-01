@@ -63,6 +63,10 @@ export namespace CheckValue {
     return typeof value === 'function'
   }
 
+  function Integer(schema: Types.TNumeric, value: any): boolean {
+    return typeof value === 'number' && globalThis.Number.isInteger(value)
+  }
+
   function Intersect(schema: Types.TIntersect, value: any): boolean {
     return Object(schema, value)
   }
@@ -76,13 +80,7 @@ export namespace CheckValue {
   }
 
   function Number(schema: Types.TNumeric, value: any): boolean {
-    if (typeof value !== 'number') {
-      return false
-    } else if (schema.type === 'integer') {
-      return typeof value === 'number' && globalThis.Number.isInteger(value)
-    } else {
-      return typeof value === 'number'
-    }
+    return typeof value === 'number'
   }
 
   function Object(schema: Types.TObject, value: any): boolean {
@@ -173,6 +171,8 @@ export namespace CheckValue {
         return Enum(anySchema, value)
       case 'Function':
         return Function(anySchema, value)
+      case 'Integer':
+        return Integer(anySchema, value)
       case 'Intersect':
         return Intersect(anySchema, value)
       case 'Literal':

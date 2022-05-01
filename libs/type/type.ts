@@ -51,6 +51,28 @@ export type TReadonlyOptional<T extends TSchema> = T & { [Modifier]: 'ReadonlyOp
 // Schema
 // --------------------------------------------------------------------------
 
+export interface SchemaOptions {
+  $schema?: string
+  $id?: string
+  title?: string
+  description?: string
+  default?: any
+  examples?: any
+  design?: any
+  [prop: string]: any
+}
+
+export interface TSchema extends SchemaOptions {
+  [Kind]: string
+  [Modifier]?: string
+  params: unknown[]
+  static: unknown
+}
+
+// --------------------------------------------------------------------------
+// TAnySchema
+// --------------------------------------------------------------------------
+
 export type TAnySchema =
   | TSchema
   | TAny
@@ -76,24 +98,6 @@ export type TAnySchema =
   | TUnknown
   | TVoid
 
-export interface SchemaOptions {
-  $schema?: string
-  $id?: string
-  title?: string
-  description?: string
-  default?: any
-  examples?: any
-  design?: any
-  [prop: string]: any
-}
-
-export interface TSchema extends SchemaOptions {
-  [Kind]: string
-  [Modifier]?: string
-  params: unknown[]
-  static: unknown
-}
-
 // --------------------------------------------------------------------------
 // TNumeric
 // --------------------------------------------------------------------------
@@ -106,11 +110,7 @@ export interface NumericOptions extends SchemaOptions {
   multipleOf?: number
 }
 
-export interface TNumeric extends TSchema, NumericOptions {
-  [Kind]: 'Number'
-  static: number
-  type: string
-}
+export type TNumeric = TInteger | TNumber
 
 // --------------------------------------------------------------------------
 // Any
@@ -219,8 +219,8 @@ export interface TFunction<T extends readonly TSchema[] = TSchema[], U extends T
 // Integer
 // --------------------------------------------------------------------------
 
-export interface TInteger extends TNumeric, NumericOptions {
-  [Kind]: 'Number'
+export interface TInteger extends TSchema, NumericOptions {
+  [Kind]: 'Integer'
   static: number
   type: 'integer'
 }
@@ -274,7 +274,7 @@ export interface TNull extends TSchema {
 // Number
 // --------------------------------------------------------------------------
 
-export interface TNumber extends TNumeric, NumericOptions {
+export interface TNumber extends TSchema, NumericOptions {
   [Kind]: 'Number'
   static: number
   type: 'number'
@@ -620,7 +620,7 @@ export class TypeBuilder {
 
   /** Creates a integer type */
   public Integer(options: NumericOptions = {}): TInteger {
-    return this.Create({ ...options, [Kind]: 'Number', type: 'integer' })
+    return this.Create({ ...options, [Kind]: 'Integer', type: 'integer' })
   }
 
   /** Creates a intersect type. */
