@@ -30,6 +30,7 @@ import * as Types from '@sidewinder/type'
 
 export namespace CreateValue {
   const referenceMap = new Map<string, Types.TSchema>()
+  let recursionDepth = 0
 
   function Any(schema: Types.TAny): any {
     if (schema.default !== undefined) {
@@ -254,7 +255,6 @@ export namespace CreateValue {
     return null
   }
 
-  let recursionDepth = 0
   /** Creates a value from the given schema. If the schema specifies a default value, then that value is returned. */
   export function Visit<T extends Types.TSchema>(schema: T): Types.Static<T> {
     recursionDepth += 1
@@ -314,8 +314,10 @@ export namespace CreateValue {
         throw Error(`Unknown schema kind '${schema[Types.Kind]}'`)
     }
   }
+
   /** Creates a value from the given schema. If the schema specifies a default value, then that value is returned. */
   export function Create<T extends Types.TSchema>(schema: T): Types.Static<T> {
+    recursionDepth = 0
     return Visit(schema)
   }
 }
