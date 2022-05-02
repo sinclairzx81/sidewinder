@@ -112,13 +112,24 @@ export interface ReadonlyMap<K extends string> {
  * type only provides access to the requests headers and querystring parameters.
  */
 export class Request {
+  private readonly internalIpAddress: string
   private readonly internalHeaders: Map<string, string>
   private readonly internalQuery: Map<string, string>
+
   constructor(request: IncomingMessage) {
-    this.internalHeaders = new Map<string, string>()
-    this.internalQuery = new Map<string, string>()
-    this.readHeaders(request)
-    this.readQuery(request)
+    this.internalIpAddress = this.readIpAddress(request)
+    this.internalHeaders = this.readHeaders(request)
+    this.internalQuery = this.readQuery(request)
+  }
+
+  /**
+   * Gets the ip address associated with this request. This address will either
+   * be the raw socket remoteAddress, or in the instance of a load balancer, the
+   * x-forwarded-for address. If no address can be resolved, then this function
+   * returns 0.0.0.0.
+   */
+  public get ipAddress(): string {
+    return this.internalIpAddress
   }
 
   /** Gets the http headers for this request */
@@ -131,36 +142,55 @@ export class Request {
     return this.internalQuery
   }
 
-  private readHeaders(request: IncomingMessage) {
-    for (const [key, value] of Object.entries(request.headers)) {
-      if (value === null || value === undefined) {
-        this.internalHeaders.set(key, '')
-      } else if (typeof value === 'string') {
-        this.internalHeaders.set(key, value)
-      } else if (Array.isArray(value)) {
-        this.internalHeaders.set(key, value.join(', '))
-      } else {
-        /** ignore */
-      }
+  private readIpAddress(request: IncomingMessage) {
+    if (request.headers['x-forwarded-for'] !== undefined) {
+      const forwarded = request.headers['x-forwarded-for'] as string
+      return forwarded.trim()
+    } else if (request.socket.remoteAddress !== undefined) {
+      return request.socket.remoteAddress
+    } else {
+      return '0.0.0.0'
     }
   }
 
-  private readQuery(request: IncomingMessage) {
-    if (request.url === undefined) return
-    const qindex = request.url.indexOf('?')
-    if (qindex === -1 || qindex === request.url.length - 1) return
-    const qstring = request.url.slice(qindex + 1)
-    for (const [key, value] of Object.entries(this.parseUrl(qstring))) {
+  private readHeaders(request: IncomingMessage) {
+    const map = new Map<string, string>()
+    for (const [key, value] of Object.entries(request.headers)) {
       if (value === null || value === undefined) {
-        this.internalQuery.set(key, '')
+        map.set(key, '')
       } else if (typeof value === 'string') {
-        this.internalQuery.set(key, value)
+        map.set(key, value)
       } else if (Array.isArray(value)) {
-        this.internalQuery.set(key, value.join(', '))
+        map.set(key, value.join(', '))
       } else {
         /** ignore */
       }
     }
+    return map
+  }
+
+  private readQuery(request: IncomingMessage) {
+    const map = new Map<string, string>()
+    if (request.url === undefined) {
+      return map
+    }
+    const qindex = request.url.indexOf('?')
+    if (qindex === -1 || qindex === request.url.length - 1) {
+      return map
+    }
+    const qstring = request.url.slice(qindex + 1)
+    for (const [key, value] of Object.entries(this.parseUrl(qstring))) {
+      if (value === null || value === undefined) {
+        map.set(key, '')
+      } else if (typeof value === 'string') {
+        map.set(key, value)
+      } else if (Array.isArray(value)) {
+        map.set(key, value.join(', '))
+      } else {
+        /** ignore */
+      }
+    }
+    return map
   }
 
   private parseUrl(url: string): object {
