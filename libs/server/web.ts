@@ -382,6 +382,7 @@ export class WebService<Contract extends TContract, Context extends TSchema = TS
     await this.onConnectCallback(rpcContextResult.value())
     const executeResult = await this.executeRpcRequest(rpcContextResult.value(), rpcRequestResult.value())
     if (!executeResult.ok()) {
+      this.dispatchError(clientId, executeResult.error())
       await this.writeExecuteError(clientId, response, rpcRequestResult.value(), executeResult.error())
       await this.onCloseCallback(rpcContextResult.value())
     } else {

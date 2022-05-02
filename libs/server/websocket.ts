@@ -223,6 +223,14 @@ export class WebSocketService<Contract extends TContract, Context extends TSchem
   // Request
   // -------------------------------------------------------------------------------------------
 
+  private async dispatchError(clientId: string, error: Error) {
+    try {
+      await this.onErrorCallback(clientId, error)
+    } catch {
+      /* ignore */
+    }
+  }
+
   private async sendResponseWithResult(socket: WebSocket, rpcRequest: RpcRequest, result: unknown) {
     if (rpcRequest.id === undefined || rpcRequest.id === null) return
     const response = RpcProtocol.encodeResult(rpcRequest.id, result)
@@ -252,6 +260,7 @@ export class WebSocketService<Contract extends TContract, Context extends TSchem
       const result = await this.methods.execute(context, rpcRequest.method, rpcRequest.params)
       await this.sendResponseWithResult(socket, rpcRequest, result)
     } catch (error) {
+      this.dispatchError(clientId, error as Error)
       await this.sendResponseWithError(socket, rpcRequest, error as Error)
     }
   }
