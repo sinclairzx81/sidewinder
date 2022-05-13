@@ -117,7 +117,7 @@ export class RestService extends HttpService {
   public put(...args: any[]) {
     return this.createRoute(...(['put', ...args] as [string, string, RestMiddleware[], RestCallback]))
   }
-  
+
   /** Creates a route */
   private createRoute(...args: any[]): this {
     this.routes.push(
@@ -146,7 +146,7 @@ export class RestService extends HttpService {
       await restResponse.text('Not found')
     })
   }
-
+  
   /** Handles an incoming HTTP request. If the request was unhandled it is deferred to the `next` handler. */
   private handler(clientId: string, request: IncomingMessage, response: ServerResponse, next: RestMiddlewareNextFunction) {
     // Resolve route from request and defer to 'next' if the route cannot be found.
@@ -158,9 +158,7 @@ export class RestService extends HttpService {
     const restResponse = new RestResponse(response)
     this.executeRoute([...this.middleware, ...route.middleware], restRequest, restResponse, async (requestRequest, restResponse) => {
       try {
-        console.log('before')
         await route.callback(requestRequest, restResponse)
-        console.log('after')
       } catch (error) {
         this.onErrorCallback(clientId, error)
         await restResponse.status(500).text('Internal Server Error')
