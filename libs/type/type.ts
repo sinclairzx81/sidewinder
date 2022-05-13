@@ -26,8 +26,6 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-import { Extends, ExtendsResult } from './extends'
-
 // --------------------------------------------------------------------------
 // Symbols
 // --------------------------------------------------------------------------
@@ -581,36 +579,6 @@ export class TypeBuilder {
       .map((key) => item[key]) as T[keyof T][]
     const anyOf = values.map((value) => (typeof value === 'string' ? { type: 'string' as const, const: value } : { type: 'number' as const, const: value }))
     return this.Create({ ...options, [Kind]: 'Enum', anyOf })
-  }
-
-  /** Constructs a type by excluding from UnionType all union members that are assignable to ExcludedMembers */
-  public Exclude<T extends TUnion, U extends TUnion>(unionType: T, excludedMembers: U, options: SchemaOptions = {}): TExclude<T, U> {
-    const anyOf = unionType.anyOf.filter((schema: TSchema) => !Extends.Check(schema, excludedMembers)).map((schema) => this.Clone(schema))
-    return this.Create({ ...options, [Kind]: 'Union', anyOf })
-  }
-
-  /** Constructs a type by extracting from Type all union members that are assignable to Union. */
-  public Extract<T extends TSchema, U extends TUnion>(type: T, union: U, options: SchemaOptions = {}): TExtract<T, U> {
-    if (type[Kind] === 'Union') {
-      const anyOf = type.anyOf.filter((schema: TSchema) => Extends.Check(schema, union) === ExtendsResult.True).map((schema: TSchema) => this.Clone(schema))
-      return this.Create({ ...options, [Kind]: 'Union', anyOf })
-    } else {
-      const anyOf = union.anyOf.filter((schema) => Extends.Check(type, schema) === ExtendsResult.True).map((schema) => this.Clone(schema))
-      return this.Create({ ...options, [Kind]: 'Union', anyOf })
-    }
-  }
-
-  /** If left extends right, return True otherwise False */
-  public Extends<Left extends TSchema, Right extends TSchema, True extends TSchema, False extends TSchema>(left: Left, right: Right, x: True, y: False): TExtends<Left, Right, True, False> {
-    const result = Extends.Check(left, right)
-    switch (result) {
-      case ExtendsResult.Union:
-        return this.Union([this.Clone(x), this.Clone(y)]) as any as TExtends<Left, Right, True, False>
-      case ExtendsResult.True:
-        return this.Clone(x)
-      case ExtendsResult.False:
-        return this.Clone(y)
-    }
   }
 
   /** Creates a function type */

@@ -1,2 +1,1 @@
-import './extends'
 import './schemas'

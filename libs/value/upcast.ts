@@ -48,7 +48,7 @@ namespace UpcastUnionValue {
     if (schema[Types.Kind] === 'Object' && typeof value === 'object' && value !== null) {
       const objectSchema: Types.TObject = schema as any
       const entries = globalThis.Object.entries(objectSchema.properties)
-      score += entries.reduce((acc, [key, schema]) => acc + (CheckValue.Check(schema, value[key]) ? 1 : 0), 0)
+      score += entries.reduce((acc, [key, schema]) => acc + (CheckValue.Visit(schema, value[key]) ? 1 : 0), 0)
     }
     return score
   }
@@ -65,7 +65,7 @@ namespace UpcastUnionValue {
     return select
   }
   export function Create<T extends Types.TUnion<any[]>>(schema: T, value: any) {
-    return CheckValue.Check(schema, value) ? value : UpcastValue.Create(Select(schema, value), value)
+    return CheckValue.Visit(schema, value) ? value : UpcastValue.Create(Select(schema, value), value)
   }
 }
 
@@ -73,21 +73,21 @@ export namespace UpcastValue {
   const ids = new Map<string, Types.TObject>()
 
   function Any(schema: Types.TAny, value: any): any {
-    return CheckValue.Check(schema, value) ? value : CreateValue.Create(schema)
+    return CheckValue.Visit(schema, value) ? value : CreateValue.Create(schema)
   }
 
   function Array(schema: Types.TArray, value: any): any {
-    if (CheckValue.Check(schema, value)) return value
+    if (CheckValue.Visit(schema, value)) return value
     if (!globalThis.Array.isArray(value)) return CreateValue.Create(schema)
     return value.map((element: any) => Create(schema.items, element))
   }
 
   function Boolean(schema: Types.TBoolean, value: any): any {
-    return CheckValue.Check(schema, value) ? value : CreateValue.Create(schema)
+    return CheckValue.Visit(schema, value) ? value : CreateValue.Create(schema)
   }
 
   function Constructor(schema: Types.TConstructor, value: any): any {
-    if (CheckValue.Check(schema, value)) return CreateValue.Create(schema)
+    if (CheckValue.Visit(schema, value)) return CreateValue.Create(schema)
     const required = new Set(schema.returns.required || [])
     const result = function () {}
     for (const [key, property] of globalThis.Object.entries(schema.returns.properties)) {
@@ -98,15 +98,15 @@ export namespace UpcastValue {
   }
 
   function Enum(schema: Types.TEnum<any>, value: any): any {
-    return CheckValue.Check(schema, value) ? value : CreateValue.Create(schema)
+    return CheckValue.Visit(schema, value) ? value : CreateValue.Create(schema)
   }
 
   function Function(schema: Types.TFunction, value: any): any {
-    return CheckValue.Check(schema, value) ? value : CreateValue.Create(schema)
+    return CheckValue.Visit(schema, value) ? value : CreateValue.Create(schema)
   }
 
   function Integer(schema: Types.TInteger, value: any): any {
-    return CheckValue.Check(schema, value) ? value : CreateValue.Create(schema)
+    return CheckValue.Visit(schema, value) ? value : CreateValue.Create(schema)
   }
 
   function Intersect(schema: Types.TIntersect, value: any): any {
@@ -114,19 +114,19 @@ export namespace UpcastValue {
   }
 
   function Literal(schema: Types.TLiteral, value: any): any {
-    return CheckValue.Check(schema, value) ? value : CreateValue.Create(schema)
+    return CheckValue.Visit(schema, value) ? value : CreateValue.Create(schema)
   }
 
   function Null(schema: Types.TNull, value: any): any {
-    return CheckValue.Check(schema, value) ? value : CreateValue.Create(schema)
+    return CheckValue.Visit(schema, value) ? value : CreateValue.Create(schema)
   }
 
   function Number(schema: Types.TNumber, value: any): any {
-    return CheckValue.Check(schema, value) ? value : CreateValue.Create(schema)
+    return CheckValue.Visit(schema, value) ? value : CreateValue.Create(schema)
   }
 
   function Object(schema: Types.TObject, value: any): any {
-    if (CheckValue.Check(schema, value)) return value
+    if (CheckValue.Visit(schema, value)) return value
     if (value === null || typeof value !== 'object') return CreateValue.Create(schema)
     ids.set(schema.$id!, schema)
     const required = new Set(schema.required || [])
@@ -139,11 +139,11 @@ export namespace UpcastValue {
   }
 
   function Promise(schema: Types.TSchema, value: any): any {
-    return CheckValue.Check(schema, value) ? value : CreateValue.Create(schema)
+    return CheckValue.Visit(schema, value) ? value : CreateValue.Create(schema)
   }
 
   function Record(schema: Types.TRecord<any, any>, value: any): any {
-    if (CheckValue.Check(schema, value)) return value
+    if (CheckValue.Visit(schema, value)) return value
     if (value === null || typeof value !== 'object' || globalThis.Array.isArray(value)) return CreateValue.Create(schema)
     const subschemaKey = globalThis.Object.keys(schema.patternProperties)[0]
     const subschema = schema.patternProperties[subschemaKey]
@@ -168,18 +168,18 @@ export namespace UpcastValue {
   }
 
   function String(schema: Types.TString, value: any): any {
-    return CheckValue.Check(schema, value) ? value : CreateValue.Create(schema)
+    return CheckValue.Visit(schema, value) ? value : CreateValue.Create(schema)
   }
 
   function Tuple(schema: Types.TTuple<any[]>, value: any): any {
-    if (CheckValue.Check(schema, value)) return value
+    if (CheckValue.Visit(schema, value)) return value
     if (!globalThis.Array.isArray(value)) return CreateValue.Create(schema)
     if (schema.items === undefined) return []
     return schema.items.map((schema, index) => Create(schema, value[index]))
   }
 
   function Undefined(schema: Types.TUndefined, value: any): any {
-    return CheckValue.Check(schema, value) ? value : CreateValue.Create(schema)
+    return CheckValue.Visit(schema, value) ? value : CreateValue.Create(schema)
   }
 
   function Union(schema: Types.TUnion<any[]>, value: any): any {
@@ -187,15 +187,15 @@ export namespace UpcastValue {
   }
 
   function Uint8Array(schema: Types.TUint8Array, value: any): any {
-    return CheckValue.Check(schema, value) ? value : CreateValue.Create(schema)
+    return CheckValue.Visit(schema, value) ? value : CreateValue.Create(schema)
   }
 
   function Unknown(schema: Types.TUnknown, value: any): any {
-    return CheckValue.Check(schema, value) ? value : CreateValue.Create(schema)
+    return CheckValue.Visit(schema, value) ? value : CreateValue.Create(schema)
   }
 
   function Void(schema: Types.TVoid, value: any): any {
-    return CheckValue.Check(schema, value) ? value : CreateValue.Create(schema)
+    return CheckValue.Visit(schema, value) ? value : CreateValue.Create(schema)
   }
 
   export function Create<T extends Types.TSchema>(schema: T, value: any): Types.Static<T> {
