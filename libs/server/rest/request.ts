@@ -37,7 +37,7 @@ export class RestRequest {
   private readonly internalQuery: Map<string, string>
   private readonly internalParams: Map<string, string>
 
-  constructor(private readonly request: IncomingMessage, params: Record<string, string>) {
+  constructor(private readonly request: IncomingMessage, params: Record<string, string>, public readonly clientId: string) {
     this.internalIpAddress = this.readIpAddress(request)
     this.internalHeaders = this.readHeaders(request)
     this.internalQuery = this.readQuery(request)
@@ -91,6 +91,9 @@ export class RestRequest {
 
   /** Reads the body of this request as a Uint8Array */
   public async arrayBuffer(): Promise<Uint8Array> {
+    if (this.request.method?.toLowerCase() === 'get') {
+      throw new Error('Unable to read body from GET request')
+    }
     return new Promise<Uint8Array>((resolve, reject) => {
       const buffers: Uint8Array[] = []
       this.request.on('data', (buffer) => buffers.push(buffer))

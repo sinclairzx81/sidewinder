@@ -2,19 +2,31 @@ import { Host, RestService } from '@sidewinder/server'
 import { fetch } from '@sidewinder/web'
 
 export class Service extends RestService {
-    private index = super.get('/', (req, res) => {
+    private _error = super.event('error', (clientId, error) => {
+        console.log(clientId, error)
+    })
+
+    private index = super.get('/', async (req, res) => {
         res.html('<h1>hello world</h1>')
     })
+
     private _put = super.put('/', async (req, res) => {
+        console.log(req.clientId)
         res.text('put response')
     })
+
     private _post = super.post('/', async (req, res) => {
+        console.log(req.clientId)
         res.text('post response')
     })
+
     private _delete = super.delete('/', async (req, res) => {
+        console.log(req.clientId)
         res.text('delete response')
     })
+
     private _patch = super.patch('/', async (req, res) => {
+        console.log(req.clientId)
         res.text('patch response')
     })
 }

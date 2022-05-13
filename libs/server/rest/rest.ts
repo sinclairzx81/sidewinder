@@ -34,7 +34,7 @@ import { RestResponse } from './response'
 import { Pattern } from './pattern'
 
 export type RestMiddlewareVariant = RestMiddleware | RestMiddlewareFunction
-
+export type RestServiceErrorCallback = (clientId: string, error: unknown) => Promise<void> | void
 export type RestCallback = (request: RestRequest, response: RestResponse) => void
 
 export type RestRoute = {
@@ -45,12 +45,88 @@ export type RestRoute = {
 }
 
 export class RestService extends HttpService {
-  private readonly middleware: RestMiddleware[] = []
-  private readonly routes: RestRoute[] = []
+  private onErrorCallback: RestServiceErrorCallback
+  private readonly middleware: RestMiddleware[]
+  private readonly routes: RestRoute[]
   constructor() {
     super()
+    this.onErrorCallback = () => {}
+    this.middleware = []
+    this.routes = []
   }
 
+  /** Subscribes to error events. */
+  public event(event: 'error', callback: RestServiceErrorCallback): RestServiceErrorCallback
+
+  /** Subscribes to events */
+  public event(event: string, callback: (...args: any[]) => any): any {
+    switch (event) {
+      case 'error': {
+        this.onErrorCallback = callback
+        break
+      }
+      default:
+        throw Error(`Unknown event '${event}'`)
+    }
+    return callback
+  }
+
+  /** Creates a middleware function which is executed on all routes. */
+  public use(middleware: RestMiddlewareVariant): this
+  public use(middleware: any) {
+    this.middleware.push(this.normalizeMiddleware(middleware))
+    return this
+  }
+
+  /** Creates a http `get` route */
+  public get(pattern: string, middleware: RestMiddlewareVariant[], callback: RestCallback): this
+  /** Creates a http `get` route */
+  public get(pattern: string, callback: RestCallback): this
+  public get(...args: any[]) {
+    return this.createRoute(...(['get', ...args] as [string, string, RestMiddleware[], RestCallback]))
+  }
+
+  /** Creates a http `delete` route */
+  public delete(pattern: string, middleware: RestMiddlewareVariant[], handler: RestCallback): this
+  /** Creates a http `delete` route */
+  public delete(pattern: string, callback: RestCallback): this
+  public delete(...args: any[]) {
+    return this.createRoute(...(['delete', ...args] as [string, string, RestMiddleware[], RestCallback]))
+  }
+
+  /** Creates a http `patch` route */
+  public patch(pattern: string, middleware: RestMiddlewareVariant[], handler: RestCallback): this
+  /** Creates a http `patch` route */
+  public patch(pattern: string, callback: RestCallback): this
+  public patch(...args: any[]) {
+    return this.createRoute(...(['patch', ...args] as [string, string, RestMiddleware[], RestCallback]))
+  }
+
+  /** Creates a http `post` route */
+  public post(pattern: string, middleware: RestMiddlewareVariant[], handler: RestCallback): this
+  /** Creates a http `post` route */
+  public post(pattern: string, callback: RestCallback): this
+  public post(...args: any[]) {
+    return this.createRoute(...(['post', ...args] as [string, string, RestMiddleware[], RestCallback]))
+  }
+
+  /** Creates a http `put` route */
+  public put(pattern: string, middleware: RestMiddlewareVariant[], handler: RestCallback): this
+  /** Creates a http `put` route */
+  public put(pattern: string, callback: RestCallback): this
+  public put(...args: any[]) {
+    return this.createRoute(...(['put', ...args] as [string, string, RestMiddleware[], RestCallback]))
+  }
+
+  /** Creates a http `options` route */
+  public options(pattern: string, middleware: RestMiddlewareVariant[], handler: RestCallback): this
+  /** Creates a http `options` route */
+  public options(pattern: string, callback: RestCallback): this
+  public options(...args: any[]) {
+    return this.createRoute(...(['options', ...args] as [string, string, RestMiddleware[], RestCallback]))
+  }
+
+  /** Creates a route */
   private createRoute(...args: any[]): this {
     this.routes.push(
       args.length === 4
@@ -70,64 +146,9 @@ export class RestService extends HttpService {
     return this
   }
 
-  /** Specifies middleware common to all routes. */
-  public use(middleware: RestMiddlewareVariant): this
-  public use(middleware: any) {
-    this.middleware.push(this.normalizeMiddleware(middleware))
-    return this
-  }
-
-  /** Defines a http `get` route */
-  public get(pattern: string, middleware: RestMiddlewareVariant[], callback: RestCallback): this
-  /** Defines a http `get` route */
-  public get(pattern: string, callback: RestCallback): this
-  public get(...args: any[]) {
-    return this.createRoute(...(['get', ...args] as [string, string, RestMiddleware[], RestCallback]))
-  }
-
-  /** Defines a http `delete` route */
-  public delete(pattern: string, middleware: RestMiddlewareVariant[], handler: RestCallback): this
-  /** Defines a http `delete` route */
-  public delete(pattern: string, callback: RestCallback): this
-  public delete(...args: any[]) {
-    return this.createRoute(...(['delete', ...args] as [string, string, RestMiddleware[], RestCallback]))
-  }
-
-  /** Defines a http `patch` route */
-  public patch(pattern: string, middleware: RestMiddlewareVariant[], handler: RestCallback): this
-  /** Defines a http `patch` route */
-  public patch(pattern: string, callback: RestCallback): this
-  public patch(...args: any[]) {
-    return this.createRoute(...(['patch', ...args] as [string, string, RestMiddleware[], RestCallback]))
-  }
-
-  /** Defines a http `post` route */
-  public post(pattern: string, middleware: RestMiddlewareVariant[], handler: RestCallback): this
-  /** Defines a http `post` route */
-  public post(pattern: string, callback: RestCallback): this
-  public post(...args: any[]) {
-    return this.createRoute(...(['post', ...args] as [string, string, RestMiddleware[], RestCallback]))
-  }
-
-  /** Defines a http `put` route */
-  public put(pattern: string, middleware: RestMiddlewareVariant[], handler: RestCallback): this
-  /** Defines a http `put` route */
-  public put(pattern: string, callback: RestCallback): this
-  public put(...args: any[]) {
-    return this.createRoute(...(['put', ...args] as [string, string, RestMiddleware[], RestCallback]))
-  }
-
-  /** Defines a http `options` route */
-  public options(pattern: string, middleware: RestMiddlewareVariant[], handler: RestCallback): this
-  /** Defines a http `options` route */
-  public options(pattern: string, callback: RestCallback): this
-  public options(...args: any[]) {
-    return this.createRoute(...(['options', ...args] as [string, string, RestMiddleware[], RestCallback]))
-  }
-
   /** Accepts an incoming HTTP request and processes it as Rest method call. This method is called automatically by the Host. */
-  public async accept(_: string, req: IncomingMessage, res: ServerResponse) {
-    this.handler(req, res, async (_, restResponse) => {
+  public async accept(clientId: string, req: IncomingMessage, res: ServerResponse) {
+    this.handler(clientId, req, res, async (_, restResponse) => {
       restResponse.status(404)
       restResponse.headers({ 'Content-Type': 'text/plain' })
       await restResponse.text('Not found')
@@ -135,18 +156,21 @@ export class RestService extends HttpService {
   }
 
   /** Handles an incoming HTTP request. If the request was unhandled it is deferred to the `next` handler. */
-  private handler(request: IncomingMessage, response: ServerResponse, next: RestMiddlewareNextFunction) {
+  private handler(clientId: string, request: IncomingMessage, response: ServerResponse, next: RestMiddlewareNextFunction) {
     // Resolve route from request and defer to 'next' if the route cannot be found.
     const resolved = this.resolveRoute(request)
-    if (resolved === undefined) return next(new RestRequest(request, {}), new RestResponse(response))
+    if (resolved === undefined) return next(new RestRequest(request, {}, clientId), new RestResponse(response))
     // Execute middleware and route
     const [route, params] = resolved
-    const restRequest = new RestRequest(request, params)
+    const restRequest = new RestRequest(request, params, clientId)
     const restResponse = new RestResponse(response)
     this.executeRoute([...this.middleware, ...route.middleware], restRequest, restResponse, async (requestRequest, restResponse) => {
       try {
+        console.log('before')
         await route.callback(requestRequest, restResponse)
+        console.log('after')
       } catch (error) {
+        this.onErrorCallback(clientId, error)
         await restResponse.status(500).text('Internal Server Error')
       }
     })
