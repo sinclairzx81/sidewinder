@@ -117,15 +117,7 @@ export class RestService extends HttpService {
   public put(...args: any[]) {
     return this.createRoute(...(['put', ...args] as [string, string, RestMiddleware[], RestCallback]))
   }
-
-  /** Creates a http `options` route */
-  public options(pattern: string, middleware: RestMiddlewareVariant[], handler: RestCallback): this
-  /** Creates a http `options` route */
-  public options(pattern: string, callback: RestCallback): this
-  public options(...args: any[]) {
-    return this.createRoute(...(['options', ...args] as [string, string, RestMiddleware[], RestCallback]))
-  }
-
+  
   /** Creates a route */
   private createRoute(...args: any[]): this {
     this.routes.push(
