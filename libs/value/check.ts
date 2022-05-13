@@ -143,8 +143,8 @@ export namespace CheckValue {
   }
 
   function Union(schema: Types.TUnion<any[]>, value: any): boolean {
-    for(let i = 0; i < schema.anyOf.length; i++) {
-      if(Visit(schema.anyOf[i], value)) return true
+    for (let i = 0; i < schema.anyOf.length; i++) {
+      if (Visit(schema.anyOf[i], value)) return true
     }
     return false
   }
@@ -219,7 +219,7 @@ export namespace CheckValue {
   }
 
   export function Check<T extends Types.TSchema>(schema: T, value: any): boolean {
-    if(referenceMap.size > 0) referenceMap.clear()
+    if (referenceMap.size > 0) referenceMap.clear()
     return Visit(schema, value)
   }
 }
