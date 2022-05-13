@@ -26,11 +26,13 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-import { IncomingMessage, ServerResponse } from 'http'
+import { RestRequest } from './request'
+import { RestResponse } from './response'
 
-/** Raw Http Service. Accepts all Http requests for any Http method. */
-export class HttpService {
-  public accept(clientId: string, request: IncomingMessage, response: ServerResponse) {
-    response.end('HttpService: accept() method not implemented')
-  }
+export type RestMiddlewareNextFunction = (request: RestRequest, response: RestResponse) => void
+
+export type RestMiddlewareFunction = (request: RestRequest, response: RestResponse, next: RestMiddlewareNextFunction) => Promise<unknown> | unknown
+
+export interface RestMiddleware {
+  callback(request: RestRequest, response: RestResponse, next: RestMiddlewareNextFunction): Promise<unknown> | unknown
 }

@@ -29,11 +29,11 @@ THE SOFTWARE.
 import type { IncomingMessage, ServerResponse } from 'http'
 
 import { Exception, Static, Type, TSchema, TString, TContract, TFunction, AuthorizeFunction, AuthorizeFunctionReturnType, ContractMethodParamters, ContractMethodReturnType } from '@sidewinder/contract'
-import { Platform } from '@sidewinder/platform'
-import { Validator } from '@sidewinder/validator'
 import { ServiceMethods, RpcErrorCode, RpcProtocol, RpcRequest, RpcResponse } from './methods/index'
 import { Encoder, JsonEncoder, MsgPackEncoder } from './encoder/index'
-import { HttpService } from './http'
+import { Platform } from '@sidewinder/platform'
+import { Validator } from '@sidewinder/validator'
+import { HttpService } from '../http/http'
 import { Request } from './request'
 
 // --------------------------------------------------------------------------

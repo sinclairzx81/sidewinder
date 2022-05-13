@@ -26,8 +26,8 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-export * from '@sidewinder/contract'
-export * from './http/index'
-export * from './rest/index'
-export * from './rpc/index'
-export * from './host'
+export * from './encoder/index'
+export * from './methods/index'
+export * from './request'
+export * from './web'
+export * from './websocket'
