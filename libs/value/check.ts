@@ -81,10 +81,17 @@ export namespace CheckValue {
 
   function Object(schema: Types.TObject, value: any): boolean {
     if (typeof value !== 'object' || value === null) return false
-    for (const key in schema.properties) {
-      const propertySchema = schema.properties[key]
-      const propertyValue = value[key]
-      if (propertyValue === undefined && schema.required !== undefined && !schema.required.includes(key)) return true
+    const propertyKeys = globalThis.Object.keys(schema.properties)
+    if (schema.additionalProperties === false) {
+      const valueKeys = globalThis.Object.keys(value)
+      for (const valueKey of valueKeys) {
+        if (!propertyKeys.includes(valueKey)) return false
+      }
+    }
+    for (const propertyKey of propertyKeys) {
+      const propertySchema = schema.properties[propertyKey]
+      const propertyValue = value[propertyKey]
+      if (propertyValue === undefined && schema.required !== undefined && !schema.required.includes(propertyKey)) return true
       if (!Visit(propertySchema, propertyValue)) return false
     }
     return true
@@ -97,7 +104,7 @@ export namespace CheckValue {
   function Record(schema: Types.TRecord<any, any>, value: any): boolean {
     if (typeof value !== 'object' || value === null) return false
     const propertySchema = globalThis.Object.values(schema.patternProperties)[0]
-    for (const key in value) {
+    for (const key of globalThis.Object.keys(value)) {
       const propertyValue = value[key]
       if (!Visit(propertySchema, propertyValue)) return false
     }

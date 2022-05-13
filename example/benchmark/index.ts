@@ -63,8 +63,8 @@ const T = Type.Object({
         foo: Type.String(),
         num: Type.Number(),
         bool: Type.Boolean()
-    })
-})
+    }, { additionalProperties: false })
+}, { additionalProperties: false })
 
 const I = Value.Create(T)
 console.log(I, Value.Check(T, I))
@@ -72,7 +72,7 @@ console.log(I, Value.Check(T, I))
 function ajv() {
     const validator = new Validator(T)
     const start = Date.now()
-    for (let i = 0; i < 1_000_000; i++) {
+    for (let i = 0; i < 5_000_000; i++) {
         validator.check(I)
     }
     return Date.now() - start
@@ -80,7 +80,7 @@ function ajv() {
 
 function value() {
     const start = Date.now()
-    for (let i = 0; i < 1_000_000; i++) {
+    for (let i = 0; i < 5_000_000; i++) {
         const x = Value.Check(T, I)
         if (x === false) throw 1
     }
@@ -95,5 +95,5 @@ while(true) {
     console.log(Math.round((a / b) * 100), '%')
 }
 
-// const T = Type.Object({ x: Type.Number(), y: Type.Optional(Type.Number()) })
-// console.log(Value.Check(T, { x: 10 }))
+const S = Type.Object({ x: Type.Number() }, { additionalProperties: false })
+console.log(Value.Check(S, { x: 10, y: 10 }))

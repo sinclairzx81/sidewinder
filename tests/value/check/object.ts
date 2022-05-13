@@ -25,6 +25,25 @@ describe('value/check/Object', () => {
     Assert.equal(result, true)
   })
 
+  it('Should fail object with additional properties', () => {
+    const T = Type.Object(
+      {
+        x: Type.Number(),
+        y: Type.Number(),
+        z: Type.Number(),
+      },
+      { additionalProperties: false },
+    )
+    const value = {
+      x: 1,
+      y: 1,
+      z: 1,
+      a: 1,
+    }
+    const result = Value.Check(T, value)
+    Assert.equal(result, false)
+  })
+
   it('Should fail object with invalid property', () => {
     const value = {
       x: true,
