@@ -4,7 +4,7 @@ import { compilePackage, packPackage } from './build/index'
 // Packages
 // -------------------------------------------------------------
 
-const version = '0.8.78'
+const version = '0.8.79'
 const packages = [
     ['async',     version, 'Sidewinder Async'],
     ['buffer',    version, 'Sidewinder Buffer'],
@@ -82,6 +82,6 @@ export async function build(target = 'target/build') {
 // Publish
 // -------------------------------------------------------------
 
-export async function publish(target = 'target/build') {
-    for(const [name, version] of packages) await shell(`cd ${target}/${name} && npm publish sidewinder-${name}-${version}.tgz --access=public`)
+export async function publish(otp, target = 'target/build') {
+    for(const [name, version] of packages) await shell(`cd ${target}/${name} && npm publish sidewinder-${name}-${version}.tgz --access=public --otp ${otp}`)
 }
