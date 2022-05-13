@@ -71,7 +71,7 @@ export class RestService extends HttpService {
     return callback
   }
 
-  /** Creates a middleware function which is executed on all routes. */
+  /** Creates a middleware function which is executed on all routes */
   public use(middleware: RestMiddlewareVariant): this
   public use(middleware: any) {
     this.middleware.push(this.normalizeMiddleware(middleware))
@@ -146,7 +146,7 @@ export class RestService extends HttpService {
       await restResponse.text('Not found')
     })
   }
-  
+
   /** Handles an incoming HTTP request. If the request was unhandled it is deferred to the `next` handler. */
   private handler(clientId: string, request: IncomingMessage, response: ServerResponse, next: RestMiddlewareNextFunction) {
     // Resolve route from request and defer to 'next' if the route cannot be found.
