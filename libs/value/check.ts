@@ -52,7 +52,10 @@ export namespace CheckValue {
   }
 
   function Enum(schema: Types.TEnum<any>, value: any): boolean {
-    return schema.anyOf.some((schema) => schema.const === value)
+    for (const subschema of schema.anyOf) {
+      if (subschema.const === value) return true
+    }
+    return false
   }
 
   function Function(schema: Types.TFunction, value: any): boolean {
@@ -168,7 +171,7 @@ export namespace CheckValue {
     return value === null
   }
 
-  export function Visit<T extends Types.TSchema>(schema: T, value: any): boolean {
+  function Visit<T extends Types.TSchema>(schema: T, value: any): boolean {
     if (schema.$id !== undefined) referenceMap.set(schema.$id, schema)
     const anySchema = schema as any
     switch (anySchema[Types.Kind]) {

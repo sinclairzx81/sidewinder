@@ -1,12 +1,35 @@
-import { Validator } from '@sidewinder/validator'
-import { Value } from '@sidewinder/value'
 import { Type, Static } from '@sidewinder/type'
+
+
 import * as Types from '@sidewinder/type'
 
-
 export namespace Compiler {
-    const referenceMap = new Map<string, Types.TSchema>()
+    const referenceMap   = new Map<string, Types.TSchema>()
+    const functionMap    = new Map<Types.TSchema, (value: any) => boolean>()
+    const functionLocals = [] as string[]
 
+    // -------------------------------------------------------------------
+    // Locals
+    // -------------------------------------------------------------------
+
+    function ClearLocals() {
+        while(functionLocals.length > 0) functionLocals.shift()
+    }
+
+    function SetLocal(code: string) {
+        const local = `local${functionLocals.length}`
+        functionLocals.push(code.replace('local', local))
+        return local
+    }
+
+    function GetLocals() {
+        return functionLocals.join('\n')
+    }
+
+    // -------------------------------------------------------------------
+    // Expressions
+    // -------------------------------------------------------------------
+    
     function* Any(schema: Types.TAny, path: string): Generator<string> {
     }
 
@@ -60,13 +83,13 @@ export namespace Compiler {
             // of the property key length. This is because exhaustive testing for values 
             // will occur in subsequent property tests.
             if(schema.required && schema.required.length === propertyKeys.length) {
-                yield `${propertyKeys.length} === globalThis.Object.keys(${path}).length`
+                yield `(globalThis.Object.keys(${path}).length === ${propertyKeys.length})`
             } 
             // exhaustive: In cases where optional properties exist, then we must perform
             // an exhaustive check on the values property keys. This operation is O(n^2).
             else {
                 const set = `[${propertyKeys.map(key => `'${key}'`).join(', ')}]`
-                yield `globalThis.Object.keys(${path}).every(key => ${set}.includes(key))`
+                yield `(globalThis.Object.keys(${path}).every(key => ${set}.includes(key)))`
             }
         }
         for (const propertyKey of propertyKeys) {
@@ -112,7 +135,11 @@ export namespace Compiler {
 
     function* String(schema: Types.TString, path: string): Generator<string> {
         yield `(typeof ${path} === 'string')`
-        // todo: patterns - likely require stack frame precompilation
+        if(schema.pattern === undefined) return
+        if (schema.pattern !== undefined) {
+            const local = SetLocal(`const local = new RegExp('${schema.pattern}');`)
+            yield `(${path}.match(${local}) !== null)`   
+        }
     }
 
     function* Tuple(schema: Types.TTuple<any[]>, path: string): Generator<string> {
@@ -132,11 +159,8 @@ export namespace Compiler {
     }
 
     function* Union(schema: Types.TUnion<any[]>, path: string): Generator<string> {
-        // for (let i = 0; i < schema.anyOf.length; i++) {
-        //   if (Visit(schema.anyOf[i], value)) yield true
-        // }
-        // yield false
-        yield ``
+        const exprs = schema.anyOf.map(schema => [...Visit(schema, path)].join(' && '))
+        yield `(${exprs.join(' || ')})`
     }
 
     function* Uint8Array(schema: Types.TUint8Array, path: string): Generator<string> {
@@ -150,7 +174,7 @@ export namespace Compiler {
         yield `${path} === null`
     }
 
-    function* Visit<T extends Types.TSchema>(schema: T, path: string): Generator<string> {
+    export function* Visit<T extends Types.TSchema>(schema: T, path: string): Generator<string> {
         if (schema.$id !== undefined) referenceMap.set(schema.$id, schema)
         const anySchema = schema as any
         switch (anySchema[Types.Kind]) {
@@ -207,18 +231,25 @@ export namespace Compiler {
         }
     }
 
+    export function Linear<T extends Types.TSchema>(schema: T) {
+        ClearLocals()
+        return  [...Visit(schema, 'value')]
+    }
+
     /** Compiles this schema to an expression */
     export function Expr<T extends Types.TSchema>(schema: T): string {
+        ClearLocals()
         return [...Visit(schema, 'value')].join(' && ')
     }
 
     /** Compiles this schema validation function */
     export function Func<T extends Types.TSchema>(schema: T): (value: any) => boolean {
-        const expr = [...Visit(schema, 'value')].join(' && ')
-        return new globalThis.Function('value', `return ${expr}`) as any
+        ClearLocals()
+        const expr = [...Visit(schema, 'value')].map(expr => `    ${expr}`).join(' && \n')
+        const locals = GetLocals()
+        const body = `${locals}\nreturn (function Check(value) {\n  return (\n${expr}\n  )\n})(value)`
+        return new globalThis.Function('value', body) as any
     }
-
-    const functionMap = new Map<Types.TSchema, (value: any) => boolean>()
 
     /** Checks if the value is of the given type */
     export function Check<T extends Types.TSchema>(schema: T, value: unknown): value is Static<typeof T> {
@@ -228,98 +259,51 @@ export namespace Compiler {
 }
 
 
-// $id: 'AjvTest',
-// $schema: 'http://json-schema.org/draft-07/schema#',
-// type: 'object',
-// properties: {
-//   number: {
-//     type: 'number',
-//   },
-//   negNumber: {
-//     type: 'number',
-//   },
-//   maxNumber: {
-//     type: 'number',
-//   },
-//   string: {
-//     type: 'string',
-//   },
-//   longString: {
-//     type: 'string',
-//   },
-//   boolean: {
-//     type: 'boolean',
-//   },
-//   deeplyNested: {
-//     type: 'object',
-//     properties: {
-//       foo: {
-//         type: 'string',
-//       },
-//       num: {
-//         type: 'number',
-//       },
-//       bool: {
-//         type: 'boolean',
-//       },
-//     },
-//     required: ['foo', 'num', 'bool'],
-//     additionalProperties: false,
-//   },
-// },
-// required: [
-//   'number',
-//   'negNumber',
-//   'maxNumber',
-//   'string',
-//   'longString',
-//   'boolean',
-//   'deeplyNested',
-// ],
-// additionalProperties: false,
+// function * test(path: string) {
+//     const x = typeof value.x === 'number' &&
+//     typeof value.y === 'number' &&
+//     typeof value.z === 'number'
+// }
 
 const T = Type.Object({
-    number: Type.Number(),
-    negNumber: Type.Number(),
-    maxNumber: Type.Number(),
-    string: Type.String({ default: 'hello' }),
-    longString: Type.String({ default: '1111111111111111111111111111111111111111111111111111111111111111111111' }),
-    boolean: Type.Boolean(),
-    deeplyNested: Type.Object({
-        foo: Type.String(),
-        num: Type.Number(),
-        bool: Type.Boolean()
-    })
+    x: Type.Number(),
+    y: Type.Number(),
+    z: Type.Number(),
+    i: Type.Array(Type.Number()),
+    u: Type.Union([
+        Type.String(),
+        Type.Number(),
+        Type.Object({
+            x: Type.Number(),
+            y: Type.Number(),
+            z: Type.Number(),
+        })
+    ])
 })
 
-const I = Value.Create(T)
-console.log(I, Value.Check(T, I))
+console.log(Compiler.Func(Type.Object({
+    x: Type.String({ pattern: '123' }),
+    y: Type.String({ pattern: '321' }),
+    z: Type.Object({
+        x: Type.Number(),
+        y: Type.Number(),
+        z: Type.Number(),
+        i: Type.Array(Type.Number()),
+        u: Type.Array(Type.Union([
+            Type.String(),
+            Type.Number(),
+            Type.Object({
+                x: Type.Number(),
+                y: Type.Number(),
+                z: Type.Number(),
+            })
+        ]))
+    })
+})).toString())
 
-function ajv() {
-    const validator = new Validator(T)
-    const start = Date.now()
-    for (let i = 0; i < 50_000_000; i++) {
-        validator.check(I)
-    }
-    return Date.now() - start
-}
 
-function value() {
-    const start = Date.now()
-    for (let i = 0; i < 50_000_000; i++) {
-        const x = Compiler.Check(T, I)
-        if (x === false) throw 1
-    }
-    return Date.now() - start
-}
-
-while (true) {
-    const a = ajv()
-    console.log(a)
-    const b = value()
-    console.log(b)
-    console.log(Math.round((a / b) * 100), '%')
-}
-
-const S = Type.Object({ x: Type.Number() }, { additionalProperties: false })
-console.log(Value.Check(S, { x: 10, y: 10 }))
+// for (let i = 0; i < 20_000_000; i++) {
+//     const value = { x: 1, y: 2, z: 3 }
+//     const x = Compiler.Check(T, value)
+// }
+// // console.log(z)
