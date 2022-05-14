@@ -6,8 +6,33 @@ import * as Types from '@sidewinder/type'
 
 export namespace Compiler {
     const referenceMap = new Map<string, Types.TSchema>()
+    const functionMap = new Map<Types.TSchema, (value: any) => boolean>()
+    const functionLocals = [] as string[]
+
+    // -------------------------------------------------------------------
+    // Locals
+    // -------------------------------------------------------------------
+
+    function ClearLocals() {
+        while (functionLocals.length > 0) functionLocals.shift()
+    }
+
+    function SetLocal(code: string) {
+        const name = `local${functionLocals.length}`
+        functionLocals.push(code.replace('local', name))
+        return name
+    }
+
+    function GetLocals() {
+        return functionLocals.join('\n')
+    }
+
+    // -------------------------------------------------------------------
+    // Expressions
+    // -------------------------------------------------------------------
 
     function* Any(schema: Types.TAny, path: string): Generator<string> {
+        yield '(true)'
     }
 
     function* Array(schema: Types.TArray, path: string): Generator<string> {
@@ -59,14 +84,14 @@ export namespace Compiler {
             // then we only need check that the values property key length matches that
             // of the property key length. This is because exhaustive testing for values 
             // will occur in subsequent property tests.
-            if(schema.required && schema.required.length === propertyKeys.length) {
-                yield `${propertyKeys.length} === globalThis.Object.keys(${path}).length`
-            } 
+            if (schema.required && schema.required.length === propertyKeys.length) {
+                yield `(globalThis.Object.keys(${path}).length === ${propertyKeys.length})`
+            }
             // exhaustive: In cases where optional properties exist, then we must perform
             // an exhaustive check on the values property keys. This operation is O(n^2).
             else {
                 const set = `[${propertyKeys.map(key => `'${key}'`).join(', ')}]`
-                yield `globalThis.Object.keys(${path}).every(key => ${set}.includes(key))`
+                yield `(globalThis.Object.keys(${path}).every(key => ${set}.includes(key)))`
             }
         }
         for (const propertyKey of propertyKeys) {
@@ -85,7 +110,8 @@ export namespace Compiler {
     }
 
     function* Record(schema: Types.TRecord<any, any>, path: string): Generator<string> {
-        // if (typeof value !== 'object' || value === null) yield false
+        yield `(typeof ${path} === 'object' && ${path} !== null)`
+
         // const propertySchema = globalThis.Object.values(schema.patternProperties)[0]
         // for (const key of globalThis.Object.keys(value)) {
         //   const propertyValue = value[key]
@@ -104,15 +130,15 @@ export namespace Compiler {
     }
 
     function* Self(schema: Types.TSelf, path: string): Generator<string> {
-        // if (!referenceMap.has(schema.$ref)) throw new Error(`Check: Cannot locate schema with $id '${schema.$id}' for referenced type`)
-        // const referenced = referenceMap.get(schema.$ref)!
-        // yield Visit(referenced, value)
-        yield ``
+        yield `Check(${path})`
     }
 
     function* String(schema: Types.TString, path: string): Generator<string> {
         yield `(typeof ${path} === 'string')`
-        // todo: patterns - likely require stack frame precompilation
+        if (schema.pattern !== undefined) {
+            const local = SetLocal(`const local = new RegExp('${schema.pattern}');`)
+            yield `(${local}.test(${path}))`
+        }
     }
 
     function* Tuple(schema: Types.TTuple<any[]>, path: string): Generator<string> {
@@ -132,11 +158,8 @@ export namespace Compiler {
     }
 
     function* Union(schema: Types.TUnion<any[]>, path: string): Generator<string> {
-        // for (let i = 0; i < schema.anyOf.length; i++) {
-        //   if (Visit(schema.anyOf[i], value)) yield true
-        // }
-        // yield false
-        yield ``
+        const exprs = schema.anyOf.map(schema => [...Visit(schema, path)].join(' && '))
+        yield `(${exprs.join(' || ')})`
     }
 
     function* Uint8Array(schema: Types.TUint8Array, path: string): Generator<string> {
@@ -150,7 +173,7 @@ export namespace Compiler {
         yield `${path} === null`
     }
 
-    function* Visit<T extends Types.TSchema>(schema: T, path: string): Generator<string> {
+    export function* Visit<T extends Types.TSchema>(schema: T, path: string): Generator<string> {
         if (schema.$id !== undefined) referenceMap.set(schema.$id, schema)
         const anySchema = schema as any
         switch (anySchema[Types.Kind]) {
@@ -207,18 +230,26 @@ export namespace Compiler {
         }
     }
 
+    export function Linear<T extends Types.TSchema>(schema: T) {
+        ClearLocals()
+        return [...Visit(schema, 'value')]
+    }
+
     /** Compiles this schema to an expression */
     export function Expr<T extends Types.TSchema>(schema: T): string {
+        ClearLocals()
         return [...Visit(schema, 'value')].join(' && ')
     }
 
     /** Compiles this schema validation function */
     export function Func<T extends Types.TSchema>(schema: T): (value: any) => boolean {
-        const expr = [...Visit(schema, 'value')].join(' && ')
-        return new globalThis.Function('value', `return ${expr}`) as any
+        ClearLocals()
+        const expr = [...Visit(schema, 'value')].map(expr => `    ${expr}`).join(' && \n')
+        const locals = GetLocals()
+        const body = `${locals}\nreturn function Check(value) {\n  return (\n${expr}\n  )\n}`
+        const func = globalThis.Function(body)
+        return func()
     }
-
-    const functionMap = new Map<Types.TSchema, (value: any) => boolean>()
 
     /** Checks if the value is of the given type */
     export function Check<T extends Types.TSchema>(schema: T, value: unknown): value is Static<typeof T> {
@@ -226,7 +257,6 @@ export namespace Compiler {
         return functionMap.get(schema)!(value)
     }
 }
-
 
 // $id: 'AjvTest',
 // $schema: 'http://json-schema.org/draft-07/schema#',
@@ -278,27 +308,92 @@ export namespace Compiler {
 // ],
 // additionalProperties: false,
 
-const T = Type.Object({
-    number: Type.Number(),
-    negNumber: Type.Number(),
-    maxNumber: Type.Number(),
-    string: Type.String({ default: 'hello' }),
-    longString: Type.String({ default: '1111111111111111111111111111111111111111111111111111111111111111111111' }),
-    boolean: Type.Boolean(),
-    deeplyNested: Type.Object({
-        foo: Type.String(),
-        num: Type.Number(),
-        bool: Type.Boolean()
-    })
-})
+const T = Type.Rec(Node => Type.Object({
+    id: Type.String(),
+    nodes: Type.Array(Node)
+}))
 
-const I = Value.Create(T)
+
+const I = {
+    id: '', nodes: [{
+        id: '', nodes: [{
+            id: '', nodes: [{
+                id: '', nodes: []
+            }, {
+                id: '', nodes: []
+            }, {
+                id: '', nodes: []
+            }, {
+                id: '', nodes: []
+            }]
+        }]
+    }, {
+        id: '', nodes: [{
+            id: '', nodes: [{
+                id: '', nodes: []
+            }, {
+                id: '', nodes: []
+            }, {
+                id: '', nodes: []
+            }, {
+                id: '', nodes: []
+            }]
+        }]
+    }, {
+        id: '', nodes: [{
+            id: '', nodes: [{
+                id: '', nodes: []
+            }, {
+                id: '', nodes: []
+            }, {
+                id: '', nodes: []
+            }, {
+                id: '', nodes: []
+            }]
+        }]
+    }, {
+        id: '', nodes: [{
+            id: '', nodes: [{
+                id: '', nodes: []
+            }, {
+                id: '', nodes: []
+            }, {
+                id: '', nodes: []
+            }, {
+                id: '', nodes: []
+            }]
+        }]
+    }]
+}
+
+// const T = Type.Object({
+//     number: Type.Number(),
+//     negNumber: Type.Number(),
+//     maxNumber: Type.Number(),
+//     string: Type.String({ default: 'hello' }),
+//     longString: Type.String({ default: '1111111111111111111111111111111111111111111111111111111111111111111111' }),
+//     boolean: Type.Boolean(),
+//     deeplyNested: Type.Object({
+//         foo: Type.String(),
+//         num: Type.Number(),
+//         bool: Type.Boolean()
+//     })
+// })
+// const I = Value.Create(T)
+
+// const T = Type.Object({
+//     id: Type.String({ pattern: '123'}),  
+// })
+// const I = { id: '123' }
+
+console.log(T)
 console.log(I, Value.Check(T, I))
 
+const iterations = 5_000_000
 function ajv() {
     const validator = new Validator(T)
     const start = Date.now()
-    for (let i = 0; i < 50_000_000; i++) {
+    for (let i = 0; i < iterations; i++) {
         validator.check(I)
     }
     return Date.now() - start
@@ -306,20 +401,23 @@ function ajv() {
 
 function value() {
     const start = Date.now()
-    for (let i = 0; i < 50_000_000; i++) {
+    for (let i = 0; i < iterations; i++) {
         const x = Compiler.Check(T, I)
-        if (x === false) throw 1
+        if (x !== true) throw 1
     }
     return Date.now() - start
 }
 
 while (true) {
+    console.log('-----------------')
     const a = ajv()
-    console.log(a)
+    console.log('ajv', a, 'ms')
     const b = value()
-    console.log(b)
-    console.log(Math.round((a / b) * 100), '%')
+    console.log('val', b, 'ms')
+    console.log('out', a / b, 'faster')
 }
 
-const S = Type.Object({ x: Type.Number() }, { additionalProperties: false })
-console.log(Value.Check(S, { x: 10, y: 10 }))
+const x = /123/
+console.log(x.test('123'))
+console.log(x.test('1'))
+console.log(x.test('123'))

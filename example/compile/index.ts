@@ -4,8 +4,8 @@ import { Type, Static } from '@sidewinder/type'
 import * as Types from '@sidewinder/type'
 
 export namespace Compiler {
-    const referenceMap   = new Map<string, Types.TSchema>()
-    const functionMap    = new Map<Types.TSchema, (value: any) => boolean>()
+    const referenceMap = new Map<string, Types.TSchema>()
+    const functionMap = new Map<Types.TSchema, (value: any) => boolean>()
     const functionLocals = [] as string[]
 
     // -------------------------------------------------------------------
@@ -13,13 +13,13 @@ export namespace Compiler {
     // -------------------------------------------------------------------
 
     function ClearLocals() {
-        while(functionLocals.length > 0) functionLocals.shift()
+        while (functionLocals.length > 0) functionLocals.shift()
     }
 
     function SetLocal(code: string) {
-        const local = `local${functionLocals.length}`
-        functionLocals.push(code.replace('local', local))
-        return local
+        const name = `local${functionLocals.length}`
+        functionLocals.push(code.replace('local', name))
+        return name
     }
 
     function GetLocals() {
@@ -29,13 +29,14 @@ export namespace Compiler {
     // -------------------------------------------------------------------
     // Expressions
     // -------------------------------------------------------------------
-    
+
     function* Any(schema: Types.TAny, path: string): Generator<string> {
+        yield '(true)'
     }
 
     function* Array(schema: Types.TArray, path: string): Generator<string> {
         const expr = [...Visit(schema.items, `value`)].join(' && ')
-        yield `(globalThis.Array.isArray(${path}) && ${path}.every(value => ${expr}))`
+        yield `(Array.isArray(${path}) && ${path}.every(value => ${expr}))`
     }
 
     function* Boolean(schema: Types.TBoolean, path: string): Generator<string> {
@@ -55,7 +56,7 @@ export namespace Compiler {
     }
 
     function* Integer(schema: Types.TNumeric, path: string): Generator<string> {
-        yield `(typeof ${path} === 'number' && globalThis.Number.isInteger(${path}))`
+        yield `(typeof ${path} === 'number' && Number.isInteger(${path}))`
     }
 
     function* Intersect(schema: Types.TIntersect, path: string): Generator<string> {
@@ -82,14 +83,14 @@ export namespace Compiler {
             // then we only need check that the values property key length matches that
             // of the property key length. This is because exhaustive testing for values 
             // will occur in subsequent property tests.
-            if(schema.required && schema.required.length === propertyKeys.length) {
-                yield `(globalThis.Object.keys(${path}).length === ${propertyKeys.length})`
-            } 
+            if (schema.required && schema.required.length === propertyKeys.length) {
+                yield `(Object.keys(${path}).length === ${propertyKeys.length})`
+            }
             // exhaustive: In cases where optional properties exist, then we must perform
             // an exhaustive check on the values property keys. This operation is O(n^2).
             else {
-                const set = `[${propertyKeys.map(key => `'${key}'`).join(', ')}]`
-                yield `(globalThis.Object.keys(${path}).every(key => ${set}.includes(key)))`
+                const keys = `[${propertyKeys.map(key => `'${key}'`).join(', ')}]`
+                yield `(Object.keys(${path}).every(key => ${keys}.includes(key)))`
             }
         }
         for (const propertyKey of propertyKeys) {
@@ -108,7 +109,8 @@ export namespace Compiler {
     }
 
     function* Record(schema: Types.TRecord<any, any>, path: string): Generator<string> {
-        // if (typeof value !== 'object' || value === null) yield false
+        yield `(typeof ${path} === 'object' && ${path} !== null)`
+
         // const propertySchema = globalThis.Object.values(schema.patternProperties)[0]
         // for (const key of globalThis.Object.keys(value)) {
         //   const propertyValue = value[key]
@@ -127,31 +129,24 @@ export namespace Compiler {
     }
 
     function* Self(schema: Types.TSelf, path: string): Generator<string> {
-        // if (!referenceMap.has(schema.$ref)) throw new Error(`Check: Cannot locate schema with $id '${schema.$id}' for referenced type`)
-        // const referenced = referenceMap.get(schema.$ref)!
-        // yield Visit(referenced, value)
-        yield ``
+        yield `Check(${path})`
     }
 
     function* String(schema: Types.TString, path: string): Generator<string> {
         yield `(typeof ${path} === 'string')`
-        if(schema.pattern === undefined) return
         if (schema.pattern !== undefined) {
             const local = SetLocal(`const local = new RegExp('${schema.pattern}');`)
-            yield `(${path}.match(${local}) !== null)`   
+            yield `(${local}.test(${path}))`
         }
     }
 
     function* Tuple(schema: Types.TTuple<any[]>, path: string): Generator<string> {
-        // if (typeof value !== 'object' || !globalThis.Array.isArray(value)) yield false
-        // if (schema.items === undefined && value.length === 0) yield true
-        // if (schema.items === undefined) yield false
-        // if (value.length < schema.minItems || value.length > schema.maxItems) yield false
-        // for (let i = 0; i < schema.items.length; i++) {
-        //   if (!Visit(schema.items[i], value[i])) yield false
-        // }
-        // yield true
-        yield ``
+        yield `(Array.isArray(${path}))`
+        if(schema.items === undefined) return yield `(${path}.length === 0)`
+        yield `(${path}.length === ${schema.maxItems})`
+        for(let i = 0; i < schema.items.length; i++) {
+            yield [...Visit(schema.items[i], `${path}[${i}]`)].join(' && ')
+        }
     }
 
     function* Undefined(schema: Types.TUndefined, path: string): Generator<string> {
@@ -164,7 +159,7 @@ export namespace Compiler {
     }
 
     function* Uint8Array(schema: Types.TUint8Array, path: string): Generator<string> {
-        yield `${path} instanceof globalThis.Uint8Array`
+        yield `${path} instanceof Uint8Array`
     }
 
     function* Unknown(schema: Types.TUnknown, path: string): Generator<string> {
@@ -233,7 +228,7 @@ export namespace Compiler {
 
     export function Linear<T extends Types.TSchema>(schema: T) {
         ClearLocals()
-        return  [...Visit(schema, 'value')]
+        return [...Visit(schema, 'value')]
     }
 
     /** Compiles this schema to an expression */
@@ -247,8 +242,9 @@ export namespace Compiler {
         ClearLocals()
         const expr = [...Visit(schema, 'value')].map(expr => `    ${expr}`).join(' && \n')
         const locals = GetLocals()
-        const body = `${locals}\nreturn (function Check(value) {\n  return (\n${expr}\n  )\n})(value)`
-        return new globalThis.Function('value', body) as any
+        const body = `${locals}\nreturn function Check(value) {\n  return (\n${expr}\n  )\n}`
+        const func = globalThis.Function(body)
+        return func()
     }
 
     /** Checks if the value is of the given type */
@@ -266,44 +262,16 @@ export namespace Compiler {
 // }
 
 const T = Type.Object({
-    x: Type.Number(),
-    y: Type.Number(),
-    z: Type.Number(),
-    i: Type.Array(Type.Number()),
-    u: Type.Union([
-        Type.String(),
-        Type.Number(),
-        Type.Object({
-            x: Type.Number(),
-            y: Type.Number(),
-            z: Type.Number(),
-        })
-    ])
-})
-
-console.log(Compiler.Func(Type.Object({
-    x: Type.String({ pattern: '123' }),
-    y: Type.String({ pattern: '321' }),
-    z: Type.Object({
+    tuple: Type.Tuple([Type.Number(), Type.Object({
         x: Type.Number(),
         y: Type.Number(),
         z: Type.Number(),
-        i: Type.Array(Type.Number()),
-        u: Type.Array(Type.Union([
-            Type.String(),
-            Type.Number(),
-            Type.Object({
-                x: Type.Number(),
-                y: Type.Number(),
-                z: Type.Number(),
-            })
-        ]))
-    })
-})).toString())
+    })])
+})
 
+console.log(Compiler.Func(T).toString())
 
-// for (let i = 0; i < 20_000_000; i++) {
-//     const value = { x: 1, y: 2, z: 3 }
-//     const x = Compiler.Check(T, value)
-// }
-// // console.log(z)
+const value = { tuple: [1, {x: 1, y: 1, z: 1}] }
+console.log(Compiler.Check(T, value))
+
+// console.log(z)
