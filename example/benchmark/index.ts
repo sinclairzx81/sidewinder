@@ -3,7 +3,6 @@ import { Value } from '@sidewinder/value'
 import { Type, Static } from '@sidewinder/type'
 import * as Types from '@sidewinder/type'
 
-
 export namespace Compiler {
     const referenceMap = new Map<string, Types.TSchema>()
     const functionMap = new Map<Types.TSchema, (value: any) => boolean>()
@@ -37,7 +36,7 @@ export namespace Compiler {
 
     function* Array(schema: Types.TArray, path: string): Generator<string> {
         const expr = [...Visit(schema.items, `value`)].join(' && ')
-        yield `(globalThis.Array.isArray(${path}) && ${path}.every(value => ${expr}))`
+        yield `(Array.isArray(${path}) && ${path}.every(value => ${expr}))`
     }
 
     function* Boolean(schema: Types.TBoolean, path: string): Generator<string> {
@@ -57,7 +56,7 @@ export namespace Compiler {
     }
 
     function* Integer(schema: Types.TNumeric, path: string): Generator<string> {
-        yield `(typeof ${path} === 'number' && globalThis.Number.isInteger(${path}))`
+        yield `(typeof ${path} === 'number' && Number.isInteger(${path}))`
     }
 
     function* Intersect(schema: Types.TIntersect, path: string): Generator<string> {
@@ -85,13 +84,13 @@ export namespace Compiler {
             // of the property key length. This is because exhaustive testing for values 
             // will occur in subsequent property tests.
             if (schema.required && schema.required.length === propertyKeys.length) {
-                yield `(globalThis.Object.keys(${path}).length === ${propertyKeys.length})`
+                yield `(Object.keys(${path}).length === ${propertyKeys.length})`
             }
             // exhaustive: In cases where optional properties exist, then we must perform
             // an exhaustive check on the values property keys. This operation is O(n^2).
             else {
-                const set = `[${propertyKeys.map(key => `'${key}'`).join(', ')}]`
-                yield `(globalThis.Object.keys(${path}).every(key => ${set}.includes(key)))`
+                const keys = `[${propertyKeys.map(key => `'${key}'`).join(', ')}]`
+                yield `(Object.keys(${path}).every(key => ${keys}.includes(key)))`
             }
         }
         for (const propertyKey of propertyKeys) {
@@ -111,7 +110,6 @@ export namespace Compiler {
 
     function* Record(schema: Types.TRecord<any, any>, path: string): Generator<string> {
         yield `(typeof ${path} === 'object' && ${path} !== null)`
-
         // const propertySchema = globalThis.Object.values(schema.patternProperties)[0]
         // for (const key of globalThis.Object.keys(value)) {
         //   const propertyValue = value[key]
@@ -142,15 +140,12 @@ export namespace Compiler {
     }
 
     function* Tuple(schema: Types.TTuple<any[]>, path: string): Generator<string> {
-        // if (typeof value !== 'object' || !globalThis.Array.isArray(value)) yield false
-        // if (schema.items === undefined && value.length === 0) yield true
-        // if (schema.items === undefined) yield false
-        // if (value.length < schema.minItems || value.length > schema.maxItems) yield false
-        // for (let i = 0; i < schema.items.length; i++) {
-        //   if (!Visit(schema.items[i], value[i])) yield false
-        // }
-        // yield true
-        yield ``
+        yield `(Array.isArray(${path}))`
+        if(schema.items === undefined) return yield `(${path}.length === 0)`
+        yield `(${path}.length === ${schema.maxItems})`
+        for(let i = 0; i < schema.items.length; i++) {
+            yield [...Visit(schema.items[i], `${path}[${i}]`)].join(' && ')
+        }
     }
 
     function* Undefined(schema: Types.TUndefined, path: string): Generator<string> {
@@ -163,7 +158,7 @@ export namespace Compiler {
     }
 
     function* Uint8Array(schema: Types.TUint8Array, path: string): Generator<string> {
-        yield `${path} instanceof globalThis.Uint8Array`
+        yield `${path} instanceof Uint8Array`
     }
 
     function* Unknown(schema: Types.TUnknown, path: string): Generator<string> {
@@ -308,78 +303,79 @@ export namespace Compiler {
 // ],
 // additionalProperties: false,
 
-const T = Type.Rec(Node => Type.Object({
-    id: Type.String(),
-    nodes: Type.Array(Node)
-}))
+// const T = Type.Rec(Node => Type.Object({
+//     id: Type.String(),
+//     nodes: Type.Array(Node)
+// }))
 
 
-const I = {
-    id: '', nodes: [{
-        id: '', nodes: [{
-            id: '', nodes: [{
-                id: '', nodes: []
-            }, {
-                id: '', nodes: []
-            }, {
-                id: '', nodes: []
-            }, {
-                id: '', nodes: []
-            }]
-        }]
-    }, {
-        id: '', nodes: [{
-            id: '', nodes: [{
-                id: '', nodes: []
-            }, {
-                id: '', nodes: []
-            }, {
-                id: '', nodes: []
-            }, {
-                id: '', nodes: []
-            }]
-        }]
-    }, {
-        id: '', nodes: [{
-            id: '', nodes: [{
-                id: '', nodes: []
-            }, {
-                id: '', nodes: []
-            }, {
-                id: '', nodes: []
-            }, {
-                id: '', nodes: []
-            }]
-        }]
-    }, {
-        id: '', nodes: [{
-            id: '', nodes: [{
-                id: '', nodes: []
-            }, {
-                id: '', nodes: []
-            }, {
-                id: '', nodes: []
-            }, {
-                id: '', nodes: []
-            }]
-        }]
-    }]
-}
+// const I = {
+//     id: '', nodes: [{
+//         id: '', nodes: [{
+//             id: '', nodes: [{
+//                 id: '', nodes: []
+//             }, {
+//                 id: '', nodes: []
+//             }, {
+//                 id: '', nodes: []
+//             }, {
+//                 id: '', nodes: []
+//             }]
+//         }]
+//     }, {
+//         id: '', nodes: [{
+//             id: '', nodes: [{
+//                 id: '', nodes: []
+//             }, {
+//                 id: '', nodes: []
+//             }, {
+//                 id: '', nodes: []
+//             }, {
+//                 id: '', nodes: []
+//             }]
+//         }]
+//     }, {
+//         id: '', nodes: [{
+//             id: '', nodes: [{
+//                 id: '', nodes: []
+//             }, {
+//                 id: '', nodes: []
+//             }, {
+//                 id: '', nodes: []
+//             }, {
+//                 id: '', nodes: []
+//             }]
+//         }]
+//     }, {
+//         id: '', nodes: [{
+//             id: '', nodes: [{
+//                 id: '', nodes: []
+//             }, {
+//                 id: '', nodes: []
+//             }, {
+//                 id: '', nodes: []
+//             }, {
+//                 id: '', nodes: []
+//             }]
+//         }]
+//     }]
+// }
 
-// const T = Type.Object({
-//     number: Type.Number(),
-//     negNumber: Type.Number(),
-//     maxNumber: Type.Number(),
-//     string: Type.String({ default: 'hello' }),
-//     longString: Type.String({ default: '1111111111111111111111111111111111111111111111111111111111111111111111' }),
-//     boolean: Type.Boolean(),
-//     deeplyNested: Type.Object({
-//         foo: Type.String(),
-//         num: Type.Number(),
-//         bool: Type.Boolean()
-//     })
-// })
-// const I = Value.Create(T)
+const T = Type.Object({
+    number: Type.Number(),
+    negNumber: Type.Number(),
+    maxNumber: Type.Number(),
+    string: Type.String({ default: 'hello' }),
+    longString: Type.String({ default: '1111111111111111111111111111111111111111111111111111111111111111111111' }),
+    boolean: Type.Boolean(),
+    tuple: Type.Tuple([Type.Number(), Type.Number(), Type.String()]),
+    deeplyNested: Type.Object({
+        foo: Type.String(),
+        num: Type.Number(),
+        bool: Type.Boolean()
+    }, { additionalProperties: false })
+}, { additionalProperties: false })
+const I = Value.Create(T)
 
 // const T = Type.Object({
 //     id: Type.String({ pattern: '123'}),  
@@ -389,7 +385,7 @@ const I = {
 console.log(T)
 console.log(I, Value.Check(T, I))
 
-const iterations = 5_000_000
+const iterations = 50_000_000
 function ajv() {
     const validator = new Validator(T)
     const start = Date.now()

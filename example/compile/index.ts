@@ -57,6 +57,11 @@ export namespace Compiler {
 
     function* Integer(schema: Types.TNumeric, path: string): Generator<string> {
         yield `(typeof ${path} === 'number' && Number.isInteger(${path}))`
+        if(schema.multipleOf) yield `(${path} % ${schema.multipleOf} === 0)`
+        if(schema.exclusiveMinimum) yield `(${path} < ${schema.exclusiveMinimum})`
+        if(schema.exclusiveMaximum) yield `(${path} < ${schema.exclusiveMaximum})`
+        if(schema.minimum) yield `(${path} >= ${schema.minimum})`
+        if(schema.maximum) yield `(${path} <= ${schema.maximum})` 
     }
 
     function* Intersect(schema: Types.TIntersect, path: string): Generator<string> {
@@ -64,7 +69,11 @@ export namespace Compiler {
     }
 
     function* Literal(schema: Types.TLiteral, path: string): Generator<string> {
-        yield `${schema.const} === ${path}`
+        if(typeof schema.const === 'string') {
+            yield `${path} === '${schema.const}'`
+        } else {
+            yield `${path} === ${schema.const}`
+        }
     }
 
     function* Null(schema: Types.TNull, path: string): Generator<string> {
@@ -73,6 +82,11 @@ export namespace Compiler {
 
     function* Number(schema: Types.TNumeric, path: string): Generator<string> {
         yield `(typeof ${path} === 'number')`
+        if(schema.multipleOf) yield `(${path} % ${schema.multipleOf} === 0)`
+        if(schema.exclusiveMinimum) yield `(${path} < ${schema.exclusiveMinimum})`
+        if(schema.exclusiveMaximum) yield `(${path} < ${schema.exclusiveMaximum})`
+        if(schema.minimum) yield `(${path} >= ${schema.minimum})`
+        if(schema.maximum) yield `(${path} <= ${schema.maximum})` 
     }
 
     function* Object(schema: Types.TObject, path: string): Generator<string> {
@@ -85,10 +99,7 @@ export namespace Compiler {
             // will occur in subsequent property tests.
             if (schema.required && schema.required.length === propertyKeys.length) {
                 yield `(Object.keys(${path}).length === ${propertyKeys.length})`
-            }
-            // exhaustive: In cases where optional properties exist, then we must perform
-            // an exhaustive check on the values property keys. This operation is O(n^2).
-            else {
+            } else {
                 const keys = `[${propertyKeys.map(key => `'${key}'`).join(', ')}]`
                 yield `(Object.keys(${path}).every(key => ${keys}.includes(key)))`
             }
@@ -262,6 +273,10 @@ export namespace Compiler {
 // }
 
 const T = Type.Object({
+    a: Type.Literal(10),
+    b: Type.Literal(false),
+    c: Type.Literal('hello'),
+    number: Type.Number({ minimum: 10, maximum: 100, multipleOf: 10 }),
     tuple: Type.Tuple([Type.Number(), Type.Object({
         x: Type.Number(),
         y: Type.Number(),
@@ -269,9 +284,13 @@ const T = Type.Object({
     })])
 })
 
-console.log(Compiler.Func(T).toString())
+for(let i = 0; i < 10000; i++) {
+    Compiler.Func(T).toString()
+}
 
-const value = { tuple: [1, {x: 1, y: 1, z: 1}] }
+console.log('done', Compiler.Func(T).toString())
+
+const value = { a: 10, b: false, c: 'hello', number: 10, tuple: [1, {x: 1, y: 1, z: 1}] }
 console.log(Compiler.Check(T, value))
 
 // console.log(z)
