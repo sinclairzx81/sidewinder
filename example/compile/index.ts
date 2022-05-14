@@ -1,16 +1,14 @@
 import { Type, Static } from '@sidewinder/type'
 
-
 import * as Types from '@sidewinder/type'
 
 export namespace Compiler {
-    const referenceMap = new Map<string, Types.TSchema>()
-    const functionMap = new Map<Types.TSchema, (value: any) => boolean>()
-    const functionLocals = [] as string[]
 
     // -------------------------------------------------------------------
     // Locals
     // -------------------------------------------------------------------
+
+    const functionLocals = [] as string[]
 
     function ClearLocals() {
         while (functionLocals.length > 0) functionLocals.shift()
@@ -57,11 +55,11 @@ export namespace Compiler {
 
     function* Integer(schema: Types.TNumeric, path: string): Generator<string> {
         yield `(typeof ${path} === 'number' && Number.isInteger(${path}))`
-        if(schema.multipleOf) yield `(${path} % ${schema.multipleOf} === 0)`
-        if(schema.exclusiveMinimum) yield `(${path} < ${schema.exclusiveMinimum})`
-        if(schema.exclusiveMaximum) yield `(${path} < ${schema.exclusiveMaximum})`
-        if(schema.minimum) yield `(${path} >= ${schema.minimum})`
-        if(schema.maximum) yield `(${path} <= ${schema.maximum})` 
+        if (schema.multipleOf) yield `(${path} % ${schema.multipleOf} === 0)`
+        if (schema.exclusiveMinimum) yield `(${path} < ${schema.exclusiveMinimum})`
+        if (schema.exclusiveMaximum) yield `(${path} < ${schema.exclusiveMaximum})`
+        if (schema.minimum) yield `(${path} >= ${schema.minimum})`
+        if (schema.maximum) yield `(${path} <= ${schema.maximum})`
     }
 
     function* Intersect(schema: Types.TIntersect, path: string): Generator<string> {
@@ -69,7 +67,7 @@ export namespace Compiler {
     }
 
     function* Literal(schema: Types.TLiteral, path: string): Generator<string> {
-        if(typeof schema.const === 'string') {
+        if (typeof schema.const === 'string') {
             yield `${path} === '${schema.const}'`
         } else {
             yield `${path} === ${schema.const}`
@@ -82,11 +80,11 @@ export namespace Compiler {
 
     function* Number(schema: Types.TNumeric, path: string): Generator<string> {
         yield `(typeof ${path} === 'number')`
-        if(schema.multipleOf) yield `(${path} % ${schema.multipleOf} === 0)`
-        if(schema.exclusiveMinimum) yield `(${path} < ${schema.exclusiveMinimum})`
-        if(schema.exclusiveMaximum) yield `(${path} < ${schema.exclusiveMaximum})`
-        if(schema.minimum) yield `(${path} >= ${schema.minimum})`
-        if(schema.maximum) yield `(${path} <= ${schema.maximum})` 
+        if (schema.multipleOf) yield `(${path} % ${schema.multipleOf} === 0)`
+        if (schema.exclusiveMinimum) yield `(${path} < ${schema.exclusiveMinimum})`
+        if (schema.exclusiveMaximum) yield `(${path} < ${schema.exclusiveMaximum})`
+        if (schema.minimum) yield `(${path} >= ${schema.minimum})`
+        if (schema.maximum) yield `(${path} <= ${schema.maximum})`
     }
 
     function* Object(schema: Types.TObject, path: string): Generator<string> {
@@ -131,10 +129,6 @@ export namespace Compiler {
         yield ``
     }
 
-    function* Rec(schema: Types.TRec<any>, path: string): Generator<string> {
-        throw new Error('Cannot typeof recursive types')
-    }
-
     function* Ref(schema: Types.TRef<any>, path: string): Generator<string> {
         throw new Error('Cannot typeof reference types')
     }
@@ -153,9 +147,9 @@ export namespace Compiler {
 
     function* Tuple(schema: Types.TTuple<any[]>, path: string): Generator<string> {
         yield `(Array.isArray(${path}))`
-        if(schema.items === undefined) return yield `(${path}.length === 0)`
+        if (schema.items === undefined) return yield `(${path}.length === 0)`
         yield `(${path}.length === ${schema.maxItems})`
-        for(let i = 0; i < schema.items.length; i++) {
+        for (let i = 0; i < schema.items.length; i++) {
             yield [...Visit(schema.items[i], `${path}[${i}]`)].join(' && ')
         }
     }
@@ -170,7 +164,9 @@ export namespace Compiler {
     }
 
     function* Uint8Array(schema: Types.TUint8Array, path: string): Generator<string> {
-        yield `${path} instanceof Uint8Array`
+        yield `(${path} instanceof Uint8Array)`
+        if (schema.maxByteLength) yield `(${path}.length <= ${schema.maxByteLength})`
+        if (schema.minByteLength) yield `(${path}.length >= ${schema.minByteLength})`
     }
 
     function* Unknown(schema: Types.TUnknown, path: string): Generator<string> {
@@ -181,7 +177,6 @@ export namespace Compiler {
     }
 
     export function* Visit<T extends Types.TSchema>(schema: T, path: string): Generator<string> {
-        if (schema.$id !== undefined) referenceMap.set(schema.$id, schema)
         const anySchema = schema as any
         switch (anySchema[Types.Kind]) {
             case 'Any':
@@ -212,8 +207,6 @@ export namespace Compiler {
                 return yield* Promise(anySchema, path)
             case 'Record':
                 return yield* Record(anySchema, path)
-            case 'Rec':
-                return yield* Rec(anySchema, path)
             case 'Ref':
                 return yield* Ref(anySchema, path)
             case 'Self':
@@ -237,16 +230,9 @@ export namespace Compiler {
         }
     }
 
-    export function Linear<T extends Types.TSchema>(schema: T) {
-        ClearLocals()
-        return [...Visit(schema, 'value')]
-    }
-
-    /** Compiles this schema to an expression */
-    export function Expr<T extends Types.TSchema>(schema: T): string {
-        ClearLocals()
-        return [...Visit(schema, 'value')].join(' && ')
-    }
+    // -------------------------------------------------------------------
+    // Compile
+    // -------------------------------------------------------------------
 
     /** Compiles this schema validation function */
     export function Func<T extends Types.TSchema>(schema: T): (value: any) => boolean {
@@ -258,13 +244,21 @@ export namespace Compiler {
         return func()
     }
 
-    /** Checks if the value is of the given type */
+    // -------------------------------------------------------------------
+    // Check
+    // -------------------------------------------------------------------
+
+    const functionMap = new Map<Types.TSchema, (value: any) => boolean>()
+
+    /** 
+     * Checks if the value is of the given type. This operates through dynamic compilation of the
+     * given schema on first validation.
+     */
     export function Check<T extends Types.TSchema>(schema: T, value: unknown): value is Static<typeof T> {
         if (!functionMap.has(schema)) functionMap.set(schema, Func(schema))
         return functionMap.get(schema)!(value)
     }
 }
-
 
 // function * test(path: string) {
 //     const x = typeof value.x === 'number' &&
@@ -273,9 +267,11 @@ export namespace Compiler {
 // }
 
 const T = Type.Object({
+    o: Type.Rec(Self => Type.Object({ a: Type.Number(), x: Type.Array(Self) })),
     a: Type.Literal(10),
     b: Type.Literal(false),
     c: Type.Literal('hello'),
+    u: Type.Uint8Array({ minByteLength: 100 }),
     number: Type.Number({ minimum: 10, maximum: 100, multipleOf: 10 }),
     tuple: Type.Tuple([Type.Number(), Type.Object({
         x: Type.Number(),
@@ -283,14 +279,14 @@ const T = Type.Object({
         z: Type.Number(),
     })])
 })
-
-for(let i = 0; i < 10000; i++) {
+console.log(T)
+for (let i = 0; i < 100_000; i++) {
     Compiler.Func(T).toString()
 }
 
 console.log('done', Compiler.Func(T).toString())
 
-const value = { a: 10, b: false, c: 'hello', number: 10, tuple: [1, {x: 1, y: 1, z: 1}] }
+const value = { a: 10, b: false, c: 'hello', u: new Uint8Array(100), number: 10, tuple: [1, { x: 1, y: 1, z: 1 }] }
 console.log(Compiler.Check(T, value))
 
 // console.log(z)

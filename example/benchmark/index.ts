@@ -4,13 +4,12 @@ import { Type, Static } from '@sidewinder/type'
 import * as Types from '@sidewinder/type'
 
 export namespace Compiler {
-    const referenceMap = new Map<string, Types.TSchema>()
-    const functionMap = new Map<Types.TSchema, (value: any) => boolean>()
-    const functionLocals = [] as string[]
 
     // -------------------------------------------------------------------
     // Locals
     // -------------------------------------------------------------------
+    
+    const functionLocals = [] as string[]
 
     function ClearLocals() {
         while (functionLocals.length > 0) functionLocals.shift()
@@ -57,6 +56,11 @@ export namespace Compiler {
 
     function* Integer(schema: Types.TNumeric, path: string): Generator<string> {
         yield `(typeof ${path} === 'number' && Number.isInteger(${path}))`
+        if(schema.multipleOf) yield `(${path} % ${schema.multipleOf} === 0)`
+        if(schema.exclusiveMinimum) yield `(${path} < ${schema.exclusiveMinimum})`
+        if(schema.exclusiveMaximum) yield `(${path} < ${schema.exclusiveMaximum})`
+        if(schema.minimum) yield `(${path} >= ${schema.minimum})`
+        if(schema.maximum) yield `(${path} <= ${schema.maximum})` 
     }
 
     function* Intersect(schema: Types.TIntersect, path: string): Generator<string> {
@@ -64,7 +68,11 @@ export namespace Compiler {
     }
 
     function* Literal(schema: Types.TLiteral, path: string): Generator<string> {
-        yield `${schema.const} === ${path}`
+        if(typeof schema.const === 'string') {
+            yield `${path} === '${schema.const}'`
+        } else {
+            yield `${path} === ${schema.const}`
+        }
     }
 
     function* Null(schema: Types.TNull, path: string): Generator<string> {
@@ -73,6 +81,11 @@ export namespace Compiler {
 
     function* Number(schema: Types.TNumeric, path: string): Generator<string> {
         yield `(typeof ${path} === 'number')`
+        if(schema.multipleOf) yield `(${path} % ${schema.multipleOf} === 0)`
+        if(schema.exclusiveMinimum) yield `(${path} < ${schema.exclusiveMinimum})`
+        if(schema.exclusiveMaximum) yield `(${path} < ${schema.exclusiveMaximum})`
+        if(schema.minimum) yield `(${path} >= ${schema.minimum})`
+        if(schema.maximum) yield `(${path} <= ${schema.maximum})` 
     }
 
     function* Object(schema: Types.TObject, path: string): Generator<string> {
@@ -85,10 +98,7 @@ export namespace Compiler {
             // will occur in subsequent property tests.
             if (schema.required && schema.required.length === propertyKeys.length) {
                 yield `(Object.keys(${path}).length === ${propertyKeys.length})`
-            }
-            // exhaustive: In cases where optional properties exist, then we must perform
-            // an exhaustive check on the values property keys. This operation is O(n^2).
-            else {
+            } else {
                 const keys = `[${propertyKeys.map(key => `'${key}'`).join(', ')}]`
                 yield `(Object.keys(${path}).every(key => ${keys}.includes(key)))`
             }
@@ -110,6 +120,7 @@ export namespace Compiler {
 
     function* Record(schema: Types.TRecord<any, any>, path: string): Generator<string> {
         yield `(typeof ${path} === 'object' && ${path} !== null)`
+
         // const propertySchema = globalThis.Object.values(schema.patternProperties)[0]
         // for (const key of globalThis.Object.keys(value)) {
         //   const propertyValue = value[key]
@@ -158,18 +169,19 @@ export namespace Compiler {
     }
 
     function* Uint8Array(schema: Types.TUint8Array, path: string): Generator<string> {
-        yield `${path} instanceof Uint8Array`
+        yield `(${path} instanceof Uint8Array)`
+        if(schema.maxByteLength) yield `(${path}.length <= ${schema.maxByteLength})`
+        if(schema.minByteLength) yield `(${path}.length >= ${schema.minByteLength})`
     }
 
     function* Unknown(schema: Types.TUnknown, path: string): Generator<string> {
     }
 
     function* Void(schema: Types.TVoid, path: string): Generator<string> {
-        yield `${path} === null`
+        yield `(${path} === null)`
     }
 
     export function* Visit<T extends Types.TSchema>(schema: T, path: string): Generator<string> {
-        if (schema.$id !== undefined) referenceMap.set(schema.$id, schema)
         const anySchema = schema as any
         switch (anySchema[Types.Kind]) {
             case 'Any':
@@ -224,20 +236,13 @@ export namespace Compiler {
                 throw Error(`Unknown schema kind '${schema[Types.Kind]}'`)
         }
     }
-
-    export function Linear<T extends Types.TSchema>(schema: T) {
-        ClearLocals()
-        return [...Visit(schema, 'value')]
-    }
-
-    /** Compiles this schema to an expression */
-    export function Expr<T extends Types.TSchema>(schema: T): string {
-        ClearLocals()
-        return [...Visit(schema, 'value')].join(' && ')
-    }
-
+    
+    // -------------------------------------------------------------------
+    // Compile
+    // -------------------------------------------------------------------
+    
     /** Compiles this schema validation function */
-    export function Func<T extends Types.TSchema>(schema: T): (value: any) => boolean {
+    export function Compile<T extends Types.TSchema>(schema: T): (value: any) => boolean {
         ClearLocals()
         const expr = [...Visit(schema, 'value')].map(expr => `    ${expr}`).join(' && \n')
         const locals = GetLocals()
@@ -246,69 +251,26 @@ export namespace Compiler {
         return func()
     }
 
-    /** Checks if the value is of the given type */
+    // -------------------------------------------------------------------
+    // Check
+    // -------------------------------------------------------------------
+
+    const functionMap = new Map<Types.TSchema, (value: any) => boolean>()
+
+    /** 
+     * Checks if the value is of the given type. This operates through dynamic compilation of the
+     * given schema on first validation.
+     */
     export function Check<T extends Types.TSchema>(schema: T, value: unknown): value is Static<typeof T> {
-        if (!functionMap.has(schema)) functionMap.set(schema, Func(schema))
+        if (!functionMap.has(schema)) functionMap.set(schema, Compile(schema))
         return functionMap.get(schema)!(value)
     }
 }
-
-// $id: 'AjvTest',
-// $schema: 'http://json-schema.org/draft-07/schema#',
-// type: 'object',
-// properties: {
-//   number: {
-//     type: 'number',
-//   },
-//   negNumber: {
-//     type: 'number',
-//   },
-//   maxNumber: {
-//     type: 'number',
-//   },
-//   string: {
-//     type: 'string',
-//   },
-//   longString: {
-//     type: 'string',
-//   },
-//   boolean: {
-//     type: 'boolean',
-//   },
-//   deeplyNested: {
-//     type: 'object',
-//     properties: {
-//       foo: {
-//         type: 'string',
-//       },
-//       num: {
-//         type: 'number',
-//       },
-//       bool: {
-//         type: 'boolean',
-//       },
-//     },
-//     required: ['foo', 'num', 'bool'],
-//     additionalProperties: false,
-//   },
-// },
-// required: [
-//   'number',
-//   'negNumber',
-//   'maxNumber',
-//   'string',
-//   'longString',
-//   'boolean',
-//   'deeplyNested',
-// ],
-// additionalProperties: false,
 
 // const T = Type.Rec(Node => Type.Object({
 //     id: Type.String(),
 //     nodes: Type.Array(Node)
 // }))
-
-
 // const I = {
 //     id: '', nodes: [{
 //         id: '', nodes: [{
@@ -375,6 +337,7 @@ const T = Type.Object({
         bool: Type.Boolean()
     }, { additionalProperties: false })
 }, { additionalProperties: false })
+
 const I = Value.Create(T)
 
 // const T = Type.Object({
@@ -392,7 +355,7 @@ function ajv() {
     for (let i = 0; i < iterations; i++) {
         validator.check(I)
     }
-    return Date.now() - start
+    return Date.now() - start 
 }
 
 function value() {
@@ -403,7 +366,7 @@ function value() {
     }
     return Date.now() - start
 }
-
+console.log(Compiler.Compile(T).toString())
 while (true) {
     console.log('-----------------')
     const a = ajv()
@@ -413,7 +376,3 @@ while (true) {
     console.log('out', a / b, 'faster')
 }
 
-const x = /123/
-console.log(x.test('123'))
-console.log(x.test('1'))
-console.log(x.test('123'))

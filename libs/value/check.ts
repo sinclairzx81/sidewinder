@@ -171,7 +171,7 @@ export namespace CheckValue {
     return value === null
   }
 
-  function Visit<T extends Types.TSchema>(schema: T, value: any): boolean {
+  export function Visit<T extends Types.TSchema>(schema: T, value: any): boolean {
     if (schema.$id !== undefined) referenceMap.set(schema.$id, schema)
     const anySchema = schema as any
     switch (anySchema[Types.Kind]) {
