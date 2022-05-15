@@ -1,5 +1,5 @@
 import { Type, Static, TSchema } from '@sidewinder/type'
-
+import { Value } from '@sidewinder/value'
 import * as Types from '@sidewinder/type'
 
 // -----------------------------------------------------
@@ -11,7 +11,7 @@ export interface DebugAssertOk {
 }
 
 export interface DebugAssertFail {
-    ok:   false
+    ok: false
     expr: string
     path: string
     kind: string
@@ -33,10 +33,13 @@ export namespace TypeCompiler {
         path: string
     }
 
+    function CreateCheckFunctionName($id: string) {
+        return `check_${$id.replace(/-/g, '_')}`
+    }
+
     function CreateCondition<T extends Types.TSchema>(schema: T, path: string, expr: string): Condition {
         return { schema, path, expr }
     }
-
 
     function* Any(schema: Types.TAny, path: string): Generator<Condition> {
         yield CreateCondition(schema, path, '(true)')
@@ -140,7 +143,8 @@ export namespace TypeCompiler {
     }
 
     function* Self(schema: Types.TSelf, path: string): Generator<Condition> {
-        yield CreateCondition(schema, path, `Check(${path})`)
+        const func = CreateCheckFunctionName(schema.$ref)
+        yield CreateCondition(schema, path, `(${func}(${path}).ok)`)
     }
 
     function* String(schema: Types.TString, path: string): Generator<Condition> {
@@ -185,6 +189,14 @@ export namespace TypeCompiler {
     }
 
     function* Visit<T extends Types.TSchema>(schema: T, path: string): Generator<Condition> {
+        if (schema.$id && !functionSet.has(schema.$id)) {
+            functionSet.add(schema.$id)
+            const func = CreateCheckFunctionName(schema.$id)
+            const expr = [...Visit(schema, 'value')].map(condition => condition.expr).join(' && ')
+            SetLocal(`const local = value => ({ ok: ${expr}})`, func)
+            yield CreateCondition(schema, path, `(${func}(${path}).ok)`)
+            return
+        }
         const anySchema = schema as any
         switch (anySchema[Types.Kind]) {
             case 'Any':
@@ -238,15 +250,19 @@ export namespace TypeCompiler {
     // Locals
     // -------------------------------------------------------------------
 
+    const functionSet = new Set<string>()
     const functionLocals = [] as string[]
 
     function ClearLocals() {
         while (functionLocals.length > 0) functionLocals.shift()
     }
 
-    function SetLocal(code: string) {
-        const name = `local${functionLocals.length}`
-        functionLocals.push(code.replace('local', name))
+    function SetLocal(code: string, name?: string) {
+        if(name) {
+            functionLocals.push(code.replace('local', name))
+            return name
+        }
+        functionLocals.push(code.replace('local', `local${functionLocals.length}`))
         return name
     }
 
@@ -258,28 +274,22 @@ export namespace TypeCompiler {
     // Compiler
     // -------------------------------------------------------------------
 
-     /** Compiles an validation function that includes debug symbol information. */
-     export function Debug<T extends Types.TSchema>(schema: T): DebugAssertFunction {
+    /** Compiles a type into validation function */
+    export function Compile<T extends Types.TSchema>(schema: T): DebugAssertFunction {
         ClearLocals()
         const conditions = [...Visit(schema, 'value')]
-        const schemas    = conditions.map(condition => condition.schema)
-        const statements = conditions.map((condition, index) => `if(!${condition.expr}) { return { ok: false,  path: '${condition.path}', schema: schemas[${index}], data: ${condition.path} } }`)
+        const schemas = conditions.map(condition => condition.schema)
+        const statements = conditions.map((condition, index) => `  if(!${condition.expr}) { return { ok: false, path: '${condition.path}', schema: schemas[${index}], data: ${condition.path} } }`)
         const locals = GetLocals()
-        const body = `${locals}\nreturn function Check(value) {\n${statements.join('\n')}\nreturn true \n}`
+        const body = `${locals}\n\nreturn function check(value) {\n${statements.join('\n')}\n  return { ok: true } \n}`
+        console.log('----------------------------------------------------------')
+        console.log(body)
+        console.log('----------------------------------------------------------')
         const func = globalThis.Function('schemas', body)
         return func(schemas)
     }
-
-    /** Compiles an optimized validation function that omits and debug information. This function returns true or false only. */
-    export function Release<T extends Types.TSchema>(schema: T): ReleaseAssertFunction<Static<T>> {
-        ClearLocals()
-        const conditions = [...Visit(schema, 'value')].map(expr => `    ${expr.expr}`).join(' && \n')
-        const locals = GetLocals()
-        const body = `${locals}\nreturn function Check(value) {\n  return (\n${conditions}\n  )\n}`
-        const func = globalThis.Function(body)
-        return func()
-    }
 }
+
 
 // function * test(path: string) {
 //     const x = typeof value.x === 'number' &&
@@ -287,51 +297,84 @@ export namespace TypeCompiler {
 //     typeof value.z === 'number'
 // }
 
-enum Foo {
-    A, B
-}
-
-const T = Type.Object({
-    // o: Type.Rec(Self => Type.Object({ a: Type.Number(), x: Type.Array(Self) })),
-    // a: Type.Literal(10),
-    // b: Type.Literal(false),
-    // c: Type.Literal('hello'),
-    a: Type.Array(Type.Number()),
-    e: Type.Enum(Foo),
-    r: Type.Record(Type.Union([
-        Type.Literal('A'),
-        Type.Literal('B'),
-        Type.Literal('C')
-    ]), Type.Object({
-        a: Type.Number(),
-        b: Type.Number()
-    })),
-    // u: Type.Uint8Array({ minByteLength: 100 }),
-    // number: Type.Number({ minimum: 10, maximum: 100, multipleOf: 10 }),
-    // tuple: Type.Tuple([Type.Number(), Type.Object({
-    //     x: Type.Number(),
-    //     y: Type.Number(),
-    //     z: Type.Number(),
-    // })])
-})
-console.log(T)
-// for (let i = 0; i < 1; i++) {
-//     Compiler.Func(T).toString()
+// enum Foo {
+//     A, B
 // }
 
-console.log('debug', TypeCompiler.Debug(T).toString())
-console.log('release', TypeCompiler.Release(T).toString())
+// const T = Type.Object({
+//     number: Type.Number(),
+//     negNumber: Type.Number(),
+//     maxNumber: Type.Number(),
+//     string: Type.String({ default: 'hello' }),
+//     longString: Type.String(),
+//     boolean: Type.Boolean(),
+//     deeplyNested: Type.Object({
+//         foo: Type.String(),
+//         num: Type.Number(),
+//         bool: Type.Boolean()
+//     })
+// })
 
-const value = {
-    e: 3,
-    a: [1, 2, 3, true],
-    r: {
-        'A': { a: 1, b: 2 },
-        'B': { a: 1, b: 2 },
-        'C': { a: 1, b: 2 }
+const T = Type.Object({
+    node: Type.Rec(Node => Type.Object({
+        id: Type.Number({ $id: 'Id' }),
+        item: Type.Object({
+            nodes: Type.Array(Node)
+        }, { $id: 'Item' })
+    }))
+}, { $id: 'ENTRY'})
+
+const I = {
+    node: {
+        id: 'nodeA',
+        item: {
+            nodes: [{
+                id: 'nodeA',
+                item: {
+                    nodes: []
+                }
+            }]
+        }
     }
-}
-const Check = TypeCompiler.Debug(T)
-const Result = Check(value)
+} 
+
+// console.log(T)
+// console.log(I)
+
+// console.log('debug', TypeCompiler.Compile(T).toString())
+const Check = TypeCompiler.Compile(T)
+const Result = Check(I)
 console.log(JSON.stringify(Result, null, 2))
 
+
+// function check_type_0(value: any) {
+//     if (!(typeof value === 'object' && value !== null)) { return { ok: false, path: 'value', data: value } }
+//     if (!(typeof value.id === 'string')) { return { ok: false, path: 'value.id', data: value.id } }
+//     if (!(Array.isArray(value.nodes) && value.nodes.every((value: any) => (check_type_0(value).ok)))) { return { ok: false, path: 'value.nodes', data: value.nodes } }
+//     return { ok: true }
+// }
+
+// function check(value: any) {
+//     if (!(typeof value === 'object' && value !== null)) { return { ok: false, path: 'value', data: value } }
+//     const result0 = check_type_0(value.node)
+//     if (!result0.ok) { return result0 }
+//     return { ok: true }
+// }
+
+// const A = check({
+//     node: {
+//         id: 'nodeA',
+//         nodes: [{
+//             id: 'nodeB',
+//             nodes: [{
+//                 id: 'nodeB',
+//                 nodes: [1]
+//             }]
+//         }, {
+//             id: 'nodeC',
+//             nodes: []
+//         }]
+//     }
+// })
+
+// console.log(A)

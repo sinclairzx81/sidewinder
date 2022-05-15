@@ -268,15 +268,15 @@ export namespace TypeCompiler {
         return func(schemas)
     }
 
-    /** Compiles an optimized validation function that omits and debug information. This function returns true or false only. */
-    export function Release<T extends Types.TSchema>(schema: T): ReleaseAssertFunction<Static<T>> {
-        ClearLocals()
-        const conditions = [...Visit(schema, 'value')].map(expr => `    ${expr.expr}`).join(' && \n')
-        const locals = GetLocals()
-        const body = `${locals}\nreturn function Check(value) {\n  return (\n${conditions}\n  )\n}`
-        const func = globalThis.Function(body)
-        return func()
-    }
+    // /** Compiles an optimized validation function that omits and debug information. This function returns true or false only. */
+    // export function Release<T extends Types.TSchema>(schema: T): ReleaseAssertFunction<Static<T>> {
+    //     ClearLocals()
+    //     const conditions = [...Visit(schema, 'value')].map(expr => `    ${expr.expr}`).join(' && \n')
+    //     const locals = GetLocals()
+    //     const body = `${locals}\nreturn function Check(value) {\n  return (\n${conditions}\n  )\n}`
+    //     const func = globalThis.Function(body)
+    //     return func()
+    // }
 }
 
 // const T = Type.Rec(Node => Type.Object({
@@ -335,33 +335,47 @@ export namespace TypeCompiler {
 //     }]
 // }
 
-
-
 const T = Type.Object({
-    number: Type.Number(),
-    negNumber: Type.Number(),
-    maxNumber: Type.Number(),
-    string: Type.String({ default: 'hello' }),
-    longString: Type.String({ default: '1111111111111111111111111111111111111111111111111111111111111111111111' }),
-    boolean: Type.Boolean(),
-    tuple: Type.Tuple([Type.Number(), Type.Number(), Type.String()]),
-    // r: Type.Record(Type.Union([
-    //     Type.Literal('A'),
-    //     Type.Literal('B'),
-    //     Type.Literal('C')
-    // ]), Type.Object({
-    //     a: Type.Number(),
-    //     b: Type.Number()
-    // })),
-    deeplyNested: Type.Object({
-        foo: Type.String(),
-        num: Type.Number(),
-        bool: Type.Boolean()
-    })
+    node: Type.Rec(Node => Type.Object({
+        id: Type.String(),
+        nodes: Type.Array(Node)
+    }))
 })
 
+const I = {
+    node: {
+        id: 'hello',
+        nodes: [{
+            id: 'hello',
+            nodes: []
+        }]
+    }
+}
+// const T = Type.Object({
+//     number: Type.Number(),
+//     negNumber: Type.Number(),
+//     maxNumber: Type.Number(),
+//     string: Type.String({ default: 'hello' }),
+//     longString: Type.String({ default: '1111111111111111111111111111111111111111111111111111111111111111111111' }),
+//     boolean: Type.Boolean(),
+//     tuple: Type.Tuple([Type.Number(), Type.Number(), Type.String()]),
+//     // r: Type.Record(Type.Union([
+//     //     Type.Literal('A'),
+//     //     Type.Literal('B'),
+//     //     Type.Literal('C')
+//     // ]), Type.Object({
+//     //     a: Type.Number(),
+//     //     b: Type.Number()
+//     // })),
+//     deeplyNested: Type.Object({
+//         foo: Type.String(),
+//         num: Type.Number(),
+//         bool: Type.Boolean()
+//     })
+// })
 
-const I = Value.Create(T)
+
+// const I = Value.Create(T)
 
 // const T = Type.Object({
 //     id: Type.String({ pattern: '123'}),  
@@ -373,7 +387,7 @@ console.log(I, Value.Check(T, I))
 
 const x = TypeCompiler.Debug(T)
 
-const iterations = 50_000_000
+const iterations = 5_000_000
 function ajv() {
     const validator = new Validator(T)
     const start = Date.now()
@@ -394,7 +408,7 @@ function value() {
     }
     return Date.now() - start
 }
-console.log(TypeCompiler.Release(T).toString())
+console.log(TypeCompiler.Debug(T).toString())
 
 while (true) {
     console.log('-----------------')
