@@ -170,9 +170,9 @@ export interface TEnumOption<T> {
 }
 
 export interface TEnum<T extends Record<string, string | number> = Record<string, string | number>> extends TSchema {
-  [Kind]: 'Enum'
+  [Kind]: 'Union'
   static: T[keyof T]
-  anyOf: TEnumOption<T>[]
+  anyOf: TLiteral<string | number>[]
 }
 
 // --------------------------------------------------------------------------
@@ -577,8 +577,8 @@ export class TypeBuilder {
     const values = Object.keys(item)
       .filter((key) => isNaN(key as any))
       .map((key) => item[key]) as T[keyof T][]
-    const anyOf = values.map((value) => (typeof value === 'string' ? { type: 'string' as const, const: value } : { type: 'number' as const, const: value }))
-    return this.Create({ ...options, [Kind]: 'Enum', anyOf })
+    const anyOf = values.map((value) => (typeof value === 'string' ? { [Kind]: 'Literal', type: 'string' as const, const: value } : { [Kind]: 'Literal', type: 'number' as const, const: value }))
+    return this.Create({ ...options, [Kind]: 'Union', anyOf })
   }
 
   /** Creates a function type */
