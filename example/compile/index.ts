@@ -62,10 +62,6 @@ export namespace Compiler {
         if (schema.maximum) yield `(${path} <= ${schema.maximum})`
     }
 
-    function* Intersect(schema: Types.TIntersect, path: string): Generator<string> {
-        yield* Object(schema, path)
-    }
-
     function* Literal(schema: Types.TLiteral, path: string): Generator<string> {
         if (typeof schema.const === 'string') {
             yield `${path} === '${schema.const}'`
@@ -118,15 +114,19 @@ export namespace Compiler {
     }
 
     function* Record(schema: Types.TRecord<any, any>, path: string): Generator<string> {
-        yield `(typeof ${path} === 'object' && ${path} !== null)`
-
-        // const propertySchema = globalThis.Object.values(schema.patternProperties)[0]
-        // for (const key of globalThis.Object.keys(value)) {
-        //   const propertyValue = value[key]
-        //   if (!Visit(propertySchema, propertyValue)) yield false
-        // }
-        // yield true
-        yield ``
+        yield `(typeof ${path} === 'object' && ${path} !== null)`        
+        const [keyPattern, valueSchema] = globalThis.Object.entries(schema.patternProperties)[0]
+        // optimization: if passing union literal strings, we can add a forward assertion to
+        // check the length of the keys matches that of the number possible union values. This
+        // quickly asserts that the value has all required keys before exhaustive checks.
+        if(!(keyPattern === '^.*$' || keyPattern === '^(0|[1-9][0-9]*)$')) {
+            const propertyKeys = keyPattern.slice(1, keyPattern.length - 1).split('|')
+            yield `(Object.keys(${path})).length === ${propertyKeys.length}`
+        }
+        const local = SetLocal(`const local = new RegExp(/${keyPattern}/)`)
+        yield `(Object.keys(${path}).every(key => ${local}.test(key)))`
+        const expr = [...Visit(valueSchema, 'value')].join(' && ')
+        yield `(Object.values(${path}).every(value => ${expr}))`
     }
 
     function* Ref(schema: Types.TRef<any>, path: string): Generator<string> {
@@ -193,8 +193,6 @@ export namespace Compiler {
                 return yield* Function(anySchema, path)
             case 'Integer':
                 return yield* Integer(anySchema, path)
-            case 'Intersect':
-                return yield* Intersect(anySchema, path)
             case 'Literal':
                 return yield* Literal(anySchema, path)
             case 'Null':
@@ -267,26 +265,40 @@ export namespace Compiler {
 // }
 
 const T = Type.Object({
-    o: Type.Rec(Self => Type.Object({ a: Type.Number(), x: Type.Array(Self) })),
-    a: Type.Literal(10),
-    b: Type.Literal(false),
-    c: Type.Literal('hello'),
-    u: Type.Uint8Array({ minByteLength: 100 }),
-    number: Type.Number({ minimum: 10, maximum: 100, multipleOf: 10 }),
-    tuple: Type.Tuple([Type.Number(), Type.Object({
-        x: Type.Number(),
-        y: Type.Number(),
-        z: Type.Number(),
-    })])
+    // o: Type.Rec(Self => Type.Object({ a: Type.Number(), x: Type.Array(Self) })),
+    // a: Type.Literal(10),
+    // b: Type.Literal(false),
+    // c: Type.Literal('hello'),
+    r: Type.Record(Type.Union([
+        Type.Literal('A'),
+        Type.Literal('B'),
+        Type.Literal('C')
+    ]), Type.Object({
+        a: Type.Number(),
+        b: Type.Number()
+    })),
+    // u: Type.Uint8Array({ minByteLength: 100 }),
+    // number: Type.Number({ minimum: 10, maximum: 100, multipleOf: 10 }),
+    // tuple: Type.Tuple([Type.Number(), Type.Object({
+    //     x: Type.Number(),
+    //     y: Type.Number(),
+    //     z: Type.Number(),
+    // })])
 })
 console.log(T)
-for (let i = 0; i < 100_000; i++) {
+for (let i = 0; i < 1; i++) {
     Compiler.Func(T).toString()
 }
 
 console.log('done', Compiler.Func(T).toString())
 
-const value = { a: 10, b: false, c: 'hello', u: new Uint8Array(100), number: 10, tuple: [1, { x: 1, y: 1, z: 1 }] }
+const value = { 
+    r: { 
+        'A': { a: 1, b: 2 },
+        'B': { a: 1, b: 2 },
+        'C': { a: 1, b: 2 } 
+    } 
+}
 console.log(Compiler.Check(T, value))
 
 // console.log(z)

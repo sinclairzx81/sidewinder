@@ -170,8 +170,14 @@ export namespace CreateValue {
   }
 
   function Record(schema: Types.TRecord<any, any>): any {
+    const [keyPattern, valueSchema] = globalThis.Object.entries(schema.patternProperties)[0]
     if (schema.default !== undefined) {
       return schema.default
+    } else if (!(keyPattern === '^.*$' || keyPattern === '^(0|[1-9][0-9]*)$')) {
+      const propertyKeys = keyPattern.slice(1, keyPattern.length - 1).split('|')
+      return propertyKeys.reduce((acc, key) => {
+        return { ...acc, [key]: Create(valueSchema) }
+      }, {})
     } else {
       return {}
     }

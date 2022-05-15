@@ -8,7 +8,7 @@ export namespace Compiler {
     // -------------------------------------------------------------------
     // Locals
     // -------------------------------------------------------------------
-    
+
     const functionLocals = [] as string[]
 
     function ClearLocals() {
@@ -56,19 +56,15 @@ export namespace Compiler {
 
     function* Integer(schema: Types.TNumeric, path: string): Generator<string> {
         yield `(typeof ${path} === 'number' && Number.isInteger(${path}))`
-        if(schema.multipleOf) yield `(${path} % ${schema.multipleOf} === 0)`
-        if(schema.exclusiveMinimum) yield `(${path} < ${schema.exclusiveMinimum})`
-        if(schema.exclusiveMaximum) yield `(${path} < ${schema.exclusiveMaximum})`
-        if(schema.minimum) yield `(${path} >= ${schema.minimum})`
-        if(schema.maximum) yield `(${path} <= ${schema.maximum})` 
-    }
-
-    function* Intersect(schema: Types.TIntersect, path: string): Generator<string> {
-        yield* Object(schema, path)
+        if (schema.multipleOf) yield `(${path} % ${schema.multipleOf} === 0)`
+        if (schema.exclusiveMinimum) yield `(${path} < ${schema.exclusiveMinimum})`
+        if (schema.exclusiveMaximum) yield `(${path} < ${schema.exclusiveMaximum})`
+        if (schema.minimum) yield `(${path} >= ${schema.minimum})`
+        if (schema.maximum) yield `(${path} <= ${schema.maximum})`
     }
 
     function* Literal(schema: Types.TLiteral, path: string): Generator<string> {
-        if(typeof schema.const === 'string') {
+        if (typeof schema.const === 'string') {
             yield `${path} === '${schema.const}'`
         } else {
             yield `${path} === ${schema.const}`
@@ -81,11 +77,11 @@ export namespace Compiler {
 
     function* Number(schema: Types.TNumeric, path: string): Generator<string> {
         yield `(typeof ${path} === 'number')`
-        if(schema.multipleOf) yield `(${path} % ${schema.multipleOf} === 0)`
-        if(schema.exclusiveMinimum) yield `(${path} < ${schema.exclusiveMinimum})`
-        if(schema.exclusiveMaximum) yield `(${path} < ${schema.exclusiveMaximum})`
-        if(schema.minimum) yield `(${path} >= ${schema.minimum})`
-        if(schema.maximum) yield `(${path} <= ${schema.maximum})` 
+        if (schema.multipleOf) yield `(${path} % ${schema.multipleOf} === 0)`
+        if (schema.exclusiveMinimum) yield `(${path} < ${schema.exclusiveMinimum})`
+        if (schema.exclusiveMaximum) yield `(${path} < ${schema.exclusiveMaximum})`
+        if (schema.minimum) yield `(${path} >= ${schema.minimum})`
+        if (schema.maximum) yield `(${path} <= ${schema.maximum})`
     }
 
     function* Object(schema: Types.TObject, path: string): Generator<string> {
@@ -119,19 +115,19 @@ export namespace Compiler {
     }
 
     function* Record(schema: Types.TRecord<any, any>, path: string): Generator<string> {
-        yield `(typeof ${path} === 'object' && ${path} !== null)`
-
-        // const propertySchema = globalThis.Object.values(schema.patternProperties)[0]
-        // for (const key of globalThis.Object.keys(value)) {
-        //   const propertyValue = value[key]
-        //   if (!Visit(propertySchema, propertyValue)) yield false
-        // }
-        // yield true
-        yield ``
-    }
-
-    function* Rec(schema: Types.TRec<any>, path: string): Generator<string> {
-        throw new Error('Cannot typeof recursive types')
+        yield `(typeof ${path} === 'object' && ${path} !== null)`        
+        const [keyPattern, valueSchema] = globalThis.Object.entries(schema.patternProperties)[0]
+        // optimization: if passing union literal strings, we can add a forward assertion to
+        // check the length of the keys matches that of the number possible union values. This
+        // quickly asserts that the value has all required keys before exhaustive checks.
+        if(!(keyPattern === '^.*$' || keyPattern === '^(0|[1-9][0-9]*)$')) {
+            const propertyKeys = keyPattern.slice(1, keyPattern.length - 1).split('|')
+            yield `(Object.keys(${path})).length === ${propertyKeys.length}`
+        }
+        const local = SetLocal(`const local = new RegExp(/${keyPattern}/)`)
+        yield `(Object.keys(${path}).every(key => ${local}.test(key)))`
+        const expr = [...Visit(valueSchema, 'value')].join(' && ')
+        yield `(Object.values(${path}).every(value => ${expr}))`
     }
 
     function* Ref(schema: Types.TRef<any>, path: string): Generator<string> {
@@ -152,9 +148,9 @@ export namespace Compiler {
 
     function* Tuple(schema: Types.TTuple<any[]>, path: string): Generator<string> {
         yield `(Array.isArray(${path}))`
-        if(schema.items === undefined) return yield `(${path}.length === 0)`
+        if (schema.items === undefined) return yield `(${path}.length === 0)`
         yield `(${path}.length === ${schema.maxItems})`
-        for(let i = 0; i < schema.items.length; i++) {
+        for (let i = 0; i < schema.items.length; i++) {
             yield [...Visit(schema.items[i], `${path}[${i}]`)].join(' && ')
         }
     }
@@ -170,15 +166,15 @@ export namespace Compiler {
 
     function* Uint8Array(schema: Types.TUint8Array, path: string): Generator<string> {
         yield `(${path} instanceof Uint8Array)`
-        if(schema.maxByteLength) yield `(${path}.length <= ${schema.maxByteLength})`
-        if(schema.minByteLength) yield `(${path}.length >= ${schema.minByteLength})`
+        if (schema.maxByteLength) yield `(${path}.length <= ${schema.maxByteLength})`
+        if (schema.minByteLength) yield `(${path}.length >= ${schema.minByteLength})`
     }
 
     function* Unknown(schema: Types.TUnknown, path: string): Generator<string> {
     }
 
     function* Void(schema: Types.TVoid, path: string): Generator<string> {
-        yield `(${path} === null)`
+        yield `${path} === null`
     }
 
     export function* Visit<T extends Types.TSchema>(schema: T, path: string): Generator<string> {
@@ -198,8 +194,6 @@ export namespace Compiler {
                 return yield* Function(anySchema, path)
             case 'Integer':
                 return yield* Integer(anySchema, path)
-            case 'Intersect':
-                return yield* Intersect(anySchema, path)
             case 'Literal':
                 return yield* Literal(anySchema, path)
             case 'Null':
@@ -212,8 +206,6 @@ export namespace Compiler {
                 return yield* Promise(anySchema, path)
             case 'Record':
                 return yield* Record(anySchema, path)
-            case 'Rec':
-                return yield* Rec(anySchema, path)
             case 'Ref':
                 return yield* Ref(anySchema, path)
             case 'Self':
@@ -236,11 +228,11 @@ export namespace Compiler {
                 throw Error(`Unknown schema kind '${schema[Types.Kind]}'`)
         }
     }
-    
+
     // -------------------------------------------------------------------
     // Compile
     // -------------------------------------------------------------------
-    
+
     /** Compiles this schema validation function */
     export function Compile<T extends Types.TSchema>(schema: T): (value: any) => boolean {
         ClearLocals()
@@ -331,6 +323,14 @@ const T = Type.Object({
     longString: Type.String({ default: '1111111111111111111111111111111111111111111111111111111111111111111111' }),
     boolean: Type.Boolean(),
     tuple: Type.Tuple([Type.Number(), Type.Number(), Type.String()]),
+    r: Type.Record(Type.Union([
+        Type.Literal('A'),
+        Type.Literal('B'),
+        Type.Literal('C')
+    ]), Type.Object({
+        a: Type.Number(),
+        b: Type.Number()
+    })),
     deeplyNested: Type.Object({
         foo: Type.String(),
         num: Type.Number(),
@@ -348,7 +348,7 @@ const I = Value.Create(T)
 console.log(T)
 console.log(I, Value.Check(T, I))
 
-const iterations = 50_000_000
+const iterations = 5_000_000
 function ajv() {
     const validator = new Validator(T)
     const start = Date.now()
