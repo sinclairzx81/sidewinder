@@ -335,47 +335,39 @@ export namespace TypeCompiler {
 //     }]
 // }
 
-const T = Type.Object({
-    node: Type.Rec(Node => Type.Object({
-        id: Type.String(),
-        nodes: Type.Array(Node)
-    }))
-})
-
-const I = {
-    node: {
-        id: 'hello',
-        nodes: [{
-            id: 'hello',
-            nodes: []
-        }]
-    }
-}
 // const T = Type.Object({
-//     number: Type.Number(),
-//     negNumber: Type.Number(),
-//     maxNumber: Type.Number(),
-//     string: Type.String({ default: 'hello' }),
-//     longString: Type.String({ default: '1111111111111111111111111111111111111111111111111111111111111111111111' }),
-//     boolean: Type.Boolean(),
-//     tuple: Type.Tuple([Type.Number(), Type.Number(), Type.String()]),
-//     // r: Type.Record(Type.Union([
-//     //     Type.Literal('A'),
-//     //     Type.Literal('B'),
-//     //     Type.Literal('C')
-//     // ]), Type.Object({
-//     //     a: Type.Number(),
-//     //     b: Type.Number()
-//     // })),
-//     deeplyNested: Type.Object({
-//         foo: Type.String(),
-//         num: Type.Number(),
-//         bool: Type.Boolean()
-//     })
+//     node: Type.Rec(Node => Type.Object({
+//         id: Type.String(),
+//         nodes: Type.Array(Node)
+//     }))
 // })
 
+// const I = {
+//     node: {
+//         id: 'hello',
+//         nodes: [{
+//             id: 'hello',
+//             nodes: []
+//         }]
+//     }
+// }
 
-// const I = Value.Create(T)
+const T = Type.Object({
+    number: Type.Number(),
+    negNumber: Type.Number(),
+    maxNumber: Type.Number(),
+    string: Type.String({ default: 'hello' }),
+    longString: Type.String({ default: '1111111111111111111111111111111111111111111111111111111111111111111111' }),
+    boolean: Type.Boolean(),
+    deeplyNested: Type.Object({
+        foo: Type.String(),
+        num: Type.Number(),
+        bool: Type.Boolean()
+    }, { additionalProperties: false })
+}, { additionalProperties: false })
+
+
+const I = Value.Create(T)
 
 // const T = Type.Object({
 //     id: Type.String({ pattern: '123'}),  
@@ -387,7 +379,7 @@ console.log(I, Value.Check(T, I))
 
 const x = TypeCompiler.Debug(T)
 
-const iterations = 5_000_000
+const iterations = 50_000_000
 function ajv() {
     const validator = new Validator(T)
     const start = Date.now()

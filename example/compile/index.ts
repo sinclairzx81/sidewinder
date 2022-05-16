@@ -1,5 +1,4 @@
-import { Type, Static, TSchema } from '@sidewinder/type'
-import { Value } from '@sidewinder/value'
+import { Type } from '@sidewinder/type'
 import * as Types from '@sidewinder/type'
 
 // -----------------------------------------------------
@@ -22,24 +21,24 @@ export type DebugAssertFunction = (value: unknown) => DebugAssertOk | DebugAsser
 export type ReleaseAssertFunction<T> = (value: unknown) => value is T
 
 export namespace TypeCompiler {
-
+    
     // -------------------------------------------------------------------
-    // Conditions
+    // Condition
     // -------------------------------------------------------------------
 
     export interface Condition {
-        schema: any
+        schema: Types.TSchema
         expr: string
         path: string
-    }
-
-    function CreateCheckFunctionName($id: string) {
-        return `check_${$id.replace(/-/g, '_')}`
     }
 
     function CreateCondition<T extends Types.TSchema>(schema: T, path: string, expr: string): Condition {
         return { schema, path, expr }
     }
+
+    // -------------------------------------------------------------------
+    // Schemas
+    // -------------------------------------------------------------------
 
     function* Any(schema: Types.TAny, path: string): Generator<Condition> {
         yield CreateCondition(schema, path, '(true)')
@@ -143,7 +142,7 @@ export namespace TypeCompiler {
     }
 
     function* Self(schema: Types.TSelf, path: string): Generator<Condition> {
-        const func = CreateCheckFunctionName(schema.$ref)
+        const func = CreateFunctionName(schema.$ref)
         yield CreateCondition(schema, path, `(${func}(${path}).ok)`)
     }
 
@@ -189,14 +188,15 @@ export namespace TypeCompiler {
     }
 
     function* Visit<T extends Types.TSchema>(schema: T, path: string): Generator<Condition> {
-        if (schema.$id && !functionSet.has(schema.$id)) {
-            functionSet.add(schema.$id)
-            const func = CreateCheckFunctionName(schema.$id)
-            const expr = [...Visit(schema, 'value')].map(condition => condition.expr).join(' && ')
-            SetLocal(`const local = value => ({ ok: ${expr}})`, func)
-            yield CreateCondition(schema, path, `(${func}(${path}).ok)`)
+         if (schema.$id && !functionNames.has(schema.$id)) {
+            functionNames.add(schema.$id)
+            const name = CreateFunctionName(schema.$id)
+            const body = CreateFunction(schema, 'value', name)
+            SetLocal(body)
+            yield CreateCondition(schema, path, `(${name}(${path}).ok)`)
             return
         }
+        
         const anySchema = schema as any
         switch (anySchema[Types.Kind]) {
             case 'Any':
@@ -250,41 +250,56 @@ export namespace TypeCompiler {
     // Locals
     // -------------------------------------------------------------------
 
-    const functionSet = new Set<string>()
-    const functionLocals = [] as string[]
+    const functionLocals = new Set<string>()
+    const functionNames = new Set<string>()
 
     function ClearLocals() {
-        while (functionLocals.length > 0) functionLocals.shift()
+        functionLocals.clear()
+        functionNames.clear()
     }
 
-    function SetLocal(code: string, name?: string) {
-        if(name) {
-            functionLocals.push(code.replace('local', name))
-            return name
-        }
-        functionLocals.push(code.replace('local', `local${functionLocals.length}`))
+    function SetLocal(code: string) {
+        const name = `local${functionLocals.size}`
+        functionLocals.add(code.replace('local', name))
         return name
     }
 
     function GetLocals() {
-        return functionLocals.join('\n')
+        return [...functionLocals].join('\n')
+    }
+
+    // -------------------------------------------------------------------
+    // Functions
+    // -------------------------------------------------------------------
+    
+    function CreateFunctionName($id: string) {
+        return `check_${$id.replace(/-/g, '_')}`
+    }
+
+    function CreateFunction(schema: Types.TSchema, path: string, name: string) {
+        const conditions = [...Visit(schema, path)]
+        const statements = conditions.map((condition, index) => `  if(!${condition.expr}) { return { ok: false,  path: '${condition.path}', schema: schemas[${index}], data: ${condition.path} } }`)
+        return `function ${name}(value) {\n${statements.join('\n')}\n  return { ok: true }\n}`
     }
 
     // -------------------------------------------------------------------
     // Compiler
     // -------------------------------------------------------------------
 
+    /** Returns the validation kernel as a string. This function is primarily used for debugging. */
+    export function Kernel<T extends Types.TSchema>(schema: T): string {
+        ClearLocals()
+        const _ = [...Visit(schema, 'value')] // locals populated during yield
+        const locals = GetLocals()
+        return `${locals}\n return ${CreateFunction(schema, 'value', 'check')}`
+    }
+
     /** Compiles a type into validation function */
     export function Compile<T extends Types.TSchema>(schema: T): DebugAssertFunction {
         ClearLocals()
-        const conditions = [...Visit(schema, 'value')]
-        const schemas = conditions.map(condition => condition.schema)
-        const statements = conditions.map((condition, index) => `  if(!${condition.expr}) { return { ok: false, path: '${condition.path}', schema: schemas[${index}], data: ${condition.path} } }`)
+        const schemas = [...Visit(schema, 'value')].map(condition => condition.schema)
         const locals = GetLocals()
-        const body = `${locals}\n\nreturn function check(value) {\n${statements.join('\n')}\n  return { ok: true } \n}`
-        console.log('----------------------------------------------------------')
-        console.log(body)
-        console.log('----------------------------------------------------------')
+        const body = `${locals}\n return ${CreateFunction(schema, 'value', 'check')}`
         const func = globalThis.Function('schemas', body)
         return func(schemas)
     }
@@ -317,12 +332,12 @@ export namespace TypeCompiler {
 
 const T = Type.Object({
     node: Type.Rec(Node => Type.Object({
-        id: Type.Number({ $id: 'Id' }),
+        id: Type.String(),
         item: Type.Object({
             nodes: Type.Array(Node)
-        }, { $id: 'Item' })
+        })
     }))
-}, { $id: 'ENTRY'})
+})
 
 const I = {
     node: {
@@ -341,7 +356,7 @@ const I = {
 // console.log(T)
 // console.log(I)
 
-// console.log('debug', TypeCompiler.Compile(T).toString())
+console.log(TypeCompiler.Kernel(T))
 const Check = TypeCompiler.Compile(T)
 const Result = Check(I)
 console.log(JSON.stringify(Result, null, 2))
