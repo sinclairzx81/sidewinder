@@ -1,7 +1,7 @@
 import { Type, Static } from '@sidewinder/type'
 import { ok, fail } from './validate'
 
-describe('type/Intersect', () => {
+describe('type/schema/Intersect', () => {
   it('Should intersect two objects', () => {
     const A = Type.Object({ a: Type.String() })
     const B = Type.Object({ b: Type.Number() })

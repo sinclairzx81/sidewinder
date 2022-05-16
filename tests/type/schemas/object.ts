@@ -1,7 +1,7 @@
 import { Type } from '@sidewinder/type'
 import { ok, fail } from './validate'
 
-describe('type/Object', () => {
+describe('type/schema/Object', () => {
   it('Should not validate a number', () => {
     const T = Type.Object({})
     fail(T, 42)

@@ -1,3 +1,3 @@
 import { Type } from '@sidewinder/type'
 
-describe('type/Modifier', () => {})
+describe('type/schema/Modifier', () => {})

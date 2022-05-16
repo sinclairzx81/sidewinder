@@ -1,7 +1,7 @@
 import { Type } from '@sidewinder/type'
 import { ok, fail } from './validate'
 
-describe('type/Enum', () => {
+describe('type/schema/Enum', () => {
   it('Should validate when emum uses default numeric values', () => {
     enum Kind {
       Foo, // = 0

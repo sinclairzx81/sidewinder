@@ -1,7 +1,7 @@
 import { Type } from '@sidewinder/type'
 import { ok, fail } from './validate'
 
-describe('type/Union', () => {
+describe('type/schema/Union', () => {
   it('Should validate union of string, number and boolean', () => {
     const A = Type.String()
     const B = Type.Number()

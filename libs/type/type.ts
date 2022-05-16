@@ -306,7 +306,7 @@ export interface ObjectOptions extends SchemaOptions {
   maxProperties?: number
 }
 
-export interface TObject<T extends TProperties = TProperties> extends TSchema {
+export interface TObject<T extends TProperties = TProperties> extends TSchema, ObjectOptions {
   [Kind]: 'Object'
   static: PropertiesReduce<T, this['params']>
   type: 'object'
@@ -612,7 +612,11 @@ export class TypeBuilder {
         properties[key] = properties[key] === undefined ? schema : { [Kind]: 'Union', anyOf: [properties[key], { ...schema }] }
       }
     }
-    return this.Create({ ...options, [Kind]: 'Object', type: 'object', properties, required: [...required] })
+    if (required.size > 0) {
+      return this.Create({ ...options, [Kind]: 'Object', type: 'object', properties, required: [...required] })
+    } else {
+      return this.Create({ ...options, [Kind]: 'Object', type: 'object', properties })
+    }
   }
 
   /** Creates a keyof type */
@@ -644,9 +648,12 @@ export class TypeBuilder {
       const modifier = property[Modifier]
       return modifier && (modifier === 'Optional' || modifier === 'ReadonlyOptional')
     })
-    const required_names = property_names.filter((name) => !optional.includes(name))
-    const required = required_names.length > 0 ? required_names : undefined
-    return this.Create(required ? { ...options, [Kind]: 'Object', type: 'object', properties, required } : { ...options, [Kind]: 'Object', type: 'object', properties })
+    const required = property_names.filter((name) => !optional.includes(name))
+    if (required.length > 0) {
+      return this.Create({ ...options, [Kind]: 'Object', type: 'object', properties, required })
+    } else {
+      return this.Create({ ...options, [Kind]: 'Object', type: 'object', properties })
+    }
   }
 
   /** Creates a new object whose properties are omitted from the given object */

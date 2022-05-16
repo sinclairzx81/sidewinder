@@ -2,7 +2,7 @@ import { deepStrictEqual, strictEqual } from 'assert'
 import { Type } from '@sidewinder/type'
 import { ok, fail } from './validate'
 
-describe('type/Readonly', () => {
+describe('type/schema/Readonly', () => {
   it('Should validate object with readonly', () => {
     const T = Type.Object(
       {

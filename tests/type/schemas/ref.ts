@@ -2,7 +2,7 @@ import { Type } from '@sidewinder/type'
 import { ok, fail } from './validate'
 import { Assert } from '../../assert/index'
 
-describe('type/Ref', () => {
+describe('type/schema/Ref', () => {
   it('Should should validate when referencing a type', () => {
     const T = Type.Object(
       {

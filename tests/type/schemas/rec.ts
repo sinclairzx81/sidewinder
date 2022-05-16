@@ -1,7 +1,7 @@
 import { Type } from '@sidewinder/type'
 import { ok, fail } from './validate'
 
-describe('type/Rec', () => {
+describe('type/schema/Rec', () => {
   it('Should validate recursive node type', () => {
     const Node = Type.Rec((Self) =>
       Type.Object({

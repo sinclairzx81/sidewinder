@@ -1,7 +1,7 @@
 import { Type } from '@sidewinder/type'
 import { ok, fail } from './validate'
 
-describe('type/Array', () => {
+describe('type/schema/Array', () => {
   it('Should validate an array of any', () => {
     const T = Type.Array(Type.Any())
     ok(T, [0, true, 'hello', {}])

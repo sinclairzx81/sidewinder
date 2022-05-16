@@ -114,4 +114,4 @@ function start(iterations: number) {
 }
 
 
-start(50_000_000)
+start(5_000_000)

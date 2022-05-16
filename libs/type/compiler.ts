@@ -1,3 +1,31 @@
+/*--------------------------------------------------------------------------
+
+@sidewinder/type
+
+The MIT License (MIT)
+
+Copyright (c) 2022 Haydn Paterson (sinclair) <haydn.developer@gmail.com>
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+
+---------------------------------------------------------------------------*/
+
 import * as Types from './type'
 
 // -----------------------------------------------------
@@ -71,9 +99,9 @@ export namespace TypeCompiler {
 
     function* Literal(schema: Types.TLiteral, path: string): Generator<Condition> {
         if (typeof schema.const === 'string') {
-            yield CreateCondition(schema, path, `${path} === '${schema.const}'`)
+            yield CreateCondition(schema, path, `(${path} === '${schema.const}')`)
         } else {
-            yield CreateCondition(schema, path, `${path} === ${schema.const}`)
+            yield CreateCondition(schema, path, `(${path} === ${schema.const})`)
         }
     }
 
@@ -91,7 +119,9 @@ export namespace TypeCompiler {
     }
 
     function* Object(schema: Types.TObject, path: string): Generator<Condition> {
-        yield CreateCondition(schema, path, `(typeof ${path} === 'object' && ${path} !== null)`)
+        yield CreateCondition(schema, path, `(typeof ${path} === 'object' && ${path} !== null && !Array.isArray(${path}))`)
+        if(schema.minProperties !== undefined) yield CreateCondition(schema, path, `(Object.keys(${path}).length >= ${schema.minProperties})`)
+        if(schema.maxProperties !== undefined) yield CreateCondition(schema, path, `(Object.keys(${path}).length <= ${schema.maxProperties})`)
         const propertyKeys = globalThis.Object.keys(schema.properties)
         if (schema.additionalProperties === false) {
             // optimization: If the property key length matches the required keys length
@@ -110,8 +140,8 @@ export namespace TypeCompiler {
             if (schema.required && schema.required.includes(propertyKey)) {
                 yield* Visit(propertySchema, `${path}.${propertyKey}`)
             } else {
-                const expr = [...Visit(propertySchema, `${path}.${propertyKey}`)].join(' && ')
-                yield CreateCondition(schema, `${path}.${propertyKey}`, `${path}.${propertyKey} === undefined ? true : (${expr})`)
+                const expr = [...Visit(propertySchema, `${path}.${propertyKey}`)].map(condition => condition.expr).join(' && ')
+                yield CreateCondition(schema, `${path}.${propertyKey}`, `(${path}.${propertyKey} === undefined ? true : (${expr}))`)
             }
         }
     }
@@ -130,7 +160,7 @@ export namespace TypeCompiler {
             const propertyKeys = keyPattern.slice(1, keyPattern.length - 1).split('|')
             yield CreateCondition(schema, path, `(Object.keys(${path}).length === ${propertyKeys.length})`)
         }
-        const local = SetLocal(`const local = new RegExp(/${keyPattern}/)`)
+        const local = PushLocal(`const local = new RegExp(/${keyPattern}/)`)
         yield CreateCondition(schema, path, `(Object.keys(${path}).every(key => ${local}.test(key)))`)
         const expr = [...Visit(valueSchema, 'value')].map(cond => cond.expr).join(' && ')
         yield CreateCondition(schema, path, `(Object.values(${path}).every(value => ${expr}))`)
@@ -148,7 +178,7 @@ export namespace TypeCompiler {
     function* String(schema: Types.TString, path: string): Generator<Condition> {
         yield CreateCondition(schema, path, `(typeof ${path} === 'string')`)
         if (schema.pattern !== undefined) {
-            const local = SetLocal(`const local = new RegExp('${schema.pattern}');`)
+            const local = PushLocal(`const local = new RegExp('${schema.pattern}');`)
             yield CreateCondition(schema, path, `(${local}.test(${path}))`)
         }
     }
@@ -159,7 +189,7 @@ export namespace TypeCompiler {
         yield CreateCondition(schema, path, `(${path}.length === ${schema.maxItems})`)
         for (let i = 0; i < schema.items.length; i++) {
             const expr = [...Visit(schema.items[i], `${path}[${i}]`)].map(condition => condition.expr).join(' && ')
-            yield CreateCondition(schema, path, expr)
+            yield CreateCondition(schema, path, `(${expr})`)
         }
     }
 
@@ -183,19 +213,19 @@ export namespace TypeCompiler {
     }
 
     function* Void(schema: Types.TVoid, path: string): Generator<Condition> {
-        yield CreateCondition(schema, path, `${path} === null`)
+        yield CreateCondition(schema, path, `(${path} === null)`)
     }
-
+    
     function* Visit<T extends Types.TSchema>(schema: T, path: string): Generator<Condition> {
         if (schema.$id && !functionNames.has(schema.$id)) {
             functionNames.add(schema.$id)
+            const conditions = [...Visit(schema, 'value')]
             const name = CreateFunctionName(schema.$id)
-            const body = CreateFunction(schema, 'value', name)
-            SetLocal(body)
+            const body = CreateFunction(name, conditions)
+            PushLocal(body)
             yield CreateCondition(schema, path, `(${name}(${path}).ok)`)
             return
         }
-
         const anySchema = schema as any
         switch (anySchema[Types.Kind]) {
             case 'Any':
@@ -257,14 +287,14 @@ export namespace TypeCompiler {
         functionNames.clear()
     }
 
-    function SetLocal(code: string) {
+    function PushLocal(code: string) {
         const name = `local${functionLocals.size}`
         functionLocals.add(code.replace('local', name))
         return name
     }
 
     function GetLocals() {
-        return [...functionLocals].join('\n')
+        return [...functionLocals.values()].join('\n')
     }
 
     // -------------------------------------------------------------------
@@ -275,9 +305,8 @@ export namespace TypeCompiler {
         return `check_${$id.replace(/-/g, '_')}`
     }
 
-    function CreateFunction(schema: Types.TSchema, path: string, name: string) {
-        const conditions = [...Visit(schema, path)]
-        const statements = conditions.map((condition, index) => `  if(!${condition.expr}) { return { ok: false,  path: '${condition.path}', schema: schemas[${index}], data: ${condition.path} } }`)
+    function CreateFunction(name: string, conditions: Condition[]) {
+        const statements = conditions.map((condition, index) => `  if(!${condition.expr}) { return { ok: false, path: '${condition.path}', schema: schemas[${index}], data: ${condition.path} } }`)
         return `function ${name}(value) {\n${statements.join('\n')}\n  return { ok: true }\n}`
     }
 
@@ -288,17 +317,18 @@ export namespace TypeCompiler {
     /** Returns the validation kernel as a string. This function is primarily used for debugging. */
     export function Kernel<T extends Types.TSchema>(schema: T): string {
         ClearLocals()
-        const _ = [...Visit(schema, 'value')] // locals populated during yield
+        const conditions = [...Visit(schema, 'value')] // locals populated during yield
         const locals = GetLocals()
-        return `${locals}\n return ${CreateFunction(schema, 'value', 'check')}`
+        return `${locals}\nreturn ${CreateFunction('check', conditions)}`
     }
 
     /** Compiles a type into validation function */
     export function Compile<T extends Types.TSchema>(schema: T): DebugAssertFunction {
         ClearLocals()
-        const schemas = [...Visit(schema, 'value')].map(condition => condition.schema)
+        const conditions = [...Visit(schema, 'value')]
+        const schemas = conditions.map(condition => condition.schema)
         const locals = GetLocals()
-        const body = `${locals}\n return ${CreateFunction(schema, 'value', 'check')}`
+        const body = `${locals}\nreturn ${CreateFunction('check', conditions)}`
         const func = globalThis.Function('schemas', body)
         return func(schemas)
     }
