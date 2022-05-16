@@ -41,7 +41,6 @@ export interface DebugAssertFail {
   expr: string
   path: string
   kind: string
-  schema: Types.TSchema
 }
 
 export type DebugAssertFunction = (value: unknown) => DebugAssertOk | DebugAssertFail
@@ -159,6 +158,9 @@ export namespace TypeCompiler {
   }
 
   function* Ref(schema: Types.TRef<any>, path: string): Generator<Condition> {
+    // reference: referenced schemas can originate from either additional
+    // schemas or inline in the schema itself. Ideally the recursive
+    // path should align to reference path. Consider for review.
     if (!functionNames.has(schema.$ref)) {
       const reference = referenceMap.get(schema.$ref)!
       functionNames.add(schema.$ref)
@@ -218,6 +220,9 @@ export namespace TypeCompiler {
   }
 
   function* Visit<T extends Types.TSchema>(schema: T, path: string): Generator<Condition> {
+    // reference: referenced schemas can originate from either additional
+    // schemas or inline in the schema itself. Ideally the recursive
+    // path should align to reference path. Consider for review.
     if (schema.$id && !functionNames.has(schema.$id)) {
       functionNames.add(schema.$id)
       const conditions = [...Visit(schema, 'value')]
@@ -227,6 +232,7 @@ export namespace TypeCompiler {
       yield CreateCondition(schema, path, `(${name}(${path}).ok)`)
       return
     }
+
     const anySchema = schema as any
     switch (anySchema[Types.Kind]) {
       case 'Any':
@@ -316,7 +322,7 @@ export namespace TypeCompiler {
   }
 
   function CreateFunction(name: string, conditions: Condition[]) {
-    const statements = conditions.map((condition, index) => `  if(!${condition.expr}) { return { ok: false, path: '${condition.path}', schema: schemas[${index}], data: ${condition.path} } }`)
+    const statements = conditions.map((condition, index) => `  if(!${condition.expr}) { return { ok: false, path: '${condition.path}', data: ${condition.path} } }`)
     return `function ${name}(value) {\n${statements.join('\n')}\n  return { ok: true }\n}`
   }
 
@@ -325,23 +331,18 @@ export namespace TypeCompiler {
   // -------------------------------------------------------------------
 
   /** Returns the validation kernel as a string. This function is primarily used for debugging. */
-  export function Kernel<T extends Types.TSchema>(schema: T, referencedSchemas: Types.TSchema[] = []): string {
+  export function Kernel<T extends Types.TSchema>(schema: T, additional: Types.TSchema[] = []): string {
     ClearLocals()
-    PushReferences(referencedSchemas)
+    PushReferences(additional)
     const conditions = [...Visit(schema, 'value')] // locals populated during yield
     const locals = GetLocals()
     return `${locals.join('\n')}\nreturn ${CreateFunction('check', conditions)}`
   }
 
   /** Compiles a type into validation function */
-  export function Compile<T extends Types.TSchema>(schema: T, referencedSchemas: Types.TSchema[] = []): DebugAssertFunction {
-    ClearLocals()
-    PushReferences(referencedSchemas)
-    const conditions = [...Visit(schema, 'value')]
-    const schemas = conditions.map((condition) => condition.schema)
-    const locals = GetLocals()
-    const body = `${locals.join('\n')}\nreturn ${CreateFunction('check', conditions)}`
-    const func = globalThis.Function('schemas', body)
-    return func(schemas)
+  export function Compile<T extends Types.TSchema>(schema: T, additional: Types.TSchema[] = []): DebugAssertFunction {
+    const kernel = Kernel(schema, additional)
+    const func = globalThis.Function(kernel)
+    return func()
   }
 }
