@@ -159,7 +159,16 @@ export namespace TypeCompiler {
   }
 
   function* Ref(schema: Types.TRef<any>, path: string): Generator<Condition> {
-    throw new Error('TypeCompiler cannot compile Ref for Ref')
+    if (!functionNames.has(schema.$ref)) {
+      const reference = referenceMap.get(schema.$ref)!
+      functionNames.add(schema.$ref)
+      const conditions = [...Visit(reference, 'value')]
+      const name = CreateFunctionName(schema.$ref)
+      const body = CreateFunction(name, conditions)
+      PushLocal(body)
+    }
+    const func = CreateFunctionName(schema.$ref)
+    yield CreateCondition(schema, path, `(${func}(${path}).ok)`)
   }
 
   function* Self(schema: Types.TSelf, path: string): Generator<Condition> {
@@ -270,13 +279,22 @@ export namespace TypeCompiler {
   // -------------------------------------------------------------------
   // Locals
   // -------------------------------------------------------------------
-
+  const referenceMap = new Map<string, Types.TSchema>()
   const functionLocals = new Set<string>()
   const functionNames = new Set<string>()
 
   function ClearLocals() {
     functionLocals.clear()
     functionNames.clear()
+    referenceMap.clear()
+  }
+
+  function PushReferences(schemas: Types.TSchema[] = []) {
+    for (const schema of schemas) {
+      if (!schema.$id) throw Error(`Referenced schemas must specify an $id. Failed for '${JSON.stringify(schema)}'`)
+      if (referenceMap.has(schema.$id)) throw Error(`Duplicate schema $id detected for '${schema.$id}'`)
+      referenceMap.set(schema.$id, schema)
+    }
   }
 
   function PushLocal(code: string) {
@@ -286,7 +304,7 @@ export namespace TypeCompiler {
   }
 
   function GetLocals() {
-    return [...functionLocals.values()].join('\n')
+    return [...functionLocals.values()]
   }
 
   // -------------------------------------------------------------------
@@ -307,20 +325,22 @@ export namespace TypeCompiler {
   // -------------------------------------------------------------------
 
   /** Returns the validation kernel as a string. This function is primarily used for debugging. */
-  export function Kernel<T extends Types.TSchema>(schema: T, additional: Types.TSchema[] = []): string {
+  export function Kernel<T extends Types.TSchema>(schema: T, referencedSchemas: Types.TSchema[] = []): string {
     ClearLocals()
+    PushReferences(referencedSchemas)
     const conditions = [...Visit(schema, 'value')] // locals populated during yield
     const locals = GetLocals()
-    return `${locals}\nreturn ${CreateFunction('check', conditions)}`
+    return `${locals.join('\n')}\nreturn ${CreateFunction('check', conditions)}`
   }
 
   /** Compiles a type into validation function */
-  export function Compile<T extends Types.TSchema>(schema: T, additional: Types.TSchema[] = []): DebugAssertFunction {
+  export function Compile<T extends Types.TSchema>(schema: T, referencedSchemas: Types.TSchema[] = []): DebugAssertFunction {
     ClearLocals()
+    PushReferences(referencedSchemas)
     const conditions = [...Visit(schema, 'value')]
     const schemas = conditions.map((condition) => condition.schema)
     const locals = GetLocals()
-    const body = `${locals}\nreturn ${CreateFunction('check', conditions)}`
+    const body = `${locals.join('\n')}\nreturn ${CreateFunction('check', conditions)}`
     const func = globalThis.Function('schemas', body)
     return func(schemas)
   }

@@ -10,7 +10,6 @@ function benchmark<T extends TSchema>(name: string, iterations: number, schema: 
     console.log('benchmark:', name)
     const I = data || Value.Create(schema)
     const A = (function () {
-        console.log(schema)
         const validator = new Validator(schema)
         const start = Date.now()
         console.log('benchmark:', name, 'ajv profiling')
@@ -113,5 +112,6 @@ function start(iterations: number) {
     })
 }
 
-
-start(10_000_000)
+while(true) {
+    start(10_000_000)
+}
