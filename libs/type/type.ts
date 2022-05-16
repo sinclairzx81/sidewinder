@@ -26,8 +26,6 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-import { Extends, ExtendsResult } from './extends'
-
 // --------------------------------------------------------------------------
 // Symbols
 // --------------------------------------------------------------------------
@@ -172,9 +170,9 @@ export interface TEnumOption<T> {
 }
 
 export interface TEnum<T extends Record<string, string | number> = Record<string, string | number>> extends TSchema {
-  [Kind]: 'Enum'
+  [Kind]: 'Union'
   static: T[keyof T]
-  anyOf: TEnumOption<T>[]
+  anyOf: TLiteral<string | number>[]
 }
 
 // --------------------------------------------------------------------------
@@ -308,7 +306,7 @@ export interface ObjectOptions extends SchemaOptions {
   maxProperties?: number
 }
 
-export interface TObject<T extends TProperties = TProperties> extends TSchema {
+export interface TObject<T extends TProperties = TProperties> extends TSchema, ObjectOptions {
   [Kind]: 'Object'
   static: PropertiesReduce<T, this['params']>
   type: 'object'
@@ -364,6 +362,7 @@ export interface TRecord<K extends TRecordKey = TRecordKey, T extends TSchema = 
   static: Record<Static<K>, Static<T, this['params']>>
   type: 'object'
   patternProperties: { [pattern: string]: T }
+  additionalProperties: false
 }
 
 // --------------------------------------------------------------------------
@@ -579,38 +578,8 @@ export class TypeBuilder {
     const values = Object.keys(item)
       .filter((key) => isNaN(key as any))
       .map((key) => item[key]) as T[keyof T][]
-    const anyOf = values.map((value) => (typeof value === 'string' ? { type: 'string' as const, const: value } : { type: 'number' as const, const: value }))
-    return this.Create({ ...options, [Kind]: 'Enum', anyOf })
-  }
-
-  /** Constructs a type by excluding from UnionType all union members that are assignable to ExcludedMembers */
-  public Exclude<T extends TUnion, U extends TUnion>(unionType: T, excludedMembers: U, options: SchemaOptions = {}): TExclude<T, U> {
-    const anyOf = unionType.anyOf.filter((schema: TSchema) => !Extends.Check(schema, excludedMembers)).map((schema) => this.Clone(schema))
+    const anyOf = values.map((value) => (typeof value === 'string' ? { [Kind]: 'Literal', type: 'string' as const, const: value } : { [Kind]: 'Literal', type: 'number' as const, const: value }))
     return this.Create({ ...options, [Kind]: 'Union', anyOf })
-  }
-
-  /** Constructs a type by extracting from Type all union members that are assignable to Union. */
-  public Extract<T extends TSchema, U extends TUnion>(type: T, union: U, options: SchemaOptions = {}): TExtract<T, U> {
-    if (type[Kind] === 'Union') {
-      const anyOf = type.anyOf.filter((schema: TSchema) => Extends.Check(schema, union) === ExtendsResult.True).map((schema: TSchema) => this.Clone(schema))
-      return this.Create({ ...options, [Kind]: 'Union', anyOf })
-    } else {
-      const anyOf = union.anyOf.filter((schema) => Extends.Check(type, schema) === ExtendsResult.True).map((schema) => this.Clone(schema))
-      return this.Create({ ...options, [Kind]: 'Union', anyOf })
-    }
-  }
-
-  /** If left extends right, return True otherwise False */
-  public Extends<Left extends TSchema, Right extends TSchema, True extends TSchema, False extends TSchema>(left: Left, right: Right, x: True, y: False): TExtends<Left, Right, True, False> {
-    const result = Extends.Check(left, right)
-    switch (result) {
-      case ExtendsResult.Union:
-        return this.Union([this.Clone(x), this.Clone(y)]) as any as TExtends<Left, Right, True, False>
-      case ExtendsResult.True:
-        return this.Clone(x)
-      case ExtendsResult.False:
-        return this.Clone(y)
-    }
   }
 
   /** Creates a function type */
@@ -644,7 +613,11 @@ export class TypeBuilder {
         properties[key] = properties[key] === undefined ? schema : { [Kind]: 'Union', anyOf: [properties[key], { ...schema }] }
       }
     }
-    return this.Create({ ...options, [Kind]: 'Object', type: 'object', properties, required: [...required] })
+    if (required.size > 0) {
+      return this.Create({ ...options, [Kind]: 'Object', type: 'object', properties, required: [...required] })
+    } else {
+      return this.Create({ ...options, [Kind]: 'Object', type: 'object', properties })
+    }
   }
 
   /** Creates a keyof type */
@@ -676,9 +649,12 @@ export class TypeBuilder {
       const modifier = property[Modifier]
       return modifier && (modifier === 'Optional' || modifier === 'ReadonlyOptional')
     })
-    const required_names = property_names.filter((name) => !optional.includes(name))
-    const required = required_names.length > 0 ? required_names : undefined
-    return this.Create(required ? { ...options, [Kind]: 'Object', type: 'object', properties, required } : { ...options, [Kind]: 'Object', type: 'object', properties })
+    const required = property_names.filter((name) => !optional.includes(name))
+    if (required.length > 0) {
+      return this.Create({ ...options, [Kind]: 'Object', type: 'object', properties, required })
+    } else {
+      return this.Create({ ...options, [Kind]: 'Object', type: 'object', properties })
+    }
   }
 
   /** Creates a new object whose properties are omitted from the given object */
@@ -745,7 +721,8 @@ export class TypeBuilder {
           throw Error('Invalid Record Key')
       }
     })()
-    return this.Create({ ...options, [Kind]: 'Record', type: 'object', patternProperties: { [pattern]: value } })
+
+    return this.Create({ ...options, [Kind]: 'Record', type: 'object', patternProperties: { [pattern]: value }, additionalProperties: false })
   }
 
   /** Creates a recursive object type */

@@ -1,2 +1,2 @@
-import './extends'
+import './compiler'
 import './schemas'

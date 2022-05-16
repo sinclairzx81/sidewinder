@@ -2,7 +2,7 @@ import { Type } from '@sidewinder/type'
 import { ok, fail } from './validate'
 import { Assert } from '../../assert'
 
-describe('type/Tuple', () => {
+describe('type/schema/Tuple', () => {
   it('Should validate tuple of [string, number]', () => {
     const A = Type.String()
     const B = Type.Number()

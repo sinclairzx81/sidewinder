@@ -29,10 +29,7 @@ THE SOFTWARE.
 import * as Types from '@sidewinder/type'
 
 export namespace CheckValue {
-  // -----------------------------------------------------
-  // Required to defer recursive type validation
-  // -----------------------------------------------------
-  const ids = new Map<string, Types.TObject>()
+  const referenceMap = new Map<string, Types.TSchema>()
 
   function Any(schema: Types.TAny, value: any): boolean {
     return true
@@ -40,7 +37,10 @@ export namespace CheckValue {
 
   function Array(schema: Types.TArray, value: any): boolean {
     if (typeof value !== 'object' || !globalThis.Array.isArray(value)) return false
-    return value.every((element) => Check(schema.items, element))
+    for (let i = 0; i < value.length; i++) {
+      if (!Visit(schema.items, value[i])) return false
+    }
+    return true
   }
 
   function Boolean(schema: Types.TBoolean, value: any): boolean {
@@ -48,15 +48,14 @@ export namespace CheckValue {
   }
 
   function Constructor(schema: Types.TConstructor, value: any): boolean {
-    const required = new Set(schema.returns.required || [])
-    return globalThis.Object.entries(schema.returns.properties).every(([key, schema]) => {
-      if (!required.has(key) && value.prototype[key] === undefined) return true
-      return Check(schema as Types.TSchema, value.prototype[key])
-    })
+    return Visit(schema.returns, value.prototype) // check return type only (as an object)
   }
 
   function Enum(schema: Types.TEnum<any>, value: any): boolean {
-    return schema.anyOf.some((schema) => schema.const === value)
+    for (const subschema of schema.anyOf) {
+      if (subschema.const === value) return true
+    }
+    return false
   }
 
   function Function(schema: Types.TFunction, value: any): boolean {
@@ -84,14 +83,21 @@ export namespace CheckValue {
   }
 
   function Object(schema: Types.TObject, value: any): boolean {
-    if (typeof value !== 'object') return false
-    if (value === null) return false
-    const required = new Set<string>(schema.required || [])
-    ids.set(schema.$id!, schema)
-    return globalThis.Object.entries(schema.properties).every(([key, schema]) => {
-      if (!required.has(key) && value[key] === undefined) return true
-      return Check(schema, value[key])
-    })
+    if (typeof value !== 'object' || value === null) return false
+    const propertyKeys = globalThis.Object.keys(schema.properties)
+    if (schema.additionalProperties === false) {
+      const valueKeys = globalThis.Object.keys(value)
+      for (const valueKey of valueKeys) {
+        if (!propertyKeys.includes(valueKey)) return false
+      }
+    }
+    for (const propertyKey of propertyKeys) {
+      const propertySchema = schema.properties[propertyKey]
+      const propertyValue = value[propertyKey]
+      if (propertyValue === undefined && schema.required !== undefined && !schema.required.includes(propertyKey)) return true
+      if (!Visit(propertySchema, propertyValue)) return false
+    }
+    return true
   }
 
   function Promise(schema: Types.TPromise<any>, value: any): boolean {
@@ -99,11 +105,13 @@ export namespace CheckValue {
   }
 
   function Record(schema: Types.TRecord<any, any>, value: any): boolean {
-    if (value === null || typeof value !== 'object') return false
-    return globalThis.Object.entries(value).every(([key, value]) => {
-      const subschema = globalThis.Object.values(schema.patternProperties)[0]
-      return Check(subschema, value)
-    })
+    if (typeof value !== 'object' || value === null) return false
+    const propertySchema = globalThis.Object.values(schema.patternProperties)[0]
+    for (const key of globalThis.Object.keys(value)) {
+      const propertyValue = value[key]
+      if (!Visit(propertySchema, propertyValue)) return false
+    }
+    return true
   }
 
   function Rec(schema: Types.TRec<any>, value: any): boolean {
@@ -115,8 +123,9 @@ export namespace CheckValue {
   }
 
   function Self(schema: Types.TSelf, value: any): any {
-    if (!ids.has(schema.$ref)) throw new Error(`Check: Cannot locate schema with $id '${schema.$id}' for referenced type`)
-    return Object(ids.get(schema.$ref)!, value)
+    if (!referenceMap.has(schema.$ref)) throw new Error(`Check: Cannot locate schema with $id '${schema.$id}' for referenced type`)
+    const referenced = referenceMap.get(schema.$ref)!
+    return Visit(referenced, value)
   }
 
   function String(schema: Types.TString, value: any): boolean {
@@ -133,7 +142,10 @@ export namespace CheckValue {
     if (schema.items === undefined && value.length === 0) return true
     if (schema.items === undefined) return false
     if (value.length < schema.minItems || value.length > schema.maxItems) return false
-    return schema.items.every((schema, index) => Check(schema, value[index]))
+    for (let i = 0; i < schema.items.length; i++) {
+      if (!Visit(schema.items[i], value[i])) return false
+    }
+    return true
   }
 
   function Undefined(schema: Types.TUndefined, value: any): boolean {
@@ -141,7 +153,10 @@ export namespace CheckValue {
   }
 
   function Union(schema: Types.TUnion<any[]>, value: any): boolean {
-    return schema.anyOf.some((schema) => Check(schema, value))
+    for (let i = 0; i < schema.anyOf.length; i++) {
+      if (Visit(schema.anyOf[i], value)) return true
+    }
+    return false
   }
 
   function Uint8Array(schema: Types.TUint8Array, value: any): boolean {
@@ -156,7 +171,8 @@ export namespace CheckValue {
     return value === null
   }
 
-  export function Check<T extends Types.TSchema>(schema: T, value: any): boolean {
+  export function Visit<T extends Types.TSchema>(schema: T, value: any): boolean {
+    if (schema.$id !== undefined) referenceMap.set(schema.$id, schema)
     const anySchema = schema as any
     switch (anySchema[Types.Kind]) {
       case 'Any':
@@ -210,5 +226,10 @@ export namespace CheckValue {
       default:
         throw Error(`Unknown schema kind '${schema[Types.Kind]}'`)
     }
+  }
+
+  export function Check<T extends Types.TSchema>(schema: T, value: any): boolean {
+    if (referenceMap.size > 0) referenceMap.clear()
+    return Visit(schema, value)
   }
 }

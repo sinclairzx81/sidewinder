@@ -1,7 +1,7 @@
 import { Type } from '@sidewinder/type'
 import { ok, fail } from './validate'
 
-describe('type/Unsafe', () => {
+describe('type/schema/Unsafe', () => {
   it('Should validate an unsafe type', () => {
     const T = Type.Unsafe({
       type: 'object',

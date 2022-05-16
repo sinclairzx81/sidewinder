@@ -2,7 +2,7 @@ import { Type } from '@sidewinder/type'
 import { ok, fail } from './validate'
 import { strictEqual } from 'assert'
 
-describe('type/Omit', () => {
+describe('type/schema/Omit', () => {
   it('Should omit properties on the source schema', () => {
     const A = Type.Object(
       {

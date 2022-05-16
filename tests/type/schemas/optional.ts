@@ -2,7 +2,7 @@ import { strictEqual } from 'assert'
 import { Type } from '@sidewinder/type'
 import { ok } from './validate'
 
-describe('type/Optional', () => {
+describe('type/schema/Optional', () => {
   it('Should validate object with optional', () => {
     const T = Type.Object(
       {
