@@ -1,28 +1,11 @@
 import { Type, TypeCompiler } from '@sidewinder/type'
 
-const T = Type.Tuple([
-    Type.Rec((Node) =>
-        Type.Object({
-            id: Type.String(),
-            nodes: Type.Array(Node),
-        }),
-    ),
-])
+const R = Type.String({ $id: 'AString' })
 
-const C = TypeCompiler.Compile(T)
-const R = C([
-    {
-        id: 'A',
-        nodes: [
-            { id: 1, nodes: [] },
-            { id: 'C', nodes: [] },
-        ],
-    },
-])
-console.log(R)
-// console.log(T)
+const T = Type.Record(Type.Number(), Type.Number())
 
-console.log(TypeCompiler.Kernel(T))
+
+console.log(TypeCompiler.Kernel(T, [R]))
 
 
 // function check_type_0(value: any) {

@@ -362,6 +362,7 @@ export interface TRecord<K extends TRecordKey = TRecordKey, T extends TSchema = 
   static: Record<Static<K>, Static<T, this['params']>>
   type: 'object'
   patternProperties: { [pattern: string]: T }
+  additionalProperties: false
 }
 
 // --------------------------------------------------------------------------
@@ -720,7 +721,8 @@ export class TypeBuilder {
           throw Error('Invalid Record Key')
       }
     })()
-    return this.Create({ ...options, [Kind]: 'Record', type: 'object', patternProperties: { [pattern]: value } })
+
+    return this.Create({ ...options, [Kind]: 'Record', type: 'object', patternProperties: { [pattern]: value }, additionalProperties: false })
   }
 
   /** Creates a recursive object type */
