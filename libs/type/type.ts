@@ -150,7 +150,7 @@ export interface TBoolean extends TSchema {
 // Constructor
 // --------------------------------------------------------------------------
 
-type TContructorParameters<T extends readonly TSchema[], P extends unknown[]> = [...{ [K in keyof T]: T[K] extends TSchema ? Static<T[K], P> : never }]
+export type TContructorParameters<T extends readonly TSchema[], P extends unknown[]> = [...{ [K in keyof T]: T[K] extends TSchema ? Static<T[K], P> : never }]
 
 export interface TConstructor<T extends TSchema[] = TSchema[], U extends TSchema = TSchema> extends TSchema {
   [Kind]: 'Constructor'
@@ -318,7 +318,7 @@ export interface TObject<T extends TProperties = TProperties> extends TSchema, O
 // Omit
 // --------------------------------------------------------------------------
 
-interface TOmit<T extends TObject, Properties extends ObjectPropertyKeys<T>[]> extends TObject, ObjectOptions {
+export interface TOmit<T extends TObject, Properties extends ObjectPropertyKeys<T>[]> extends TObject, ObjectOptions {
   static: Omit<Static<T, this['params']>, Properties[number]>
   properties: T extends TObject ? Omit<T['properties'], Properties[number]> : never
 }
