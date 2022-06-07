@@ -76,7 +76,7 @@ export class ServiceMethods {
   }
 
   // ------------------------------------------------------------------------------
-  // Publics
+  // Privates
   // ------------------------------------------------------------------------------
   
   async #authorize(context: unknown, entry: RegisteredServerMethod) {
