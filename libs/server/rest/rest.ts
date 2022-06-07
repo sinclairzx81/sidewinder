@@ -121,7 +121,7 @@ export class RestService extends HttpService {
   public put(...args: any[]) {
     return this.#createRoute(...(['put', ...args] as [string, string, RestMiddleware[], RestCallback]))
   }
-  
+
   // ------------------------------------------------------------------------------------
   // Private
   // ------------------------------------------------------------------------------------

@@ -47,31 +47,39 @@ export interface RegisteredServerMethod {
  * via JSON RPC 2.0 protocol.
  */
 export class ServiceMethods {
-  private readonly methods: Map<string, RegisteredServerMethod>
+  readonly #methods: Map<string, RegisteredServerMethod>
 
   constructor() {
-    this.methods = new Map<string, RegisteredServerMethod>()
+    this.#methods = new Map<string, RegisteredServerMethod>()
   }
 
+  // ------------------------------------------------------------------------------
+  // Publics
+  // ------------------------------------------------------------------------------
+  
   public register(method: string, schema: TFunction<any[], any>, authorize: Function, callback: Function) {
     const paramsValidator = new Validator(Type.Tuple(schema.parameters))
     const returnValidator = new Validator(schema.returns)
-    this.methods.set(method, { paramsValidator, returnValidator, authorize, callback })
+    this.#methods.set(method, { paramsValidator, returnValidator, authorize, callback })
   }
 
   public async execute(context: unknown, method: string, params: unknown[]) {
-    this.validateMethodExists(method)
-    const entry = this.methods.get(method)!
-    const methodContext = await this.authorize(context, entry)
-    this.validateMethodParameters(entry, method, params)
+    this.#validateMethodExists(method)
+    const entry = this.#methods.get(method)!
+    const methodContext = await this.#authorize(context, entry)
+    this.#validateMethodParameters(entry, method, params)
     const output = await entry.callback(methodContext, ...params)
     // Note: To support void, we remap a undefined result to null
     const result = output === undefined ? null : output
-    this.validateMethodReturnType(entry, method as string, result)
+    this.#validateMethodReturnType(entry, method as string, result)
     return result
   }
 
-  private async authorize(context: unknown, entry: RegisteredServerMethod) {
+  // ------------------------------------------------------------------------------
+  // Publics
+  // ------------------------------------------------------------------------------
+  
+  async #authorize(context: unknown, entry: RegisteredServerMethod) {
     try {
       return await entry.authorize(context)
     } catch {
@@ -79,20 +87,20 @@ export class ServiceMethods {
     }
   }
 
-  private validateMethodExists(method: string) {
-    if (!this.methods.has(method)) {
+  #validateMethodExists(method: string) {
+    if (!this.#methods.has(method)) {
       throw new Exception(`Method not found`, RpcErrorCode.MethodNotFound, {})
     }
   }
 
-  private validateMethodParameters(entry: RegisteredServerMethod, method: string, params: unknown[]) {
+  #validateMethodParameters(entry: RegisteredServerMethod, method: string, params: unknown[]) {
     const check = entry.paramsValidator.check(params)
     if (!check.success) {
       throw new Exception(`Invalid parameters for method ${method}(...). ${check.errorText}`, RpcErrorCode.InvalidParams, check.success)
     }
   }
 
-  private validateMethodReturnType(entry: RegisteredServerMethod, method: string, result: unknown) {
+  #validateMethodReturnType(entry: RegisteredServerMethod, method: string, result: unknown) {
     const check = entry.returnValidator.check(result)
     if (!check.success) {
       throw new Exception(`Method '${method}' returned an invalid result`, RpcErrorCode.InternalServerError, {})

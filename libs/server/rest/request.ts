@@ -32,17 +32,21 @@ import { parse as parseQueryString } from 'qs'
 import { IncomingMessage } from 'http'
 
 export class RestRequest {
-  private readonly internalIpAddress: string
-  private readonly internalHeaders: Map<string, string>
-  private readonly internalQuery: Map<string, string>
-  private readonly internalParams: Map<string, string>
+  readonly #ipAddress: string
+  readonly #headers: Map<string, string>
+  readonly #query: Map<string, string>
+  readonly #params: Map<string, string>
 
   constructor(private readonly request: IncomingMessage, params: Record<string, string>, public readonly clientId: string) {
-    this.internalIpAddress = this.readIpAddress(request)
-    this.internalHeaders = this.readHeaders(request)
-    this.internalQuery = this.readQuery(request)
-    this.internalParams = this.readParams(params)
+    this.#ipAddress = this.#readIpAddress(request)
+    this.#headers = this.#readHeaders(request)
+    this.#query = this.#readQuery(request)
+    this.#params = this.#readParams(params)
   }
+
+  // ------------------------------------------------------------------------------
+  // Publics
+  // ------------------------------------------------------------------------------
 
   /**
    * Gets the ip address associated with this request. This address will either
@@ -51,22 +55,22 @@ export class RestRequest {
    * returns 0.0.0.0.
    */
   public get ipAddress(): string {
-    return this.internalIpAddress
+    return this.#ipAddress
   }
 
   /** Gets the http headers for this request */
   public get headers(): ReadonlyMap<HttpHeaderKeys> {
-    return this.internalHeaders
+    return this.#headers
   }
 
   /** Gets the parsed querystring parameters for this request */
   public get query(): ReadonlyMap<string> {
-    return this.internalQuery
+    return this.#query
   }
 
   /** Gets the parsed params obtain from the url pattern */
   public get params(): ReadonlyMap<string> {
-    return this.internalParams
+    return this.#params
   }
 
   /** Reads one buffer from this request */
@@ -112,7 +116,11 @@ export class RestRequest {
     return JSON.parse(await this.text())
   }
 
-  private readIpAddress(request: IncomingMessage) {
+  // ------------------------------------------------------------------------------
+  // Privates
+  // ------------------------------------------------------------------------------
+  
+  #readIpAddress(request: IncomingMessage) {
     if (request.headers['x-forwarded-for'] !== undefined) {
       const forwarded = request.headers['x-forwarded-for'] as string
       return forwarded.trim()
@@ -123,7 +131,7 @@ export class RestRequest {
     }
   }
 
-  private readHeaders(request: IncomingMessage) {
+  #readHeaders(request: IncomingMessage) {
     const map = new Map<string, string>()
     for (const [key, value] of Object.entries(request.headers)) {
       if (value === null || value === undefined) {
@@ -139,7 +147,7 @@ export class RestRequest {
     return map
   }
 
-  private readQuery(request: IncomingMessage) {
+  #readQuery(request: IncomingMessage) {
     const map = new Map<string, string>()
     if (request.url === undefined) {
       return map
@@ -149,7 +157,7 @@ export class RestRequest {
       return map
     }
     const qstring = request.url.slice(qindex + 1)
-    for (const [key, value] of Object.entries(this.parseUrl(qstring))) {
+    for (const [key, value] of Object.entries(this.#parseUrl(qstring))) {
       if (value === null || value === undefined) {
         map.set(key, '')
       } else if (typeof value === 'string') {
@@ -163,7 +171,7 @@ export class RestRequest {
     return map
   }
 
-  private readParams(params: Record<string, string>) {
+  #readParams(params: Record<string, string>) {
     const map = new Map<string, string>()
     for (const key of Object.keys(params)) {
       map.set(key, params[key])
@@ -171,7 +179,7 @@ export class RestRequest {
     return map
   }
 
-  private parseUrl(url: string): object {
+  #parseUrl(url: string): object {
     try {
       return parseQueryString(url)
     } catch {

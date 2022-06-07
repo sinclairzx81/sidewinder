@@ -35,16 +35,20 @@ import { ReadonlyMap, HttpHeaderKeys } from '../http/index'
  * type only provides access to the requests headers and querystring parameters.
  */
 export class Request {
-  private readonly internalIpAddress: string
-  private readonly internalHeaders: Map<string, string>
-  private readonly internalQuery: Map<string, string>
+  readonly #ipAddress: string
+  readonly #headers: Map<string, string>
+  readonly #query: Map<string, string>
 
   constructor(request: IncomingMessage) {
-    this.internalIpAddress = this.readIpAddress(request)
-    this.internalHeaders = this.readHeaders(request)
-    this.internalQuery = this.readQuery(request)
+    this.#ipAddress = this.#readIpAddress(request)
+    this.#headers = this.#readHeaders(request)
+    this.#query = this.#readQuery(request)
   }
 
+  // ------------------------------------------------------------------------------
+  // Publics
+  // ------------------------------------------------------------------------------
+  
   /**
    * Gets the ip address associated with this request. This address will either
    * be the raw socket remoteAddress, or in the instance of a load balancer, the
@@ -52,20 +56,24 @@ export class Request {
    * returns 0.0.0.0.
    */
   public get ipAddress(): string {
-    return this.internalIpAddress
+    return this.#ipAddress
   }
 
   /** Gets the http headers for this request */
   public get headers(): ReadonlyMap<HttpHeaderKeys> {
-    return this.internalHeaders
+    return this.#headers
   }
 
   /** Gets the parsed querystring parameters for this request */
   public get query(): ReadonlyMap<string> {
-    return this.internalQuery
+    return this.#query
   }
 
-  private readIpAddress(request: IncomingMessage) {
+  // ------------------------------------------------------------------------------
+  // Privates
+  // ------------------------------------------------------------------------------
+  
+  #readIpAddress(request: IncomingMessage) {
     if (request.headers['x-forwarded-for'] !== undefined) {
       const forwarded = request.headers['x-forwarded-for'] as string
       return forwarded.trim()
@@ -76,7 +84,7 @@ export class Request {
     }
   }
 
-  private readHeaders(request: IncomingMessage) {
+  #readHeaders(request: IncomingMessage) {
     const map = new Map<string, string>()
     for (const [key, value] of Object.entries(request.headers)) {
       if (value === null || value === undefined) {
@@ -92,7 +100,7 @@ export class Request {
     return map
   }
 
-  private readQuery(request: IncomingMessage) {
+  #readQuery(request: IncomingMessage) {
     const map = new Map<string, string>()
     if (request.url === undefined) {
       return map
@@ -102,7 +110,7 @@ export class Request {
       return map
     }
     const qstring = request.url.slice(qindex + 1)
-    for (const [key, value] of Object.entries(this.parseUrl(qstring))) {
+    for (const [key, value] of Object.entries(this.#parseUrl(qstring))) {
       if (value === null || value === undefined) {
         map.set(key, '')
       } else if (typeof value === 'string') {
@@ -116,7 +124,7 @@ export class Request {
     return map
   }
 
-  private parseUrl(url: string): object {
+  #parseUrl(url: string): object {
     try {
       return parseQueryString(url)
     } catch {

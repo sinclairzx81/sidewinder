@@ -34,16 +34,17 @@ interface Deferred {
   resolve: Function
   reject: Function
 }
+
 /**
  * A Responder is a specialized async utility used to handle request response resolution
  * over WebSockets. It is a form of Deferred but supports rejecting multiple deferreds
  * via a context (for example a WebSocket identifier)
  */
 export class Responder {
-  private readonly entries: Map<string, Deferred>
+  readonly #deferreds: Map<string, Deferred>
 
   constructor() {
-    this.entries = new Map<string, Deferred>()
+    this.#deferreds = new Map<string, Deferred>()
   }
 
   /** Registers a deferred with the given context and returns an awaitable handle. */
@@ -55,41 +56,41 @@ export class Responder {
       reject = _reject
     })
     const handle = v4()
-    this.entries.set(handle, { context, promise, resolve, reject })
+    this.#deferreds.set(handle, { context, promise, resolve, reject })
     return handle
   }
 
   /** Waits for the given handle to resolve. If the handle does not exist and error is thrown. */
   public async wait<T = any>(handle: string): Promise<T> {
-    if (!this.entries.has(handle)) throw Error('Response')
-    const entry = this.entries.get(handle)!
+    if (!this.#deferreds.has(handle)) throw Error('Response')
+    const entry = this.#deferreds.get(handle)!
     try {
       const result = (await entry.promise) as T
-      this.entries.delete(handle)
+      this.#deferreds.delete(handle)
       return result
     } catch (error) {
-      this.entries.delete(handle)
+      this.#deferreds.delete(handle)
       throw error
     }
   }
 
   /** Resolves a deferred with the given result */
   public resolve(handle: string, result: unknown) {
-    if (!this.entries.has(handle)) return console.log('NO HANDLE')
-    const deferred = this.entries.get(handle)!
+    if (!this.#deferreds.has(handle)) return console.log('NO HANDLE')
+    const deferred = this.#deferreds.get(handle)!
     deferred.resolve(result)
   }
 
   /** Rejects a deferred with the given error */
   public reject(handle: string, error: unknown) {
-    if (!this.entries.has(handle)) return
-    const deferred = this.entries.get(handle)!
+    if (!this.#deferreds.has(handle)) return
+    const deferred = this.#deferreds.get(handle)!
     deferred.reject(error)
   }
 
   /** Rejects all deferreds matching the given context */
   public rejectFor(context: string, error: unknown) {
-    for (const [handle, deferred] of this.entries) {
+    for (const [handle, deferred] of this.#deferreds) {
       if (deferred.context === context) deferred.reject(error)
     }
   }

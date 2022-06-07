@@ -25,35 +25,40 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
+
 import { Buffer } from '@sidewinder/buffer'
 import { ServerResponse } from 'http'
 
 export class RestResponse {
-  private _headers: Record<string, string>
-  private _status: number = 200
-  private _statusText: string = ''
+  #headers: Record<string, string>
+  #status: number = 200
+  #statusText: string = ''
 
   constructor(private readonly response: ServerResponse) {
-    this._headers = {}
-    this._status = 200
-    this._statusText = ''
+    this.#headers = {}
+    this.#status = 200
+    this.#statusText = ''
   }
 
+  // ------------------------------------------------------------------------------
+  // Publics
+  // ------------------------------------------------------------------------------
+  
   /** Sets the status text for this response. */
   public statusText(statusText: string): this {
-    this._statusText = statusText
+    this.#statusText = statusText
     return this
   }
 
   /** Sets the status code for this response. */
   public status(status: number): this {
-    this._status = status
+    this.#status = status
     return this
   }
 
   /** Sets the http headers for this response. */
   public headers(headers: Record<string, string | number>) {
-    this._headers = Object.keys(headers).reduce((acc, key) => {
+    this.#headers = Object.keys(headers).reduce((acc, key) => {
       return { ...acc, [key]: headers[key].toString() }
     }, {})
     return this
@@ -61,13 +66,13 @@ export class RestResponse {
 
   /** Ends this request by sending the given Uint8Array buffer on the response */
   public async arrayBuffer(buffer: Uint8Array, contentType: string = 'text/plain'): Promise<void> {
-    await this.internalWriteHead(this._status, this._statusText, {
-      ...this._headers,
+    await this.#internalWriteHead(this.#status, this.#statusText, {
+      ...this.#headers,
       'Content-Type': contentType,
       'Content-Length': buffer.length.toString(),
     })
-    await this.internalWrite(buffer)
-    await this.internalEnd()
+    await this.#internalWrite(buffer)
+    await this.#internalEnd()
   }
 
   /** Ends this request by sending a text response */
@@ -86,15 +91,15 @@ export class RestResponse {
     return await this.text(html, 'text/html')
   }
 
-  // ----------------------------------------------------------------------
-  // Internal
-  // ----------------------------------------------------------------------
+  // ------------------------------------------------------------------------------
+  // Privates
+  // ------------------------------------------------------------------------------
 
-  private async internalWriteHead(status: number, statusText: string = '', headers: Record<string, string> = {}): Promise<void> {
+  async #internalWriteHead(status: number, statusText: string = '', headers: Record<string, string> = {}): Promise<void> {
     this.response.writeHead(status, statusText, headers)
   }
 
-  private async internalWrite(data: Uint8Array): Promise<void> {
+  async #internalWrite(data: Uint8Array): Promise<void> {
     return new Promise((resolve, reject) => {
       this.response.write(data, (error) => {
         if (error) return reject(error)
@@ -103,7 +108,7 @@ export class RestResponse {
     })
   }
 
-  private async internalEnd(): Promise<void> {
+  async #internalEnd(): Promise<void> {
     return new Promise((resolve) => {
       this.response.end(() => resolve())
     })

@@ -98,29 +98,29 @@ function defaultHostOptions(options: Partial<HostOptions>): HostOptions {
  * and Express middleware to be mounted as services.
  */
 export class Host {
-  private server!: Server // deferred till listen
-  private readonly options: HostOptions
-  private readonly wsserver: WebSocketServer
-  private readonly application: Application
-  private readonly services: Map<string, WebSocketService<any>>
-  private readonly sockets: Map<number, ws.WebSocket>
-  private readonly keepAliveInterval: NodeJS.Timer
-  private socketOrdinal: number
-  private socketCount: number
-  private listening: boolean
-  private disposed: boolean
+  #server!: Server // deferred till listen
+  readonly #options: HostOptions
+  readonly #wsserver: WebSocketServer
+  readonly #application: Application
+  readonly #services: Map<string, WebSocketService<any>>
+  readonly #sockets: Map<number, ws.WebSocket>
+  readonly #keepAliveInterval: NodeJS.Timer
+  #socketOrdinal: number
+  #socketCount: number
+  #listening: boolean
+  #disposed: boolean
 
   constructor(options: Partial<HostOptions> = {}) {
-    this.options = defaultHostOptions(options)
-    this.services = new Map<string, WebSocketService<any>>()
-    this.sockets = new Map<number, ws.WebSocket>()
-    this.application = express()
-    this.wsserver = new WebSocketServer({ noServer: true, ...(this.options.disableFrameCompression ? { perMessageDeflate: false } : {}) })
-    this.keepAliveInterval = setInterval(() => this.keepAlive())
-    this.socketOrdinal = 0
-    this.socketCount = 0
-    this.listening = false
-    this.disposed = false
+    this.#options = defaultHostOptions(options)
+    this.#services = new Map<string, WebSocketService<any>>()
+    this.#sockets = new Map<number, ws.WebSocket>()
+    this.#application = express()
+    this.#wsserver = new WebSocketServer({ noServer: true, ...(this.#options.disableFrameCompression ? { perMessageDeflate: false } : {}) })
+    this.#keepAliveInterval = setInterval(() => this.keepAlive())
+    this.#socketOrdinal = 0
+    this.#socketCount = 0
+    this.#listening = false
+    this.#disposed = false
     this.configureAutoScaling()
   }
 
@@ -154,13 +154,13 @@ export class Host {
     if (args.length > 2 || args.length < 1) throw Error('Invalid parameters on use()')
     const [path, service] = args.length === 2 ? [args[0], args[1]] : ['/', args[0]]
     if (service instanceof WebSocketService) {
-      this.services.set(path, service)
+      this.#services.set(path, service)
     } else if (service instanceof WebService) {
-      this.application.post(path, (req, res) => service.accept(v4(), req, res))
+      this.#application.post(path, (req, res) => service.accept(v4(), req, res))
     } else if (service instanceof HttpService) {
-      this.application.use(path, (req, res) => service.accept(v4(), req, res))
+      this.#application.use(path, (req, res) => service.accept(v4(), req, res))
     } else {
-      this.application.use(path, service)
+      this.#application.use(path, service)
     }
   }
 
@@ -168,11 +168,11 @@ export class Host {
   public listen(port: number, hostname: string = '0.0.0.0', options: ServerOptions = {}): Promise<void> {
     this.assertDisposed()
     this.assertNotListening()
-    this.listening = true
+    this.#listening = true
     return new Promise((resolve) => {
-      this.server = createHttpServer(this.application)
-      this.server.on('upgrade', (request, socket, head) => this.upgrade(request, socket as Socket, head))
-      this.server.listen(port, hostname, () => resolve())
+      this.#server = createHttpServer(this.#application)
+      this.#server.on('upgrade', (request, socket, head) => this.upgrade(request, socket as Socket, head))
+      this.#server.listen(port, hostname, () => resolve())
     })
   }
 
@@ -180,28 +180,28 @@ export class Host {
   public listenTls(port: number, hostname: string = '0.0.0.0', options: ServerOptions = {}): Promise<void> {
     this.assertDisposed()
     this.assertNotListening()
-    this.listening = true
+    this.#listening = true
     return new Promise((resolve) => {
-      this.server = createHttpsServer(options, this.application)
-      this.server.on('upgrade', (request, socket, head) => this.upgrade(request, socket as Socket, head))
-      this.server.listen(port, hostname, () => resolve())
+      this.#server = createHttpsServer(options, this.#application)
+      this.#server.on('upgrade', (request, socket, head) => this.upgrade(request, socket as Socket, head))
+      this.#server.listen(port, hostname, () => resolve())
     })
   }
 
   /** Disposes this host and terminates all connections */
   public async dispose(): Promise<void> {
-    if (this.disposed) return
-    this.disposed = true
+    if (this.#disposed) return
+    this.#disposed = true
     return new Promise((resolve, reject) => {
-      clearInterval(this.keepAliveInterval)
-      for (const [socketId, socket] of this.sockets) {
-        this.sockets.delete(socketId)
+      clearInterval(this.#keepAliveInterval)
+      for (const [socketId, socket] of this.#sockets) {
+        this.#sockets.delete(socketId)
         socket.close()
       }
-      this.wsserver.close((error) => {
+      this.#wsserver.close((error) => {
         if (error) return reject(error)
-        if (!this.server) return resolve()
-        this.server.close((error) => {
+        if (!this.#server) return resolve()
+        this.#server.close((error) => {
           if (error) return reject(error)
           resolve()
         })
@@ -215,24 +215,24 @@ export class Host {
       return
     }
     const url = new URL(request.url!, 'http://domain.com/')
-    if (!this.services.has(url.pathname!)) {
+    if (!this.#services.has(url.pathname!)) {
       socket.destroy()
       return
     }
     try {
       const clientId = v4()
-      const service = this.services.get(url.pathname)!
+      const service = this.#services.get(url.pathname)!
       const authorized = await service.upgrade(clientId, request)
       if (!authorized) {
         socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n')
         socket.destroy()
         return
       }
-      this.wsserver.handleUpgrade(request, socket, head, (socket: ws.WebSocket) => {
+      this.#wsserver.handleUpgrade(request, socket, head, (socket: ws.WebSocket) => {
         socket.on('close', () => this.decrementSocketCount())
         this.incrementSocketCount()
         service.accept(clientId, socket)
-        this.sockets.set(this.nextSocketOrdinal(), socket)
+        this.#sockets.set(this.nextSocketOrdinal(), socket)
       })
     } catch (error) {
       console.error('[Host] Error upgrading connection: ', error)
@@ -242,46 +242,46 @@ export class Host {
   }
 
   private configureAutoScaling() {
-    if (this.options.autoScaling === undefined) return
-    this.application.get(this.options.autoScaling.endpoint, (_, res) => {
-      const status = this.socketCount >= this.options.autoScaling!.threshold ? 500 : 200
+    if (this.#options.autoScaling === undefined) return
+    this.#application.get(this.#options.autoScaling.endpoint, (_, res) => {
+      const status = this.#socketCount >= this.#options.autoScaling!.threshold ? 500 : 200
       res.status(status).json({ status })
     })
   }
 
   private keepAlive() {
-    for (const [ordinal, socket] of this.sockets) {
+    for (const [ordinal, socket] of this.#sockets) {
       socket.ping(void 0, false, (error) => {
         if (error === undefined || error === null) return
         try {
           socket.close()
         } catch {}
-        this.sockets.delete(ordinal)
+        this.#sockets.delete(ordinal)
       })
     }
   }
 
   private nextSocketOrdinal() {
-    return this.socketOrdinal++
+    return this.#socketOrdinal++
   }
 
   private incrementSocketCount() {
-    this.socketCount += 1
+    this.#socketCount += 1
   }
 
   private decrementSocketCount() {
-    this.socketCount -= 1
+    this.#socketCount -= 1
   }
 
   private exceedSocketCount() {
-    return this.socketCount >= this.options.maxSocketCount
+    return this.#socketCount >= this.#options.maxSocketCount
   }
 
   private assertNotListening() {
-    if (this.listening) throw Error('Host can only listen once')
+    if (this.#listening) throw Error('Host can only listen once')
   }
 
   private assertDisposed() {
-    if (this.disposed) throw Error('Host is disposed')
+    if (this.#disposed) throw Error('Host is disposed')
   }
 }
