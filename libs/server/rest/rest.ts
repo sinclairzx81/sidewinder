@@ -45,15 +45,19 @@ export type RestRoute = {
 }
 
 export class RestService extends HttpService {
-  private onErrorCallback: RestServiceErrorCallback
-  private readonly middleware: RestMiddleware[]
-  private readonly routes: RestRoute[]
+  #onErrorCallback: RestServiceErrorCallback
+  readonly #middleware: RestMiddleware[]
+  readonly #routes: RestRoute[]
   constructor() {
     super()
-    this.onErrorCallback = () => {}
-    this.middleware = []
-    this.routes = []
+    this.#onErrorCallback = () => {}
+    this.#middleware = []
+    this.#routes = []
   }
+
+  // ------------------------------------------------------------------------------------
+  // Public
+  // ------------------------------------------------------------------------------------
 
   /** Subscribes to error events. */
   public event(event: 'error', callback: RestServiceErrorCallback): RestServiceErrorCallback
@@ -62,7 +66,7 @@ export class RestService extends HttpService {
   public event(event: string, callback: (...args: any[]) => any): any {
     switch (event) {
       case 'error': {
-        this.onErrorCallback = callback
+        this.#onErrorCallback = callback
         break
       }
       default:
@@ -74,7 +78,7 @@ export class RestService extends HttpService {
   /** Creates a middleware function which is executed on all routes */
   public use(middleware: RestMiddlewareVariant): this
   public use(middleware: any) {
-    this.middleware.push(this.normalizeMiddleware(middleware))
+    this.#middleware.push(this.#normalizeMiddleware(middleware))
     return this
   }
 
@@ -83,7 +87,7 @@ export class RestService extends HttpService {
   /** Creates a http `get` route */
   public get(pattern: string, callback: RestCallback): this
   public get(...args: any[]) {
-    return this.createRoute(...(['get', ...args] as [string, string, RestMiddleware[], RestCallback]))
+    return this.#createRoute(...(['get', ...args] as [string, string, RestMiddleware[], RestCallback]))
   }
 
   /** Creates a http `delete` route */
@@ -91,7 +95,7 @@ export class RestService extends HttpService {
   /** Creates a http `delete` route */
   public delete(pattern: string, callback: RestCallback): this
   public delete(...args: any[]) {
-    return this.createRoute(...(['delete', ...args] as [string, string, RestMiddleware[], RestCallback]))
+    return this.#createRoute(...(['delete', ...args] as [string, string, RestMiddleware[], RestCallback]))
   }
 
   /** Creates a http `patch` route */
@@ -99,7 +103,7 @@ export class RestService extends HttpService {
   /** Creates a http `patch` route */
   public patch(pattern: string, callback: RestCallback): this
   public patch(...args: any[]) {
-    return this.createRoute(...(['patch', ...args] as [string, string, RestMiddleware[], RestCallback]))
+    return this.#createRoute(...(['patch', ...args] as [string, string, RestMiddleware[], RestCallback]))
   }
 
   /** Creates a http `post` route */
@@ -107,7 +111,7 @@ export class RestService extends HttpService {
   /** Creates a http `post` route */
   public post(pattern: string, callback: RestCallback): this
   public post(...args: any[]) {
-    return this.createRoute(...(['post', ...args] as [string, string, RestMiddleware[], RestCallback]))
+    return this.#createRoute(...(['post', ...args] as [string, string, RestMiddleware[], RestCallback]))
   }
 
   /** Creates a http `put` route */
@@ -115,17 +119,21 @@ export class RestService extends HttpService {
   /** Creates a http `put` route */
   public put(pattern: string, callback: RestCallback): this
   public put(...args: any[]) {
-    return this.createRoute(...(['put', ...args] as [string, string, RestMiddleware[], RestCallback]))
+    return this.#createRoute(...(['put', ...args] as [string, string, RestMiddleware[], RestCallback]))
   }
+  
+  // ------------------------------------------------------------------------------------
+  // Private
+  // ------------------------------------------------------------------------------------
 
   /** Creates a route */
-  private createRoute(...args: any[]): this {
-    this.routes.push(
+  #createRoute(...args: any[]): this {
+    this.#routes.push(
       args.length === 4
         ? {
             method: args[0] as string,
             pattern: new Pattern(args[1] as string),
-            middleware: args[2].map((middleware: RestMiddleware) => this.normalizeMiddleware(middleware)),
+            middleware: args[2].map((middleware: RestMiddleware) => this.#normalizeMiddleware(middleware)),
             callback: args[3] as RestCallback,
           }
         : {
@@ -140,7 +148,7 @@ export class RestService extends HttpService {
 
   /** Accepts an incoming HTTP request and processes it as Rest method call. This method is called automatically by the Host. */
   public async accept(clientId: string, req: IncomingMessage, res: ServerResponse) {
-    this.handler(clientId, req, res, async (_, restResponse) => {
+    this.#handler(clientId, req, res, async (_, restResponse) => {
       restResponse.status(404)
       restResponse.headers({ 'Content-Type': 'text/plain' })
       await restResponse.text('Not found')
@@ -148,28 +156,28 @@ export class RestService extends HttpService {
   }
 
   /** Handles an incoming HTTP request. If the request was unhandled it is deferred to the `next` handler. */
-  private handler(clientId: string, request: IncomingMessage, response: ServerResponse, next: RestMiddlewareNextFunction) {
+  #handler(clientId: string, request: IncomingMessage, response: ServerResponse, next: RestMiddlewareNextFunction) {
     // Resolve route from request and defer to 'next' if the route cannot be found.
-    const resolved = this.resolveRoute(request)
+    const resolved = this.#resolveRoute(request)
     if (resolved === undefined) return next(new RestRequest(request, {}, clientId), new RestResponse(response))
     // Execute middleware and route
     const [route, params] = resolved
     const restRequest = new RestRequest(request, params, clientId)
     const restResponse = new RestResponse(response)
-    this.executeRoute([...this.middleware, ...route.middleware], restRequest, restResponse, async (requestRequest, restResponse) => {
+    this.#executeRoute([...this.#middleware, ...route.middleware], restRequest, restResponse, async (requestRequest, restResponse) => {
       try {
         await route.callback(requestRequest, restResponse)
       } catch (error) {
-        this.onErrorCallback(clientId, error)
+        this.#onErrorCallback(clientId, error)
         await restResponse.status(500).text('Internal Server Error')
       }
     })
   }
 
-  private resolveRoute(request: IncomingMessage): [RestRoute, Record<string, string>] | undefined {
+  #resolveRoute(request: IncomingMessage): [RestRoute, Record<string, string>] | undefined {
     const [url, method] = [request.url || '/', request.method || 'get']
     const { pathname } = new URL(url, 'http://localhost')
-    for (const route of this.routes) {
+    for (const route of this.#routes) {
       if (route.method !== method.toLocaleLowerCase()) continue
       const params = route.pattern.match(pathname)
       if (!params) continue
@@ -178,13 +186,13 @@ export class RestService extends HttpService {
     return undefined
   }
 
-  private executeRoute(middleware: RestMiddleware[], request: RestRequest, response: RestResponse, next: RestMiddlewareNextFunction) {
+  #executeRoute(middleware: RestMiddleware[], request: RestRequest, response: RestResponse, next: RestMiddlewareNextFunction) {
     if (middleware.length === 0) return next(request, response)
-    middleware.shift()!.callback(request, response, (request, response) => this.executeRoute(middleware, request, response, next))
+    middleware.shift()!.callback(request, response, (request, response) => this.#executeRoute(middleware, request, response, next))
   }
 
   /** Middleware functions are remapped middleware types. */
-  private normalizeMiddleware(middleware: RestMiddlewareVariant): RestMiddleware {
+  #normalizeMiddleware(middleware: RestMiddlewareVariant): RestMiddleware {
     return typeof middleware === 'function' ? { callback: middleware } : middleware
   }
 }
