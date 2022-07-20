@@ -116,44 +116,44 @@ Sidewinder Contracts are serializable JavaScript objects with embedded JSON sche
 
 ```typescript
 
-const Contract = Type.Contract({                                         // const Contract = {
-  format: 'json',                                                        //   type: 'contract',
-  server: {                                                              //   format: 'json',
-    add: Type.Function([Type.Number(), Type.Number()], Type.Number()),   //   server: {
-    sub: Type.Function([Type.Number(), Type.Number()], Type.Number()),   //     add: {
-    mul: Type.Function([Type.Number(), Type.Number()], Type.Number()),   //       type: 'function',
-    div: Type.Function([Type.Number(), Type.Number()], Type.Number()),   //       returns: { type: 'number' },
-  }                                                                      //       parameters: [
-})                                                                       //         { type: 'number' },
-                                                                         //         { type: 'number' }
-                                                                         //       ]
-                                                                         //     },
-                                                                         //     sub: {
-                                                                         //       type: 'function',
-                                                                         //       returns: { type: 'number' },
-                                                                         //       parameters: [
-                                                                         //         { type: 'number' },
-                                                                         //         { type: 'number' }
-                                                                         //       ]
-                                                                         //     },
-                                                                         //     mul: {
-                                                                         //       type: 'function',
-                                                                         //       returns: { type: 'number' },
-                                                                         //       parameters: [
-                                                                         //         { type: 'number' },
-                                                                         //         { type: 'number' }
-                                                                         //       ]
-                                                                         //     },
-                                                                         //     div: {
-                                                                         //       type: 'function',
-                                                                         //       returns: { type: 'number' },
-                                                                         //       parameters: [
-                                                                         //         { type: 'number' },
-                                                                         //         { type: 'number' }
-                                                                         //       ]
-                                                                         //     }
-                                                                         //   }
-                                                                         // }
+const Contract = Type.Contract({                     // const Contract = {
+  format: 'json',                                    //   type: 'contract',
+  server: {                                          //   format: 'json',
+    add: Type.Function([                             //   server: {
+      Type.Number(),                                 //     add: {
+      Type.Number()                                  //       type: 'function',
+    ], Type.Number()),                               //       returns: { type: 'number' },
+    sub: Type.Function([                             //       parameters: [
+      Type.Number(),                                 //         { type: 'number' },
+      Type.Number()                                  //         { type: 'number' }                                                  
+    ], Type.Number()),                               //       ]
+    mul: Type.Function([                             //     },
+      Type.Number(),                                 //     sub: {
+      Type.Number()                                  //       type: 'function',
+    ], Type.Number()),                               //       returns: { type: 'number' },
+    div: Type.Function([                             //       parameters: [
+      Type.Number(),                                 //         { type: 'number' },
+      Type.Number()                                  //         { type: 'number' }
+    ], Type.Number()),                               //       ]
+  }                                                  //     },                                                                   
+})                                                   //     mul: {
+                                                     //       type: 'function',
+                                                     //       returns: { type: 'number' },
+                                                     //       parameters: [
+                                                     //         { type: 'number' },
+                                                     //         { type: 'number' }
+                                                     //       ]
+                                                     //     },
+                                                     //     div: {
+                                                     //       type: 'function',
+                                                     //       returns: { type: 'number' },
+                                                     //       parameters: [
+                                                     //         { type: 'number' },
+                                                     //         { type: 'number' }
+                                                     //       ]
+                                                     //     }
+                                                     //   }
+                                                     // }
 ```
 
 ## Build
