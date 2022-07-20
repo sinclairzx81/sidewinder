@@ -99,7 +99,7 @@ host.listen(5000)
 
 const client = new WebClient(Contract, 'http://localhost:5000/api')
 
-const result = await client.call('add', 1, 1)
+const result = await client.call('add', 1, 2)
 //    │                         │         │
 //    │                         │         └─── arguments as (method: string, a: number, b: number)
 //    │                         │ 
@@ -153,6 +153,53 @@ const Contract = Type.Contract({                     // const Contract = {
                                                      //     }
                                                      //   }
                                                      // }
+```
+
+## Classes
+
+Sidewinder Client and Server types are extensible and allow you to create service classes which can accept dependencies. 
+
+```typescript
+import { Type, WebService } from '@sidewinder/server'
+
+// ---------------------------------------------------------------------------
+// Contract
+// ---------------------------------------------------------------------------
+
+export const EchoContract = Type.Contract({
+    format: 'msgpack',
+    server: {
+        'echo': Type.Function([Type.String()], Type.String())
+    }
+})
+
+// ---------------------------------------------------------------------------
+// Service
+// ---------------------------------------------------------------------------
+
+export class EchoService extends WebService<typeof EchoContract> {
+
+  constructor(private readonly logger: Logger) {
+    super(EchoContract)
+  }
+
+  public echo = super.method('echo', (context, input) => {
+    
+    this.logger.log('echo:', context, input)
+
+    return input
+  })
+}
+
+// ---------------------------------------------------------------------------
+// Host
+// ---------------------------------------------------------------------------
+
+const host = new Host()
+
+host.use('/api', new EchoService(new DataDogLogging()))
+
+host.listen(5000)
 ```
 
 ## Build
