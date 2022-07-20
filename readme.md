@@ -111,7 +111,7 @@ const result = await client.call('add', 1, 1)
 
 ## Metadata
 
-Sidewinder Contracts are serializable JavaScript objects with embedded JSON schema. Contracts can be used for machine readable schematics and published to remote systems, or used to generate human readable documentation.
+Sidewinder Contracts are a Interface Description Format (similar to gRPC IDL) which embed JSON Schema for method parameters and return types. Contracts are reflectable and can be used for build and automation tooling or used to generate human readable documentation.
 
 ```typescript
 
