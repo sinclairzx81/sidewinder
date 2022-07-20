@@ -1,25 +1,32 @@
 <div align='center'>
-
+<style>
+    table {
+        width: 100%;
+    }
+</style>
 <h1>Sidewinder</h1>
 
-<p>Type Safe Micro Services for Node</p>
+<p>Type Safe RPC Services for Node</p>
 
 <img src='./build/assets/sidewinder.png' />
 
 <br />
 <br />
 
-[<img src="https://img.shields.io/npm/v/@sidewinder/async?label=%40sidewinder%2Fasync">](https://www.npmjs.com/package/@sidewinder/async) [<img src="https://img.shields.io/npm/v/@sidewinder/buffer?label=%40sidewinder%2Fbuffer">](https://www.npmjs.com/package/@sidewinder/buffer) [<img src="https://img.shields.io/npm/v/@sidewinder/channel?label=%40sidewinder%2Fchannel">](https://www.npmjs.com/package/@sidewinder/channel) [<img src="https://img.shields.io/npm/v/@sidewinder/client?label=%40sidewinder%2Fclient">](https://www.npmjs.com/package/@sidewinder/client) [<img src="https://img.shields.io/npm/v/@sidewinder/config?label=%40sidewinder%2Fconfig">](https://www.npmjs.com/package/@sidewinder/config) [<img src="https://img.shields.io/npm/v/@sidewinder/contract?label=%40sidewinder%2Fcontract">](https://www.npmjs.com/package/@sidewinder/contract) [<img src="https://img.shields.io/npm/v/@sidewinder/events?label=%40sidewinder%2Fevents">](https://www.npmjs.com/package/@sidewinder/events) [<img src="https://img.shields.io/npm/v/@sidewinder/hash?label=%40sidewinder%2Fhash">](https://www.npmjs.com/package/@sidewinder/hash) [<img src="https://img.shields.io/npm/v/@sidewinder/mime?label=%40sidewinder%2Fmime">](https://www.npmjs.com/package/@sidewinder/mime) [<img src="https://img.shields.io/npm/v/@sidewinder/mongo?label=%40sidewinder%2Fmongo">](https://www.npmjs.com/package/@sidewinder/mongo) [<img src="https://img.shields.io/npm/v/@sidewinder/path?label=%40sidewinder%2Fpath">](https://www.npmjs.com/package/@sidewinder/path) [<img src="https://img.shields.io/npm/v/@sidewinder/platform?label=%40sidewinder%2Fplatform">](https://www.npmjs.com/package/@sidewinder/platform) [<img src="https://img.shields.io/npm/v/@sidewinder/redis?label=%40sidewinder%2Fredis">](https://www.npmjs.com/package/@sidewinder/redis) [<img src="https://img.shields.io/npm/v/@sidewinder/server?label=%40sidewinder%2Fserver">](https://www.npmjs.com/package/@sidewinder/server) [<img src="https://img.shields.io/npm/v/@sidewinder/token?label=%40sidewinder%2Ftoken">](https://www.npmjs.com/package/@sidewinder/token) [<img src="https://img.shields.io/npm/v/@sidewinder/type?label=%40sidewinder%2Ftype">](https://www.npmjs.com/package/@sidewinder/type) [<img src="https://img.shields.io/npm/v/@sidewinder/validator?label=%40sidewinder%2Fvalidator">](https://www.npmjs.com/package/@sidewinder/validator) [<img src="https://img.shields.io/npm/v/@sidewinder/validator?label=%40sidewinder%2Fvalue">](https://www.npmjs.com/package/@sidewinder/value) [<img src="https://img.shields.io/npm/v/@sidewinder/web?label=%40sidewinder%2Fweb">](https://www.npmjs.com/package/@sidewinder/web) [![GitHub CI](https://github.com/sinclairzx81/sidewinder/workflows/GitHub%20CI/badge.svg)](https://github.com/sinclairzx81/sidewinder/actions) 
-
-
+[<img src="https://img.shields.io/npm/v/@sidewinder/contract?label=%40sidewinder%2Fcontract">](https://www.npmjs.com/package/@sidewinder/contract)
+[<img src="https://img.shields.io/npm/v/@sidewinder/client?label=%40sidewinder%2Fclient">](https://www.npmjs.com/package/@sidewinder/client) 
+[<img src="https://img.shields.io/npm/v/@sidewinder/server?label=%40sidewinder%2Fserver">](https://www.npmjs.com/package/@sidewinder/server)
+[![GitHub CI](https://github.com/sinclairzx81/sidewinder/workflows/GitHub%20CI/badge.svg)](https://github.com/sinclairzx81/sidewinder/actions)
 
 </div>
 
 ## Overview
 
-Sidewinder is a strictly typed and runtime validated micro service framework built for Node and Browser environments. It is designed for web service architectures where each service needs to communicate with other services in complex ways and where challenges often arise verifying each service is communicating using strict communication contracts. 
+Sidewinder is a strictly typed RPC client and server framework for Node. It is designed for microservice architectures and enables one to define type safe communication contracts which can be shared between client and server. It automatically handles runtime validation of data received over the network and provides automatic static type inference for RPC methods in TypeScript.
 
-Sidewinder is developed primarily around a [runtime type system](https://github.com/sinclairzx81/typebox) based on JSON Schema. It encodes runtime type information into JavaScript directly then leverages the TypeScript language to statically infer associated static types at compile time. This approach enables distributed services to be statically checked with the TypeScript compiler, with the same runtime data assertions handled automatically by Sidewinder packages using standard JSON Schema validation.
+Sidewinder is developed around a [Runtime Type System](https://github.com/sinclairzx81/typebox) based on JSON Schema. It encodes runtime type information as JSON Schema into JavaScript and uses TypeScript type inference to statically infer associated static types at compile time. This approach enables distributed applications to be statically checked with the TypeScript compiler, with the same runtime type assertions handled via standard JSON Schema validation at runtime.
+
+Sidewinder services use JSON RPC 2.0, JSON Schema and MsgPack for optional binary message encoding. It offers both Http and Web Socket service types with Web Sockets services supporting full duplex and connection retry.
 
 License MIT
 
@@ -27,74 +34,29 @@ License MIT
 
 - [Overview](#Overview)
 - [Install](#Install)
-- [Static and Runtime Safe](#TypeSafety)
+- [Usage](#Usage)
+- [Type Safety](#TypeSafety)
 - [Services and Clients](#ServicesAndClients)
 - [Services and Metadata](#ServiceAndMetadata)
 - [Build Local](#BuildLocal)
 
-### Packages
-
-- [Async](libs/async)
-- [Buffer](libs/buffer)
-- [Channel](libs/channel)
-- [Client](libs/client)
-- [Config](libs/config)
-- [Contract](libs/contract)
-- [Event](libs/events)
-- [Hash](libs/hash)
-- [Mime](libs/mime)
-- [Mongo](libs/mongo)
-- [Path](libs/path)
-- [Platform](libs/platform)
-- [Redis](libs/redis)
-- [Server](libs/server)
-- [Token](libs/token)
-- [Type](libs/type)
-- [Validator](libs/validator)
-- [Value](libs/value)
-- [Web](libs/web)
-
 ## Install
 
-Sidewinder consists of a number of packages that target various facets of micro service development. Each package is orientated towards type safe interactions with services and common Node infrastructure.
+Sidewinder provides seperate packages for Server and Client environments.
 
 ```bash
-# Runtime Type System
-$ npm install @sidewinder/type       # Json Schema Runtime Type Builder
-$ npm install @sidewinder/validator  # Json Schema Validator
-
-# Service Packages
-$ npm install @sidewinder/contract   # Service Descriptions Contracts
+$ npm install @sidewinder/contract   # Shared RPC Interface Contract
 $ npm install @sidewinder/client     # Http and Web Socket Clients
-$ npm install @sidewinder/server     # Http and Web Socket Services and Hosting
-
-# Database and Infrastructure
-$ npm install @sidewinder/mongo      # Type Safe Mongo
-$ npm install @sidewinder/redis      # Type Safe Redis
-
-# Application Messaging
-$ npm install @sidewinder/async      # Asynchronous Primitives
-$ npm install @sidewinder/channel    # Asynchronous Channels
-$ npm install @sidewinder/events     # Portable Event Emitter
-
-# Hashing and Signing
-$ npm install @sidewinder/hash       # Hashing Functions
-$ npm install @sidewinder/token      # Type Safe Json Web Token
-
-# Environment
-$ npm install @sidewinder/buffer     # Operations on type Uint8Array
-$ npm install @sidewinder/config     # Type Safe Configurations
-$ npm install @sidewinder/path       # File System Pathing Utility
-$ npm install @sidewinder/platform   # Runtime Environment Checks
+$ npm install @sidewinder/server     # Http and Web Socket Services
 ```
 
 <a name="TypeSafety"></a>
 
-## Static and Runtime Safe
+## Type Safety
 
 [TypeScript Example Link](https://www.typescriptlang.org/play?#code/JYWwDg9gTgLgBAbzgFQJ5gKZwL5wGZQQhwDkAAgM7AAmGA7sAHa1QD0AxhIzFAIbswSAKFCRYiOAHUMAIwDKGKADdg7LLgJFSlGvSYtWFRUsXDR0eEmkyAwgBtgGbjnyFi5KrQbNFHB08EhIVZWOABaCMio6JjYuPiExPjg0JsuHn4YFPCk3Lz8gqigzkYKeDTuPgE4AF4UdAwAOgqMgQAKBCE4brgjZUUALkQuntGSXmpqEiG0TEaAMQBXRgFgLjaAbVmmgDlFkBlFNoBKABp6ub2Do+OAXXPtxqvDqBPjke7sIWx37ML-gGAsLZBTKVQYP5AqHQuLFLhlXrGcG1OCMehSWSglRqNotKowX59bFNEAYGAACwg1Da40mJHObXY-m4AElqOdeOcZMdagA+YajEKjUYAH2F4rFwpFHzgQvFcEl8u6ip6AGpInAwLw+CAKHA2rwhox9i8uUaTYp3oLQvKVbaZXKJUq1RrlsAAI6LLBMxzOXTcYB4RxQB02iWhpXqiJwUkUqmo3ikuBMPCKKAYaiuLQlVpZa2hiOjKNhODpmCLKCMZOMVNQdOZ3h6gAGxuuUCbhZ60tGZYrVd4cFVcBkcG+vyFMMnU+y9l9WQnU8XQLhpXgPoCKLRdAxtmZMFx6Xx5xI5JgMDAAxCjWvjRIvxKCPTFEWdngdV4dF4wDXe8a7F4dh2DSExTOcACM4HvI6CrOrBTpKtK0F2nBzrIS60bagA5vsAR6o2+qxpS1BDGUUBMJhHLmm2ZqohaUBQWGMEoShYrZF2zEocWMZkkRCZJimaYZlmxA5vibHKuJg4ak+L7wMAzati8TZAA)
 
-Sidewinder provides both runtime and static type safety derived from Contract definitions encoded in JavaScript. It makes heavy use of TypeScript's type inference capabilities to statically infer Client and Service method signatures for defined Contracts; with data received over the network runtime checked to ensure it matches the expected parameter and return types defined for each method.
+Sidewinder makes use of TypeScript static type inference to ensure Client and Server implementations match the specification defined by the Contract.
 
 ```typescript
 // ---------------------------------------------------------------------------
@@ -216,10 +178,6 @@ const div = await client.call('div', 1, 2)
 console.log([add, sub, mul, div]) // [3, -1, 2, 0.5]
 ```
 
-
-
-
-
 <a name="ServiceAndMetadata"></a>
 
 ## Service And Metadata
@@ -285,6 +243,32 @@ const Contract = {
   }
 }
 ```
+
+## Packages
+
+Sidewinder is principally designed for type safe RPC but provides a number of additional other packages useful to microservice development in Node. The following packages are also available.
+
+| Package  | Description  | Version  | 
+|---|---|---|
+| Async      | Provides Async Primitives  | [<img src="https://img.shields.io/npm/v/@sidewinder/async?label=%40sidewinder%2Fasync">](https://www.npmjs.com/package/@sidewinder/async)  |
+| Buffer     | Buffer Utility for Uint8Array   | [<img src="https://img.shields.io/npm/v/@sidewinder/buffer?label=%40sidewinder%2Fbuffer">](https://www.npmjs.com/package/@sidewinder/buffer)   |
+| Channel    | Asynchronous Channels in Node | [<img src="https://img.shields.io/npm/v/@sidewinder/channel?label=%40sidewinder%2Fchannel">](https://www.npmjs.com/package/@sidewinder/channel)   | 
+| Client     | Sidewinder RPC Client Libraries | [<img src="https://img.shields.io/npm/v/@sidewinder/client?label=%40sidewinder%2Fclient">](https://www.npmjs.com/package/@sidewinder/client)    |
+| Config     | TypeSafe Configurations | [<img src="https://img.shields.io/npm/v/@sidewinder/config?label=%40sidewinder%2Fconfig">](https://www.npmjs.com/package/@sidewinder/config)     |
+| Contract   | RPC Contracts | [<img src="https://img.shields.io/npm/v/@sidewinder/contract?label=%40sidewinder%2Fcontract">](https://www.npmjs.com/package/@sidewinder/contract)      |
+| Events     | Event Emitter for Node and Browser | [<img src="https://img.shields.io/npm/v/@sidewinder/events?label=%40sidewinder%2Fevents">](https://www.npmjs.com/package/@sidewinder/events)     |
+| Hash       | Hashing Utilities | [<img src="https://img.shields.io/npm/v/@sidewinder/hash?label=%40sidewinder%2Fhash">](https://www.npmjs.com/package/@sidewinder/hash)    |
+| Mime       | Mime Type Lookup | [<img src="https://img.shields.io/npm/v/@sidewinder/mime?label=%40sidewinder%2Fmime">](https://www.npmjs.com/package/@sidewinder/mime)     |
+| Mongo      | TypeSafe Mongo Driver | [<img src="https://img.shields.io/npm/v/@sidewinder/mongo?label=%40sidewinder%2Fmongo">](https://www.npmjs.com/package/@sidewinder/mongo)      |
+| Path       | Pathing Utility for Node and Browser | [<img src="https://img.shields.io/npm/v/@sidewinder/path?label=%40sidewinder%2Fpath">](https://www.npmjs.com/package/@sidewinder/path)      |
+| Platform   | Platform Resolver | [<img src="https://img.shields.io/npm/v/@sidewinder/platform?label=%40sidewinder%2Fplatform">](https://www.npmjs.com/package/@sidewinder/platform)     |
+| Redis      | TypeSafe Redis Driver | [<img src="https://img.shields.io/npm/v/@sidewinder/redis?label=%40sidewinder%2Fredis">](https://www.npmjs.com/package/@sidewinder/redis)      |
+| Server     | Sidewinder RPC Server Library | [<img src="https://img.shields.io/npm/v/@sidewinder/server?label=%40sidewinder%2Fserver">](https://www.npmjs.com/package/@sidewinder/server)   |
+| Token      | JSON Web Token Encoders | [<img src="https://img.shields.io/npm/v/@sidewinder/token?label=%40sidewinder%2Ftoken">](https://www.npmjs.com/package/@sidewinder/token)  |
+| Type       | Runtime Type System | [<img src="https://img.shields.io/npm/v/@sidewinder/type?label=%40sidewinder%2Ftype">](https://www.npmjs.com/package/@sidewinder/type)   |
+| Validator  | Type Validation | [<img src="https://img.shields.io/npm/v/@sidewinder/validator?label=%40sidewinder%2Fvalidator">](https://www.npmjs.com/package/@sidewinder/validator)    |
+| Value      | Value Generation from Types | [<img src="https://img.shields.io/npm/v/@sidewinder/validator?label=%40sidewinder%2Fvalue">](https://www.npmjs.com/package/@sidewinder/value)   |
+| Web        | Web Polyfills | [<img src="https://img.shields.io/npm/v/@sidewinder/web?label=%40sidewinder%2Fweb">](https://www.npmjs.com/package/@sidewinder/web)    |
 
 <a name="BuildLocal"></a>
 
