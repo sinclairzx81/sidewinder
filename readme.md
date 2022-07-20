@@ -1,9 +1,11 @@
-<div align='center'>
 <style>
     table {
         width: 100%;
     }
 </style>
+
+<div align='center'>
+
 <h1>Sidewinder</h1>
 
 <p>Type Safe RPC Services for Node</p>
