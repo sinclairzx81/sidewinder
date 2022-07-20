@@ -18,7 +18,7 @@
 
 ## Overview
 
-Sidewinder is a strictly typed high performance RPC Client and Server framework for Node. It is built specifically for microservice architectures and uses strict communication contracts (similar to gRPC IDL) for runtime validated method calls across a network. It uses a [Runtime Type System](https://github.com/sinclairzx81/typebox) that enables the creation complex data structure definitions and strict type inference support for TypeScript.
+Sidewinder is a strictly typed high performance RPC Client and Server framework for Node. It is built specifically for microservice architectures and uses strict communication contracts for type safe method calls over a network. Contracts are built using a [Runtime Type System](https://github.com/sinclairzx81/typebox) that allows one to describe complex data structures as well as providing advanced static type inference support for TypeScript.
 
 Sidewinder uses JSON RPC 2.0 for the RPC protocol, JSON Schema for message schematics and MsgPack for optional binary message encoding. It provides both Http and Web Socket support, as well as full duplex RPC calls between Client and Server over Web Sockets. It can be used to create statically checked distributed services on the Node platform.
 
