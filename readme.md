@@ -18,11 +18,9 @@
 
 ## Overview
 
-Sidewinder is a strictly typed RPC client and server framework for Node. It is designed for microservice architectures and enables one to define type safe communication contracts which can be shared between client and server. It automatically handles runtime validation of data received over the network and provides automatic static type inference for RPC methods in TypeScript.
+Sidewinder is a strictly typed high performance RPC Client and Server framework for Node. It is built specifically for microservice architectures and utilizes strict communication contracts to enable runtime validated RPC method calls over a network. It is built around a [Runtime Type System](https://github.com/sinclairzx81/typebox) which enables one to define of complex data structures to be passed on RPC method calls as well as strict type inference support for TypeScript.
 
-Sidewinder is developed around a [Runtime Type System](https://github.com/sinclairzx81/typebox) based on JSON Schema. It encodes runtime type information as JSON Schema into JavaScript and uses TypeScript type inference to statically infer associated static types at compile time. This approach enables distributed applications to be statically checked with the TypeScript compiler, with the same runtime type assertions handled via standard JSON Schema validation at runtime.
-
-Sidewinder services use JSON RPC 2.0, JSON Schema and MsgPack for optional binary message encoding. It offers both Http and Web Socket service types with Web Sockets services supporting full duplex and connection retry.
+Sidewinder uses JSON RPC 2.0 for the RPC protocol, JSON Schema for message schematics and MsgPack for optional binary message encoding. It provides both Http and Web Socket support, as well as full duplex RPC calls between Client and Server over Web Sockets. It can be used to create statically checked distributed services on the Node platform.
 
 License MIT
 
@@ -32,6 +30,7 @@ License MIT
 - [Install](#Install)
 - [Usage](#Usage)
 - [Metadata](#Metadata)
+- [Classes](#Classes)
 - [Packages](#Packages)
 - [Build](#Build)
 
