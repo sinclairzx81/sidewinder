@@ -111,7 +111,7 @@ const result = await client.call('add', 1, 1)
 
 ## Metadata
 
-Sidewinder Contracts are a Interface Description Format (similar to gRPC IDL) which embed JSON Schema for method parameters and return types. Contracts are reflectable and can be used for build and automation tooling or used to generate human readable documentation.
+Sidewinder Contracts are a [Interface Description Format](https://en.wikipedia.org/wiki/Interface_description_language) which embed JSON Schema for method parameters and return types. Contracts are reflectable and can be used to create automated tooling or used to generate human readable documentation.
 
 ```typescript
 
