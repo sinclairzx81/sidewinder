@@ -2,7 +2,7 @@
 
 <h1>Sidewinder</h1>
 
-<p>Type Safe RPC Services for Node</p>
+<p>Type Safe RPC for Node</p>
 
 <img src='./build/assets/sidewinder.png' />
 
