@@ -1,11 +1,11 @@
 import { Host, RestService } from '@sidewinder/server'
-import { fetch } from '@sidewinder/web'
+import { fetch } from '@sidewinder/platform'
 
 export class Service extends RestService {
     private _error = super.event('error', (clientId, error) => {
         console.log(clientId, error)
     })
-
+    
     private index = super.get('/', async (req, res) => {
         res.html('<h1>hello world</h1>')
     })

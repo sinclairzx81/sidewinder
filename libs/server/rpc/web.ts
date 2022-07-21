@@ -28,10 +28,10 @@ THE SOFTWARE.
 
 import type { IncomingMessage, ServerResponse } from 'http'
 
-import { Exception, Static, Type, TSchema, TString, TContract, TFunction, AuthorizeFunction, AuthorizeFunctionReturnType, ContractMethodParamters, ContractMethodReturnType } from '@sidewinder/contract'
 import { TypeCompiler, TypeCheck } from '@sidewinder/type/compiler'
-import { ServiceMethods, RpcErrorCode, RpcProtocol, RpcRequest, RpcResponse } from './methods/index'
-import { Encoder, JsonEncoder, MsgPackEncoder } from './encoder/index'
+import * as Types from '@sidewinder/contract'
+import * as Methods from './methods/index'
+import * as Encoder from './encoder/index'
 import { Platform } from '@sidewinder/platform'
 import { HttpService } from '../http/http'
 import { Request } from './request'
@@ -75,26 +75,26 @@ export type WebServiceCloseCallback<Context> = (context: Context) => Promise<voi
 export type WebServiceErrorCallback = (clientId: string, error: unknown) => Promise<void> | void
 
 /** A JSON RPC 2.0 based HTTP service that supports remote method invocation via HTTP POST requests. */
-export class WebService<Contract extends TContract, Context extends TSchema = TString> extends HttpService {
-  private readonly _contextTypeCheck: TypeCheck<Context>
-  private readonly _methods: ServiceMethods
-  private readonly _encoder: Encoder
+export class WebService<Contract extends Types.TContract, Context extends Types.TSchema = Types.TString> extends HttpService {
+  readonly #contextTypeCheck: TypeCheck<Context>
+  readonly #methods: Methods.ServiceMethods
+  readonly #encoder: Encoder.Encoder
 
-  private _onAuthorizeCallback: WebServiceAuthorizeCallback<Static<Context>>
-  private _onConnectCallback: WebServiceConnectCallback<Static<Context>>
-  private _onCloseCallback: WebServiceCloseCallback<Static<Context>>
-  private _onErrorCallback: WebServiceErrorCallback
+  #onAuthorizeCallback: WebServiceAuthorizeCallback<Types.Static<Context>>
+  #onConnectCallback: WebServiceConnectCallback<Types.Static<Context>>
+  #onCloseCallback: WebServiceCloseCallback<Types.Static<Context>>
+  #onErrorCallback: WebServiceErrorCallback
 
   /** Creates a new WebService */
-  constructor(private readonly contract: Contract, private readonly context: Context = Type.String() as any) {
+  constructor(private readonly contract: Contract, private readonly context: Context = Types.Type.String() as any) {
     super()
-    this._contextTypeCheck = TypeCompiler.Compile(this.context)
-    this._onAuthorizeCallback = (clientId: string) => clientId as any
-    this._onConnectCallback = () => {}
-    this._onErrorCallback = () => {}
-    this._onCloseCallback = () => {}
-    this._encoder = this.contract.format === 'json' ? new JsonEncoder() : new MsgPackEncoder()
-    this._methods = new ServiceMethods()
+    this.#contextTypeCheck = TypeCompiler.Compile(this.context)
+    this.#onAuthorizeCallback = (clientId: string) => clientId as any
+    this.#onConnectCallback = () => {}
+    this.#onErrorCallback = () => {}
+    this.#onCloseCallback = () => {}
+    this.#encoder = this.contract.format === 'json' ? new Encoder.JsonEncoder() : new Encoder.MsgPackEncoder()
+    this.#methods = new Methods.ServiceMethods()
     this._setupNotImplemented()
   }
 
@@ -103,20 +103,20 @@ export class WebService<Contract extends TContract, Context extends TSchema = TS
    * this event is mandatory if the service provides a context schema. The authorize event must return a value
    * that conforms to the services context or throw if the user is not authorized.
    */
-  public event(event: 'authorize', callback: WebServiceAuthorizeCallback<Static<Context>>): WebServiceAuthorizeCallback<Static<Context>>
+  public event(event: 'authorize', callback: WebServiceAuthorizeCallback<Types.Static<Context>>): WebServiceAuthorizeCallback<Types.Static<Context>>
 
   /**
    * Subscribes to connect events. This event is raised immediately following a successful 'authorize' event only.
    * This event receives the context returned from a successful authorization.
    */
-  public event(event: 'connect', callback: WebServiceConnectCallback<Static<Context>>): WebServiceConnectCallback<Static<Context>>
+  public event(event: 'connect', callback: WebServiceConnectCallback<Types.Static<Context>>): WebServiceConnectCallback<Types.Static<Context>>
 
   /**
    * Subscribes to close events. This event is raised whenever the remote Http request is about to close.
    * Callers should use this event to clean up any associated state created for the request. This event receives
    * the context returned from a successful authorization.
    */
-  public event(event: 'close', callback: WebServiceCloseCallback<Static<Context>>): WebServiceCloseCallback<Static<Context>>
+  public event(event: 'close', callback: WebServiceCloseCallback<Types.Static<Context>>): WebServiceCloseCallback<Types.Static<Context>>
 
   /**
    * Subscribes to error events. This event is raised if there are any http transport errors. This event
@@ -128,19 +128,19 @@ export class WebService<Contract extends TContract, Context extends TSchema = TS
   public event(event: string, callback: (...args: any[]) => any): any {
     switch (event) {
       case 'authorize': {
-        this._onAuthorizeCallback = callback
+        this.#onAuthorizeCallback = callback
         break
       }
       case 'connect': {
-        this._onConnectCallback = callback
+        this.#onConnectCallback = callback
         break
       }
       case 'error': {
-        this._onErrorCallback = callback
+        this.#onErrorCallback = callback
         break
       }
       case 'close': {
-        this._onCloseCallback = callback
+        this.#onCloseCallback = callback
         break
       }
       default:
@@ -151,26 +151,30 @@ export class WebService<Contract extends TContract, Context extends TSchema = TS
 
   /** Defines a server method implementation with method level authorization */
   public method<
-    Method extends keyof Static<Contract>['server'] extends infer R ? (R extends string ? R : never) : never,
-    Parameters extends ContractMethodParamters<Static<Contract>['server'][Method]>,
-    ReturnType extends ContractMethodReturnType<Static<Contract>['server'][Method]>,
-    Authorize extends AuthorizeFunction<Static<Context>, any>,
-  >(method: Method, authorize: Authorize, callback: (context: AuthorizeFunctionReturnType<Authorize>, ...params: Parameters) => Promise<ReturnType> | ReturnType): (context: Static<Context>, ...params: Parameters) => Promise<ReturnType>
+    Method extends keyof Types.Static<Contract>['server'] extends infer R ? (R extends string ? R : never) : never,
+    Parameters extends Types.ContractMethodParamters<Types.Static<Contract>['server'][Method]>,
+    ReturnType extends Types.ContractMethodReturnType<Types.Static<Contract>['server'][Method]>,
+    Authorize extends Types.AuthorizeFunction<Types.Static<Context>, any>,
+  >(
+    method: Method,
+    authorize: Authorize,
+    callback: (context: Types.AuthorizeFunctionReturnType<Authorize>, ...params: Parameters) => Promise<ReturnType> | ReturnType,
+  ): (context: Types.Static<Context>, ...params: Parameters) => Promise<ReturnType>
 
   /** Defines a server method implementation */
   public method<
-    Method extends keyof Static<Contract>['server'] extends infer R ? (R extends string ? R : never) : never,
-    Parameters extends ContractMethodParamters<Static<Contract>['server'][Method]>,
-    ReturnType extends ContractMethodReturnType<Static<Contract>['server'][Method]>,
-  >(method: Method, callback: (context: Static<Context>, ...params: Parameters) => Promise<ReturnType> | ReturnType): (context: Static<Context>, ...params: Parameters) => Promise<ReturnType>
+    Method extends keyof Types.Static<Contract>['server'] extends infer R ? (R extends string ? R : never) : never,
+    Parameters extends Types.ContractMethodParamters<Types.Static<Contract>['server'][Method]>,
+    ReturnType extends Types.ContractMethodReturnType<Types.Static<Contract>['server'][Method]>,
+  >(method: Method, callback: (context: Types.Static<Context>, ...params: Parameters) => Promise<ReturnType> | ReturnType): (context: Types.Static<Context>, ...params: Parameters) => Promise<ReturnType>
 
   /** Defines a server method implementation */
   public method(...args: any[]): any {
     const [method, authorize, callback] = args.length === 3 ? [args[0], args[1], args[2]] : [args[0], (context: any) => context, args[1]]
-    const target = (this.contract.server as any)[method] as TFunction | undefined
+    const target = (this.contract.server as any)[method] as Types.TFunction | undefined
     if (target === undefined) throw Error(`Cannot define method '${method}' as it does not exist in contract`)
-    this._methods.register(method, target, authorize, callback)
-    return async (context: Static<Context>, ...params: any[]) => await this._methods.execute(context, method, params)
+    this.#methods.register(method, target, authorize, callback)
+    return async (context: Types.Static<Context>, ...params: any[]) => await this.#methods.execute(context, method, params)
   }
 
   /** Accepts an incoming HTTP request and processes it as JSON RPC method call. This method is called automatically by the Host. */
@@ -194,15 +198,15 @@ export class WebService<Contract extends TContract, Context extends TSchema = TS
     // Execute
     // -----------------------------------------------------------------
 
-    await this._onConnectCallback(rpcContextResult.value())
+    await this.#onConnectCallback(rpcContextResult.value())
     const executeResult = await this._executeRpcRequest(rpcContextResult.value(), rpcRequestResult.value())
     if (!executeResult.ok()) {
       this._dispatchError(clientId, executeResult.error())
       await this._writeExecuteError(clientId, response, rpcRequestResult.value(), executeResult.error())
-      await this._onCloseCallback(rpcContextResult.value())
+      await this.#onCloseCallback(rpcContextResult.value())
     } else {
       await this._writeExecuteResult(clientId, response, rpcRequestResult.value(), executeResult.value())
-      await this._onCloseCallback(rpcContextResult.value())
+      await this.#onCloseCallback(rpcContextResult.value())
     }
   }
 
@@ -241,17 +245,17 @@ export class WebService<Contract extends TContract, Context extends TSchema = TS
   // ---------------------------------------------------------------------
 
   /** Reads the RpcRequest from the http request body */
-  private async _readRpcRequest(request: IncomingMessage): Promise<PipelineResult<RpcRequest>> {
+  private async _readRpcRequest(request: IncomingMessage): Promise<PipelineResult<Methods.RpcRequest>> {
     const buffer = await this._readRequestBuffer(request)
-    const decoded = RpcProtocol.decodeAny(this._encoder.decode(buffer))
+    const decoded = Methods.RpcProtocol.decodeAny(this.#encoder.decode(buffer))
     if (decoded === undefined) return PipelineResult.error(Error('Unable to read protocol request'))
     if (decoded.type !== 'request') return PipelineResult.error(Error('Protocol request was not of type request'))
     return PipelineResult.ok(decoded.data)
   }
 
   /** Writes an RpcResponse to the Http Body */
-  private async _writeRpcResponse(response: ServerResponse, status: number, rpcresponse: RpcResponse): Promise<void> {
-    const buffer = this._encoder.encode(rpcresponse)
+  private async _writeRpcResponse(response: ServerResponse, status: number, rpcresponse: Methods.RpcResponse): Promise<void> {
+    const buffer = this.#encoder.encode(rpcresponse)
     this._writeResponseBuffer(response, status, buffer).catch(() => {})
   }
 
@@ -265,24 +269,24 @@ export class WebService<Contract extends TContract, Context extends TSchema = TS
     }
   }
 
-  async _readRpcContext(clientId: string, request: IncomingMessage): Promise<PipelineResult<Static<Context>>> {
+  private async _readRpcContext(clientId: string, request: IncomingMessage): Promise<PipelineResult<Types.Static<Context>>> {
     try {
-      const context = await this._onAuthorizeCallback(clientId, new Request(request))
+      const context = await this.#onAuthorizeCallback(clientId, new Request(request))
       return PipelineResult.ok(context)
     } catch (error) {
       return PipelineResult.error(error as Error)
     }
   }
 
-  private _checkRpcContext(rpcContext: Static<Context>): PipelineResult<null> {
-    const result = this._contextTypeCheck.Check(rpcContext)
+  private _checkRpcContext(rpcContext: Types.Static<Context>): PipelineResult<null> {
+    const result = this.#contextTypeCheck.Check(rpcContext)
     if (result) return PipelineResult.ok(null)
     return PipelineResult.error(new Error('Rpc Context is invalid'))
   }
 
   private async _dispatchError(clientId: string, error: Error) {
     try {
-      await this._onErrorCallback(clientId, error)
+      await this.#onErrorCallback(clientId, error)
     } catch {
       /* ignore */
     }
@@ -293,9 +297,9 @@ export class WebService<Contract extends TContract, Context extends TSchema = TS
     return await this._writeRpcResponse(
       response,
       401,
-      RpcProtocol.encodeError('', {
+      Methods.RpcProtocol.encodeError('', {
         data: {},
-        code: RpcErrorCode.InvalidRequest,
+        code: Methods.RpcErrorCode.InvalidRequest,
         message: `Invalid Content-Type header. Expected '${contentType}'`,
       }),
     ).catch((error) => this._dispatchError(clientId, error))
@@ -305,9 +309,9 @@ export class WebService<Contract extends TContract, Context extends TSchema = TS
     return await this._writeRpcResponse(
       response,
       401,
-      RpcProtocol.encodeError('', {
+      Methods.RpcProtocol.encodeError('', {
         data: {},
-        code: RpcErrorCode.InvalidRequest,
+        code: Methods.RpcErrorCode.InvalidRequest,
         message: 'Authorization Failed',
       }),
     ).catch((error) => this._dispatchError(clientId, error))
@@ -317,9 +321,9 @@ export class WebService<Contract extends TContract, Context extends TSchema = TS
     return await this._writeRpcResponse(
       response,
       500,
-      RpcProtocol.encodeError('', {
+      Methods.RpcProtocol.encodeError('', {
         data: {},
-        code: RpcErrorCode.InternalServerError,
+        code: Methods.RpcErrorCode.InternalServerError,
         message: 'Service request context is invalid. The request cannot proceed.',
       }),
     ).catch((error) => this._dispatchError(clientId, error))
@@ -329,39 +333,39 @@ export class WebService<Contract extends TContract, Context extends TSchema = TS
     return await this._writeRpcResponse(
       response,
       400,
-      RpcProtocol.encodeError('', {
+      Methods.RpcProtocol.encodeError('', {
         data: {},
-        code: RpcErrorCode.InvalidRequest,
+        code: Methods.RpcErrorCode.InvalidRequest,
         message: 'The request was invalid',
       }),
     ).catch((error) => this._dispatchError(clientId, error))
   }
 
-  private async _writeExecuteError(clientId: string, response: ServerResponse, rpcRequest: RpcRequest, error: Error) {
+  private async _writeExecuteError(clientId: string, response: ServerResponse, rpcRequest: Methods.RpcRequest, error: Error) {
     if (rpcRequest.id === undefined) {
       await this._writeResponseBuffer(response, 200, Buffer.from('{}')).catch((error) => this._dispatchError(clientId, error))
     } else {
-      if (error instanceof Exception) {
+      if (error instanceof Types.Exception) {
         const [code, data, message] = [error.code, error.data, error.message]
-        await this._writeRpcResponse(response, 400, RpcProtocol.encodeError('', { data, code, message })).catch((error) => this._dispatchError(clientId, error))
+        await this._writeRpcResponse(response, 400, Methods.RpcProtocol.encodeError('', { data, code, message })).catch((error) => this._dispatchError(clientId, error))
       } else {
-        const [code, data, message] = [RpcErrorCode.InternalServerError, {}, 'Internal Server Error']
-        return await this._writeRpcResponse(response, 500, RpcProtocol.encodeError('', { data, code, message })).catch((error) => this._dispatchError(clientId, error))
+        const [code, data, message] = [Methods.RpcErrorCode.InternalServerError, {}, 'Internal Server Error']
+        return await this._writeRpcResponse(response, 500, Methods.RpcProtocol.encodeError('', { data, code, message })).catch((error) => this._dispatchError(clientId, error))
       }
     }
   }
 
-  private async _writeExecuteResult(clientId: string, response: ServerResponse, rpcRequest: RpcRequest, result: unknown) {
+  private async _writeExecuteResult(clientId: string, response: ServerResponse, rpcRequest: Methods.RpcRequest, result: unknown) {
     if (rpcRequest.id === undefined) {
       await this._writeResponseBuffer(response, 200, Buffer.from('{}')).catch((error) => this._dispatchError(clientId, error))
     } else {
-      await this._writeRpcResponse(response, 200, RpcProtocol.encodeResult('', result)).catch((error) => this._dispatchError(clientId, error))
+      await this._writeRpcResponse(response, 200, Methods.RpcProtocol.encodeResult('', result)).catch((error) => this._dispatchError(clientId, error))
     }
   }
 
-  private async _executeRpcRequest(rpcContext: Static<Context>, rpcRequest: RpcRequest): Promise<PipelineResult<any>> {
+  private async _executeRpcRequest(rpcContext: Types.Static<Context>, rpcRequest: Methods.RpcRequest): Promise<PipelineResult<any>> {
     try {
-      const result = await this._methods.execute(rpcContext, rpcRequest.method, rpcRequest.params)
+      const result = await this.#methods.execute(rpcContext, rpcRequest.method, rpcRequest.params)
       return PipelineResult.ok(result)
     } catch (error) {
       return PipelineResult.error(error as Error)
@@ -370,12 +374,12 @@ export class WebService<Contract extends TContract, Context extends TSchema = TS
 
   private _setupNotImplemented() {
     for (const [name, schema] of Object.entries(this.contract.server)) {
-      this._methods.register(
+      this.#methods.register(
         name,
-        schema as TFunction,
+        schema as Types.TFunction,
         (context: any) => context,
         () => {
-          throw new Exception(`Method '${name}' not implemented`, RpcErrorCode.InternalServerError, {})
+          throw new Types.Exception(`Method '${name}' not implemented`, Methods.RpcErrorCode.InternalServerError, {})
         },
       )
     }
