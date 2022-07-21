@@ -28,7 +28,7 @@ THE SOFTWARE.
 
 import { Deferred } from '@sidewinder/async'
 import { Message, MessageType } from './message'
-import { SyncSender } from './sync-sender'
+import { SyncSender } from './syncsender'
 import { Receiver } from './receiver'
 import { Queue } from './queue'
 
