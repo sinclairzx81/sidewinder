@@ -1,117 +1,45 @@
-import { Validator } from '@sidewinder/validator'
-import { Value } from '@sidewinder/value'
-import { Type, TSchema, TypeCompiler } from '@sidewinder/type'
+import { Type, Host, WebSocketService } from '@sidewinder/server'
+import { WebSocketClient } from '@sidewinder/client'
 
-// ------------------------------------------------------------------------------
-// Benchmarks
-// ------------------------------------------------------------------------------
+export const Contract = Type.Contract({
+    server: {
+        echo: Type.Function([Type.String()], Type.String())
+    }
+})
 
-function benchmark<T extends TSchema>(name: string, iterations: number, schema: T, data?: unknown) {
-    console.log('benchmark:', name)
-    const I = data || Value.Create(schema)
-    const A = (function () {
-        const validator = new Validator(schema)
-        const start = Date.now()
-        console.log('benchmark:', name, 'ajv profiling')
-        for (let i = 0; i < iterations; i++) {
-            const result = validator.check(I)
-            if (result.success === false) throw 1
-        }
-        return Date.now() - start
-    })();
-    const B = (function () {
-        const validator = TypeCompiler.Compile(schema)
-        const start = Date.now()
-        console.log('benchmark:', name, 'val profiling')
-        for (let i = 0; i < iterations; i++) {
-            const result = validator(I)
-            if (result.ok === false) throw 1
-        }
-        return Date.now() - start
-    })();
-    console.log('benchmark:', name, 'ajv:', A)
-    console.log('benchmark:', name, 'val:', B)
-    console.log('benchmark:', name, A / B, 'delta')
-}
+export class EchoService extends WebSocketService<typeof Contract> {
 
-function start(iterations: number) {
+    constructor() {
+        super(Contract)
+    }   
 
-    benchmark('looseAssert', iterations, Type.Object({
-        number: Type.Number(),
-        negNumber: Type.Number(),
-        maxNumber: Type.Number(),
-        string: Type.String({ default: 'hello' }),
-        longString: Type.String(),
-        boolean: Type.Boolean(),
-        deeplyNested: Type.Object({
-            foo: Type.String(),
-            num: Type.Number(),
-            bool: Type.Boolean()
-        })
-    }))
+    public echo = super.method('echo', (context, input) => {
 
-    benchmark('strictAssert', iterations, Type.Object({
-        number: Type.Number(),
-        negNumber: Type.Number(),
-        maxNumber: Type.Number(),
-        string: Type.String({ default: 'hello' }),
-        longString: Type.String(),
-        boolean: Type.Boolean(),
-        deeplyNested: Type.Object({
-            foo: Type.String(),
-            num: Type.Number(),
-            bool: Type.Boolean()
-        }, { additionalProperties: false })
-    }, { additionalProperties: false }))
-
-    benchmark('recursive', iterations, Type.Rec(Node => Type.Object({
-        id: Type.String(),
-        nodes: Type.Array(Node)
-    })), {
-        id: '', nodes: [{
-            id: '', nodes: [{
-                id: '', nodes: []
-            }, {
-                id: '', nodes: []
-            }, {
-                id: '', nodes: []
-            }, {
-                id: '', nodes: []
-            }]
-        }, {
-            id: '', nodes: [{
-                id: '', nodes: []
-            }, {
-                id: '', nodes: []
-            }, {
-                id: '', nodes: []
-            }, {
-                id: '', nodes: []
-            }]
-        }, {
-            id: '', nodes: [{
-                id: '', nodes: []
-            }, {
-                id: '', nodes: []
-            }, {
-                id: '', nodes: []
-            }, {
-                id: '', nodes: []
-            }]
-        }, {
-            id: '', nodes: [{
-                id: '', nodes: []
-            }, {
-                id: '', nodes: []
-            }, {
-                id: '', nodes: []
-            }, {
-                id: '', nodes: []
-            }]
-        }]
+        return input
     })
 }
 
-while(true) {
-    start(10_000_000)
+const host = new Host()
+
+host.use('/api', new EchoService())
+
+host.listen(5000)
+
+
+async function benchmark() {
+
+    const client = new WebSocketClient(Contract, 'ws://localhost:5000/api')
+
+    while(true) {
+
+        const requests = Array.from({ length: 40_000 }).map((_, i) => client.call('echo', `${i} hello world`))
+
+        const start = Date.now()
+
+        const results = await Promise.all(requests)
+
+        console.log(results.length, Date.now() - start, 'ms') // average 1100ms
+    }
 }
+
+benchmark()
