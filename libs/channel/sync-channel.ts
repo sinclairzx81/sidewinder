@@ -27,7 +27,6 @@ THE SOFTWARE.
 ---------------------------------------------------------------------------*/
 
 import { Deferred } from '@sidewinder/async'
-import { KeepAlive } from './keepalive'
 import { Message, MessageType } from './message'
 import { SyncSender } from './sync-sender'
 import { Receiver } from './receiver'
@@ -39,19 +38,13 @@ import { Queue } from './queue'
  * capacity permits additional values.
  */
 export class SyncChannel<T = any> implements SyncSender<T>, Receiver<T> {
-  private readonly keepAlive: KeepAlive | null
   private readonly queue: Queue<Message<T>>
   private readonly sends: Deferred<void>[]
   private endedAsync: boolean
   private ended: boolean
 
-  /**
-   * Creates a new SyncChannel
-   * @param bounds The number of buffered values before senders will await. Default is 1.
-   * @param keepAlive If true, will prevent the process from exiting if there are no values being received. Default is false.
-   */
-  constructor(private readonly bounds: number = 1, keepAlive: boolean = false) {
-    this.keepAlive = keepAlive ? new KeepAlive() : null
+  /** Creates a new SyncChannel */
+  constructor(private readonly bounds: number = 1) {
     this.queue = new Queue<Message<T>>()
     this.sends = []
     this.endedAsync = false
@@ -104,7 +97,6 @@ export class SyncChannel<T = any> implements SyncSender<T>, Receiver<T> {
       case MessageType.Error:
         throw message.error
       case MessageType.End: {
-        this.terminateKeepAlive()
         return null
       }
     }
@@ -130,11 +122,5 @@ export class SyncChannel<T = any> implements SyncSender<T>, Receiver<T> {
       this.sends.push(deferred)
       await deferred.promise()
     }
-  }
-
-  /** Terminates the keepAlive */
-  private terminateKeepAlive() {
-    if (this.keepAlive === null) return
-    this.keepAlive.dispose()
   }
 }

@@ -22,7 +22,6 @@ License MIT
 - [SyncChannel](#SyncChannel)
 - [Errors](#Errors)
 - [Select](#Select)
-- [KeepAlive](#KeepAlive)
 
 ## Example
 
@@ -169,58 +168,6 @@ await channel.next() // 1
 await channel.next() // 'world'
 await channel.next() // 2
 await channel.next() // null - eof
-```
-
-</details>
-
-## KeepAlive
-
-In Node environments, the JavaScript process will terminate if there are no actions scheduled to run in the JS event loop. Because Sidewinder channels receive values without interacting with the JS event loop for performance reasons, the NodeJS runtime may terminate a process while a receiver is awaiting for values. This behaviour occurs only in scenarios where there are no other pending actions being scheduled on the event loop.
-
-To ensure a process stays active, the Channel and SyncChannel constructors accept a `keepAlive` boolean argument on their constructors which schedules a `setInterval()` loop to trigger once every 60 seconds. By enabling this it will prevent the Node runtime from termination.
-
-### Node Process Termination
-
-In the following example, we setup a receiver to receive values however there is no sender sending values. The expectation here would be for the receiver to await indefinitely, however Node will terminate the process immediately as there is no actions being scheduled on the JS event loop.
-
-<details>
-    <summary>Example</summary>
-
-```typescript
-import { Channel } from '@sidewinder/channel'
-
-const channel = new Channel()
-
-async function receiver() {
-  for await (const value of channel) {
-    console.log(value)
-  }
-}
-
-receiver().then(() => console.log('done'))
-```
-
-</details>
-
-### Node Process KeepAlive
-
-In the following example, we set the channel keepAlive to true. This will internally start a `setInterval()` loop that will continue until the sender calls `end()` on the channel. Note that the `keepAlive` should only be used in scenarios where there are no other actions being scheduled on the event loop. The follow will prevent Node from terminating the process.
-
-<details>
-    <summary>Example</summary>
-
-```typescript
-import { Channel } from '@sidewinder/channel'
-
-const channel = new Channel(true) // keepAlive
-
-async function receiver() {
-  for await (const value of channel) {
-    console.log(value)
-  }
-}
-
-receiver().then(() => console.log('done'))
 ```
 
 </details>
