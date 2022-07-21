@@ -26,7 +26,7 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-export * from './encoder/index'
+export * from './encoding/index'
 export * from './methods/index'
 export * from './request'
 export * from './web'
