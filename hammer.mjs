@@ -5,7 +5,7 @@ import { readFileSync } from 'fs'
 // Packages
 // -------------------------------------------------------------
 
-const version = '0.9.1'
+const version = '0.10.0'
 const packages = [
     ['async', version, 'Sidewinder Async'],
     ['buffer', version, 'Sidewinder Buffer'],
