@@ -1,2 +1,0 @@
-import './compiler'
-import './validator'

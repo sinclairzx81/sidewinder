@@ -27,18 +27,18 @@ THE SOFTWARE.
 ---------------------------------------------------------------------------*/
 
 import { Redis, RedisOptions } from 'ioredis'
-import { Validator } from '@sidewinder/validator'
+import { TypeCompiler, TypeCheck, TypeException } from '@sidewinder/type/compiler'
 import { RedisEncoder } from '../encoder'
 import { RedisConnect } from '../connect'
 import { Static, TSchema } from '../type'
 
 export class RedisPub<Schema extends TSchema> {
-  private readonly validator: Validator<TSchema>
+  private readonly typeCheck: TypeCheck<TSchema>
   private readonly encoder: RedisEncoder
   private ended: boolean
 
   constructor(private readonly schema: Schema, public readonly topic: string, private readonly redis: Redis) {
-    this.validator = new Validator(this.schema)
+    this.typeCheck = TypeCompiler.Compile(this.schema)
     this.encoder = new RedisEncoder(this.schema)
     this.ended = false
   }
@@ -46,8 +46,11 @@ export class RedisPub<Schema extends TSchema> {
   /** Publishes the given value to the topic. */
   public async send(value: Static<Schema>): Promise<void> {
     if (this.ended) return
-    this.validator.assert(value)
-    await this.redis.publish(this.encodeKey(), this.encoder.encode(value))
+    if (this.typeCheck.Check(value)) {
+      await this.redis.publish(this.encodeKey(), this.encoder.encode(value))
+    } else {
+      throw new TypeException('RedisPub:send()', this.typeCheck, value)
+    }
   }
 
   /** Disposes of this publisher */

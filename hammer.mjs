@@ -21,10 +21,7 @@ const packages = [
     ['redis',     version, 'Sidewinder Redis'],
     ['server',    version, 'Sidewinder Server'],
     ['token',     version, 'Sidewinder Token'],
-    ['type',      version, 'Sidewinder Type'],
-    ['validator', version, 'Sidewinder Validator'],
-    ['value',     version, 'Sidewinder Value'],
-    ['web',       version, 'Sidewinder Web'],
+    ['type',      version, 'Sidewinder Type']
 ]
 
 // -------------------------------------------------------------

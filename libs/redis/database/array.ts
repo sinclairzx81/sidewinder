@@ -27,17 +27,17 @@ THE SOFTWARE.
 ---------------------------------------------------------------------------*/
 
 import { Redis } from 'ioredis'
-import { Validator } from '@sidewinder/validator'
+import { TypeCompiler, TypeCheck, TypeException } from '@sidewinder/type/compiler'
 import { RedisEncoder } from '../encoder'
 import { Static, TSchema } from '../type'
 
 /** A RedisArray is analogous to a JavaScript Array. It provides asynchronous push, shift, pop, unshift and indexing values in a remote Redis list. */
 export class RedisArray<Schema extends TSchema> {
-  private readonly validator: Validator<TSchema>
+  private readonly typeCheck: TypeCheck<TSchema>
   private readonly encoder: RedisEncoder
 
   constructor(private readonly schema: Schema, private readonly redis: Redis, private readonly keyspace: string) {
-    this.validator = new Validator(this.schema)
+    this.typeCheck = TypeCompiler.Compile(this.schema)
     this.encoder = new RedisEncoder(this.schema)
   }
 
@@ -65,14 +65,14 @@ export class RedisArray<Schema extends TSchema> {
 
   /** Sets the value at the given index */
   public async set(index: number, value: Static<Schema>): Promise<void> {
-    this.validator.assert(value)
+    this.assertType(value)
     this.redis.lset(this.resolveKey(), index, this.encoder.encode(value))
   }
 
   /** Pushes a value to the end of this Array */
   public async push(...values: Static<Schema>[]) {
     for (const value of values) {
-      this.validator.assert(value)
+      this.assertType(value)
     }
     for (const value of values) {
       await this.redis.rpush(this.resolveKey(), this.encoder.encode(value))
@@ -82,7 +82,7 @@ export class RedisArray<Schema extends TSchema> {
   /** Pushes a value to the start of this Array */
   public async unshift(...values: Static<Schema>[]): Promise<void> {
     for (const value of values) {
-      this.validator.assert(value)
+      this.assertType(value)
     }
     for (const value of values.reverse()) {
       await this.redis.lpush(this.resolveKey(), this.encoder.encode(value))
@@ -126,6 +126,11 @@ export class RedisArray<Schema extends TSchema> {
   // ------------------------------------------------------------
   // Key Encoding
   // ------------------------------------------------------------
+
+  private assertType(value: unknown) {
+    if (this.typeCheck.Check(value)) return
+    throw new TypeException('RedisArray', this.typeCheck, value)
+  }
 
   private resolveKey() {
     return `sw::array:${this.keyspace}`

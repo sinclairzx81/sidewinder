@@ -28,7 +28,7 @@ THE SOFTWARE.
 
 import { Redis, RedisOptions } from 'ioredis'
 import { SyncSender } from '@sidewinder/channel'
-import { Validator } from '@sidewinder/validator'
+import { TypeCompiler, TypeCheck, TypeException } from '@sidewinder/type/compiler'
 import { RedisConnect } from '../connect'
 import { RedisEncoder } from '../encoder'
 import { Static, TSchema } from '../type'
@@ -41,12 +41,12 @@ import { Message } from './message'
  * of Sidewinder channels across Redis.
  */
 export class RedisSender<Schema extends TSchema> implements SyncSender<Static<Schema>> {
-  private readonly validator: Validator<TSchema>
+  private readonly typeCheck: TypeCheck<TSchema>
   private readonly encoder: RedisEncoder
   private ended: boolean
 
   constructor(private readonly schema: TSchema, private readonly channel: string, private readonly redis: Redis) {
-    this.validator = new Validator(this.schema)
+    this.typeCheck = TypeCompiler.Compile(this.schema)
     this.encoder = new RedisEncoder(this.schema)
     this.ended = false
   }
@@ -54,7 +54,7 @@ export class RedisSender<Schema extends TSchema> implements SyncSender<Static<Sc
   /** Sends the given value to this channel. If channel has ended no action. */
   public async send(value: Static<Schema>): Promise<void> {
     if (this.ended) return
-    this.validator.assert(value)
+    this.assertType(value)
     const message: Static<typeof Message> = { type: 'next', value }
     await this.redis.rpush(this.encodeKey(), this.encoder.encode(message))
   }
@@ -87,6 +87,11 @@ export class RedisSender<Schema extends TSchema> implements SyncSender<Static<Sc
 
   private encodeKey() {
     return `sw::channel:${this.channel}`
+  }
+
+  private assertType(value: unknown) {
+    if (this.typeCheck.Check(value)) return
+    throw new TypeException('RedisSender', this.typeCheck, value)
   }
 
   // ------------------------------------------------------------

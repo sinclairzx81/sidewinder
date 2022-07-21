@@ -26,11 +26,11 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-import { Exception, Static, Type, TSchema, TString, TContract, TFunction, AuthorizeFunction, AuthorizeFunctionReturnType, ContractMethodParamters, ContractMethodReturnType } from '@sidewinder/contract'
 import type { MessageEvent, CloseEvent, ErrorEvent } from 'ws'
 import type { IncomingMessage } from 'http'
 
-import { Validator } from '@sidewinder/validator'
+import { Exception, Static, Type, TSchema, TString, TContract, TFunction, AuthorizeFunction, AuthorizeFunctionReturnType, ContractMethodParamters, ContractMethodReturnType } from '@sidewinder/contract'
+import { TypeCompiler, TypeCheck } from '@sidewinder/type/compiler'
 import { ServiceMethods, Responder, RpcErrorCode, RpcProtocol, RpcRequest, RpcResponse } from './methods/index'
 import { Encoder, JsonEncoder, MsgPackEncoder } from './encoder/index'
 import { Request } from './request'
@@ -47,17 +47,17 @@ export type WebSocketServiceErrorCallback = (context: string, error: unknown) =>
  * clients.
  */
 export class WebSocketService<Contract extends TContract, Context extends TSchema = TString> {
-  #onAuthorizeCallback: WebSocketServiceAuthorizeCallback<Static<Context>>
-  #onConnectCallback: WebSocketServiceConnectCallback<Static<Context>>
-  #onCloseCallback: WebSocketServiceCloseCallback<Static<Context>>
-  #onErrorCallback: WebSocketServiceErrorCallback
+  private _onAuthorizeCallback: WebSocketServiceAuthorizeCallback<Static<Context>>
+  private _onConnectCallback: WebSocketServiceConnectCallback<Static<Context>>
+  private _onCloseCallback: WebSocketServiceCloseCallback<Static<Context>>
+  private _onErrorCallback: WebSocketServiceErrorCallback
 
-  readonly #contextValidator: Validator<Context>
-  readonly #contexts: Map<string, Static<Context>>
-  readonly #sockets: Map<string, WebSocket>
-  readonly #encoder: Encoder
-  readonly #responder: Responder
-  readonly #methods: ServiceMethods
+  private readonly _contextTypeCheck: TypeCheck<Context>
+  private readonly _contexts: Map<string, Static<Context>>
+  private readonly _sockets: Map<string, WebSocket>
+  private readonly _encoder: Encoder
+  private readonly _responder: Responder
+  private readonly _methods: ServiceMethods
 
   /**
    * Creates a new WebSocketService
@@ -65,17 +65,17 @@ export class WebSocketService<Contract extends TContract, Context extends TSchem
    * @param context The context this service should use.
    */
   constructor(private readonly contract: Contract, private readonly context: Context = Type.String() as any) {
-    this.#contextValidator = new Validator(this.context)
-    this.#onAuthorizeCallback = (clientId: string) => clientId as any
-    this.#onConnectCallback = () => {}
-    this.#onErrorCallback = () => {}
-    this.#onCloseCallback = () => {}
-    this.#contexts = new Map<string, Static<Context>>()
-    this.#sockets = new Map<string, WebSocket>()
-    this.#encoder = this.contract.format === 'json' ? new JsonEncoder() : new MsgPackEncoder()
-    this.#responder = new Responder()
-    this.#methods = new ServiceMethods()
-    this.#setupNotImplemented()
+    this._contextTypeCheck = TypeCompiler.Compile(this.context)
+    this._onAuthorizeCallback = (clientId: string) => clientId as any
+    this._onConnectCallback = () => {}
+    this._onErrorCallback = () => {}
+    this._onCloseCallback = () => {}
+    this._contexts = new Map<string, Static<Context>>()
+    this._sockets = new Map<string, WebSocket>()
+    this._encoder = this.contract.format === 'json' ? new JsonEncoder() : new MsgPackEncoder()
+    this._responder = new Responder()
+    this._methods = new ServiceMethods()
+    this._setupNotImplemented()
   }
 
   /**
@@ -108,19 +108,19 @@ export class WebSocketService<Contract extends TContract, Context extends TSchem
   public event(event: string, callback: (...args: any[]) => any): any {
     switch (event) {
       case 'authorize': {
-        this.#onAuthorizeCallback = callback
+        this._onAuthorizeCallback = callback
         break
       }
       case 'connect': {
-        this.#onConnectCallback = callback
+        this._onConnectCallback = callback
         break
       }
       case 'error': {
-        this.#onErrorCallback = callback
+        this._onErrorCallback = callback
         break
       }
       case 'close': {
-        this.#onCloseCallback = callback
+        this._onCloseCallback = callback
         break
       }
       default:
@@ -131,7 +131,7 @@ export class WebSocketService<Contract extends TContract, Context extends TSchem
 
   /** Returns an iterator for each clientId currently connected to this service */
   public clients(): IterableIterator<string> {
-    return this.#sockets.keys()
+    return this._sockets.keys()
   }
 
   /** Defines a server method implementation with method level authorization */
@@ -154,8 +154,8 @@ export class WebSocketService<Contract extends TContract, Context extends TSchem
     const [method, authorize, callback] = args.length === 3 ? [args[0], args[1], args[2]] : [args[0], (context: any) => context, args[1]]
     const target = (this.contract.server as any)[method] as TFunction | undefined
     if (target === undefined) throw Error(`Cannot define method '${method}' as it does not exist in contract`)
-    this.#methods.register(method, target, authorize, callback)
-    return async (context: Static<Context>, ...params: any[]) => await this.#methods.execute(context, method, params)
+    this._methods.register(method, target, authorize, callback)
+    return async (context: Static<Context>, ...params: any[]) => await this._methods.execute(context, method, params)
   }
 
   /** Calls a remote client method */
@@ -164,13 +164,13 @@ export class WebSocketService<Contract extends TContract, Context extends TSchem
     Parameters extends ContractMethodParamters<Static<Contract>['client'][Method]>,
     ReturnType extends ContractMethodReturnType<Static<Contract>['client'][Method]>,
   >(clientId: string, method: Method, ...params: Parameters): Promise<ReturnType> {
-    if (!this.#sockets.has(clientId)) throw new Error('ClientId not found')
-    const handle = this.#responder.register(clientId)
-    const socket = this.#sockets.get(clientId)!
+    if (!this._sockets.has(clientId)) throw new Error('ClientId not found')
+    const handle = this._responder.register(clientId)
+    const socket = this._sockets.get(clientId)!
     const request = RpcProtocol.encodeRequest(handle, method, params)
-    const message = this.#encoder.encode(request)
+    const message = this._encoder.encode(request)
     socket.send(message)
-    return await this.#responder.wait(handle)
+    return await this._responder.wait(handle)
   }
 
   /** Sends a message to a remote client method and ignores the result */
@@ -179,17 +179,17 @@ export class WebSocketService<Contract extends TContract, Context extends TSchem
     method: Method,
     ...params: Parameters
   ): void {
-    if (!this.#sockets.has(clientId)) return
-    const socket = this.#sockets.get(clientId)!
+    if (!this._sockets.has(clientId)) return
+    const socket = this._sockets.get(clientId)!
     const request = RpcProtocol.encodeRequest(undefined, method, params)
-    const message = this.#encoder.encode(request)
+    const message = this._encoder.encode(request)
     socket.send(message)
   }
 
   /** Closes a client */
   public close(clientId: string): void {
-    if (!this.#sockets.has(clientId)) return
-    const socket = this.#sockets.get(clientId)!
+    if (!this._sockets.has(clientId)) return
+    const socket = this._sockets.get(clientId)!
     socket.close()
   }
 
@@ -198,70 +198,69 @@ export class WebSocketService<Contract extends TContract, Context extends TSchem
   // -------------------------------------------------------------------------------------------
 
   public async upgrade(clientId: string, request: IncomingMessage): Promise<boolean> {
-    try {
-      const context = await this.#onAuthorizeCallback(clientId, new Request(request))
-      this.#contextValidator.assert(context)
-      this.#contexts.set(clientId, context)
+    const context = await this._onAuthorizeCallback(clientId, new Request(request))
+    if (this._contextTypeCheck.Check(context)) {
+      this._contexts.set(clientId, context)
       return true
-    } catch {
+    } else {
       return false
     }
   }
 
   public async accept(clientId: string, socket: any /** WebSocket */) {
-    // Do not want to force downstream implementations into requiring esModuleInterop */
-    this.#sockets.set(clientId, socket)
+    // esModuleInterop issue
+    this._sockets.set(clientId, socket)
     socket.binaryType = 'arraybuffer'
-    socket.addEventListener('message', (event: MessageEvent) => this.#onMessageHandler(clientId, socket, event))
-    socket.addEventListener('error', (event: ErrorEvent) => this.#onErrorHandler(clientId, event))
-    socket.addEventListener('close', (event: CloseEvent) => this.#onCloseHandler(clientId, event))
-    const context = this.#resolveContext(clientId)
-    await this.#onConnectCallback(context)
+    socket.addEventListener('message', (event: MessageEvent) => this._onMessageHandler(clientId, socket, event))
+    socket.addEventListener('error', (event: ErrorEvent) => this._onErrorHandler(clientId, event))
+    socket.addEventListener('close', (event: CloseEvent) => this._onCloseHandler(clientId, event))
+    const context = this._resolveContext(clientId)
+    await this._onConnectCallback(context)
   }
 
   // -------------------------------------------------------------------------------------------
   // Request
   // -------------------------------------------------------------------------------------------
 
-  async #dispatchError(clientId: string, error: Error) {
+  private async _dispatchError(clientId: string, error: Error) {
     try {
-      await this.#onErrorCallback(clientId, error)
+      await this._onErrorCallback(clientId, error)
     } catch {
       /* ignore */
     }
   }
 
-  async #sendResponseWithResult(socket: WebSocket, rpcRequest: RpcRequest, result: unknown) {
+  private async _sendResponseWithResult(socket: WebSocket, rpcRequest: RpcRequest, result: unknown) {
     if (rpcRequest.id === undefined || rpcRequest.id === null) return
     const response = RpcProtocol.encodeResult(rpcRequest.id, result)
-    const buffer = this.#encoder.encode(response)
+    const buffer = this._encoder.encode(response)
     socket.send(buffer)
   }
 
-  async #sendResponseWithError(socket: WebSocket, rpcRequest: RpcRequest, error: Error) {
+  private async _sendResponseWithError(socket: WebSocket, rpcRequest: RpcRequest, error: Error) {
     if (rpcRequest.id === undefined || rpcRequest.id === null) return
     if (error instanceof Exception) {
       const response = RpcProtocol.encodeError(rpcRequest.id, { code: error.code, message: error.message, data: error.data })
-      const buffer = this.#encoder.encode(response)
+      const buffer = this._encoder.encode(response)
       socket.send(buffer)
     } else {
       const code = RpcErrorCode.InternalServerError
       const message = 'Internal Server Error'
       const data = {}
       const response = RpcProtocol.encodeError(rpcRequest.id, { code, message, data })
-      const buffer = this.#encoder.encode(response)
+      const buffer = this._encoder.encode(response)
       socket.send(buffer)
     }
   }
 
-  async #executeRequest(clientId: string, socket: WebSocket, rpcRequest: RpcRequest) {
-    const context = this.#resolveContext(clientId)
+  private async _executeRequest(clientId: string, socket: WebSocket, rpcRequest: RpcRequest) {
+    const context = this._resolveContext(clientId)
     try {
-      const result = await this.#methods.execute(context, rpcRequest.method, rpcRequest.params)
-      await this.#sendResponseWithResult(socket, rpcRequest, result)
+      const result = await this._methods.execute(context, rpcRequest.method, rpcRequest.params)
+      await this._sendResponseWithResult(socket, rpcRequest, result)
     } catch (error) {
-      this.#dispatchError(clientId, error as Error)
-      await this.#sendResponseWithError(socket, rpcRequest, error as Error)
+      this._dispatchError(clientId, error as Error)
+      await this._sendResponseWithError(socket, rpcRequest, error as Error)
     }
   }
 
@@ -269,12 +268,12 @@ export class WebSocketService<Contract extends TContract, Context extends TSchem
   // Response
   // -------------------------------------------------------------------------------------------
 
-  #executeResponse(rpcResponse: RpcResponse) {
+  private _executeResponse(rpcResponse: RpcResponse) {
     if (rpcResponse.result !== undefined) {
-      this.#responder.resolve(rpcResponse.id, rpcResponse.result)
+      this._responder.resolve(rpcResponse.id, rpcResponse.result)
     } else if (rpcResponse.error) {
       const { message, code, data } = rpcResponse.error
-      this.#responder.reject(rpcResponse.id, new Exception(message, code, data))
+      this._responder.reject(rpcResponse.id, new Exception(message, code, data))
     }
   }
 
@@ -282,45 +281,45 @@ export class WebSocketService<Contract extends TContract, Context extends TSchem
   // Socket Events
   // -------------------------------------------------------------------------------------------
 
-  async #onMessageHandler(clientId: string, socket: WebSocket, event: MessageEvent) {
+  private async _onMessageHandler(clientId: string, socket: WebSocket, event: MessageEvent) {
     try {
-      const message = RpcProtocol.decodeAny(this.#encoder.decode(event.data as Uint8Array))
+      const message = RpcProtocol.decodeAny(this._encoder.decode(event.data as Uint8Array))
       if (message === undefined) return
       if (message.type === 'request') {
-        await this.#executeRequest(clientId, socket, message.data)
+        await this._executeRequest(clientId, socket, message.data)
       } else if (message.type === 'response') {
-        await this.#executeResponse(message.data)
+        await this._executeResponse(message.data)
       } else {
       }
     } catch (error) {
-      this.#onErrorCallback(clientId, error)
+      this._onErrorCallback(clientId, error)
     }
   }
 
-  #onErrorHandler(clientId: string, event: ErrorEvent) {
-    this.#onErrorCallback(clientId, event)
+  private _onErrorHandler(clientId: string, event: ErrorEvent) {
+    this._onErrorCallback(clientId, event)
   }
 
-  #onCloseHandler(clientId: string, event: CloseEvent) {
-    this.#responder.rejectFor(clientId, new Error('Client disconnected'))
-    const context = this.#resolveContext(clientId)
-    this.#contexts.delete(clientId)
-    this.#sockets.delete(clientId)
-    this.#onCloseCallback(context)
+  private _onCloseHandler(clientId: string, event: CloseEvent) {
+    this._responder.rejectFor(clientId, new Error('Client disconnected'))
+    const context = this._resolveContext(clientId)
+    this._contexts.delete(clientId)
+    this._sockets.delete(clientId)
+    this._onCloseCallback(context)
   }
 
   // -------------------------------------------------------------------------------------------
   // Utility
   // -------------------------------------------------------------------------------------------
 
-  #resolveContext(clientId: string) {
-    if (!this.#contexts.has(clientId)) throw Error(`Critical: Cannot locate associated context for clientId '${clientId}'`)
-    return this.#contexts.get(clientId)!
+  private _resolveContext(clientId: string) {
+    if (!this._contexts.has(clientId)) throw Error(`Critical: Cannot locate associated context for clientId '${clientId}'`)
+    return this._contexts.get(clientId)!
   }
 
-  #setupNotImplemented() {
+  private _setupNotImplemented() {
     for (const [name, schema] of Object.entries(this.contract.server)) {
-      this.#methods.register(
+      this._methods.register(
         name,
         schema as TFunction,
         (context: any) => context,

@@ -27,7 +27,7 @@ THE SOFTWARE.
 ---------------------------------------------------------------------------*/
 
 import { Static, TObject } from '@sidewinder/type'
-import { Validator, ValidateResult } from '@sidewinder/validator'
+import { TypeCompiler, TypeCheck } from '@sidewinder/type/compiler'
 import { ArgumentsResolver, DocumentResolver, EnvironmentResolver } from './resolvers/index'
 import { Documentation } from './documentation/index'
 import { JsonPointer } from './pointer/index'
@@ -37,22 +37,21 @@ export class ConfigurationResolver<Schema extends TObject> {
   private readonly environmentResolver: EnvironmentResolver
   private readonly argumentResolver: ArgumentsResolver
   private readonly documentResolver: DocumentResolver
-  private readonly validator: Validator<Schema>
+  private readonly typeCheck: TypeCheck<Schema>
 
   constructor(private readonly schema: Schema, private readonly env: object, private readonly argv: string[]) {
     this.environmentResolver = new EnvironmentResolver(this.env)
     this.argumentResolver = new ArgumentsResolver(this.argv)
     this.documentResolver = new DocumentResolver()
-    this.validator = new Validator(this.schema)
+    this.typeCheck = TypeCompiler.Compile(this.schema)
   }
 
-  private exitWithResult(result: ValidateResult, object: unknown) {
+  private exitWithErrors(object: unknown) {
     const documentation = Documentation.resolve(this.schema)
-    const error = result.errorText.replace(/\//g, '.')
     console.log(documentation)
     console.log()
-    console.log('Error:', error)
-    console.log()
+    console.log('Configuration Error:')
+    console.log([...this.typeCheck.Errors(object)])
     process.exit(1)
   }
 
@@ -110,9 +109,8 @@ export class ConfigurationResolver<Schema extends TObject> {
     }
 
     // Check Object
-    const result = this.validator.check(object)
-    if (result.success) return object as Static<Schema>
-    return this.exitWithResult(result, object) as never
+    if (this.typeCheck.Check(object)) return object
+    return this.exitWithErrors(object) as never
   }
 }
 

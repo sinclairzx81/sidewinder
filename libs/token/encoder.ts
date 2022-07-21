@@ -26,31 +26,24 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
+import { TypeCompiler, TypeCheck, TypeException } from '@sidewinder/type/compiler'
 import { sign } from 'jsonwebtoken'
 import { TObject } from '@sidewinder/type'
-import { Validator } from '@sidewinder/validator'
 import { Format } from './format'
 
-export class TokenEncoderTypeError extends Error {
-  constructor(public readonly errors: any[], errorText: string) {
-    super(`TokenEncoder failed to type check. ${errorText}`)
-  }
-}
-
 export class TokenEncoder<Claims extends TObject> {
-  private readonly tokenValidator: Validator<Claims>
+  private readonly typeCheck: TypeCheck<Claims>
 
   constructor(private readonly schema: Claims, private readonly privateKey: string) {
     this.privateKey = Format.key(this.privateKey)
-    this.tokenValidator = new Validator(this.schema)
+    this.typeCheck = TypeCompiler.Compile(this.schema)
   }
 
   private validateType(token: Claims['static']) {
-    const check = this.tokenValidator.check(token)
-    if (!check.success) {
-      throw new TokenEncoderTypeError(check.errors, check.errorText)
-    } else {
+    if (this.typeCheck.Check(token)) {
       return token as Claims['static'] & { iat: number }
+    } else {
+      throw new TypeException('TokenEncoder', this.typeCheck, token)
     }
   }
 

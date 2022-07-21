@@ -27,19 +27,19 @@ THE SOFTWARE.
 ---------------------------------------------------------------------------*/
 
 import { Redis, RedisOptions } from 'ioredis'
-import { Channel } from '@sidewinder/channel'
-import { Validator } from '@sidewinder/validator'
-import { RedisEncoder } from '../encoder'
+import { TypeCompiler, TypeCheck, TypeException } from '@sidewinder/type/compiler'
 import { Static, TSchema } from '../type'
+import { Channel } from '@sidewinder/channel'
+import { RedisEncoder } from '../encoder'
 import { RedisConnect } from '../connect'
 
 export class RedisSub<Schema extends TSchema> {
-  private readonly validator: Validator<TSchema>
+  private readonly typeCheck: TypeCheck<TSchema>
   private readonly encoder: RedisEncoder
   private readonly channel: Channel<Static<Schema>>
 
   constructor(private readonly schema: TSchema, public readonly topic: string, private readonly redis: Redis) {
-    this.validator = new Validator(this.schema)
+    this.typeCheck = TypeCompiler.Compile(this.schema)
     this.encoder = new RedisEncoder(this.schema)
     this.channel = new Channel<Static<Schema>>()
     console.log('subscribing')
@@ -76,8 +76,7 @@ export class RedisSub<Schema extends TSchema> {
   private onMessage(event: string, value: string) {
     try {
       const data = this.encoder.decode<Static<Schema>>(value)
-      this.validator.assert(data)
-      this.channel.send(data)
+      if (this.typeCheck.Check(value)) this.channel.send(data)
     } catch {}
   }
 

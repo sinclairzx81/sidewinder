@@ -27,17 +27,17 @@ THE SOFTWARE.
 ---------------------------------------------------------------------------*/
 
 import { Redis } from 'ioredis'
-import { Validator } from '@sidewinder/validator'
+import { TypeCompiler, TypeCheck, TypeException } from '@sidewinder/type/compiler'
 import { RedisEncoder } from '../encoder'
 import { Static, TSchema } from '../type'
 
 /** A RedisMap is analogous to a JavaScript Map. It provides asynchronous set, get, clear and key value enumeration. */
 export class RedisMap<Schema extends TSchema> {
-  private readonly validator: Validator<TSchema>
+  private readonly typeCheck: TypeCheck<TSchema>
   private readonly encoder: RedisEncoder
 
   constructor(private readonly schema: Schema, private readonly redis: Redis, private readonly keyspace: string) {
-    this.validator = new Validator(this.schema)
+    this.typeCheck = TypeCompiler.Compile(this.schema)
     this.encoder = new RedisEncoder(this.schema)
   }
 
@@ -65,8 +65,11 @@ export class RedisMap<Schema extends TSchema> {
 
   /** Sets the value for the given key */
   public async set(key: string, value: Static<Schema>) {
-    this.validator.assert(value)
-    return await this.redis.set(this.encodeKey(key), this.encoder.encode(value))
+    if (this.typeCheck.Check(value)) {
+      return await this.redis.set(this.encodeKey(key), this.encoder.encode(value))
+    } else {
+      throw new TypeException('RedisMap:set()', this.typeCheck, value)
+    }
   }
 
   /** Gets the value for the given key */

@@ -26,9 +26,9 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
+import { TypeCompiler, TypeCheck, TypeException } from '@sidewinder/type/compiler'
 import { verify } from 'jsonwebtoken'
-import { Type, TObject } from '@sidewinder/type'
-import { Validator } from '@sidewinder/validator'
+import { TObject } from '@sidewinder/type'
 import { Format } from './format'
 
 export class TokenDecoderVerifyError extends Error {
@@ -37,18 +37,12 @@ export class TokenDecoderVerifyError extends Error {
   }
 }
 
-export class TokenDecoderTypeError extends Error {
-  constructor(public readonly errors: any[], errorText: string) {
-    super(`TokenDecoder failed to type check. ${errorText}`)
-  }
-}
-
 export class TokenDecoder<Claims extends TObject> {
-  private readonly tokenValidator: Validator<Claims>
+  private readonly typeCheck: TypeCheck<Claims>
 
   constructor(private readonly schema: Claims, private readonly publicKey: string) {
     this.publicKey = Format.key(this.publicKey)
-    this.tokenValidator = new Validator(this.schema)
+    this.typeCheck = TypeCompiler.Compile(this.schema)
   }
 
   /** Validates the given token and returns the decoded claims + iat */
@@ -62,11 +56,11 @@ export class TokenDecoder<Claims extends TObject> {
 
   /** Validates the given token is of the correct type */
   private validateType(verified: unknown): Claims['static'] & { iat: number } {
-    const check = this.tokenValidator.check(verified)
-    if (!check.success) {
-      throw new TokenDecoderTypeError(check.errors, check.errorText)
-    } else {
+    const check = this.typeCheck.Check(verified)
+    if (check) {
       return verified as Claims['static'] & { iat: number }
+    } else {
+      throw new TypeException('TokenDecoder', this.typeCheck, verified)
     }
   }
 

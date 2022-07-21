@@ -33,8 +33,6 @@
   },
   "dependencies": {
     "@msgpack/msgpack": "^2.7.2",
-    "ajv": "^8.11.0",
-    "ajv-formats": "^2.1.1",
     "bcryptjs": "^2.4.3",
     "express": "^4.17.3",
     "ioredis": "^4.28.5",

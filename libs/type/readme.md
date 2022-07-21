@@ -1,18 +1,38 @@
 <div align='center'>
 
-<h1>Sidewinder Types</h1>
+<h1>Sidewinder Type</h1>
 
-<p>Runtime Type System based on JSON Schema</p>
-
-[<img src="https://img.shields.io/npm/v/@sidewinder/type?label=%40sidewinder%2Ftype">](https://www.npmjs.com/package/@sidewinder/type)
+<p>JSON Schema Type Builder with Static Type Resolution for TypeScript</p>
 
 </div>
+
+<a name="Install"></a>
+
+## Install
+
+#### Node
+
+```bash
+$ npm install @sidewinder/type --save
+```
+
+## Example
+
+```typescript
+import { Static, Type } from '@sidewinder/type'
+
+const T = Type.String() // const T = { type: 'string' }
+
+type T = Static<typeof T> // type T = string
+```
 
 <a name="Overview"></a>
 
 ## Overview
 
-Sidewinder Types is an extended version of the TypeBox type library. It provides built in support for `Uint8Array`. It also encodes serializable runtime reflection data allowing remote systems to introspect and reconstruct associative types when schemas are exchanged over the wire. For additional information on TypeBox see the official documentation located [here](https://github.com/sinclairzx81/typebox). For validation of the schemas built with this library, refer to the Sidewinder Validation package located [here](../validation/readme.md)
+Sidewinder Type is a type builder library that creates in-memory JSON Schema objects that can be statically inferred as TypeScript types. The schemas produced by this library are designed to match the static type checking rules of the TypeScript compiler. Sidewinder Type enables one to create unified types that can be statically checked by TypeScript and runtime asserted using standard JSON Schema validation.
+
+Sidewinder Type can be used as a simple tool to build up complex schemas or integrated into RPC or REST services to help validate data received over the wire. It offers a type system aligned to the capabilities of TypeScript and can be used equally well in JavaScript environments.
 
 License MIT
 
@@ -24,20 +44,25 @@ License MIT
 - [Types](#Types)
 - [Modifiers](#Modifiers)
 - [Options](#Options)
-- [Generic Types](#Generic-Types)
+- [Extended Types](#Extended-Types)
 - [Reference Types](#Reference-Types)
 - [Recursive Types](#Recursive-Types)
-- [Extended Types](#Extended-Types)
+- [Generic Types](#Generic-Types)
+- [Unsafe Types](#Unsafe-Types)
+- [Conditional Types](#Conditional-Types)
+- [Values](#Values)
+- [Guards](#Guards)
+- [Strict](#Strict)
+- [Validation](#Validation)
+- [Compiler](#Compiler)
+- [Benchmark](#Benchmark)
+- [Contribute](#Contribute)
 
-## Install
-
-```bash
-$ npm install @sidewinder/type
-```
+<a name="Example"></a>
 
 ## Usage
 
-The following demonstrates general usage.
+The following demonstrates Sidewinder Type's general usage.
 
 ```typescript
 import { Static, Type } from '@sidewinder/type'
@@ -64,20 +89,20 @@ const T = Type.Object({
   // const T = {
   id: Type.String(), //   type: 'object',
   name: Type.String(), //   properties: {
-  timestamp: Type.Integer(), //      id: {
-}) //         type: 'string'
-//      },
-//      name: {
-//         type: 'string'
-//      },
-//      timestamp: {
-//         type: 'integer'
-//      }
+  timestamp: Type.Integer(), //     id: {
+}) //       type: 'string'
+//     },
+//     name: {
+//       type: 'string'
+//     },
+//     timestamp: {
+//       type: 'integer'
+//     }
 //   },
 //   required: [
-//      "id",
-//      "name",
-//      "timestamp"
+//     'id',
+//     'name',
+//     'timestamp'
 //   ]
 // }
 
@@ -88,9 +113,9 @@ const T = Type.Object({
 //--------------------------------------------------------------------------------------------
 
 type T = Static<typeof T> // type T = {
-//    id: string,
-//    name: string,
-//    timestamp: number
+//   id: string,
+//   name: string,
+//   timestamp: number
 // }
 
 //--------------------------------------------------------------------------------------------
@@ -117,7 +142,7 @@ The following table outlines the Sidewinder Type mappings between TypeScript and
 
 ```typescript
 ┌────────────────────────────────┬─────────────────────────────┬────────────────────────────────┐
-│ Sidewinder Type                │ TypeScript                  │ JSON Schema                    │
+│ Sidewinder Type                        │ TypeScript                  │ JSON Schema                    │
 │                                │                             │                                │
 ├────────────────────────────────┼─────────────────────────────┼────────────────────────────────┤
 │ const T = Type.Any()           │ type T = any                │ const T = { }                  │
@@ -127,22 +152,22 @@ The following table outlines the Sidewinder Type mappings between TypeScript and
 │                                │                             │                                │
 ├────────────────────────────────┼─────────────────────────────┼────────────────────────────────┤
 │ const T = Type.String()        │ type T = string             │ const T = {                    │
-│                                │                             │    type: 'string'              │
+│                                │                             │   type: 'string'               │
 │                                │                             │ }                              │
 │                                │                             │                                │
 ├────────────────────────────────┼─────────────────────────────┼────────────────────────────────┤
 │ const T = Type.Number()        │ type T = number             │ const T = {                    │
-│                                │                             │    type: 'number'              │
+│                                │                             │   type: 'number'               │
 │                                │                             │ }                              │
 │                                │                             │                                │
 ├────────────────────────────────┼─────────────────────────────┼────────────────────────────────┤
 │ const T = Type.Integer()       │ type T = number             │ const T = {                    │
-│                                │                             │    type: 'integer'             │
+│                                │                             │   type: 'integer'              │
 │                                │                             │ }                              │
 │                                │                             │                                │
 ├────────────────────────────────┼─────────────────────────────┼────────────────────────────────┤
 │ const T = Type.Boolean()       │ type T = boolean            │ const T = {                    │
-│                                │                             │    type: 'boolean'             │
+│                                │                             │   type: 'boolean'              │
 │                                │                             │ }                              │
 │                                │                             │                                │
 ├────────────────────────────────┼─────────────────────────────┼────────────────────────────────┤
@@ -164,16 +189,16 @@ The following table outlines the Sidewinder Type mappings between TypeScript and
 │                                │                             │                                │
 ├────────────────────────────────┼─────────────────────────────┼────────────────────────────────┤
 │ const T = Type.Array(          │ type T = number[]           │ const T = {                    │
-│    Type.Number()               │                             │    type: 'array',              │
-│ )                              │                             │    items: {                    │
-│                                │                             │      type: 'number'            │
-│                                │                             │    }                           │
+│   Type.Number()                │                             │   type: 'array',               │
+│ )                              │                             │   items: {                     │
+│                                │                             │     type: 'number'             │
+│                                │                             │   }                            │
 │                                │                             │ }                              │
 │                                │                             │                                │
 ├────────────────────────────────┼─────────────────────────────┼────────────────────────────────┤
 │ const T = Type.Object({        │ type T = {                  │ const T = {                    │
-│   x: Type.Number(),            │    x: number,               │   type: 'object',              │
-│   y: Type.Number()             │    y: number                │   properties: {                │
+│   x: Type.Number(),            │   x: number,                │   type: 'object',              │
+│   y: Type.Number()             │   y: number                 │   properties: {                │
 │ })                             │ }                           │      x: {                      │
 │                                │                             │        type: 'number'          │
 │                                │                             │      },                        │
@@ -186,18 +211,17 @@ The following table outlines the Sidewinder Type mappings between TypeScript and
 │                                │                             │                                │
 ├────────────────────────────────┼─────────────────────────────┼────────────────────────────────┤
 │ const T = Type.Tuple([         │ type T = [number, number]   │ const T = {                    │
-│   Type.Number(),               │                             │    type: 'array',              │
-│   Type.Number()                │                             │    items: [                    │
-│ ])                             │                             │       {                        │
-│                                │                             │         type: 'number'         │
-│                                │                             │       }, {                     │
-│                                │                             │         type: 'number'         │
-│                                │                             │       }                        │
-│                                │                             │    ],                          │
+│   Type.Number(),               │                             │   type: 'array',               │
+│   Type.Number()                │                             │   items: [{                    │
+│ ])                             │                             │      type: 'number'            │
+│                                │                             │    }, {                        │
+│                                │                             │      type: 'number'            │
+│                                │                             │    }],                         │
 │                                │                             │    additionalItems: false,     │
 │                                │                             │    minItems: 2,                │
-│                                │                             │    maxItems: 2,                │
+│                                │                             │    maxItems: 2                 │
 │                                │                             │ }                              │
+│                                │                             │                                │
 │                                │                             │                                │
 ├────────────────────────────────┼─────────────────────────────┼────────────────────────────────┤
 │ enum Foo {                     │ enum Foo {                  │ const T = {                    │
@@ -212,85 +236,81 @@ The following table outlines the Sidewinder Type mappings between TypeScript and
 │                                │                             │                                │
 ├────────────────────────────────┼─────────────────────────────┼────────────────────────────────┤
 │ const T = Type.KeyOf(          │ type T = keyof {            │ const T = {                    │
-│   Type.Object({                │   x: number,                │    enum: ['x', 'y'],           │
-│     x: Type.Number(),          │   y: number                 │    type: 'string'              │
-│     y: Type.Number()           │ }                           │ }                              │
-│   })                           │                             │                                │
-│ )                              │                             │                                │
+│   Type.Object({                │   x: number,                │   anyOf: [{                    │
+│     x: Type.Number(),          │   y: number                 │     type: 'string',            │
+│     y: Type.Number()           │ }                           │     const: 'x'                 │
+│   })                           │                             │   }, {                         │
+│ )                              │                             │     type: 'string',            │
+│                                │                             │     const: 'y'                 │
+│                                │                             │   }]                           │
+│                                │                             │ }                              │
 │                                │                             │                                │
 ├────────────────────────────────┼─────────────────────────────┼────────────────────────────────┤
 │ const T = Type.Union([         │ type T = string | number    │ const T = {                    │
-│   Type.String(),               │                             │    anyOf: [{                   │
-│   Type.Number()                │                             │       type: 'string'           │
-│ ])                             │                             │    }, {                        │
-│                                │                             │       type: 'number'           │
-│                                │                             │    }]                          │
+│   Type.String(),               │                             │   anyOf: [{                    │
+│   Type.Number()                │                             │      type: 'string'            │
+│ ])                             │                             │   }, {                         │
+│                                │                             │      type: 'number'            │
+│                                │                             │   }]                           │
 │                                │                             │ }                              │
 │                                │                             │                                │
 ├────────────────────────────────┼─────────────────────────────┼────────────────────────────────┤
 │ const T = Type.Intersect([     │ type T = {                  │ const T = {                    │
-│    Type.Object({               │    x: number                │    allOf: [{                   │
-│       x: Type.Number()         │ } & {                       │       type: 'object',          │
-│    }),                         │    y: number                │       properties: {            │
-│    Type.Object({               │ }                           │          x: {                  │
-│       y: Type.Number()         │                             │            type: 'number'      │
-│   })                           │                             │          }                     │
-│ })                             │                             │       },                       │
-│                                │                             │       required: ['x']          │
-│                                │                             │    }, {                        │
-│                                │                             │       type: 'object',          │
-│                                │                             │       properties: {            │
-│                                │                             │          y: {                  │
-│                                │                             │            type: 'number'      │
-│                                │                             │          }                     │
-│                                │                             │       },                       │
-│                                │                             │       required: ['y']          │
-│                                │                             │    }]                          │
+│   Type.Object({                │   x: number                 │   type: 'object',              │
+│     x: Type.Number()           │ } & {                       │   properties: {                │
+│   }),                          │   y: number                 │     x: {                       │
+│   Type.Object({                │ }                           │       type: 'number'           │
+│     y: Type.Number()           │                             │     },                         │
+│   })                           │                             │     y: {                       │
+│ ])                             │                             │       type: 'number'           │
+│                                │                             │     }                          │
+│                                │                             │   },                           │
+│                                │                             │   required: ['x', 'y']         │
 │                                │                             │ }                              │
 │                                │                             │                                │
 ├────────────────────────────────┼─────────────────────────────┼────────────────────────────────┤
-│ const T = Type.Record(         │ type T = {                  │ const T = {                    │
-│    Type.String(),              │    [key: string]: number    │    type: 'object',             │
-│    Type.Number()               │ }                           │    patternProperties: {        │
-│ )                              │                             │      '^.*$': {                 │
-│                                │                             │         type: 'number'         │
-│                                │                             │      }                         │
-│                                │                             │    }                           │
+│ const T = Type.Record(         │ type T = Record<            │ const T = {                    │
+│   Type.String(),               │   string,                   │   type: 'object',              │
+│   Type.Number()                │   number,                   │   patternProperties: {         │
+│ )                              │ >                           │     '^.*$': {                  │
+│                                │                             │       type: 'number'           │
+│                                │                             │     }                          │
+│                                │                             │   }                            │
 │                                │                             │ }                              │
 │                                │                             │                                │
 ├────────────────────────────────┼─────────────────────────────┼────────────────────────────────┤
 │ const T = Type.Partial(        │ type T = Partial<{          │ const T = {                    │
-│    Type.Object({               │    x: number,               │   type: 'object',              │
-│         x: Type.Number(),      │    y: number                │   properties: {                │
-│         y: Type.Number()       | }>                          │     x: {                       │
-│    })                          │                             │        type: 'number'          │
+│   Type.Object({                │   x: number,                │   type: 'object',              │
+│     x: Type.Number(),          │   y: number                 │   properties: {                │
+│     y: Type.Number()           | }>                          │     x: {                       │
+│   })                           │                             │       type: 'number'           │
 │ )                              │                             │     },                         │
 │                                │                             │     y: {                       │
-│                                │                             │        type: 'number'          │
+│                                │                             │       type: 'number'           │
 │                                │                             │     }                          │
 │                                │                             │   }                            │
 │                                │                             │ }                              │
 │                                │                             │                                │
 ├────────────────────────────────┼─────────────────────────────┼────────────────────────────────┤
 │ const T = Type.Required(       │ type T = Required<{         │ const T = {                    │
-│    Type.Object({               │    x?: number,              │   type: 'object',              │
-│       x: Type.Optional(        │    y?: number               │   properties: {                │
-│          Type.Number()         | }>                          │     x: {                       │
-│       ),                       │                             │        type: 'number'          │
-│       y: Type.Optional(        │                             │     },                         │
-│          Type.Number()         │                             │     y: {                       │
-│       )                        │                             │        type: 'number'          │
-│    })                          │                             │     }                          │
+│   Type.Object({                │   x?: number,               │   type: 'object',              │
+│     x: Type.Optional(          │   y?: number                │   properties: {                │
+│       Type.Number()            | }>                          │     x: {                       │
+│     ),                         │                             │       type: 'number'           │
+│     y: Type.Optional(          │                             │     },                         │
+│       Type.Number()            │                             │     y: {                       │
+│     )                          │                             │       type: 'number'           │
+│   })                           │                             │     }                          │
 │ )                              │                             │   },                           │
 │                                │                             │   required: ['x', 'y']         │
 │                                │                             │ }                              │
 │                                │                             │                                │
 ├────────────────────────────────┼─────────────────────────────┼────────────────────────────────┤
 │ const T = Type.Pick(           │ type T = Pick<{             │ const T = {                    │
-│    Type.Object({               │    x: number,               │   type: 'object',              │
-│       x: Type.Number(),        │    y: number                │   properties: {                │
-│       y: Type.Number(),        | }, 'x'>                     │     x: {                       │
-│     }), ['x']                  │                             │        type: 'number'          │
+│   Type.Object({                │   x: number,                │   type: 'object',              │
+│     x: Type.Number(),          │   y: number                 │   properties: {                │
+│     y: Type.Number()           | }, 'x'>                     │     x: {                       │
+│   }), ['x']                    │                             │       type: 'number'           │
 │ )                              │                             │     }                          │
 │                                │                             │   },                           │
 │                                │                             │   required: ['x']              │
@@ -298,10 +318,10 @@ The following table outlines the Sidewinder Type mappings between TypeScript and
 │                                │                             │                                │
 ├────────────────────────────────┼─────────────────────────────┼────────────────────────────────┤
 │ const T = Type.Omit(           │ type T = Omit<{             │ const T = {                    │
-│    Type.Object({               │    x: number,               │   type: 'object',              │
-│       x: Type.Number(),        │    y: number                │   properties: {                │
-│       y: Type.Number(),        | }, 'x'>                     │     y: {                       │
-│     }), ['x']                  │                             │        type: 'number'          │
+│   Type.Object({                │   x: number,                │   type: 'object',              │
+│     x: Type.Number(),          │   y: number                 │   properties: {                │
+│     y: Type.Number()           | }, 'x'>                     │     y: {                       │
+│   }), ['x']                    │                             │       type: 'number'           │
 │ )                              │                             │     }                          │
 │                                │                             │   },                           │
 │                                │                             │   required: ['y']              │
@@ -312,18 +332,18 @@ The following table outlines the Sidewinder Type mappings between TypeScript and
 
 <a name="Modifiers"></a>
 
-### Modifiers
+## Modifiers
 
-Sidewinder Types provides modifiers that can be applied to an objects properties. This allows for `optional` and `readonly` to be applied to that property. The following table illustates how they map between TypeScript and JSON Schema.
+Sidewinder Type provides modifiers that can be applied to an objects properties. This allows for `optional` and `readonly` to be applied to that property. The following table illustates how they map between TypeScript and JSON Schema.
 
 ```typescript
 ┌────────────────────────────────┬─────────────────────────────┬────────────────────────────────┐
-│ Sidewinder Type                │ TypeScript                  │ JSON Schema                    │
+│ Sidewinder Type                        │ TypeScript                  │ JSON Schema                    │
 │                                │                             │                                │
 ├────────────────────────────────┼─────────────────────────────┼────────────────────────────────┤
 │ const T = Type.Object({        │ type T = {                  │ const T = {                    │
-│   name: Type.Optional(         │    name?: string,           │   type: 'object',              │
-│      Type.String(),            │ }                           │   properties: {                │
+│   name: Type.Optional(         │   name?: string             │   type: 'object',              │
+│     Type.String()              │ }                           │   properties: {                │
 │   )                            │                             │      name: {                   │
 │ })  	                         │                             │        type: 'string'          │
 │                                │                             │      }                         │
@@ -332,22 +352,22 @@ Sidewinder Types provides modifiers that can be applied to an objects properties
 │                                │                             │                                │
 ├────────────────────────────────┼─────────────────────────────┼────────────────────────────────┤
 │ const T = Type.Object({        │ type T = {                  │ const T = {                    │
-│   name: Type.Readonly(         │    readonly name: string,   │   type: 'object',              │
-│      Type.String(),            │ }                           │   properties: {                │
-│   )                            │                             │      name: {                   │
-│ })  	                         │                             │        type: 'string'          │
-│                                │                             │      }                         │
+│   name: Type.Readonly(         │   readonly name: string     │   type: 'object',              │
+│     Type.String()              │ }                           │   properties: {                │
+│   )                            │                             │     name: {                    │
+│ })  	                         │                             │       type: 'string'           │
+│                                │                             │     }                          │
 │                                │                             │   },                           │
 │                                │                             │   required: ['name']           │
 │                                │                             │ }                              │
 │                                │                             │                                │
 ├────────────────────────────────┼─────────────────────────────┼────────────────────────────────┤
 │ const T = Type.Object({        │ type T = {                  │ const T = {                    │
-│   name: Type.ReadonlyOptional( │    readonly name?: string,  │   type: 'object',              │
-│      Type.String(),            │ }                           │   properties: {                │
-│   )                            │                             │      name: {                   │
-│ })  	                         │                             │        type: 'string'          │
-│                                │                             │      }                         │
+│   name: Type.ReadonlyOptional( │   readonly name?: string    │   type: 'object',              │
+│     Type.String()              │ }                           │   properties: {                │
+│   )                            │                             │     name: {                    │
+│ })  	                         │                             │       type: 'string'           │
+│                                │                             │     }                          │
 │                                │                             │   }                            │
 │                                │                             │ }                              │
 │                                │                             │                                │
@@ -356,7 +376,7 @@ Sidewinder Types provides modifiers that can be applied to an objects properties
 
 <a name="Options"></a>
 
-### Options
+## Options
 
 You can pass additional JSON schema options on the last argument of any given type. The following are some examples.
 
@@ -371,45 +391,75 @@ const T = Type.Number({ multipleOf: 2 })
 const T = Type.Array(Type.Integer(), { minItems: 5 })
 ```
 
-<a name="Generic-Types"></a>
+<a name="Extended-Types"></a>
 
-### Generic Types
+## Extended Types
 
-Generic types can be created using functions. The following creates a generic `Nullable<T>` type.
+In addition to JSON schema types, Sidewinder Type provides several extended types that allow for `function` and `constructor` types to be composed. These additional types are not valid JSON Schema and will not validate using typical JSON Schema validation. However, these types can be used to frame JSON schema and describe callable interfaces that may receive JSON validated data. These types are as follows.
 
 ```typescript
-import { Type, Static, TSchema } from '@sidewinder/type'
-
-// type Nullable<T> = T | null
-
-const Nullable = <T extends TSchema>(type: T) => Type.Union([type, Type.Null()])
-
-const T = Nullable(Type.String()) // const T = {
-//   "anyOf": [{
-//      type: 'string'
-//   }, {
-//      type: 'null'
-//   }]
-// }
-
-type T = Static<typeof T> // type T = string | null
-
-const U = Nullable(Type.Number()) // const U = {
-//   "anyOf": [{
-//      type: 'number'
-//   }, {
-//      type: 'null'
-//   }]
-// }
-
-type U = Static<typeof U> // type U = number | null
+┌────────────────────────────────┬─────────────────────────────┬────────────────────────────────┐
+│ Sidewinder Type                        │ TypeScript                  │ Extended Schema                │
+│                                │                             │                                │
+├────────────────────────────────┼─────────────────────────────┼────────────────────────────────┤
+│ const T = Type.Constructor([   │ type T = new (              │ const T = {                    │
+│   Type.String(),               │  arg0: string,              │   type: 'constructor'          │
+│   Type.Number()                │  arg1: number               │   parameters: [{               │
+│ ], Type.Boolean())             │ ) => boolean                │     type: 'string'             │
+│                                │                             │   }, {                         │
+│                                │                             │     type: 'number'             │
+│                                │                             │   }],                          │
+│                                │                             │   return: {                    │
+│                                │                             │     type: 'boolean'            │
+│                                │                             │   }                            │
+│                                │                             │ }                              │
+│                                │                             │                                │
+├────────────────────────────────┼─────────────────────────────┼────────────────────────────────┤
+│ const T = Type.Function([      │ type T = (                  │ const T = {                    │
+|   Type.String(),               │  arg0: string,              │   type : 'function',           │
+│   Type.Number()                │  arg1: number               │   parameters: [{               │
+│ ], Type.Boolean())             │ ) => boolean                │     type: 'string'             │
+│                                │                             │   }, {                         │
+│                                │                             │     type: 'number'             │
+│                                │                             │   }],                          │
+│                                │                             │   return: {                    │
+│                                │                             │     type: 'boolean'            │
+│                                │                             │   }                            │
+│                                │                             │ }                              │
+│                                │                             │                                │
+├────────────────────────────────┼─────────────────────────────┼────────────────────────────────┤
+│ const T = Type.Uint8Array()    │ type T = Uint8Array         │ const T = {                    │
+│                                │                             │   type: 'object',              │
+│                                │                             │   specialized: 'Uint8Array'    │
+│                                │                             │ }                              │
+│                                │                             │                                │
+├────────────────────────────────┼─────────────────────────────┼────────────────────────────────┤
+│ const T = Type.Promise(        │ type T = Promise<string>    │ const T = {                    │
+│   Type.String()                │                             │   type: 'promise',             │
+│ )                              │                             │   item: {                      │
+│                                │                             │     type: 'string'             │
+│                                │                             │   }                            │
+│                                │                             │ }                              │
+│                                │                             │                                │
+├────────────────────────────────┼─────────────────────────────┼────────────────────────────────┤
+│ const T = Type.Undefined()     │ type T = undefined          │ const T = {                    │
+│                                │                             │   type: 'object',              │
+│                                │                             │   specialized: 'Undefined'     │
+│                                │                             │ }                              │
+│                                │                             │                                │
+├────────────────────────────────┼─────────────────────────────┼────────────────────────────────┤
+│ const T = Type.Void()          │ type T = void               │ const T = {                    │
+│                                │                             │   type: 'null'                 │
+│                                │                             │ }                              │
+│                                │                             │                                │
+└────────────────────────────────┴─────────────────────────────┴────────────────────────────────┘
 ```
 
 <a name="Reference-Types"></a>
 
-### Reference Types
+## Reference Types
 
-Types can be referenced with `Type.Ref(...)`. To reference a type, the target type must specify an `$id`.
+Use `Type.Ref(...)` to create referenced types. The target type must specify an `$id`.
 
 ```typescript
 const T = Type.String({ $id: 'T' }) // const T = {
@@ -422,164 +472,467 @@ const R = Type.Ref(T) // const R = {
 // }
 ```
 
-It can sometimes be helpful to organize shared referenced types under a common namespace. The `Type.Namespace(...)` function can be used to create a shared definition container for related types. The following creates a `Math3D` container and a `Vertex` structure that references types in the container.
-
-```typescript
-const Math3D = Type.Namespace(
-  {
-    //  const Math3D = {
-    Vector4: Type.Object({
-      //    $id: 'Math3D',
-      x: Type.Number(), //    $defs: {
-      y: Type.Number(), //      Vector4: {
-      z: Type.Number(), //        type: 'object',
-      w: Type.Number(), //        properties: {
-    }), //          x: { type: 'number' },
-    Vector3: Type.Object({
-      //          y: { type: 'number' },
-      x: Type.Number(), //          z: { type: 'number' },
-      y: Type.Number(), //          w: { type: 'number' }
-      z: Type.Number(), //        },
-    }), //        required: ['x', 'y', 'z', 'w']
-    Vector2: Type.Object({
-      //      },
-      x: Type.Number(), //      Vector3: {
-      y: Type.Number(), //        type: 'object',
-    }), //        properties: {
-  },
-  { $id: 'Math3D' },
-) //          x: { 'type': 'number' },
-//          y: { 'type': 'number' },
-//          z: { 'type': 'number' }
-//        },
-//        required: ['x', 'y', 'z']
-//      },
-//      Vector2: {
-//        type: 'object',
-//        properties: {
-//          x: { 'type': 'number' },
-//          y: { 'type': 'number' },
-//        },
-//        required: ['x', 'y']
-//      }
-//    }
-//  }
-
-const Vertex = Type.Object({
-  //  const Vertex = {
-  position: Type.Ref(Math3D, 'Vector4'), //    type: 'object',
-  normal: Type.Ref(Math3D, 'Vector3'), //    properties: {
-  uv: Type.Ref(Math3D, 'Vector2'), //      position: { $ref: 'Math3D#/$defs/Vector4' },
-}) //      normal: { $ref: 'Math3D#/$defs/Vector3' },
-//      uv: { $ref: 'Math3D#/$defs/Vector2' }
-//    },
-//    required: ['position', 'normal', 'uv']
-//  }
-```
-
 <a name="Recursive-Types"></a>
 
-### Recursive Types
+## Recursive Types
 
-Recursive types can be created with the `Type.Rec(...)` function. The following creates a `Node` type that contains an array of inner Nodes. Note that due to current restrictions on TypeScript inference, it is not possible for Sidewinder Types to statically infer for recursive types. Sidewinder Types will infer the inner recursive type as `any`.
+Use `Type.Recursive(...)` to create recursive types.
 
 ```typescript
-const Node = Type.Rec(
-  (Self) =>
+const Node = Type.Recursive(
+  (Node) =>
     Type.Object({
       // const Node = {
       id: Type.String(), //   $id: 'Node',
-      nodes: Type.Array(Self), //   $ref: 'Node#/$defs/self',
+      nodes: Type.Array(Node), //   type: 'object',
     }),
   { $id: 'Node' },
-) //   $defs: {
-//     self: {
-//       type: 'object',
-//       properties: {
-//         id: {
-//           type: 'string'
-//         },
-//         nodes: {
-//            type: 'array',
-//            items: {
-//              $ref: 'Node#/$defs/self'
-//            }
-//         }
-//      }
-//    }
+) //   properties: {
+//     id: {
+//       type: 'string'
+//     },
+//     nodes: {
+//       type: 'array',
+//       items: {
+//         $ref: 'Node'
+//       }
+//     }
+//   },
+//   required: [
+//     'id',
+//     'nodes'
+//   ]
 // }
 
 type Node = Static<typeof Node> // type Node = {
 //   id: string
-//   nodes: any[]
+//   nodes: Node[]
 // }
 
-function visit(node: Node) {
-  for (const inner of node.nodes) {
-    visit(inner as Node) // Assert inner as Node
-  }
+function test(node: Node) {
+  const id = node.nodes[0].nodes[0].nodes[0].nodes[0].nodes[0].nodes[0].nodes[0].nodes[0].nodes[0].id // id is string
 }
 ```
 
-<a name="Extended-Types"></a>
+<a name="Generic-Types"></a>
 
-### Extended Types
+## Generic Types
 
-In addition to JSON schema types, Sidewinder Types provides several extended types that allow for `function` and `constructor` types to be composed. These additional types are not valid JSON Schema and will not validate using typical JSON Schema validation. However, these types can be used to frame JSON schema and describe callable interfaces that may receive JSON validated data. These types are as follows.
+Generic types can be created using functions. The following creates a generic `Nullable<T>` type.
+
+```typescript
+import { Type, Static, TSchema } from '@sidewinder/type'
+
+const Nullable = <T extends TSchema>(type: T) => Type.Union([type, Type.Null()])
+
+const T = Nullable(Type.String()) // const T = {
+//   anyOf: [{
+//     type: 'string'
+//   }, {
+//     type: 'null'
+//   }]
+// }
+
+type T = Static<typeof T> // type T = string | null
+
+const U = Nullable(Type.Number()) // const U = {
+//   anyOf: [{
+//     type: 'number'
+//   }, {
+//     type: 'null'
+//   }]
+// }
+
+type U = Static<typeof U> // type U = number | null
+```
+
+<a name="Unsafe-Types"></a>
+
+## Unsafe Types
+
+Use `Type.Unsafe(...)` to create custom schemas with user defined inference rules.
+
+```typescript
+const T = Type.Unsafe<string>({ type: 'number' }) // const T = {
+//   type: 'number'
+// }
+
+type T = Static<typeof T> // type T = string
+```
+
+The `Type.Unsafe(...)` function can be used to create schemas for validators that require specific schema representations. An example of this would be OpenAPI's `nullable` and `enum` schemas which are not provided by Sidewinder Type. The following demonstrates using `Type.Unsafe(...)` to create these types.
+
+```typescript
+import { Type, Static, TSchema } from '@sidewinder/type'
+
+//--------------------------------------------------------------------------------------------
+//
+// Nullable<T>
+//
+//--------------------------------------------------------------------------------------------
+
+function Nullable<T extends TSchema>(schema: T) {
+  return Type.Unsafe<Static<T> | null>({ ...schema, nullable: true })
+}
+
+const T = Nullable(Type.String()) // const T = {
+//   type: 'string',
+//   nullable: true
+// }
+
+type T = Static<typeof T> // type T = string | null
+
+//--------------------------------------------------------------------------------------------
+//
+// StringUnion<[...]>
+//
+//--------------------------------------------------------------------------------------------
+
+function StringEnum<T extends string[]>(values: [...T]) {
+  return Type.Unsafe<T[number]>({ enum: values })
+}
+
+const T = StringEnum(['A', 'B', 'C']) // const T = {
+//   enum: ['A', 'B', 'C']
+// }
+
+type T = Static<typeof T> // type T = 'A' | 'B' | 'C'
+```
+
+<a name="Conditional-Types"></a>
+
+## Conditional Types
+
+Use `Conditional.Extends(...)` to create conditional mapped types.
+
+```typescript
+import { Conditional } from '@sidewinder/type/conditional'
+```
+
+The following table shows the Sidewinder Type mappings between TypeScript and JSON schema.
 
 ```typescript
 ┌────────────────────────────────┬─────────────────────────────┬────────────────────────────────┐
-│ Sidewinder Type                │ TypeScript                  │ Extended Schema                │
+│ Sidewinder Type                        │ TypeScript                  │ JSON Schema                    │
 │                                │                             │                                │
 ├────────────────────────────────┼─────────────────────────────┼────────────────────────────────┤
-│ const T = Type.Constructor([   │ type T = new (              │ const T = {                    │
-│    Type.String(),              │  arg0: string,              │   type: 'constructor'          │
-│    Type.Number(),              │  arg1: number               │   arguments: [{                │
-│ ], Type.Boolean())             │ ) => boolean                │      type: 'string'            │
-│                                │                             │   }, {                         │
-│                                │                             │      type: 'number'            │
-│                                │                             │   }],                          │
-│                                │                             │   returns: {                   │
-│                                │                             │      type: 'boolean'           │
-│                                │                             │   }                            │
-│                                │                             │ }                              │
+│ const T = Conditional.Extends( │ type T =                    │ const T = {                    │
+│   Type.String(),               │  string extends number      │   const: false,                │
+│   Type.Number(),               │  true : false               │   type: 'boolean'              │
+│   Type.Literal(true),          │                             │ }                              │
+│   Type.Literal(false)          │                             │                                │
+│ )                              │                             │                                │
 │                                │                             │                                │
 ├────────────────────────────────┼─────────────────────────────┼────────────────────────────────┤
-│ const T = Type.Function([      │ type T = (                  │ const T = {                    │
-|    Type.String(),              │  arg0: string,              │   type : 'function',           │
-│    Type.Number(),              │  arg1: number               │   arguments: [{                │
-│ ], Type.Boolean())             │ ) => boolean                │      type: 'string'            │
-│                                │                             │   }, {                         │
-│                                │                             │      type: 'number'            │
-│                                │                             │   }],                          │
-│                                │                             │   returns: {                   │
-│                                │                             │      type: 'boolean'           │
-│                                │                             │   }                            │
-│                                │                             │ }                              │
+│ const T = Conditional.Extract( │ type T = Extract<           │ const T = {                    │
+│   Type.Union([                 │   'a' | 'b' | 'c',          │   anyOf: [{                    │
+│     Type.Literal('a'),         │   'a' | 'f'                 │     const: 'a'                 │
+│     Type.Literal('b'),         │ >                           │     type: 'string'             │
+│     Type.Literal('c')          │                             │   }]                           │
+│   ]),                          │                             │ }                              │
+│   Type.Union([                 │                             │                                │
+│     Type.Literal('a'),         │                             │                                │
+│     Type.Literal('f')          │                             │                                │
+│   ])                           │                             │                                │
+│ )                              │                             │                                │
 │                                │                             │                                │
 ├────────────────────────────────┼─────────────────────────────┼────────────────────────────────┤
-│ const T = Type.Promise(        │ type T = Promise<string>    │ const T = {                    │
-│    Type.String()               │                             │   type: 'promise',             │
-│ )                              │                             │   item: {                      │
-│                                │                             │      type: 'string'            │
-│                                │                             │   }                            │
-│                                │                             │ }                              │
-│                                │                             │                                │
-├────────────────────────────────┼─────────────────────────────┼────────────────────────────────┤
-│ const T = Type.Undefined()     │ type T = undefined          │ const T = {                    │
-│                                │                             │   type: 'undefined'            │
-│                                │                             │ }                              │
-│                                │                             │                                │
-├────────────────────────────────┼─────────────────────────────┼────────────────────────────────┤
-│ const T = Type.Uint8Array()    │ type T = Uint8Array         │ const T = {                    │
-│                                │                             │   type: 'object',              │
-│                                │                             │   specialized: 'Uint8Array'    │
-│                                │                             │ }                              │
-│                                │                             │                                │
-├────────────────────────────────┼─────────────────────────────┼────────────────────────────────┤
-│ const T = Type.Void()          │ type T = void               │ const T = {                    │
-│                                │                             │   type: 'null'                 │
-│                                │                             │ }                              │
+│ const T = Conditional.Exclude( │ type T = Exclude<           │ const T = {                    │
+│   Type.Union([                 │   'a' | 'b' | 'c',          │   anyOf: [{                    │
+│     Type.Literal('a'),         │   'a'                       │     const: 'b',                │
+│     Type.Literal('b'),         │ >                           │     type: 'string'             │
+│     Type.Literal('c')          │                             │   }, {                         │
+│   ]),                          │                             │     const: 'c',                │
+│   Type.Union([                 │                             │     type: 'string'             │
+│     Type.Literal('a')          │                             │   }]                           │
+│   ])                           │                             │ }                              │
+│ )                              │                             │                                │
 │                                │                             │                                │
 └────────────────────────────────┴─────────────────────────────┴────────────────────────────────┘
 ```
+
+<a name="Values"></a>
+
+## Values
+
+Use `Value.Create(...)` to generate values from types.
+
+```typescript
+import { Value } from '@sidewinder/type/value'
+import { Type } from '@sidewinder/type'
+
+const T = Type.Object({
+  x: Type.Number({ default: 1 }),
+  y: Type.Number(),
+})
+
+const V = Value.Create(T) // const V = {
+//   x: 1,
+//   y: 0
+// }
+```
+
+Use `Value.Cast(...)` to cast a value into a given type.
+
+```typescript
+import { Value } from '@sidewinder/type/value'
+import { Type } from '@sidewinder/type'
+
+const T = Type.Object({
+  x: Type.Number(),
+  y: Type.Number(),
+})
+
+const A = Value.Cast(T, null) // const A = { x: 0, y: 0 }
+
+const B = Value.Cast(T, { x: 1 }) // const B = { x: 1, y: 0 }
+
+const C = Value.Cast(T, { x: 1, y: 2, z: 3 }) // const C = { x: 1, y: 2 }
+```
+
+<a name="Guards"></a>
+
+## Guards
+
+Use a `TypeGuard` to test if a value meets a Sidewinder Type type specification. Guards can be helpful when reflecting types.
+
+```typescript
+import { TypeGuard } from '@sidewinder/type/guard'
+import { Type } from '@sidewinder/type'
+
+const T = Type.String()
+
+if (TypeGuard.TString(T)) {
+  // T is TString
+}
+```
+
+<a name="Strict"></a>
+
+## Strict
+
+Sidewinder Type schemas contain the `Kind` and `Modifier` symbol properties. These properties are provided to enable runtime type reflection on schemas, as well as helping Sidewinder Type internally compose types. These properties are not strictly valid JSON schema; so in some cases it may be desirable to omit them. Sidewinder Type provides a `Type.Strict()` function that will omit these properties if necessary.
+
+```typescript
+const T = Type.Object({
+  // const T = {
+  name: Type.Optional(Type.String()), //   [Kind]: 'Object',
+}) //   type: 'object',
+//   properties: {
+//     name: {
+//       [Kind]: 'String',
+//       type: 'string',
+//       [Modifier]: 'Optional'
+//     }
+//   }
+// }
+
+const U = Type.Strict(T) // const U = {
+//   type: 'object',
+//   properties: {
+//     name: {
+//       type: 'string'
+//     }
+//   }
+// }
+```
+
+<a name="Validation"></a>
+
+## Validation
+
+Sidewinder Type schemas target JSON Schema draft 6 so any validator capable of draft 6 should be fine. A good library to use for validation in JavaScript environments is [Ajv](https://www.npmjs.com/package/ajv). The following example shows setting up Ajv to work with Sidewinder Type.
+
+```bash
+$ npm install ajv ajv-formats --save
+```
+
+```typescript
+//--------------------------------------------------------------------------------------------
+//
+// Import Sidewinder Type and Ajv
+//
+//--------------------------------------------------------------------------------------------
+
+import { Type } from '@sidewinder/type'
+import addFormats from 'ajv-formats'
+import Ajv from 'ajv'
+
+//--------------------------------------------------------------------------------------------
+//
+// Setup Ajv validator with the following options and formats
+//
+//--------------------------------------------------------------------------------------------
+
+const ajv = addFormats(new Ajv({}), ['date-time', 'time', 'date', 'email', 'hostname', 'ipv4', 'ipv6', 'uri', 'uri-reference', 'uuid', 'uri-template', 'json-pointer', 'relative-json-pointer', 'regex'])
+
+//--------------------------------------------------------------------------------------------
+//
+// Create a Sidewinder Type type
+//
+//--------------------------------------------------------------------------------------------
+
+const T = Type.Object({
+  x: Type.Number(),
+  y: Type.Number(),
+  z: Type.Number(),
+})
+
+//--------------------------------------------------------------------------------------------
+//
+// Validate Data
+//
+//--------------------------------------------------------------------------------------------
+
+const R = ajv.validate(T, { x: 1, y: 2, z: 3 }) // const R = true
+```
+
+Please refer to the official Ajv [documentation](https://ajv.js.org/guide/getting-started.html) for additional information on using Ajv.
+
+<a name="Compiler"></a>
+
+## Compiler
+
+Sidewinder Type provides an optional high performance runtime type checker that can be used in applications that require extremely fast validation. This type checker is optimized for Sidewinder Type types only whose schematics are known in advance. If defining custom schemas with `Type.Unsafe<T>` please consider Ajv.
+
+The following demonstrates its use.
+
+```typescript
+import { TypeCompiler } from '@sidewinder/type/compiler'
+import { Type } from '@sidewinder/type'
+
+const C = TypeCompiler.Compile(
+  Type.Object({
+    // const C: TypeCheck<TObject<{
+    x: Type.Number(), //     x: TNumber;
+    y: Type.Number(), //     y: TNumber;
+    z: Type.Number(), //     z: TNumber;
+  }),
+) // }>>
+
+const R = C.Check({ x: 1, y: 2, z: 3 }) // const R = true
+```
+
+Validation errors can be read with the `Errors(...)` function.
+
+```typescript
+const C = TypeCompiler.Compile(
+  Type.Object({
+    // const C: TypeCheck<TObject<{
+    x: Type.Number(), //     x: TNumber;
+    y: Type.Number(), //     y: TNumber;
+    z: Type.Number(), //     z: TNumber;
+  }),
+) // }>>
+
+const value = {}
+
+const errors = [...C.Errors(value)] // const errors = [{
+//   schema: { type: 'number' },
+//   path: '/x',
+//   value: undefined,
+//   message: 'Expected number'
+// }, {
+//   schema: { type: 'number' },
+//   path: '/y',
+//   value: undefined,
+//   message: 'Expected number'
+// }, {
+//   schema: { type: 'number' },
+//   path: '/z',
+//   value: undefined,
+//   message: 'Expected number'
+// }]
+```
+
+Compiled routines can be inspected with the `.Code()` function.
+
+```typescript
+const C = TypeCompiler.Compile(Type.String()) // const C: TypeCheck<TString>
+
+console.log(C.Code()) // return function check(value) {
+//   return (
+//     (typeof value === 'string')
+//   )
+// }
+```
+
+## Benchmark
+
+This project maintains benchmarks that measure Ajv and TypeCompiler validate and compile performance. These benchmarks can be run locally by cloning this repository and running `npm run benchmark`. Results show against Ajv version 8.11.0.
+
+### Validate
+
+This benchmark measures validation performance for varying types. You can review this benchmark [here](https://github.com/sinclairzx81/Sidewinder Type/blob/master/benchmark/check.ts).
+
+```typescript
+┌──────────────────┬────────────┬──────────────┬──────────────┬──────────────┐
+│     (index)      │ Iterations │     Ajv      │ TypeCompiler │ Performance  │
+├──────────────────┼────────────┼──────────────┼──────────────┼──────────────┤
+│           Number │  16000000  │ '     73 ms' │ '     65 ms' │ '    1.12 x' │
+│           String │  16000000  │ '    281 ms' │ '    161 ms' │ '    1.75 x' │
+│          Boolean │  16000000  │ '    302 ms' │ '    151 ms' │ '    2.00 x' │
+│             Null │  16000000  │ '    281 ms' │ '    149 ms' │ '    1.89 x' │
+│            RegEx │  16000000  │ '    689 ms' │ '    550 ms' │ '    1.25 x' │
+│          ObjectA │  16000000  │ '    470 ms' │ '    311 ms' │ '    1.51 x' │
+│          ObjectB │  16000000  │ '    667 ms' │ '    556 ms' │ '    1.20 x' │
+│            Tuple │  16000000  │ '    362 ms' │ '    190 ms' │ '    1.91 x' │
+│            Union │  16000000  │ '    387 ms' │ '    209 ms' │ '    1.85 x' │
+│        Recursive │  16000000  │ '   6327 ms' │ '   2773 ms' │ '    2.28 x' │
+│          Vector4 │  16000000  │ '    362 ms' │ '    172 ms' │ '    2.10 x' │
+│          Matrix4 │  16000000  │ '    607 ms' │ '    418 ms' │ '    1.45 x' │
+│   Literal_String │  16000000  │ '    314 ms' │ '    151 ms' │ '    2.08 x' │
+│   Literal_Number │  16000000  │ '    281 ms' │ '    147 ms' │ '    1.91 x' │
+│  Literal_Boolean │  16000000  │ '    289 ms' │ '    148 ms' │ '    1.95 x' │
+│     Array_Number │  16000000  │ '    475 ms' │ '    230 ms' │ '    2.07 x' │
+│     Array_String │  16000000  │ '    463 ms' │ '    297 ms' │ '    1.56 x' │
+│    Array_Boolean │  16000000  │ '    521 ms' │ '    348 ms' │ '    1.50 x' │
+│    Array_ObjectA │  16000000  │ '  43842 ms' │ '  28375 ms' │ '    1.55 x' │
+│    Array_ObjectB │  16000000  │ '  45055 ms' │ '  32882 ms' │ '    1.37 x' │
+│      Array_Tuple │  16000000  │ '   1424 ms' │ '   1105 ms' │ '    1.29 x' │
+│      Array_Union │  16000000  │ '   3505 ms' │ '   1350 ms' │ '    2.60 x' │
+│  Array_Recursive │  16000000  │ ' 117087 ms' │ '  42982 ms' │ '    2.72 x' │
+│    Array_Vector4 │  16000000  │ '   1500 ms' │ '    817 ms' │ '    1.84 x' │
+│    Array_Matrix4 │  16000000  │ '   6126 ms' │ '   4965 ms' │ '    1.23 x' │
+└──────────────────┴────────────┴──────────────┴──────────────┴──────────────┘
+```
+
+### Compile
+
+This benchmark measures compilation performance for varying types. You can review this benchmark [here](https://github.com/sinclairzx81/Sidewinder Type/blob/master/benchmark/compile.ts).
+
+```typescript
+┌──────────────────┬────────────┬──────────────┬──────────────┬──────────────┐
+│     (index)      │ Iterations │     Ajv      │ TypeCompiler │ Performance  │
+├──────────────────┼────────────┼──────────────┼──────────────┼──────────────┤
+│           Number │    2000    │ '    387 ms' │ '      7 ms' │ '   55.29 x' │
+│           String │    2000    │ '    340 ms' │ '      6 ms' │ '   56.67 x' │
+│          Boolean │    2000    │ '    314 ms' │ '      5 ms' │ '   62.80 x' │
+│             Null │    2000    │ '    259 ms' │ '      5 ms' │ '   51.80 x' │
+│            RegEx │    2000    │ '    491 ms' │ '      7 ms' │ '   70.14 x' │
+│          ObjectA │    2000    │ '   2850 ms' │ '     26 ms' │ '  109.62 x' │
+│          ObjectB │    2000    │ '   2989 ms' │ '     22 ms' │ '  135.86 x' │
+│            Tuple │    2000    │ '   1283 ms' │ '     17 ms' │ '   75.47 x' │
+│            Union │    2000    │ '   1292 ms' │ '     16 ms' │ '   80.75 x' │
+│          Vector4 │    2000    │ '   1588 ms' │ '     12 ms' │ '  132.33 x' │
+│          Matrix4 │    2000    │ '    934 ms' │ '      7 ms' │ '  133.43 x' │
+│   Literal_String │    2000    │ '    340 ms' │ '      5 ms' │ '   68.00 x' │
+│   Literal_Number │    2000    │ '    402 ms' │ '      4 ms' │ '  100.50 x' │
+│  Literal_Boolean │    2000    │ '    381 ms' │ '      6 ms' │ '   63.50 x' │
+│     Array_Number │    2000    │ '    750 ms' │ '      8 ms' │ '   93.75 x' │
+│     Array_String │    2000    │ '    760 ms' │ '      6 ms' │ '  126.67 x' │
+│    Array_Boolean │    2000    │ '    796 ms' │ '      7 ms' │ '  113.71 x' │
+│    Array_ObjectA │    2000    │ '   3617 ms' │ '     26 ms' │ '  139.12 x' │
+│    Array_ObjectB │    2000    │ '   3823 ms' │ '     26 ms' │ '  147.04 x' │
+│      Array_Tuple │    2000    │ '   2263 ms' │ '     13 ms' │ '  174.08 x' │
+│      Array_Union │    2000    │ '   1725 ms' │ '     16 ms' │ '  107.81 x' │
+│    Array_Vector4 │    2000    │ '   2445 ms' │ '     14 ms' │ '  174.64 x' │
+│    Array_Matrix4 │    2000    │ '   1638 ms' │ '     11 ms' │ '  148.91 x' │
+└──────────────────┴────────────┴──────────────┴──────────────┴──────────────┘
+```
+
+<a name="Contribute"></a>
+
+## Contribute
+
+Sidewinder Type is open to community contribution. Please ensure you submit an open issue before submitting your pull request. The Sidewinder Type project preferences open community discussion prior to accepting new features.

@@ -26,7 +26,7 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-import { RetryWebSocket, WebSocket } from '@sidewinder/web'
+import { RetryWebSocket, WebSocket } from '@sidewinder/platform'
 import { Exception, Static, TContract, ContractMethodParamters, ContractMethodReturnType, TFunction } from '@sidewinder/contract'
 import { ClientMethods, Responder, RpcErrorCode, RpcProtocol, RpcRequest, RpcResponse } from './methods/index'
 import { Encoder, MsgPackEncoder, JsonEncoder } from './encoder/index'

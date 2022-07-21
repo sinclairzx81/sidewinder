@@ -26,7 +26,7 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-import { Validator } from '@sidewinder/validator'
+import { TypeCompiler } from '@sidewinder/type/compiler'
 import { Type } from '../type'
 
 export const NextMessage = Type.Object({
@@ -45,4 +45,4 @@ export const EndMessage = Type.Object({
 
 export const Message = Type.Union([NextMessage, ErrorMessage, EndMessage])
 
-export const MessageValidator = new Validator(Message)
+export const MessageTypeCheck = TypeCompiler.Compile(Message)

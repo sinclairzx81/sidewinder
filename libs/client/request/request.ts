@@ -27,7 +27,7 @@ THE SOFTWARE.
 ---------------------------------------------------------------------------*/
 
 import { TContract } from '@sidewinder/contract'
-import { fetch } from '@sidewinder/web'
+import { fetch } from '@sidewinder/platform'
 
 export namespace Request {
   function createRequiredHeader(contract: TContract, body: Uint8Array) {

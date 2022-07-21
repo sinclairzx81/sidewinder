@@ -27,7 +27,7 @@ THE SOFTWARE.
 ---------------------------------------------------------------------------*/
 
 import { Redis } from 'ioredis'
-import { Validator } from '@sidewinder/validator'
+import { TypeCompiler, TypeCheck, TypeException } from '@sidewinder/type/compiler'
 import { ValueHash } from '@sidewinder/hash'
 import { RedisEncoder } from '../encoder'
 import { Static, TSchema } from '../type'
@@ -38,11 +38,11 @@ import { Static, TSchema } from '../type'
  * JavaScript objects and arrays to be safely added to sets.
  */
 export class RedisSet<Schema extends TSchema> {
-  private readonly validator: Validator<TSchema>
+  private readonly typeCheck: TypeCheck<TSchema>
   private readonly encoder: RedisEncoder
 
   constructor(private readonly schema: Schema, private readonly redis: Redis, private readonly keyspace: string) {
-    this.validator = new Validator(this.schema)
+    this.typeCheck = TypeCompiler.Compile(this.schema)
     this.encoder = new RedisEncoder(this.schema)
   }
 
@@ -65,7 +65,7 @@ export class RedisSet<Schema extends TSchema> {
 
   /** Adds the given value to the Set */
   public async add(value: Static<Schema>) {
-    this.validator.assert(value)
+    this.assertType(value)
     return this.redis.set(this.encodeKey(value), this.encoder.encode(value))
   }
 
@@ -108,6 +108,11 @@ export class RedisSet<Schema extends TSchema> {
   // ------------------------------------------------------------
   // Key Encoding
   // ------------------------------------------------------------
+
+  private assertType(value: unknown) {
+    if (this.typeCheck.Check(value)) return
+    throw new TypeException('ResetSet', this.typeCheck, value)
+  }
 
   private encodeAllKeys() {
     return `sw::set:${this.keyspace}:*`

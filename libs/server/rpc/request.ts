@@ -48,7 +48,7 @@ export class Request {
   // ------------------------------------------------------------------------------
   // Publics
   // ------------------------------------------------------------------------------
-  
+
   /**
    * Gets the ip address associated with this request. This address will either
    * be the raw socket remoteAddress, or in the instance of a load balancer, the
@@ -72,7 +72,7 @@ export class Request {
   // ------------------------------------------------------------------------------
   // Privates
   // ------------------------------------------------------------------------------
-  
+
   #readIpAddress(request: IncomingMessage) {
     if (request.headers['x-forwarded-for'] !== undefined) {
       const forwarded = request.headers['x-forwarded-for'] as string

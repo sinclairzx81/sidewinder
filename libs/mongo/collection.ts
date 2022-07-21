@@ -27,21 +27,21 @@ THE SOFTWARE.
 ---------------------------------------------------------------------------*/
 
 import * as Mongo from 'mongodb'
-import { Validator } from '@sidewinder/validator'
+import { TypeCompiler, TypeCheck, TypeException } from '@sidewinder/type/compiler'
 import { Type, TObject, TPartial, TProperties, Static } from './type'
 import { MongoCursor } from './cursor'
 import { MongoEncoder } from './encoder'
 import { matchArguments } from './arguments'
 
 export class MongoCollection<T extends TObject<TProperties> = TObject<TProperties>> {
-  private readonly validatePartial: Validator<TPartial<T>>
-  private readonly validate: Validator<T>
-  private readonly encoder: MongoEncoder
+  private readonly _typeCheckPartial: TypeCheck<TPartial<T>>
+  private readonly _typeCheck: TypeCheck<T>
+  private readonly _encoder: MongoEncoder
 
   constructor(public readonly schema: T, public readonly collection: Mongo.Collection) {
-    this.validatePartial = new Validator(Type.Partial(schema))
-    this.validate = new Validator(schema)
-    this.encoder = new MongoEncoder(schema)
+    this._typeCheckPartial = TypeCompiler.Compile(Type.Partial(schema))
+    this._typeCheck = TypeCompiler.Compile(schema)
+    this._encoder = new MongoEncoder(schema)
   }
 
   /** Counts the number of documents in this collection. Internally uses countDocuments() */
@@ -54,10 +54,10 @@ export class MongoCollection<T extends TObject<TProperties> = TObject<TPropertie
   public count(...args: any[]): Promise<number> {
     return matchArguments(args, {
       2: (filter, options) => {
-        return this.collection.countDocuments(this.encoder.encode(filter), options)
+        return this.collection.countDocuments(this._encoder.encode(filter), options)
       },
       1: (filter) => {
-        return this.collection.countDocuments(this.encoder.encode(filter))
+        return this.collection.countDocuments(this._encoder.encode(filter))
       },
       0: () => {
         return this.collection.countDocuments()
@@ -70,14 +70,14 @@ export class MongoCollection<T extends TObject<TProperties> = TObject<TPropertie
 
   /** The name of the database this collection belongs to */
   public async deleteMany(filter: Mongo.Filter<Static<T>>): Promise<Mongo.DeleteResult> {
-    const result = await this.collection.deleteMany(this.encoder.encode(filter))
-    return this.encoder.decode(result)
+    const result = await this.collection.deleteMany(this._encoder.encode(filter))
+    return this._encoder.decode(result)
   }
 
   /** Delete a document from a collection */
   public async deleteOne(filter: Mongo.Filter<Static<T>>): Promise<Mongo.DeleteResult> {
-    const result = await this.collection.deleteOne(this.encoder.encode(filter))
-    return this.encoder.decode(result)
+    const result = await this.collection.deleteOne(this._encoder.encode(filter))
+    return this._encoder.decode(result)
   }
 
   /** The distinct command returns a list of distinct values for the given key across a collection. */
@@ -100,13 +100,13 @@ export class MongoCollection<T extends TObject<TProperties> = TObject<TPropertie
   public find(...args: any[]): MongoCursor<Static<T>> {
     return matchArguments(args, {
       2: (filter, options) => {
-        return new MongoCursor(this.encoder, this.collection.find(this.encoder.encode(filter), options))
+        return new MongoCursor(this._encoder, this.collection.find(this._encoder.encode(filter), options))
       },
       1: (filter) => {
-        return new MongoCursor(this.encoder, this.collection.find(this.encoder.encode(filter)))
+        return new MongoCursor(this._encoder, this.collection.find(this._encoder.encode(filter)))
       },
       0: () => {
-        return new MongoCursor(this.encoder, this.collection.find({}))
+        return new MongoCursor(this._encoder, this.collection.find({}))
       },
       _: () => {
         throw new Error('Invalid find() arguments')
@@ -124,16 +124,16 @@ export class MongoCollection<T extends TObject<TProperties> = TObject<TPropertie
   public async findOne(...args: any[]) {
     return matchArguments(args, {
       2: async (filter, options) => {
-        const result = await this.collection.findOne(this.encoder.encode(filter), options)
-        return this.encoder.decode(result)
+        const result = await this.collection.findOne(this._encoder.encode(filter), options)
+        return this._encoder.decode(result)
       },
       1: async (filter) => {
-        const result = await this.collection.findOne(this.encoder.encode(filter))
-        return this.encoder.decode(result)
+        const result = await this.collection.findOne(this._encoder.encode(filter))
+        return this._encoder.decode(result)
       },
       0: async () => {
         const result = await this.collection.findOne({})
-        return this.encoder.decode(result)
+        return this._encoder.decode(result)
       },
       _: () => {
         throw new Error('Invalid findOne() arguments')
@@ -149,12 +149,12 @@ export class MongoCollection<T extends TObject<TProperties> = TObject<TPropertie
   public findOneAndDelete(...args: any[]): any {
     return matchArguments(args, {
       2: async (filter, options) => {
-        const result = await this.collection.findOneAndDelete(this.encoder.encode(filter), options)
-        return this.encoder.decode(result)
+        const result = await this.collection.findOneAndDelete(this._encoder.encode(filter), options)
+        return this._encoder.decode(result)
       },
       1: async (filter) => {
-        const result = this.collection.findOneAndDelete(this.encoder.encode(filter))
-        return this.encoder.decode(result)
+        const result = this.collection.findOneAndDelete(this._encoder.encode(filter))
+        return this._encoder.decode(result)
       },
       _: () => {
         throw new Error('Invalid findOneAndDelete() arguments')
@@ -170,12 +170,12 @@ export class MongoCollection<T extends TObject<TProperties> = TObject<TPropertie
   public findOneAndReplace(...args: any[]): any {
     return matchArguments(args, {
       3: async (filter, replacement, options) => {
-        const result = await this.collection.findOneAndReplace(this.encoder.encode(filter), this.encoder.encode(replacement), options)
-        return this.encoder.decode(result)
+        const result = await this.collection.findOneAndReplace(this._encoder.encode(filter), this._encoder.encode(replacement), options)
+        return this._encoder.decode(result)
       },
       2: async (filter, replacement) => {
-        const result = await this.collection.findOneAndReplace(this.encoder.encode(filter), this.encoder.encode(replacement))
-        return this.encoder.decode(result)
+        const result = await this.collection.findOneAndReplace(this._encoder.encode(filter), this._encoder.encode(replacement))
+        return this._encoder.decode(result)
       },
       _: () => {
         throw new Error('Invalid findOneAndReplace() arguments')
@@ -192,13 +192,13 @@ export class MongoCollection<T extends TObject<TProperties> = TObject<TPropertie
     return matchArguments(args, {
       3: async (filter, update, options) => {
         this.validateUpdate(filter, update, options)
-        const result = await this.collection.findOneAndUpdate(this.encoder.encode(filter), this.encoder.encode(update), options)
-        return this.encoder.decode(result)
+        const result = await this.collection.findOneAndUpdate(this._encoder.encode(filter), this._encoder.encode(update), options)
+        return this._encoder.decode(result)
       },
       2: async (filter, update) => {
         this.validateUpdate(filter, update)
-        const result = await this.collection.findOneAndUpdate(this.encoder.encode(filter), this.encoder.encode(update))
-        return this.encoder.decode(result)
+        const result = await this.collection.findOneAndUpdate(this._encoder.encode(filter), this._encoder.encode(update))
+        return this._encoder.decode(result)
       },
       _: () => {
         throw new Error('Invalid findOneAndUpdate() arguments')
@@ -214,16 +214,16 @@ export class MongoCollection<T extends TObject<TProperties> = TObject<TPropertie
   public insertMany(...args: any[]): any {
     return matchArguments(args, {
       2: async (documents, options) => {
-        documents.forEach((document: any) => this.validate.assert(document))
-        const inserts = documents.map((doc: unknown) => this.encoder.encode(doc))
+        documents.forEach((document: any) => this.assertType(document))
+        const inserts = documents.map((doc: unknown) => this._encoder.encode(doc))
         const result = await this.collection.insertMany(inserts, options)
-        return this.encoder.decode(result)
+        return this._encoder.decode(result)
       },
       1: async (documents) => {
-        documents.forEach((document: any) => this.validate.assert(document))
-        const inserts = documents.map((doc: unknown) => this.encoder.encode(doc))
+        documents.forEach((document: any) => this.assertType(document))
+        const inserts = documents.map((doc: unknown) => this._encoder.encode(doc))
         const result = await this.collection.insertMany(inserts)
-        return this.encoder.decode(result)
+        return this._encoder.decode(result)
       },
       _: () => {
         throw new Error('Invalid insertMany() arguments')
@@ -239,14 +239,14 @@ export class MongoCollection<T extends TObject<TProperties> = TObject<TPropertie
   public insertOne(...args: any[]): any {
     return matchArguments(args, {
       2: async (document, options) => {
-        this.validate.assert(document)
-        const result = await this.collection.insertOne(this.encoder.encode(document), options)
-        return this.encoder.decode(result)
+        this.assertType(document)
+        const result = await this.collection.insertOne(this._encoder.encode(document), options)
+        return this._encoder.decode(result)
       },
       1: async (document) => {
-        this.validate.assert(document)
-        const result = await this.collection.insertOne(this.encoder.encode(document))
-        return this.encoder.decode(result)
+        this.assertType(document)
+        const result = await this.collection.insertOne(this._encoder.encode(document))
+        return this._encoder.decode(result)
       },
       _: () => {
         throw new Error('Invalid insertOne() arguments')
@@ -263,11 +263,11 @@ export class MongoCollection<T extends TObject<TProperties> = TObject<TPropertie
     return matchArguments(args, {
       3: (filter, update, options) => {
         this.validateUpdate(filter, update, options)
-        return this.collection.updateMany(this.encoder.encode(filter), this.encoder.encode(update), options)
+        return this.collection.updateMany(this._encoder.encode(filter), this._encoder.encode(update), options)
       },
       2: (filter, update) => {
         this.validateUpdate(filter, update)
-        return this.collection.updateMany(this.encoder.encode(filter), this.encoder.encode(update))
+        return this.collection.updateMany(this._encoder.encode(filter), this._encoder.encode(update))
       },
       _: () => {
         throw new Error('Invalid updateMany() arguments')
@@ -284,11 +284,11 @@ export class MongoCollection<T extends TObject<TProperties> = TObject<TPropertie
     return matchArguments(args, {
       3: (filter, update, options) => {
         this.validateUpdate(filter, update, options)
-        return this.collection.updateOne(this.encoder.encode(filter), this.encoder.encode(update), options)
+        return this.collection.updateOne(this._encoder.encode(filter), this._encoder.encode(update), options)
       },
       2: (filter, update) => {
         this.validateUpdate(filter, update)
-        return this.collection.updateOne(this.encoder.encode(filter), this.encoder.encode(update))
+        return this.collection.updateOne(this._encoder.encode(filter), this._encoder.encode(update))
       },
       _: () => {
         throw new Error('Invalid updateOne() arguments')
@@ -300,10 +300,20 @@ export class MongoCollection<T extends TObject<TProperties> = TObject<TPropertie
     for (const update of Object.values(updateFilter)) {
       if (options.upsert === true) {
         // Note: Must validate against filter and update on upsert to ensure complete document.
-        this.validate.assert({ ...filter, ...update })
+        this.assertType({ ...filter, ...update })
       } else {
-        this.validatePartial.assert(update)
+        this.assertTypePartial(update)
       }
     }
+  }
+
+  private assertTypePartial(value: unknown) {
+    if (this._typeCheckPartial.Check(value)) return
+    throw new TypeException('MongoCollection', this._typeCheckPartial, value)
+  }
+
+  private assertType(value: unknown) {
+    if (this._typeCheck.Check(value)) return
+    throw new TypeException('MongoCollection', this._typeCheck, value)
   }
 }

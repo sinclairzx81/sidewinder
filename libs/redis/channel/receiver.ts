@@ -26,12 +26,12 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-import { Redis, RedisOptions } from 'ioredis'
 import { Receiver } from '@sidewinder/channel'
-import { Validator } from '@sidewinder/validator'
+import { TypeCompiler, TypeCheck, TypeException } from '@sidewinder/type/compiler'
+import { Message, MessageTypeCheck } from './message'
+import { Redis, RedisOptions } from 'ioredis'
 import { RedisConnect } from '../connect'
 import { Static, TSchema } from '../type'
-import { Message, MessageValidator } from './message'
 import { RedisEncoder } from '../encoder'
 
 /**
@@ -41,11 +41,11 @@ import { RedisEncoder } from '../encoder'
  */
 export class RedisReceiver<Schema extends TSchema> implements Receiver<Static<Schema>> {
   private readonly encoder: RedisEncoder
-  private readonly validator: Validator<TSchema>
+  private readonly typeCheck: TypeCheck<TSchema>
 
   constructor(private readonly schema: TSchema, private readonly channel: string, private readonly redis: Redis) {
     this.encoder = new RedisEncoder(this.schema)
-    this.validator = new Validator(this.schema)
+    this.typeCheck = TypeCompiler.Compile(this.schema)
   }
 
   /** Async iterator for this Receiver */
@@ -61,10 +61,12 @@ export class RedisReceiver<Schema extends TSchema> implements Receiver<Static<Sc
   public async next(): Promise<Static<Schema> | null> {
     const [_, value] = await this.redis.blpop(this.encodeKey(), 0)
     const message = this.encoder.decode<Static<typeof Message>>(value)
-    MessageValidator.assert(message)
+    if (!MessageTypeCheck.Check(message)) {
+      throw new TypeException('RedisReceiver:Next', MessageTypeCheck, message)
+    }
     switch (message.type) {
       case 'next': {
-        this.validator.assert(message.value)
+        this.assertType(message.value)
         return message.value
       }
       case 'error': {
@@ -83,6 +85,11 @@ export class RedisReceiver<Schema extends TSchema> implements Receiver<Static<Sc
 
   private encodeKey() {
     return `sw::channel:${this.channel}`
+  }
+
+  private assertType(value: unknown) {
+    if (this.typeCheck.Check(value)) return
+    throw new TypeException('RedisReceiver', this.typeCheck, value)
   }
 
   // ------------------------------------------------------------

@@ -42,7 +42,18 @@ function * getFileImports(content: string) {
     const regex = /import[^']+(?= from ['"](.*)['"])/gm
     while(true) {
         const match = regex.exec(content)
-        if(match) yield match[1]
+        // As we need to support inner imports such as '@sidewinder/type/compiler', we need
+        // to trim the 'compiler' specifier and only compute '@sidewinder/type'. This produces
+        // the correct dependency in package.json.
+        //
+        // if(match) yield match[1] // previous
+        // else return
+        //
+        if(match) {
+            const split = match[1].split('/')
+            if(split.length > 2) yield [split[0], split[1]].join('/')
+            else yield match[1]
+        }
         else return
     }
 }
