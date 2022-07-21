@@ -59,7 +59,9 @@ export class RedisReceiver<Schema extends TSchema> implements Receiver<Static<Sc
 
   /** Reads the next value from this Receiver */
   public async next(): Promise<Static<Schema> | null> {
-    const [_, value] = await this.redis.blpop(this.encodeKey(), 0)
+    const result = await this.redis.blpop(this.encodeKey(), 0)
+    if (result === null) return null
+    const [_, value] = result
     const message = this.encoder.decode<Static<typeof Message>>(value)
     if (!MessageTypeCheck.Check(message)) {
       throw new TypeException('RedisReceiver:Next', MessageTypeCheck, message)
