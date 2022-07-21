@@ -26,7 +26,7 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-import { Exception, TSchema, TFunction } from '@sidewinder/contract'
+import { ServiceException, TSchema, TFunction } from '@sidewinder/contract'
 import { RpcErrorCode } from './protocol'
 
 export interface RegisteredClientMethod {
@@ -67,7 +67,7 @@ export class ClientMethods {
 
   private validateMethodExists(method: string) {
     if (!this.methods.has(method)) {
-      throw new Exception(`Method not found`, RpcErrorCode.MethodNotFound, {})
+      throw new ServiceException(`Method not found`, RpcErrorCode.MethodNotFound, {})
     }
   }
 

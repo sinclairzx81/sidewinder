@@ -26,7 +26,7 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-export class Exception extends Error {
+export class ServiceException extends Error {
   constructor(message: string, public code: number, public readonly data: unknown) {
     super(message)
   }

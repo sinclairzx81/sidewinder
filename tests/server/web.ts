@@ -1,4 +1,4 @@
-import { Type, Exception } from '@sidewinder/contract'
+import { Type, ServiceException } from '@sidewinder/contract'
 import { Host, WebService } from '@sidewinder/server'
 import { WebClient } from '@sidewinder/client'
 import { Assert } from '../assert/index'
@@ -236,7 +236,7 @@ describe('server/WebService', () => {
     const client = new WebClient(Contract, `http://localhost:${port}`)
     const error = (await client.call('test').catch((error: Error) => error)) as Error
     await host.dispose()
-    Assert.isInstanceOf(error, Exception)
+    Assert.isInstanceOf(error, ServiceException)
     Assert.equal(error.message, 'Authorization Failed')
   })
 
@@ -258,7 +258,7 @@ describe('server/WebService', () => {
     const client = new WebClient(Contract, `http://localhost:${port}`)
     const error = (await client.call('test').catch((error: Error) => error)) as Error
     await host.dispose()
-    Assert.isInstanceOf(error, Exception)
+    Assert.isInstanceOf(error, ServiceException)
     Assert.equal(error.message, 'Method Authorization Failed')
   })
 })

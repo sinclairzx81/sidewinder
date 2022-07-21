@@ -26,7 +26,7 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-import { Exception, Type, TFunction } from '@sidewinder/contract'
+import { ServiceException, Type, TFunction } from '@sidewinder/contract'
 import { TypeCompiler, TypeCheck } from '@sidewinder/type/compiler'
 import { RpcErrorCode } from './protocol'
 
@@ -79,24 +79,24 @@ export class ServiceMethods {
     try {
       return await entry.authorize(context)
     } catch {
-      throw new Exception('Method Authorization Failed', RpcErrorCode.InvalidRequest, {})
+      throw new ServiceException('Method Authorization Failed', RpcErrorCode.InvalidRequest, {})
     }
   }
 
   private _validateMethodExists(method: string) {
     if (!this._methods.has(method)) {
-      throw new Exception(`Method not found`, RpcErrorCode.MethodNotFound, {})
+      throw new ServiceException(`Method not found`, RpcErrorCode.MethodNotFound, {})
     }
   }
 
   private _validateMethodParameters(entry: ServerMethodEntry, method: string, params: unknown[]) {
     if (entry.paramsTypeCheck.Check(params)) return
     const errors = [...entry.paramsTypeCheck.Errors(params)]
-    throw new Exception(`Invalid parameters for method ${method}(...).`, RpcErrorCode.InvalidParams, { errors })
+    throw new ServiceException(`Invalid parameters for method ${method}(...).`, RpcErrorCode.InvalidParams, { errors })
   }
 
   private _validateMethodReturnType(entry: ServerMethodEntry, method: string, result: unknown) {
     if (entry.returnTypeCheck.Check(result)) return
-    throw new Exception(`Method '${method}' returned an invalid result`, RpcErrorCode.InternalServerError, {})
+    throw new ServiceException(`Method '${method}' returned an invalid result`, RpcErrorCode.InternalServerError, {})
   }
 }

@@ -26,7 +26,7 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-import { Exception, Static, TContract, ContractMethodParamters, ContractMethodReturnType } from '@sidewinder/contract'
+import { ServiceException, Static, TContract, ContractMethodParamters, ContractMethodReturnType } from '@sidewinder/contract'
 import { RpcProtocol } from './methods/index'
 import { Encoder, MsgPackEncoder, JsonEncoder } from './encoder/index'
 import { Request } from './request/index'
@@ -57,7 +57,7 @@ export class WebClient<Contract extends TContract> {
       return response.result as ReturnType
     } else if (response.error) {
       const { message, code, data } = response.error
-      throw new Exception(message, code, data)
+      throw new ServiceException(message, code, data)
     }
     throw Error('Unreachable')
   }

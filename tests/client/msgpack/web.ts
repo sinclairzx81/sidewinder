@@ -1,4 +1,4 @@
-import { Type, Exception } from '@sidewinder/contract'
+import { Type, ServiceException } from '@sidewinder/contract'
 import { Host, WebService } from '@sidewinder/server'
 import { WebClient } from '@sidewinder/client'
 import { Assert } from '../../assert/index'
@@ -34,7 +34,7 @@ function context(callback: ContextCallback) {
       throw Error('boom')
     })
     service.method('errors:exception', (clientId) => {
-      throw new Exception('boom', 3000, {})
+      throw new ServiceException('boom', 3000, {})
     })
     service.method('void:in', (clientId, data) => data === null)
     service.method('void:out', (clientId, data) => {})
@@ -168,7 +168,7 @@ describe('client/WebClient:MsgPack', () => {
       try {
         await client.call('errors:error')
       } catch (error) {
-        if (!(error instanceof Exception)) throw Error('Excepted Exception')
+        if (!(error instanceof ServiceException)) throw Error('Excepted Exception')
         Assert.equal(error.message, 'Internal Server Error')
         Assert.equal(error.code, -32001)
       }
@@ -181,7 +181,7 @@ describe('client/WebClient:MsgPack', () => {
       try {
         await client.call('errors:exception')
       } catch (error) {
-        if (!(error instanceof Exception)) throw Error('Excepted Exception')
+        if (!(error instanceof ServiceException)) throw Error('Excepted Exception')
         Assert.equal(error.message, 'boom')
         Assert.equal(error.code, 3000)
       }

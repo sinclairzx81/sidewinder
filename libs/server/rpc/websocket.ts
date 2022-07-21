@@ -243,7 +243,7 @@ export class WebSocketService<Contract extends Types.TContract, Context extends 
 
   async #sendResponseWithError(socket: WebSocket, rpcRequest: Methods.RpcRequest, error: Error) {
     if (rpcRequest.id === undefined || rpcRequest.id === null) return
-    if (error instanceof Types.Exception) {
+    if (error instanceof Types.ServiceException) {
       const response = Methods.RpcProtocol.encodeError(rpcRequest.id, { code: error.code, message: error.message, data: error.data })
       const buffer = this.#encoder.encode(response)
       socket.send(buffer)
@@ -277,7 +277,7 @@ export class WebSocketService<Contract extends Types.TContract, Context extends 
       this.#responder.resolve(rpcResponse.id, rpcResponse.result)
     } else if (rpcResponse.error) {
       const { message, code, data } = rpcResponse.error
-      this.#responder.reject(rpcResponse.id, new Types.Exception(message, code, data))
+      this.#responder.reject(rpcResponse.id, new Types.ServiceException(message, code, data))
     }
   }
 
@@ -328,7 +328,7 @@ export class WebSocketService<Contract extends Types.TContract, Context extends 
         schema as Types.TFunction,
         (context: any) => context,
         () => {
-          throw new Types.Exception(`Method '${name}' not implemented`, Methods.RpcErrorCode.InternalServerError, {})
+          throw new Types.ServiceException(`Method '${name}' not implemented`, Methods.RpcErrorCode.InternalServerError, {})
         },
       )
     }

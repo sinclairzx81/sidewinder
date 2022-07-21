@@ -337,7 +337,7 @@ export class WebService<Contract extends Types.TContract, Context extends Types.
     if (rpcRequest.id === undefined) {
       await this.#writeResponseBuffer(response, 200, Buffer.from('{}')).catch((error) => this.#dispatchError(clientId, error))
     } else {
-      if (error instanceof Types.Exception) {
+      if (error instanceof Types.ServiceException) {
         const [code, data, message] = [error.code, error.data, error.message]
         await this.#writeRpcResponse(response, 400, Methods.RpcProtocol.encodeError('', { data, code, message })).catch((error) => this.#dispatchError(clientId, error))
       } else {
@@ -371,7 +371,7 @@ export class WebService<Contract extends Types.TContract, Context extends Types.
         schema as Types.TFunction,
         (context: any) => context,
         () => {
-          throw new Types.Exception(`Method '${name}' not implemented`, Methods.RpcErrorCode.InternalServerError, {})
+          throw new Types.ServiceException(`Method '${name}' not implemented`, Methods.RpcErrorCode.InternalServerError, {})
         },
       )
     }

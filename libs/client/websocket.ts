@@ -27,7 +27,7 @@ THE SOFTWARE.
 ---------------------------------------------------------------------------*/
 
 import { RetryWebSocket, WebSocket } from '@sidewinder/platform'
-import { Exception, Static, TContract, ContractMethodParamters, ContractMethodReturnType, TFunction } from '@sidewinder/contract'
+import { ServiceException, Static, TContract, ContractMethodParamters, ContractMethodReturnType, TFunction } from '@sidewinder/contract'
 import { ClientMethods, Responder, RpcErrorCode, RpcProtocol, RpcRequest, RpcResponse } from './methods/index'
 import { Encoder, MsgPackEncoder, JsonEncoder } from './encoder/index'
 import { Barrier } from '@sidewinder/async'
@@ -208,7 +208,7 @@ export class WebSocketClient<Contract extends TContract> {
 
   private async sendResponseWithError(rpcRequest: RpcRequest, error: Error) {
     if (rpcRequest.id === undefined || rpcRequest.id === null) return
-    if (error instanceof Exception) {
+    if (error instanceof ServiceException) {
       const response = RpcProtocol.encodeError(rpcRequest.id, { code: error.code, message: error.message, data: error.data })
       const buffer = this.encoder.encode(response)
       this.socket.send(buffer)
@@ -240,7 +240,7 @@ export class WebSocketClient<Contract extends TContract> {
       this.responder.resolve(rpcResponse.id, rpcResponse.result)
     } else if (rpcResponse.error) {
       const { message, code, data } = rpcResponse.error
-      this.responder.reject(rpcResponse.id, new Exception(message, code, data))
+      this.responder.reject(rpcResponse.id, new ServiceException(message, code, data))
     }
   }
 
@@ -292,7 +292,7 @@ export class WebSocketClient<Contract extends TContract> {
   private setupNotImplemented() {
     for (const [name, schema] of Object.entries(this.contract.client)) {
       this.methods.register(name, schema as TFunction, () => {
-        throw new Exception(`Method '${name}' not implemented`, RpcErrorCode.InternalServerError, {})
+        throw new ServiceException(`Method '${name}' not implemented`, RpcErrorCode.InternalServerError, {})
       })
     }
   }

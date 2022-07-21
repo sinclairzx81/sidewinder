@@ -1,4 +1,4 @@
-import { Type, Exception } from '@sidewinder/contract'
+import { Type, ServiceException } from '@sidewinder/contract'
 import { Host, WebSocketService } from '@sidewinder/server'
 import { WebSocketClient } from '@sidewinder/client'
 import { Assert } from '../assert/index'
@@ -331,7 +331,7 @@ describe('server/WebSocketService', () => {
     const client = new WebSocketClient(Contract, `ws://localhost:${port}`)
     const error = (await client.call('test').catch((error: Error) => error)) as Error
     await host.dispose()
-    Assert.isInstanceOf(error, Exception)
+    Assert.isInstanceOf(error, ServiceException)
     Assert.equal(error.message, 'Method Authorization Failed')
   })
 })
