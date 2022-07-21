@@ -11,18 +11,28 @@ export const Contract = Type.Contract({
     }
 })
 
+export const Context = Type.Number()
+
 // --------------------------------------------------------------
 // Service
 // --------------------------------------------------------------
 
-export class EchoService extends WebSocketService<typeof Contract> {
+export class EchoService extends WebSocketService<typeof Contract, typeof Context> {
 
     constructor() {
-        super(Contract)
-    }   
+        super(Contract, Context)
+    }  
+
+    // public authorize = super.event('authorize', (context, request) => {
+    //     return 1
+    // })
+
+    public error = super.event('error', (context, error) => {
+        console.log(error)
+    })
 
     public echo = super.method('echo', (context, input) => {
-
+        console.log('inside echo')
         return input
     })
 }
@@ -43,4 +53,4 @@ host.listen(5000)
 
 const client = new WebSocketClient(Contract, 'ws://localhost:5000/api')
 
-client.call('echo', `hello world`).then(result => console.log(result))
+client.call('echo', `hello world`).then(result => console.log(result)).catch(error => {})

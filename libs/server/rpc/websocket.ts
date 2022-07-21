@@ -207,6 +207,8 @@ export class WebSocketService<Contract extends Types.TContract, Context extends 
       this.#contexts.set(clientId, context)
       return true
     } else {
+      const message = `The authorize() event handler returned invalid context data. Cannot proceed.`
+      this.#onErrorCallback(clientId, new Types.ServiceException(message, 0, {}))
       return false
     }
   }
