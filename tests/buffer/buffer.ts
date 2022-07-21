@@ -43,22 +43,23 @@ describe('buffer/Buffer', () => {
 
   it('should iterate buffers (1)', () => {
     const buffer: any[] = []
-    for (const [subarray, final] of Buffer.iter(new Uint8Array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]), 4)) {
-      buffer.push([[...subarray], final])
+    for (const subarray of Buffer.iterator(new Uint8Array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]), 4)) {
+      buffer.push([...subarray.map((n) => n)])
     }
-    Assert.deepEqual(buffer[0], [[0, 1, 2, 3], false])
-    Assert.deepEqual(buffer[1], [[4, 5, 6, 7], false])
-    Assert.deepEqual(buffer[2], [[8, 9, 10, 11], false])
-    Assert.deepEqual(buffer[3], [[12, 13, 14], true])
+
+    Assert.deepEqual(buffer[0], [0, 1, 2, 3])
+    Assert.deepEqual(buffer[1], [4, 5, 6, 7])
+    Assert.deepEqual(buffer[2], [8, 9, 10, 11])
+    Assert.deepEqual(buffer[3], [12, 13, 14])
   })
   it('should iterate buffers (2)', () => {
     const buffer: any[] = []
-    for (const [subarray, final] of Buffer.iter(new Uint8Array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]), 4)) {
-      buffer.push([[...subarray], final])
+    for (const subarray of Buffer.iterator(new Uint8Array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]), 4)) {
+      buffer.push([...subarray])
     }
-    Assert.deepEqual(buffer[0], [[0, 1, 2, 3], false])
-    Assert.deepEqual(buffer[1], [[4, 5, 6, 7], false])
-    Assert.deepEqual(buffer[2], [[8, 9, 10, 11], false])
-    Assert.deepEqual(buffer[3], [[12, 13, 14, 15], true])
+    Assert.deepEqual(buffer[0], [0, 1, 2, 3])
+    Assert.deepEqual(buffer[1], [4, 5, 6, 7])
+    Assert.deepEqual(buffer[2], [8, 9, 10, 11])
+    Assert.deepEqual(buffer[3], [12, 13, 14, 15])
   })
 })

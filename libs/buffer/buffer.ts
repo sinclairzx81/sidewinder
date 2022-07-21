@@ -76,28 +76,24 @@ export namespace Buffer {
     return output
   }
 
-  /**
-   * Creates an iterator for the given buffer which is chunked up to the
-   * given size. Items are yielded as [subarray, final] with final indicating
-   * the last chunk in the iterator.
-   */
-  export function* iter(buffer: Uint8Array, size: number): Generator<[subarray: Uint8Array, final: boolean]> {
-    if (size <= 0) {
-      yield [buffer, true]
+  /** Returns an iterator for the given buffer which is chunked up to the given length. Buffers are yielded as subarrays to avoid copy. */
+  export function* iterator(buffer: Uint8Array, length: number): IterableIterator<Uint8Array> {
+    if (length <= 0) {
+      yield buffer
       return
     }
-    const partials = Math.floor(buffer.length / size)
-    const remaining = buffer.length - partials * size
+
+    const partials = Math.floor(buffer.length / length)
+    const remaining = buffer.length - partials * length
     let offset = 0
-    for (let i = 0; i < partials; i++, offset += size) {
-      const subarray = buffer.subarray(offset, offset + size)
+    for (let i = 0; i < partials; i++, offset += length) {
+      const subarray = buffer.subarray(offset, offset + length)
       if (i === partials - 1 && remaining === 0) {
-        yield [subarray, true]
+        yield subarray
         return
       }
-      yield [subarray, false]
+      yield subarray
     }
-    const subarray = buffer.subarray(offset, offset + remaining)
-    yield [subarray, true]
+    yield buffer.subarray(offset, offset + remaining)
   }
 }
