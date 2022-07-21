@@ -2,13 +2,14 @@
   "scripts": {
     "clean": "hammer task clean",
     "format": "hammer task format",
+    "upgrade": "hammer task upgrade",
     "start": "hammer task start",
     "test": "hammer task test",
     "build": "hammer task build",
     "publish": "hammer task publish"
   },
   "devDependencies": {
-    "@sinclair/hammer": "^0.16.3",
+    "@sinclair/hammer": "^0.16.4",
     "@types/bcryptjs": "^2.4.2",
     "@types/chai": "^4.3.0",
     "@types/cors": "^2.8.12",
@@ -19,8 +20,6 @@
     "@types/mocha": "^9.1.0",
     "@types/node": "^17.0.14",
     "@types/object-hash": "^2.2.1",
-    "@types/react": "^17.0.39",
-    "@types/react-dom": "^17.0.11",
     "@types/uuid": "^8.3.4",
     "@types/ws": "^8.5.3",
     "chai": "^4.3.6",
@@ -29,21 +28,19 @@
     "mocha": "^9.2.2",
     "mongo-mock": "^4.1.0",
     "mongodb-client-encryption": "^2.1.0",
-    "prettier": "^2.6.2",
+    "prettier": "^2.7.1",
     "typescript": "^4.6.3"
   },
   "dependencies": {
     "@msgpack/msgpack": "^2.7.2",
     "bcryptjs": "^2.4.3",
     "express": "^4.17.3",
-    "ioredis": "^4.28.5",
+    "ioredis": "^5.2.1",
     "jsonwebtoken": "^8.5.1",
     "mongodb": "^4.5.0",
     "node-fetch": "^3.2.3",
     "object-hash": "^3.0.0",
-    "react": "^17.0.2",
-    "react-dom": "^17.0.2",
     "uuid": "^8.3.2",
-    "ws": "^8.5.0"
+    "ws": "^8.8.1"
   }
 }

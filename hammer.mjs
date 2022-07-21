@@ -1,4 +1,5 @@
 import { compilePackage, packPackage } from './build/index'
+import { readFileSync } from 'fs'
 
 // -------------------------------------------------------------
 // Packages
@@ -40,6 +41,15 @@ export async function format() {
     await shell('prettier --no-semi --single-quote --print-width 240 --trailing-comma all --write libs tests')
 }
 
+// -------------------------------------------------------------
+// Upgrade
+// -------------------------------------------------------------
+
+export async function upgrade() {
+    const packageJson = JSON.parse(readFileSync('package.json'))
+    await Promise.all( Object.keys(packageJson.dependencies).map(dependency => shell(`npm install ${dependency}@latest --save`)))
+    await Promise.all( Object.keys(packageJson.devDependencies).map(dependency => shell(`npm install ${dependency}@latest --save-dev`)))
+}
 // -------------------------------------------------------------
 // Start
 // -------------------------------------------------------------
