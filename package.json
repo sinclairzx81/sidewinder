@@ -28,6 +28,7 @@
     "ioredis-mock": "^7.2.0",
     "mocha": "^9.2.2",
     "mongo-mock": "^4.1.0",
+    "mongodb-client-encryption": "^2.1.0",
     "prettier": "^2.6.2",
     "typescript": "^4.6.3"
   },
