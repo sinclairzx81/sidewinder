@@ -3,7 +3,7 @@ import { ok, fail } from './validate'
 
 describe('type/compiler/Rec', () => {
   it('Should validate recursive node type', () => {
-    const Node = Type.Rec((Self) =>
+    const Node = Type.Recursive((Self) =>
       Type.Object({
         id: Type.String(),
         nodes: Type.Array(Self),
@@ -20,7 +20,7 @@ describe('type/compiler/Rec', () => {
 
   it('Should validate wrapped recursive node type', () => {
     const Node = Type.Tuple([
-      Type.Rec((Self) =>
+      Type.Recursive((Self) =>
         Type.Object({
           id: Type.String(),
           nodes: Type.Array(Self),
@@ -40,7 +40,7 @@ describe('type/compiler/Rec', () => {
 
   it('Should not validate wrapped recursive node type with invalid id', () => {
     const Node = Type.Tuple([
-      Type.Rec((Self) =>
+      Type.Recursive((Self) =>
         Type.Object({
           id: Type.String(),
           nodes: Type.Array(Self),

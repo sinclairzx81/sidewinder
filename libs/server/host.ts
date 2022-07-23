@@ -173,7 +173,7 @@ export class Host {
       this.#server = createHttpServer(this.#application)
       this.#server.on('upgrade', (request, socket, head) => this.upgrade(request, socket as Socket, head))
       // Node v18.4.0: https://github.com/nodejs/node/issues/43908
-      if(hostname === '0.0.0.0') {
+      if (hostname === '0.0.0.0') {
         this.#server.listen(port, () => resolve())
       } else {
         this.#server.listen(port, hostname, () => resolve())

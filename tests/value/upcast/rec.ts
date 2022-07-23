@@ -3,7 +3,7 @@ import { Type } from '@sidewinder/type'
 import { Assert } from '../../assert/index'
 
 describe('value/upcast/Rec', () => {
-  const T = Type.Rec((Self) =>
+  const T = Type.Recursive((Self) =>
     Type.Object({
       id: Type.String(),
       nodes: Type.Array(Self),
@@ -66,14 +66,14 @@ describe('value/upcast/Rec', () => {
   })
 
   it('Should upcast from varying types', () => {
-    const TypeA = Type.Rec((Self) =>
+    const TypeA = Type.Recursive((Self) =>
       Type.Object({
         id: Type.String(),
         nodes: Type.Array(Self),
       }),
     )
 
-    const TypeB = Type.Rec((Self) =>
+    const TypeB = Type.Recursive((Self) =>
       Type.Object({
         id: Type.String(),
         name: Type.String({ default: 'test' }),

@@ -109,4 +109,46 @@ describe('value/upcast/Object', () => {
       c: 'c',
     })
   })
+
+  it('Should upcast and preserve explicit optional property (issue #19)', () => {
+    
+    // -------------------------------------------------------------
+    // no explicit default
+    // -------------------------------------------------------------
+
+    const T0 = Type.Object({ property: Type.Optional(Type.String())})
+    const C0 = Value.Check(T0, {})
+    const C1 = Value.Check(T0, { unknown: ''})
+    const C2 = Value.Check(T0, { property: 'hello'})
+    const C3 = Value.Check(T0, { property: 1 })
+    Assert.deepEqual(C0, true)
+    Assert.deepEqual(C1, true)
+    Assert.deepEqual(C2, true)
+    Assert.deepEqual(C3, false)
+
+    const R2 = Value.Upcast(T0, null)
+    const R3 = Value.Upcast(T0, {})
+    const R4 = Value.Upcast(T0, { property: 'hello' }) // preserve
+    const R5 = Value.Upcast(T0, { property: 1 })       // upcast into string
+
+    Assert.deepEqual(R2, {})
+    Assert.deepEqual(R3, {})
+    Assert.deepEqual(R4, { property: 'hello' })
+    Assert.deepEqual(R5, { property: '' })
+
+    // -------------------------------------------------------------
+    // explicit default
+    // -------------------------------------------------------------
+
+    const T1 = Type.Object({ property: Type.Optional(Type.String({ default: 'world' }))})
+    const R6 = Value.Upcast(T1, null)
+    const R7 = Value.Upcast(T1, {})
+    const R8 = Value.Upcast(T1, { property: 'hello' }) // preserve
+    const R9 = Value.Upcast(T1, { property: 1 })       // upcast into string
+
+    Assert.deepEqual(R6, {})
+    Assert.deepEqual(R7, {})
+    Assert.deepEqual(R8, { property: 'hello' })
+    Assert.deepEqual(R9, { property: 'world' })
+  })
 })

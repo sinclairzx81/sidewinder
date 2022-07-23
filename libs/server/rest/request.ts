@@ -119,7 +119,7 @@ export class RestRequest {
   // ------------------------------------------------------------------------------
   // Privates
   // ------------------------------------------------------------------------------
-  
+
   #readIpAddress(request: IncomingMessage) {
     if (request.headers['x-forwarded-for'] !== undefined) {
       const forwarded = request.headers['x-forwarded-for'] as string

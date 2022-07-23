@@ -26,9 +26,25 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-import { Reflect } from './reflect'
+// --------------------------------------------------------------------------
+// Reflect
+// --------------------------------------------------------------------------
 
-export namespace CloneValue {
+export type TypeName = 'bigint' | 'symbol' | 'string' | 'boolean' | 'number' | 'function' | 'undefined' | 'null' | 'array' | 'object' | 'never'
+
+export function Reflect(value: any): TypeName {
+  if (value === undefined) return 'undefined'
+  if (value === null) return 'null'
+  if (typeof value === 'object' && !globalThis.Array.isArray(value) && value !== null) return 'object'
+  if (typeof value === 'object' && globalThis.Array.isArray(value)) return 'array'
+  return typeof value
+}
+
+// --------------------------------------------------------------------------
+// ValueClone
+// --------------------------------------------------------------------------
+
+export namespace ValueClone {
   function Undefined(_value: any): any {
     return undefined
   }

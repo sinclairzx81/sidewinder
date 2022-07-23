@@ -56,7 +56,7 @@ export class ServiceMethods {
   // ------------------------------------------------------------------------------
   // Publics
   // ------------------------------------------------------------------------------
-  
+
   public register(method: string, schema: TFunction<any[], any>, authorize: Function, callback: Function) {
     const paramsValidator = new Validator(Type.Tuple(schema.parameters))
     const returnValidator = new Validator(schema.returns)
@@ -78,7 +78,7 @@ export class ServiceMethods {
   // ------------------------------------------------------------------------------
   // Privates
   // ------------------------------------------------------------------------------
-  
+
   async #authorize(context: unknown, entry: RegisteredServerMethod) {
     try {
       return await entry.authorize(context)

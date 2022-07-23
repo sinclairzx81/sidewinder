@@ -26,43 +26,65 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-import { TSchema, Static } from '@sidewinder/type'
-import { CreateValue } from './create'
-import { CheckValue } from './check'
-import { CloneValue } from './clone'
-import { DeltaValue, Edit } from './delta'
-import { UpcastValue } from './upcast'
-
+import * as Types from '@sidewinder/type'
+import { ValueClone } from './clone'
+import { ValueErrors, ValueError } from './errors'
+import { ValueDelta, Edit } from './delta'
+import { ValueCast } from './upcast'
+import { ValueCreate } from './create'
+import { ValueCheck } from './check'
 export { Edit, EditType } from './delta'
 
+/** Creates Values from TypeBox Types */
 export namespace Value {
-  /** Returns true if the value conforms to the given schema */
-  export function Check<T extends TSchema>(schema: T, value: any): value is Static<T> {
-    return CheckValue.Check(schema, value)
-  }
-
   /** Returns a deep clone of the given value */
   export function Clone<T>(value: T): T {
-    return CloneValue.Create(value)
+    return ValueClone.Create(value)
   }
 
-  /** Creates a value from the given schema type */
-  export function Create<T extends TSchema>(schema: T): Static<T> {
-    return CreateValue.Create(schema)
+  /** Creates a value from the given type */
+  export function Create<T extends Types.TSchema, R extends Types.TSchema[]>(schema: T, references: [...R]): Types.Static<T>
+  /** Creates a value from the given type */
+  export function Create<T extends Types.TSchema>(schema: T): Types.Static<T>
+  export function Create(...args: any[]) {
+    const [schema, references] = args.length === 2 ? [args[0], args[1]] : [args[0], []]
+    return ValueCreate.Create(schema, references)
+  }
+
+  /** Checks a value matches the given type */
+  export function Check<T extends Types.TSchema, R extends Types.TSchema[]>(schema: T, references: [...R], value: unknown): value is Types.Static<T>
+  /** Checks a value matches the given type */
+  export function Check<T extends Types.TSchema>(schema: T, value: unknown): value is Types.Static<T>
+  export function Check(...args: any[]) {
+    const [schema, references, value] = args.length === 3 ? [args[0], args[1], args[2]] : [args[0], [], args[1]]
+    return ValueCheck.Check(schema, references, value)
+  }
+
+  /** Casts a value into a structure matching the given type. The result will be a new value that retains as much information of the original value as possible. */
+  export function Upcast<T extends Types.TSchema, R extends Types.TSchema[]>(schema: T, references: [...R], value: unknown): Types.Static<T>
+  /** Casts a value into a structure matching the given type. The result will be a new value that retains as much information of the original value as possible. */
+  export function Upcast<T extends Types.TSchema>(schema: T, value: unknown): Types.Static<T>
+  export function Upcast(...args: any[]) {
+    const [schema, references, value] = args.length === 3 ? [args[0], args[1], args[2]] : [args[0], [], args[1]]
+    return ValueCast.Cast(schema, references, value)
+  }
+
+  /** Returns an iterator for each error in this value. */
+  export function Errors<T extends Types.TSchema, R extends Types.TSchema[]>(schema: T, references: [...R], value: unknown): IterableIterator<ValueError>
+  /** Returns an iterator for each error in this value. */
+  export function Errors<T extends Types.TSchema>(schema: T, value: unknown): IterableIterator<ValueError>
+  export function* Errors(...args: any[]) {
+    const [schema, references, value] = args.length === 3 ? [args[0], args[1], args[2]] : [args[0], [], args[1]]
+    yield* ValueErrors.Errors(schema, references, value)
   }
 
   /** Diffs the value and produces edits to transform the value into the next value */
   export function Diff(value: any, next: any): Edit[] {
-    return DeltaValue.Diff(value, next)
+    return ValueDelta.Diff(value, next)
   }
 
   /** Patches a value by applying a series of edits */
   export function Patch(value: any, edits: Edit[]): any {
-    return DeltaValue.Edit(value, edits)
-  }
-
-  /** Upcasts a value to match a schema while preserving as much information from the original value as possible. */
-  export function Upcast<T extends TSchema>(schema: T, value: any): Static<T> {
-    return UpcastValue.Create(schema, value)
+    return ValueDelta.Edit(value, edits)
   }
 }

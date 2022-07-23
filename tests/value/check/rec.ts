@@ -3,7 +3,7 @@ import { Type } from '@sidewinder/type'
 import { Assert } from '../../assert/index'
 
 describe('value/check/Rec', () => {
-  const T = Type.Rec((Self) =>
+  const T = Type.Recursive((Self) =>
     Type.Object({
       id: Type.String(),
       nodes: Type.Array(Self),

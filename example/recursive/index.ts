@@ -11,7 +11,7 @@ import { WebClient } from '@sidewinder/client'
 // -----------------------------------------------------------
 
 const Node = Type.Tuple([
-    Type.Rec(Self => Type.Object({
+    Type.Recursive(Self => Type.Object({
         id: Type.String(),
         nodes: Type.Array(Self)
     }))

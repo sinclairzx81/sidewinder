@@ -4,7 +4,7 @@ import { Assert } from '../../assert/index'
 
 describe('value/create/Rec', () => {
   it('Should create value', () => {
-    const T = Type.Rec((Self) =>
+    const T = Type.Recursive((Self) =>
       Type.Object({
         id: Type.String(),
         nodes: Type.Array(Self),
@@ -17,7 +17,7 @@ describe('value/create/Rec', () => {
   })
 
   it('Should create default', () => {
-    const T = Type.Rec(
+    const T = Type.Recursive(
       (Self) =>
         Type.Object({
           id: Type.String(),

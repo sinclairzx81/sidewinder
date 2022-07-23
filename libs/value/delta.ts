@@ -26,9 +26,8 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-import { Reflect, TypeName } from './reflect'
 import { Pointer } from './pointer'
-import { CloneValue } from './clone'
+import { ValueClone, Reflect, TypeName } from './clone'
 
 // --------------------------------------------------------------------------
 // FlatValue
@@ -111,12 +110,13 @@ export enum EditType {
   Update,
   Insert,
 }
+
 export type Edit = Insert | Update | Delete
 export type Update = [EditType.Update, string, any]
 export type Insert = [EditType.Insert, string, any]
 export type Delete = [EditType.Delete, string]
 
-export namespace DeltaValue {
+export namespace ValueDelta {
   function IsRootUpdate(edits: Edit[]): edits is [Update] {
     return edits.length > 0 && edits[0][0] === EditType.Update && edits[0][1] === ''
   }
@@ -164,12 +164,12 @@ export namespace DeltaValue {
 
   export function Edit(valueA: any, operations: Edit[]) {
     if (IsRootUpdate(operations)) {
-      return CloneValue.Create(operations[0][2])
+      return ValueClone.Create(operations[0][2])
     }
     if (IsNullUpdate(operations)) {
-      return CloneValue.Create(valueA)
+      return ValueClone.Create(valueA)
     }
-    const clone = CloneValue.Create(valueA)
+    const clone = ValueClone.Create(valueA)
     for (const operation of operations) {
       switch (operation[0]) {
         case EditType.Insert: {

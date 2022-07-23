@@ -375,10 +375,10 @@ export interface TSelf extends TSchema {
   $ref: string
 }
 
-export type TRecReduce<T extends TSchema> = Static<T, [TRecReduce<T>]>
+export type TRecursiveReduce<T extends TSchema> = Static<T, [TRecursiveReduce<T>]>
 
-export interface TRec<T extends TSchema> extends TSchema {
-  static: TRecReduce<T>
+export interface TRecursive<T extends TSchema> extends TSchema {
+  static: TRecursiveReduce<T>
 }
 
 // --------------------------------------------------------------------------
@@ -726,7 +726,7 @@ export class TypeBuilder {
   }
 
   /** Creates a recursive object type */
-  public Rec<T extends TSchema>(callback: (self: TSelf) => T, options: SchemaOptions = {}): TRec<T> {
+  public Recursive<T extends TSchema>(callback: (self: TSelf) => T, options: SchemaOptions = {}): TRecursive<T> {
     if (options.$id === undefined) options.$id = `type-${TypeOrdinal++}`
     const self = callback({ [Kind]: 'Self', $ref: `${options.$id}` } as any)
     self.$id = options.$id

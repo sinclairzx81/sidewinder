@@ -43,7 +43,7 @@ export class RestResponse {
   // ------------------------------------------------------------------------------
   // Publics
   // ------------------------------------------------------------------------------
-  
+
   /** Sets the status text for this response. */
   public statusText(statusText: string): this {
     this.#statusText = statusText

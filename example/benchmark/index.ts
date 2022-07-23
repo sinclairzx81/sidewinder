@@ -64,7 +64,7 @@ function start(iterations: number) {
         }, { additionalProperties: false })
     }, { additionalProperties: false }))
 
-    benchmark('recursive', iterations, Type.Rec(Node => Type.Object({
+    benchmark('recursive', iterations, Type.Recursive(Node => Type.Object({
         id: Type.String(),
         nodes: Type.Array(Node)
     })), {
