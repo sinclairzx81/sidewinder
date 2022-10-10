@@ -76,7 +76,7 @@ describe('value/upcast/Intersect', () => {
   })
 
   it('Should upcast and preserve from incorrect properties', () => {
-    const value = { x: true, y: 8, z: 9 }
+    const value = { x: {}, y: 8, z: 9 }
     const result = Value.Upcast(T, value)
     Assert.deepEqual(result, {
       x: 0,

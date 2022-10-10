@@ -26,162 +26,153 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-import { Pointer } from './pointer'
-import { ValueClone, Reflect, TypeName } from './clone'
+import { Is, ObjectType, ArrayType, TypedArrayType, ValueType } from './is'
+import { ValueClone } from './clone'
+import { ValuePointer } from './pointer'
 
-// --------------------------------------------------------------------------
-// FlatValue
-// --------------------------------------------------------------------------
+export type Edit<T = unknown> = Insert<T> | Update<T> | Delete<T>
 
-type PointerRef = string
-
-type FlatValueEntry = {
-  type: TypeName
+export interface Insert<T> {
+  brand: T
+  type: 'insert'
+  path: string
   value: any
 }
-namespace FlatValue {
-  function* Undefined(key: string, value: any): Iterable<[PointerRef, FlatValueEntry]> {
-    yield [key, { type: 'undefined', value }]
-  }
-  function* Null(key: string, value: any): Iterable<[PointerRef, FlatValueEntry]> {
-    yield [key, { type: 'null', value }]
-  }
-  function* Function(key: string, value: any): Iterable<[PointerRef, FlatValueEntry]> {
-    yield [key, { type: 'function', value }]
-  }
-  function* Object(key: string, value: any): Iterable<[PointerRef, FlatValueEntry]> {
-    yield [key, { type: 'object', value }]
-    for (const entry of globalThis.Object.entries(value)) {
-      yield* Visit(`${key}/${entry[0]}`, entry[1])
-    }
-  }
-  function* Array(key: string, value: any): Iterable<[PointerRef, FlatValueEntry]> {
-    yield [key, { type: 'array', value }]
-    for (let i = 0; i < value.length; i++) {
-      yield* Visit(`${key}/${i}`, value[i])
-    }
-  }
-  function* BigInt(key: string, value: any): Iterable<[PointerRef, FlatValueEntry]> {
-    yield [key, { type: 'bigint', value }]
-  }
-  function* Symbol(key: string, value: any): Iterable<[PointerRef, FlatValueEntry]> {
-    yield [key, { type: 'symbol', value }]
-  }
-  function* String(key: string, value: any): Iterable<[PointerRef, FlatValueEntry]> {
-    yield [key, { type: 'string', value }]
-  }
-  function* Boolean(key: string, value: any): Iterable<[PointerRef, FlatValueEntry]> {
-    yield [key, { type: 'boolean', value }]
-  }
-  function* Number(key: string, value: any): Iterable<[PointerRef, FlatValueEntry]> {
-    yield [key, { type: 'number', value }]
-  }
-  function* Visit(path: string, value: any): Iterable<[PointerRef, FlatValueEntry]> {
-    switch (Reflect(value)) {
-      case 'array':
-        return yield* Array(path, value)
-      case 'bigint':
-        return yield* BigInt(path, value)
-      case 'boolean':
-        return yield* Boolean(path, value)
-      case 'function':
-        return yield* Function(path, value)
-      case 'null':
-        return yield* Null(path, value)
-      case 'number':
-        return yield* Number(path, value)
-      case 'object':
-        return yield* Object(path, value)
-      case 'string':
-        return yield* String(path, value)
-      case 'symbol':
-        return yield* Symbol(path, value)
-      case 'undefined':
-        return yield* Undefined(path, value)
-    }
-  }
-  export function* Create(value: any) {
-    return yield* Visit('', value)
-  }
+
+export interface Update<T> {
+  brand: T
+  type: 'update'
+  path: string
+  value: any
 }
 
-export enum EditType {
-  Delete,
-  Update,
-  Insert,
+export interface Delete<T> {
+  brand: T
+  type: 'delete'
+  path: string
 }
-
-export type Edit = Insert | Update | Delete
-export type Update = [EditType.Update, string, any]
-export type Insert = [EditType.Insert, string, any]
-export type Delete = [EditType.Delete, string]
 
 export namespace ValueDelta {
-  function IsRootUpdate(edits: Edit[]): edits is [Update] {
-    return edits.length > 0 && edits[0][0] === EditType.Update && edits[0][1] === ''
+  // ---------------------------------------------------------------------
+  // Edits
+  // ---------------------------------------------------------------------
+
+  function Update(path: string, value: unknown): Edit<any> {
+    return { type: 'update', path, value } as any
   }
-  function IsNullUpdate(edits: Edit[]) {
+
+  function Insert(path: string, value: unknown): Edit<any> {
+    return { type: 'insert', path, value } as any
+  }
+
+  function Delete(path: string): Edit<any> {
+    return { type: 'delete', path } as any
+  }
+
+  // ---------------------------------------------------------------------
+  // Diff
+  // ---------------------------------------------------------------------
+
+  function* Object(path: string, current: ObjectType, next: unknown): IterableIterator<Edit<any>> {
+    if (!Is.Object(next)) return yield Update(path, next)
+    const currentKeys = [...globalThis.Object.keys(current), ...globalThis.Object.getOwnPropertySymbols(current)]
+    const nextKeys = [...globalThis.Object.keys(next), ...globalThis.Object.getOwnPropertySymbols(next)]
+    for (const key of currentKeys) {
+      if (typeof key === 'symbol') throw Error('ValueDelta: Cannot produce diff symbol keys')
+      if (next[key] === undefined && nextKeys.includes(key)) yield Update(`${path}/${String(key)}`, undefined)
+    }
+    for (const key of nextKeys) {
+      if (current[key] === undefined || next[key] === undefined) continue
+      if (typeof key === 'symbol') throw Error('ValueDelta: Cannot produce diff symbol keys')
+      yield* Visit(`${path}/${String(key)}`, current[key], next[key])
+    }
+    for (const key of nextKeys) {
+      if (typeof key === 'symbol') throw Error('ValueDelta: Cannot produce diff symbol keys')
+      if (current[key] === undefined) yield Insert(`${path}/${String(key)}`, next[key])
+    }
+    for (const key of currentKeys.reverse()) {
+      if (typeof key === 'symbol') throw Error('ValueDelta: Cannot produce diff symbol keys')
+      if (next[key] === undefined && !nextKeys.includes(key)) yield Delete(`${path}/${String(key)}`)
+    }
+  }
+
+  function* Array(path: string, current: ArrayType, next: unknown): IterableIterator<Edit<any>> {
+    if (!Is.Array(next)) return yield Update(path, next)
+    for (let i = 0; i < Math.min(current.length, next.length); i++) {
+      yield* Visit(`${path}/${i}`, current[i], next[i])
+    }
+    for (let i = 0; i < next.length; i++) {
+      if (i < current.length) continue
+      yield Insert(`${path}/${i}`, next[i])
+    }
+    for (let i = current.length - 1; i >= 0; i--) {
+      if (i < next.length) continue
+      yield Delete(`${path}/${i}`)
+    }
+  }
+
+  function* TypedArray(path: string, current: TypedArrayType, next: unknown): IterableIterator<Edit<any>> {
+    if (!Is.TypedArray(next) || current.length !== next.length || globalThis.Object.getPrototypeOf(current).constructor.name !== globalThis.Object.getPrototypeOf(next).constructor.name) return yield Update(path, next)
+    for (let i = 0; i < Math.min(current.length, next.length); i++) {
+      yield* Visit(`${path}/${i}`, current[i], next[i])
+    }
+  }
+
+  function* Value(path: string, current: ValueType, next: unknown): IterableIterator<Edit<any>> {
+    if (current === next) return
+    yield Update(path, next)
+  }
+
+  function* Visit(path: string, current: unknown, next: unknown): IterableIterator<Edit<any>> {
+    if (Is.Object(current)) {
+      return yield* Object(path, current, next)
+    } else if (Is.Array(current)) {
+      return yield* Array(path, current, next)
+    } else if (Is.TypedArray(current)) {
+      return yield* TypedArray(path, current, next)
+    } else if (Is.Value(current)) {
+      return yield* Value(path, current, next)
+    } else {
+      throw new Error('ValueDelta: Cannot produce edits for value')
+    }
+  }
+
+  export function Diff<T>(current: T, next: T): Edit<T>[] {
+    return [...Visit('', current, next)]
+  }
+
+  // ---------------------------------------------------------------------
+  // Patch
+  // ---------------------------------------------------------------------
+
+  function IsRootUpdate<T>(edits: Edit<T>[]): edits is [Update<T>] {
+    return edits.length > 0 && edits[0].path === '' && edits[0].type === 'update'
+  }
+
+  function IsIdentity<T>(edits: Edit<T>[]) {
     return edits.length === 0
   }
-  function* Updates(mapA: Map<string, FlatValueEntry>, mapB: Map<string, FlatValueEntry>): Iterable<Update> {
-    for (const [keyB, entryB] of mapB) {
-      if (!mapA.has(keyB)) continue
-      const entryA = mapA.get(keyB)!
-      if (entryA.value === entryB.value) continue
-      if (entryA.type === 'object' && entryB.type === 'object') continue
-      if (entryA.type === 'array' && entryB.type === 'array') continue
-      yield [EditType.Update, keyB, entryB.value]
-    }
-  }
-  function* Inserts(mapA: Map<string, FlatValueEntry>, mapB: Map<string, FlatValueEntry>, updates: Update[]): Iterable<Insert> {
-    const discards = [] as string[]
-    for (const [keyB, entryB] of mapB) {
-      if (discards.some((ignore) => keyB.indexOf(ignore) === 0)) continue
-      if (updates.some((update) => keyB.indexOf(update[1]) === 0)) continue
-      if (mapA.has(keyB)) continue
-      if (entryB.type === 'object' || entryB.type === 'array') discards.push(keyB)
-      yield [EditType.Insert, keyB, entryB.value]
-    }
-  }
-  function* Deletes(mapA: Map<string, FlatValueEntry>, mapB: Map<string, FlatValueEntry>): Iterable<Delete> {
-    const discards = [] as string[]
-    for (const [keyA, entryA] of mapA) {
-      if (discards.some((discard) => keyA.indexOf(discard) === 0)) continue
-      if (mapB.has(keyA)) continue
-      if (entryA.type === 'object' || entryA.type === 'array') discards.push(keyA)
-      yield [EditType.Delete, keyA]
-    }
-  }
 
-  export function Diff(valueA: any, valueB: any): Edit[] {
-    const mapA = new Map(FlatValue.Create(valueA))
-    const mapB = new Map(FlatValue.Create(valueB))
-    const updates = [...Updates(mapA, mapB)]
-    const inserts = [...Inserts(mapA, mapB, updates)]
-    const deletes = [...Deletes(mapA, mapB)].reverse()
-    return [...updates, ...inserts, ...deletes]
-  }
-
-  export function Edit(valueA: any, operations: Edit[]) {
-    if (IsRootUpdate(operations)) {
-      return ValueClone.Create(operations[0][2])
+  export function Patch<T>(current: T, edits: Edit<T>[]): T {
+    if (IsRootUpdate(edits)) {
+      return ValueClone.Clone(edits[0].value)
     }
-    if (IsNullUpdate(operations)) {
-      return ValueClone.Create(valueA)
+    if (IsIdentity(edits)) {
+      return ValueClone.Clone(current)
     }
-    const clone = ValueClone.Create(valueA)
-    for (const operation of operations) {
-      switch (operation[0]) {
-        case EditType.Insert: {
-          Pointer.Set(clone, operation[1], operation[2])
+    const clone = ValueClone.Clone(current)
+    for (const edit of edits) {
+      switch (edit.type) {
+        case 'insert': {
+          ValuePointer.Set(clone, edit.path, edit.value)
           break
         }
-        case EditType.Update: {
-          Pointer.Set(clone, operation[1], operation[2])
+        case 'update': {
+          ValuePointer.Set(clone, edit.path, edit.value)
           break
         }
-        case EditType.Delete: {
-          Pointer.Delete(clone, operation[1])
+        case 'delete': {
+          ValuePointer.Delete(clone, edit.path)
           break
         }
       }

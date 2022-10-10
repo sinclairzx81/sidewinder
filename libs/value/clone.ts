@@ -26,82 +26,37 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-// --------------------------------------------------------------------------
-// Reflect
-// --------------------------------------------------------------------------
-
-export type TypeName = 'bigint' | 'symbol' | 'string' | 'boolean' | 'number' | 'function' | 'undefined' | 'null' | 'array' | 'object' | 'never'
-
-export function Reflect(value: any): TypeName {
-  if (value === undefined) return 'undefined'
-  if (value === null) return 'null'
-  if (typeof value === 'object' && !globalThis.Array.isArray(value) && value !== null) return 'object'
-  if (typeof value === 'object' && globalThis.Array.isArray(value)) return 'array'
-  return typeof value
-}
-
-// --------------------------------------------------------------------------
-// ValueClone
-// --------------------------------------------------------------------------
+import { Is, ObjectType, ArrayType, TypedArrayType, ValueType } from './is'
 
 export namespace ValueClone {
-  function Undefined(_value: any): any {
-    return undefined
+  function Object(value: ObjectType): any {
+    const keys = [...globalThis.Object.keys(value), ...globalThis.Object.getOwnPropertySymbols(value)]
+    return keys.reduce((acc, key) => ({ ...acc, [key]: Clone(value[key]) }), {})
   }
-  function Null(_value: any): any {
-    return null
+
+  function Array(value: ArrayType): any {
+    return value.map((element: any) => Clone(element))
   }
-  function Function(value: any): any {
+
+  function TypedArray(value: TypedArrayType): any {
+    return value.slice()
+  }
+
+  function Value(value: ValueType): any {
     return value
   }
-  function Object(value: any): any {
-    return globalThis.Object.entries(value).reduce((acc, [key, value]) => {
-      return { ...acc, [key]: Create(value) }
-    }, {})
-  }
-  function Array(value: any): any {
-    return value.map((element: any) => Create(element))
-  }
-  function BigInt(value: any): any {
-    return value
-  }
-  function Symbol(value: any): any {
-    return value
-  }
-  function String(value: any): any {
-    return value
-  }
-  function Boolean(value: any): any {
-    return value
-  }
-  function Number(value: any): any {
-    return value
-  }
-  export function Create<T extends any>(value: T): T {
-    const typeName = Reflect(value)
-    switch (typeName) {
-      case 'array':
-        return Array(value)
-      case 'bigint':
-        return BigInt(value)
-      case 'boolean':
-        return Boolean(value)
-      case 'function':
-        return Function(value)
-      case 'null':
-        return Null(value)
-      case 'number':
-        return Number(value)
-      case 'object':
-        return Object(value)
-      case 'string':
-        return String(value)
-      case 'symbol':
-        return Symbol(value)
-      case 'undefined':
-        return Undefined(value)
-      default:
-        throw new Error(`Cannot clone from unknown typename ${typeName}`)
+
+  export function Clone<T extends unknown>(value: T): T {
+    if (Is.Object(value)) {
+      return Object(value)
+    } else if (Is.Array(value)) {
+      return Array(value)
+    } else if (Is.TypedArray(value)) {
+      return TypedArray(value)
+    } else if (Is.Value(value)) {
+      return Value(value)
+    } else {
+      throw new Error('ValueClone: Unable to clone value')
     }
   }
 }

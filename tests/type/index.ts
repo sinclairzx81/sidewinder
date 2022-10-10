@@ -1,2 +1,1 @@
-import './compiler'
 import './schemas'

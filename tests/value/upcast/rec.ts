@@ -2,7 +2,7 @@ import { Value } from '@sidewinder/value'
 import { Type } from '@sidewinder/type'
 import { Assert } from '../../assert/index'
 
-describe('value/upcast/Rec', () => {
+describe('value/upcast/Recursive', () => {
   const T = Type.Recursive((Self) =>
     Type.Object({
       id: Type.String(),

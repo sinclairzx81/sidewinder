@@ -13,7 +13,7 @@ describe('value/upcast/Boolean', () => {
   })
 
   it('Should upcast from number', () => {
-    const value = 1
+    const value = 0
     const result = Value.Upcast(T, value)
     Assert.deepEqual(result, E)
   })

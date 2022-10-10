@@ -73,7 +73,7 @@ describe('value/upcast/Tuple', () => {
   })
 
   it('Should preserve and patch invalid element', () => {
-    const value = [true, 'hello']
+    const value = [{}, 'hello']
     const result = Value.Upcast(T, value)
     Assert.deepEqual(result, [0, 'hello'])
   })

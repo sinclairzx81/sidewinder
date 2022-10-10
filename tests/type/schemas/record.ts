@@ -47,15 +47,15 @@ describe('type/schema/Record', () => {
     fail(T, { '0': 1, '1': 2, '2': 3, '3': 4, a: 'hello' })
   })
 
-  it('Should validate when specifying union literals for the known keys', () => {
+  it('Should validate when specifying string union literals when additionalProperties is true', () => {
     const K = Type.Union([Type.Literal('a'), Type.Literal('b'), Type.Literal('c')])
     const T = Type.Record(K, Type.Number())
-    fail(T, { a: 1, b: 2, c: 3, d: 'hello' })
+    ok(T, { a: 1, b: 2, c: 3, d: 'hello' })
   })
 
-  it('Should not validate when specifying union literals for the known keys', () => {
+  it('Should not validate when specifying string union literals when additionalProperties is false', () => {
     const K = Type.Union([Type.Literal('a'), Type.Literal('b'), Type.Literal('c')])
-    const T = Type.Record(K, Type.Number())
+    const T = Type.Record(K, Type.Number(), { additionalProperties: false })
     fail(T, { a: 1, b: 2, c: 3, d: 'hello' })
   })
 
@@ -69,13 +69,13 @@ describe('type/schema/Record', () => {
     ok(R, { a: 1, b: 2, c: 3 })
   })
 
-  it('Should not validate for unknown key', () => {
+  it('Should not validate for unknown key via keyof', () => {
     const T = Type.Object({
       a: Type.String(),
       b: Type.Number(),
       c: Type.String(),
     })
-    const R = Type.Record(Type.KeyOf(T), Type.Number())
+    const R = Type.Record(Type.KeyOf(T), Type.Number(), { additionalProperties: false })
     fail(R, { a: 1, b: 2, c: 3, d: 4 })
   })
 

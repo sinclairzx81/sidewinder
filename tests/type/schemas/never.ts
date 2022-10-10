@@ -1,39 +1,33 @@
 import { Type } from '@sidewinder/type'
-import { ok, fail } from './validate'
+import { fail } from './validate'
 
-describe('type/compiler/Null', () => {
+describe('type/schema/Never', () => {
   it('Should not validate number', () => {
-    const T = Type.Null()
+    const T = Type.Never()
     fail(T, 1)
   })
-
   it('Should not validate string', () => {
-    const T = Type.Null()
+    const T = Type.Never()
     fail(T, 'hello')
   })
-
   it('Should not validate boolean', () => {
-    const T = Type.Null()
+    const T = Type.Never()
     fail(T, true)
   })
-
   it('Should not validate array', () => {
-    const T = Type.Null()
+    const T = Type.Never()
     fail(T, [1, 2, 3])
   })
-
   it('Should not validate object', () => {
-    const T = Type.Null()
+    const T = Type.Never()
     fail(T, { a: 1, b: 2 })
   })
-
   it('Should not validate null', () => {
-    const T = Type.Null()
-    ok(T, null)
+    const T = Type.Never()
+    fail(T, null)
   })
-
-  it('Should not validate undefined', () => {
-    const T = Type.Null()
+  it('Should validate undefined', () => {
+    const T = Type.Never()
     fail(T, undefined)
   })
 })

@@ -3,13 +3,13 @@ import { Type } from '@sidewinder/type'
 import { Assert } from '../../assert/index'
 
 describe('value/upcast/RegEx', () => {
-  const T = Type.RegEx(/.*/, { default: 'foo' })
+  const T = Type.RegEx(/foo/, { default: 'foo' })
   const E = 'foo'
 
   it('Should upcast from string', () => {
     const value = 'hello'
     const result = Value.Upcast(T, value)
-    Assert.deepEqual(result, value) // this matches the wildcard, and is preserved
+    Assert.deepEqual(result, 'foo')
   })
 
   it('Should upcast from number', () => {
@@ -46,7 +46,7 @@ describe('value/upcast/RegEx', () => {
   })
 
   it('Should preserve', () => {
-    const value = 'bar'
+    const value = 'foo'
     const result = Value.Upcast(T, value)
     Assert.deepEqual(result, value)
   })

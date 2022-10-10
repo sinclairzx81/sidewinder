@@ -28,6 +28,12 @@ THE SOFTWARE.
 
 import * as Types from '@sidewinder/type'
 
+export class ValueCheckUnknownTypeError extends Error {
+  constructor(public readonly schema: Types.TSchema) {
+    super('ValueCheck: Unknown type')
+  }
+}
+
 export namespace ValueCheck {
   function Any(schema: Types.TAny, references: Types.TSchema[], value: any): boolean {
     return true
@@ -53,7 +59,7 @@ export namespace ValueCheck {
   }
 
   function Constructor(schema: Types.TConstructor, references: Types.TSchema[], value: any): boolean {
-    return Visit(schema.returns, references, value)
+    return Visit(schema.returns, references, value.prototype)
   }
 
   function Function(schema: Types.TFunction, references: Types.TSchema[], value: any): boolean {
@@ -87,6 +93,10 @@ export namespace ValueCheck {
 
   function Literal(schema: Types.TLiteral, references: Types.TSchema[], value: any): boolean {
     return value === schema.const
+  }
+
+  function Never(schema: Types.TNever, references: Types.TSchema[], value: any): boolean {
+    return false
   }
 
   function Null(schema: Types.TNull, references: Types.TSchema[], value: any): boolean {
@@ -255,7 +265,6 @@ export namespace ValueCheck {
   function Visit<T extends Types.TSchema>(schema: T, references: Types.TSchema[], value: any): boolean {
     const anyReferences = schema.$id === undefined ? references : [schema, ...references]
     const anySchema = schema as any
-
     switch (anySchema[Types.Kind]) {
       case 'Any':
         return Any(anySchema, anyReferences, value)
@@ -271,6 +280,8 @@ export namespace ValueCheck {
         return Integer(anySchema, anyReferences, value)
       case 'Literal':
         return Literal(anySchema, anyReferences, value)
+      case 'Never':
+        return Never(anySchema, anyReferences, value)
       case 'Null':
         return Null(anySchema, anyReferences, value)
       case 'Number':
@@ -300,7 +311,7 @@ export namespace ValueCheck {
       case 'Void':
         return Void(anySchema, anyReferences, value)
       default:
-        throw new Error(`ValueCheck: Unknown schema kind '${schema[Types.Kind]}'`)
+        throw new ValueCheckUnknownTypeError(anySchema)
     }
   }
 

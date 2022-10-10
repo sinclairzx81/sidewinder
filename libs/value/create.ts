@@ -28,6 +28,18 @@ THE SOFTWARE.
 
 import * as Types from '@sidewinder/type'
 
+export class ValueCreateUnknownTypeError extends Error {
+  constructor(public readonly schema: Types.TSchema) {
+    super('ValueCreate: Unknown type')
+  }
+}
+
+export class ValueCreateNeverTypeError extends Error {
+  constructor(public readonly schema: Types.TSchema) {
+    super('ValueCreate: Never types cannot be created')
+  }
+}
+
 export namespace ValueCreate {
   function Any(schema: Types.TAny, references: Types.TSchema[]): any {
     if (schema.default !== undefined) {
@@ -97,7 +109,7 @@ export namespace ValueCreate {
     }
   }
 
-  function Integer(schema: Types.TNumber, references: Types.TSchema[]): any {
+  function Integer(schema: Types.TInteger, references: Types.TSchema[]): any {
     if (schema.default !== undefined) {
       return schema.default
     } else if (schema.minimum !== undefined) {
@@ -109,6 +121,10 @@ export namespace ValueCreate {
 
   function Literal(schema: Types.TLiteral, references: Types.TSchema[]): any {
     return schema.const
+  }
+
+  function Never(schema: Types.TNever, references: Types.TSchema[]): any {
+    throw new ValueCreateNeverTypeError(schema)
   }
 
   function Null(schema: Types.TNull, references: Types.TSchema[]): any {
@@ -178,7 +194,8 @@ export namespace ValueCreate {
       return Visit(reference, references)
     }
   }
-  function Self(schema: Types.TRef<any>, references: Types.TSchema[]): any {
+
+  function Self(schema: Types.TSelf, references: Types.TSchema[]): any {
     if (schema.default !== undefined) {
       return schema.default
     } else {
@@ -187,10 +204,17 @@ export namespace ValueCreate {
       return Visit(reference, references)
     }
   }
+
   function String(schema: Types.TString, references: Types.TSchema[]): any {
     if (schema.pattern !== undefined) {
       if (schema.default === undefined) {
         throw new Error('ValueCreate.String: String types with patterns must specify a default value')
+      } else {
+        return schema.default
+      }
+    } else if (schema.format !== undefined) {
+      if (schema.default === undefined) {
+        throw new Error('ValueCreate.String: String types with formats must specify a default value')
       } else {
         return schema.default
       }
@@ -275,6 +299,8 @@ export namespace ValueCreate {
         return Integer(anySchema, anyReferences)
       case 'Literal':
         return Literal(anySchema, anyReferences)
+      case 'Never':
+        return Never(anySchema, anyReferences)
       case 'Null':
         return Null(anySchema, anyReferences)
       case 'Number':
@@ -306,7 +332,7 @@ export namespace ValueCreate {
       case 'Void':
         return Void(anySchema, anyReferences)
       default:
-        throw new Error(`ValueCreate.Visit: Unknown schema kind '${schema[Types.Kind]}'`)
+        throw new ValueCreateUnknownTypeError(anySchema)
     }
   }
 

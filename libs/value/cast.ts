@@ -29,60 +29,165 @@ THE SOFTWARE.
 import * as Types from '@sidewinder/type'
 import { ValueCreate } from './create'
 import { ValueCheck } from './check'
-
-// --------------------------------------------------------------------------
-// Specialized Union Cast. Because a union can be one of many varying types
-// with properties potentially overlapping, we need a strategy to determine
-// which of those types we should cast into. This strategy needs to factor
-// the value provided by the user to make this decision.
-//
-// The following will score each union type found within the types anyOf
-// array. Typically this is executed for objects only, so the score is a
-// essentially a tally of how many properties are valid. The reasoning
-// here is the discriminator field would tip the scales in favor of that
-// union if other properties overlap and match.
-// --------------------------------------------------------------------------
+import { ValueClone } from './clone'
 
 namespace UnionValueCast {
+  // ----------------------------------------------------------------------------------------------
+  // The following will score a schema against a value. For objects, the score is the tally of
+  // points awarded for each property of the value. Property points are (1.0 / propertyCount)
+  // to prevent large property counts biasing results. Properties that match literal values are
+  // maximally awarded as literals are typically used as union discriminator fields.
+  // ----------------------------------------------------------------------------------------------
   function Score(schema: Types.TSchema, references: Types.TSchema[], value: any): number {
-    let score = 0
     if (schema[Types.Kind] === 'Object' && typeof value === 'object' && value !== null) {
-      const objectSchema: Types.TObject = schema as any
-      const entries = globalThis.Object.entries(objectSchema.properties)
-      score += entries.reduce((acc, [key, schema]) => acc + (ValueCheck.Check(schema, references, value[key]) ? 1 : 0), 0)
+      const object = schema as Types.TObject
+      const keys = Object.keys(value)
+      const entries = globalThis.Object.entries(object.properties)
+      const [point, max] = [1 / entries.length, entries.length]
+      return entries.reduce((acc, [key, schema]) => {
+        const literal = schema[Types.Kind] === 'Literal' && schema.const === value[key] ? max : 0
+        const checks = ValueCheck.Check(schema, references, value[key]) ? point : 0
+        const exists = keys.includes(key) ? point : 0
+        return acc + (literal + checks + exists)
+      }, 0)
+    } else {
+      return ValueCheck.Check(schema, references, value) ? 1 : 0
     }
-    return score
   }
-  function Select(schema: Types.TUnion, references: Types.TSchema[], value: any): Types.TSchema {
-    let select = schema.anyOf[0]
-    let best = 0
-    for (const subschema of schema.anyOf) {
-      const score = Score(subschema, references, value)
+  function Select(union: Types.TUnion, references: Types.TSchema[], value: any): Types.TSchema {
+    let [select, best] = [union.anyOf[0], 0]
+    for (const schema of union.anyOf) {
+      const score = Score(schema, references, value)
       if (score > best) {
-        select = subschema
+        select = schema
         best = score
       }
     }
     return select
   }
-  export function Create(schema: Types.TUnion, references: Types.TSchema[], value: any) {
-    return ValueCheck.Check(schema, references, value) ? value : ValueCast.Cast(Select(schema, references, value), references, value)
+
+  export function Create(union: Types.TUnion, references: Types.TSchema[], value: any) {
+    return ValueCheck.Check(union, references, value) ? ValueClone.Clone(value) : ValueCast.Cast(Select(union, references, value), references, value)
+  }
+}
+
+// -----------------------------------------------------------
+// Errors
+// -----------------------------------------------------------
+
+export class ValueCastReferenceTypeError extends Error {
+  constructor(public readonly schema: Types.TRef | Types.TSelf) {
+    super(`ValueCast: Cannot locate referenced schema with $id '${schema.$ref}'`)
+  }
+}
+
+export class ValueCastArrayUniqueItemsTypeError extends Error {
+  constructor(public readonly schema: Types.TSchema, public readonly value: unknown) {
+    super('ValueCast: Array cast produced invalid data due to uniqueItems constraint')
+  }
+}
+
+export class ValueCastNeverTypeError extends Error {
+  constructor(public readonly schema: Types.TSchema) {
+    super('ValueCast: Never types cannot be cast')
+  }
+}
+
+export class ValueCastRecursiveTypeError extends Error {
+  constructor(public readonly schema: Types.TSchema) {
+    super('ValueCast.Recursive: Cannot cast recursive schemas')
+  }
+}
+export class ValueCastUnknownTypeError extends Error {
+  constructor(public readonly schema: Types.TSchema) {
+    super('ValueCast: Unknown type')
   }
 }
 
 export namespace ValueCast {
+  // -----------------------------------------------------------
+  // Guards
+  // -----------------------------------------------------------
+
+  function IsArray(value: unknown): value is unknown[] {
+    return typeof value === 'object' && globalThis.Array.isArray(value)
+  }
+
+  function IsString(value: unknown): value is string {
+    return typeof value === 'string'
+  }
+
+  function IsBoolean(value: unknown): value is boolean {
+    return typeof value === 'boolean'
+  }
+
+  function IsBigInt(value: unknown): value is bigint {
+    return typeof value === 'bigint'
+  }
+
+  function IsNumber(value: unknown): value is number {
+    return typeof value === 'number'
+  }
+
+  function IsStringNumeric(value: unknown): value is string {
+    return IsString(value) && !isNaN(value as any) && !isNaN(parseFloat(value))
+  }
+
+  function IsValueToString(value: unknown): value is { toString: () => string } {
+    return IsBigInt(value) || IsBoolean(value) || IsNumber(value)
+  }
+
+  function IsValueTrue(value: unknown): value is true {
+    return value === true || (IsNumber(value) && value === 1) || (IsBigInt(value) && value === 1n) || (IsString(value) && (value.toLowerCase() === 'true' || value === '1'))
+  }
+
+  function IsValueFalse(value: unknown): value is true {
+    return value === false || (IsNumber(value) && value === 0) || (IsBigInt(value) && value === 0n) || (IsString(value) && (value.toLowerCase() === 'false' || value === '0'))
+  }
+
+  // -----------------------------------------------------------
+  // Convert
+  // -----------------------------------------------------------
+
+  function TryConvertString(value: unknown) {
+    return IsValueToString(value) ? value.toString() : value
+  }
+
+  function TryConvertNumber(value: unknown) {
+    return IsStringNumeric(value) ? parseFloat(value) : IsValueTrue(value) ? 1 : value
+  }
+
+  function TryConvertInteger(value: unknown) {
+    return IsStringNumeric(value) ? parseInt(value) : IsValueTrue(value) ? 1 : value
+  }
+
+  function TryConvertBoolean(value: unknown) {
+    return IsValueTrue(value) ? true : IsValueFalse(value) ? false : value
+  }
+
+  // -----------------------------------------------------------
+  // Cast
+  // -----------------------------------------------------------
+
   function Any(schema: Types.TAny, references: Types.TSchema[], value: any): any {
     return ValueCheck.Check(schema, references, value) ? value : ValueCreate.Create(schema, references)
   }
 
   function Array(schema: Types.TArray, references: Types.TSchema[], value: any): any {
-    if (ValueCheck.Check(schema, references, value)) return value
-    if (!globalThis.Array.isArray(value)) return ValueCreate.Create(schema, references)
-    return value.map((val: any) => Visit(schema.items, references, val))
+    if (ValueCheck.Check(schema, references, value)) return ValueClone.Clone(value)
+    const created = IsArray(value) ? ValueClone.Clone(value) : ValueCreate.Create(schema, references)
+    const minimum = IsNumber(schema.minItems) && created.length < schema.minItems ? [...created, ...globalThis.Array.from({ length: schema.minItems - created.length }, () => null)] : created
+    const maximum = IsNumber(schema.maxItems) && minimum.length > schema.maxItems ? minimum.slice(0, schema.maxItems) : minimum
+    const casted = maximum.map((value: unknown) => Visit(schema.items, references, value))
+    if (schema.uniqueItems !== true) return casted
+    const unique = [...new Set(casted)]
+    if (!ValueCheck.Check(schema, references, unique)) throw new ValueCastArrayUniqueItemsTypeError(schema, unique)
+    return unique
   }
 
   function Boolean(schema: Types.TBoolean, references: Types.TSchema[], value: any): any {
-    return ValueCheck.Check(schema, references, value) ? value : ValueCreate.Create(schema, references)
+    const conversion = TryConvertBoolean(value)
+    return ValueCheck.Check(schema, references, conversion) ? conversion : ValueCreate.Create(schema, references)
   }
 
   function Constructor(schema: Types.TConstructor, references: Types.TSchema[], value: any): any {
@@ -105,11 +210,16 @@ export namespace ValueCast {
   }
 
   function Integer(schema: Types.TInteger, references: Types.TSchema[], value: any): any {
-    return ValueCheck.Check(schema, references, value) ? value : ValueCreate.Create(schema, references)
+    const conversion = TryConvertInteger(value)
+    return ValueCheck.Check(schema, references, conversion) ? conversion : ValueCreate.Create(schema, references)
   }
 
   function Literal(schema: Types.TLiteral, references: Types.TSchema[], value: any): any {
     return ValueCheck.Check(schema, references, value) ? value : ValueCreate.Create(schema, references)
+  }
+
+  function Never(schema: Types.TNever, references: Types.TSchema[], value: any): any {
+    throw new ValueCastNeverTypeError(schema)
   }
 
   function Null(schema: Types.TNull, references: Types.TSchema[], value: any): any {
@@ -117,11 +227,12 @@ export namespace ValueCast {
   }
 
   function Number(schema: Types.TNumber, references: Types.TSchema[], value: any): any {
-    return ValueCheck.Check(schema, references, value) ? value : ValueCreate.Create(schema, references)
+    const conversion = TryConvertNumber(value)
+    return ValueCheck.Check(schema, references, conversion) ? conversion : ValueCreate.Create(schema, references)
   }
 
   function Object(schema: Types.TObject, references: Types.TSchema[], value: any): any {
-    if (ValueCheck.Check(schema, references, value)) return value
+    if (ValueCheck.Check(schema, references, value)) return ValueClone.Clone(value)
     if (value === null || typeof value !== 'object') return ValueCreate.Create(schema, references)
     const required = new Set(schema.required || [])
     const result = {} as Record<string, any>
@@ -137,7 +248,7 @@ export namespace ValueCast {
   }
 
   function Record(schema: Types.TRecord<any, any>, references: Types.TSchema[], value: any): any {
-    if (ValueCheck.Check(schema, references, value)) return value
+    if (ValueCheck.Check(schema, references, value)) return ValueClone.Clone(value)
     if (value === null || typeof value !== 'object' || globalThis.Array.isArray(value)) return ValueCreate.Create(schema, references)
     const subschemaKey = globalThis.Object.keys(schema.patternProperties)[0]
     const subschema = schema.patternProperties[subschemaKey]
@@ -149,27 +260,28 @@ export namespace ValueCast {
   }
 
   function Recursive(schema: Types.TRecursive<any>, references: Types.TSchema[], value: any): any {
-    throw new Error('ValueCast.Recursive: Cannot cast recursive schemas')
+    throw new ValueCastRecursiveTypeError(schema)
   }
 
   function Ref(schema: Types.TRef<any>, references: Types.TSchema[], value: any): any {
     const reference = references.find((reference) => reference.$id === schema.$ref)
-    if (reference === undefined) throw new Error(`ValueCast.Ref: Cannot find schema with $id '${schema.$ref}'.`)
+    if (reference === undefined) throw new ValueCastReferenceTypeError(schema)
     return Visit(reference, references, value)
   }
 
   function Self(schema: Types.TSelf, references: Types.TSchema[], value: any): any {
     const reference = references.find((reference) => reference.$id === schema.$ref)
-    if (reference === undefined) throw new Error(`ValueCast.Self: Cannot find schema with $id '${schema.$ref}'.`)
+    if (reference === undefined) throw new ValueCastReferenceTypeError(schema)
     return Visit(reference, references, value)
   }
 
   function String(schema: Types.TString, references: Types.TSchema[], value: any): any {
-    return ValueCheck.Check(schema, references, value) ? value : ValueCreate.Create(schema, references)
+    const conversion = TryConvertString(value)
+    return ValueCheck.Check(schema, references, conversion) ? conversion : ValueCreate.Create(schema, references)
   }
 
   function Tuple(schema: Types.TTuple<any[]>, references: Types.TSchema[], value: any): any {
-    if (ValueCheck.Check(schema, references, value)) return value
+    if (ValueCheck.Check(schema, references, value)) return ValueClone.Clone(value)
     if (!globalThis.Array.isArray(value)) return ValueCreate.Create(schema, references)
     if (schema.items === undefined) return []
     return schema.items.map((schema, index) => Visit(schema, references, value[index]))
@@ -198,7 +310,6 @@ export namespace ValueCast {
   export function Visit(schema: Types.TSchema, references: Types.TSchema[], value: any): any {
     const anyReferences = schema.$id === undefined ? references : [schema, ...references]
     const anySchema = schema as any
-
     switch (schema[Types.Kind]) {
       case 'Any':
         return Any(anySchema, anyReferences, value)
@@ -216,6 +327,8 @@ export namespace ValueCast {
         return Integer(anySchema, anyReferences, value)
       case 'Literal':
         return Literal(anySchema, anyReferences, value)
+      case 'Never':
+        return Never(anySchema, anyReferences, value)
       case 'Null':
         return Null(anySchema, anyReferences, value)
       case 'Number':
@@ -247,7 +360,8 @@ export namespace ValueCast {
       case 'Void':
         return Void(anySchema, anyReferences, value)
       default:
-        throw Error(`ValueCast.Visit: Unknown schema kind '${schema[Types.Kind]}'`)
+        console.log(anySchema)
+        throw new ValueCastUnknownTypeError(anySchema)
     }
   }
 

@@ -1,4 +1,4 @@
-import { Value, EditType } from '@sidewinder/value'
+import { Value } from '@sidewinder/value'
 import { Assert } from '../../assert/index'
 
 describe('value/delta/Patch', () => {
@@ -129,7 +129,7 @@ describe('value/delta/Patch', () => {
   it('Should patch TYPE change object to array', () => {
     const A = { x: 1, y: 2 }
     const B = [1, 2, 3]
-    const D = Value.Diff(A, B)
+    const D = Value.Diff<any>(A, B)
     const P = Value.Patch(A, D)
     Assert.deepEqual(B, P)
   })
@@ -137,7 +137,7 @@ describe('value/delta/Patch', () => {
   it('Should patch TYPE change array to object', () => {
     const A = [1, 2, 3]
     const B = { x: 1, y: 2 }
-    const D = Value.Diff(A, B)
+    const D = Value.Diff<any>(A, B)
     const P = Value.Patch(A, D)
     Assert.deepEqual(B, P)
   })
@@ -173,7 +173,7 @@ describe('value/delta/Patch', () => {
   it('Should patch VALUE change symbol', () => {
     const A = Symbol('A')
     const B = Symbol('B')
-    const D = Value.Diff(A, B)
+    const D = Value.Diff<any>(A, B)
     const P = Value.Patch(A, D)
     Assert.deepEqual(B, P)
   })
@@ -273,7 +273,7 @@ describe('value/delta/Patch', () => {
   it('Should patch PROPERTY all delete, all insert', () => {
     const A = { x: 1, y: 1, z: 1 }
     const B = { a: 2, b: 2, c: 2 }
-    const D = Value.Diff(A, B)
+    const D = Value.Diff<any>(A, B)
     const P = Value.Patch(A, D)
     Assert.deepEqual(B, P)
   })
@@ -281,7 +281,7 @@ describe('value/delta/Patch', () => {
   it('Should patch PROPERTY update, insert and delete order preserved', () => {
     const A = { x: 1, y: 1, z: 1, w: 1 }
     const B = { a: 2, b: 2, c: 2, w: 2 }
-    const D = Value.Diff(A, B)
+    const D = Value.Diff<any>(A, B)
     const P = Value.Patch(A, D)
     Assert.deepEqual(B, P)
   })
@@ -292,7 +292,7 @@ describe('value/delta/Patch', () => {
   it('Should patch NESTED OBJECT diff type change update', () => {
     const A = { v: 1 }
     const B = { v: { x: 1, y: 1, z: 1 } }
-    const D = Value.Diff(A, B)
+    const D = Value.Diff<any>(A, B)
     const P = Value.Patch(A, D)
     Assert.deepEqual(B, P)
   })
@@ -310,24 +310,11 @@ describe('value/delta/Patch', () => {
     const P = Value.Patch(A, D)
     Assert.deepEqual(B, P)
   })
-  it('Should patch NESTED OBJECT diff partial property insert', () => {
-    const A = { v: { x: 1, y: 1, z: 1 } }
-    const B = { v: { x: 1, y: 1, z: 1, w: 1 } }
-    const D = Value.Diff(A, B)
-    const E = [[EditType.Insert, '/v/w', B.v.w]]
-    Assert.deepEqual(D, E)
-  })
-  it('Should patch NESTED OBJECT diff partial property delete', () => {
-    const A = { v: { x: 1, y: 1, z: 1 } }
-    const B = { v: { x: 1, y: 1 } }
-    const D = Value.Diff(A, B)
-    const E = [[EditType.Delete, '/v/z']]
-    Assert.deepEqual(D, E)
-  })
+
   it('Should patch NESTED OBJECT update, insert and delete order preserved', () => {
     const A = { v: { x: 1, y: 1 } }
     const B = { v: { x: 2, w: 2 } }
-    const D = Value.Diff(A, B)
+    const D = Value.Diff<any>(A, B)
     const P = Value.Patch(A, D)
     Assert.deepEqual(B, P)
   })
@@ -339,7 +326,7 @@ describe('value/delta/Patch', () => {
   it('Should patch NESTED ARRAY object diff type change update', () => {
     const A = [{ v: 1 }]
     const B = [{ v: { x: 1, y: 1, z: 1 } }]
-    const D = Value.Diff(A, B)
+    const D = Value.Diff<any>(A, B)
     const P = Value.Patch(A, D)
     Assert.deepEqual(B, P)
   })
@@ -365,6 +352,7 @@ describe('value/delta/Patch', () => {
     const P = Value.Patch(A, D)
     Assert.deepEqual(B, P)
   })
+
   it('Should patch NESTED ARRAY object diff partial property delete', () => {
     const A = [{ v: { x: 1, y: 1, z: 1 } }]
     const B = [{ v: { x: 1, y: 1 } }]
@@ -372,14 +360,38 @@ describe('value/delta/Patch', () => {
     const P = Value.Patch(A, D)
     Assert.deepEqual(B, P)
   })
+
   it('Should patch NESTED ARRAY object ordered diff - update, insert and delete', () => {
     const A = [{ v: { x: 1, y: 1 } }]
     const B = [{ v: { x: 2, w: 2 } }]
-    const D = Value.Diff(A, B)
+    const D = Value.Diff<any>(A, B)
     const P = Value.Patch(A, D)
     Assert.deepEqual(B, P)
   })
 
+  it('Should patch Uint8Array (same size)', () => {
+    const A = [{ v: new Uint8Array([0, 1, 3]) }]
+    const B = [{ v: new Uint8Array([0, 1, 2]) }]
+    const D = Value.Diff<any>(A, B)
+    const P = Value.Patch(A, D)
+    Assert.deepEqual(B, P)
+  })
+
+  it('Should patch Uint8Array (less than size)', () => {
+    const A = [{ v: new Uint8Array([0, 1, 3]) }]
+    const B = [{ v: new Uint8Array([0, 1]) }]
+    const D = Value.Diff<any>(A, B)
+    const P = Value.Patch(A, D)
+    Assert.deepEqual(B, P)
+  })
+
+  it('Should patch Uint8Array (greater than size)', () => {
+    const A = [{ v: new Uint8Array([0, 1, 3]) }]
+    const B = [{ v: new Uint8Array([0, 1, 2, 4]) }]
+    const D = Value.Diff<any>(A, B)
+    const P = Value.Patch(A, D)
+    Assert.deepEqual(B, P)
+  })
   // ----------------------------------------------------
   // Mega Values
   // ----------------------------------------------------
@@ -428,7 +440,7 @@ describe('value/delta/Patch', () => {
         ],
       },
     ]
-    const D = Value.Diff(A, B)
+    const D = Value.Diff<any>(A, B)
     const P = Value.Patch(A, D)
     Assert.deepEqual(B, P)
   })

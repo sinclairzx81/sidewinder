@@ -45,7 +45,7 @@ describe('value/upcast/Void', () => {
     Assert.deepEqual(result, E)
   })
 
-  it('Should preseve', () => {
+  it('Should preserve', () => {
     const value = null
     const result = Value.Upcast(T, value)
     Assert.deepEqual(result, null)

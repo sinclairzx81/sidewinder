@@ -19,7 +19,7 @@ describe('value/upcast/Integer', () => {
   it('Should upcast from boolean', () => {
     const value = true
     const result = Value.Upcast(T, value)
-    Assert.deepEqual(result, E)
+    Assert.deepEqual(result, 1) // conversion
   })
   it('Should upcast from object', () => {
     const value = {}
