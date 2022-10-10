@@ -116,7 +116,7 @@ export class Host {
     this.#sockets = new Map<number, ws.WebSocket>()
     this.#application = express()
     this.#wsserver = new WebSocketServer({ noServer: true, ...(this.#options.disableFrameCompression ? { perMessageDeflate: false } : {}) })
-    this.#keepAliveInterval = setInterval(() => this.keepAlive())
+    this.#keepAliveInterval = setInterval(() => this.keepAlive(), options.keepAliveTimeout)
     this.#socketOrdinal = 0
     this.#socketCount = 0
     this.#listening = false
