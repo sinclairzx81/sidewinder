@@ -38,16 +38,15 @@ type ReceiverValues<T extends readonly Receiver<any>[]> = {
  * Receiver ends once all Receivers given receivers have
  * @param receivers The receivers to select from.
  * @param bounds Internal buffer bounds for the select receive buffer. Default is 1.
- * @param keepAlive If true, will prevent the process from exiting if there are no values being received. Default is false.
  */
-export function Select<I extends readonly Receiver<any>[]>(receivers: [...I], bound: number = 1, keepAlive: boolean = false): Receiver<ReceiverValues<I>> {
+export function Select<I extends readonly Receiver<any>[]>(receivers: [...I], bound: number = 1): Receiver<ReceiverValues<I>> {
   async function receive(sender: SyncChannel<any>, iterator: AsyncIterable<any>) {
     for await (const value of iterator) {
       await sender.send(value)
     }
   }
 
-  const channel = new SyncChannel<any>(bound, keepAlive)
+  const channel = new SyncChannel<any>(bound)
   const promises = receivers.map((receiver) => receive(channel, receiver))
   Promise.all(promises)
     .then(() => channel.end())

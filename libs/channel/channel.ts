@@ -27,23 +27,19 @@ THE SOFTWARE.
 ---------------------------------------------------------------------------*/
 
 import { Queue } from './queue'
-import { KeepAlive } from './keepalive'
 import { Message, MessageType } from './message'
 import { Sender } from './sender'
 import { Receiver } from './receiver'
 
 /** An unbounded asynchronous channel. */
 export class Channel<T = any> implements Sender<T>, Receiver<T> {
-  private readonly keepAlive: KeepAlive | null
   private readonly queue: Queue<Message<T>>
   private ended: boolean
 
   /**
    * Creates a new Channel
-   * @param keepAlive If true, will prevent the process from exiting if there are no values being received. Default is false.
    */
-  constructor(keepAlive: boolean = false) {
-    this.keepAlive = keepAlive ? new KeepAlive() : null
+  constructor() {
     this.queue = new Queue<Message<T>>()
     this.ended = false
   }
@@ -93,15 +89,8 @@ export class Channel<T = any> implements Sender<T>, Receiver<T> {
       case MessageType.Error:
         throw message.error
       case MessageType.End: {
-        this.terminateKeepAlive()
         return null
       }
     }
-  }
-
-  /** Terminates the keepAlive */
-  private terminateKeepAlive() {
-    if (this.keepAlive === null) return
-    this.keepAlive.dispose()
   }
 }
