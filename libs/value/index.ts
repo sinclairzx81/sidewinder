@@ -26,5 +26,6 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
+export * from '@sidewinder/type'
 export * from './pointer'
 export * from './value'
