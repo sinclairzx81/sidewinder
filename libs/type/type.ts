@@ -259,6 +259,27 @@ export interface TLiteral<T extends TLiteralValue = TLiteralValue> extends TSche
 }
 
 // --------------------------------------------------------------------------
+// Mapped
+// --------------------------------------------------------------------------
+
+export type MappedStaticProperties<T extends TProperties, U extends TSchema, P extends unknown[]> = { readonly [K in ReadonlyOptionalPropertyKeys<T>]?: Static<U, P> } & {
+  readonly [K in ReadonlyPropertyKeys<T>]: Static<U, P>
+} & {
+  [K in OptionalPropertyKeys<T>]?: Static<U, P>
+} & { [K in RequiredPropertyKeys<T>]: Static<U, P> } extends infer R
+  ? { [K in keyof R]: U }
+  : never
+
+export type MappedProperties<O extends TObject, T extends TSchema> = {
+  [K in keyof O['properties']]: T
+}
+
+export interface TMapped<O extends TObject, U extends TSchema> extends TObject, ObjectOptions {
+  static: MappedStaticProperties<O['properties'], U, this['params']>
+  properties: MappedProperties<O, U>
+}
+
+// --------------------------------------------------------------------------
 // Never
 // --------------------------------------------------------------------------
 
@@ -293,13 +314,9 @@ export interface TNumber extends TSchema, NumericOptions {
 // --------------------------------------------------------------------------
 
 export type ReadonlyOptionalPropertyKeys<T extends TProperties> = { [K in keyof T]: T[K] extends TReadonlyOptional<TSchema> ? K : never }[keyof T]
-
 export type ReadonlyPropertyKeys<T extends TProperties> = { [K in keyof T]: T[K] extends TReadonly<TSchema> ? K : never }[keyof T]
-
 export type OptionalPropertyKeys<T extends TProperties> = { [K in keyof T]: T[K] extends TOptional<TSchema> ? K : never }[keyof T]
-
 export type RequiredPropertyKeys<T extends TProperties> = keyof Omit<T, ReadonlyOptionalPropertyKeys<T> | ReadonlyPropertyKeys<T> | OptionalPropertyKeys<T>>
-
 export type PropertiesReduce<T extends TProperties, P extends unknown[]> = { readonly [K in ReadonlyOptionalPropertyKeys<T>]?: Static<T[K], P> } & {
   readonly [K in ReadonlyPropertyKeys<T>]: Static<T[K], P>
 } & {
@@ -695,6 +712,15 @@ export class TypeBuilder {
     return this.Create({ ...options, [Kind]: 'Literal', const: value, type: typeof value as 'string' | 'number' | 'boolean' })
   }
 
+  /** Creates a mapped object type whose properties assigned type U */
+  public Mapped<T extends TObject, U extends TSchema>(object: T, property: U): TMapped<T, U> {
+    const next = this.Clone(object)
+    for (const key of globalThis.Object.keys(object.properties)) {
+      next.properties[key] = property
+    }
+    return next
+  }
+
   /** Creates a never type */
   public Never(options: SchemaOptions = {}): TNever {
     return this.Create({
@@ -970,3 +996,13 @@ export class TypeBuilder {
 
 /** JSON Schema Type Builder with Static Type Resolution for TypeScript */
 export const Type = new TypeBuilder()
+
+const T = Type.Object({
+  x: Type.Number(),
+  y: Type.Optional(Type.Number()),
+  z: Type.Number(),
+})
+
+const M = Type.Mapped(T, Type.String())
+
+type M = Static<typeof M>
