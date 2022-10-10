@@ -267,7 +267,7 @@ export type MappedStaticProperties<T extends TProperties, U extends TSchema, P e
 } & {
   [K in OptionalPropertyKeys<T>]?: Static<U, P>
 } & { [K in RequiredPropertyKeys<T>]: Static<U, P> } extends infer R
-  ? { [K in keyof R]: U }
+  ? { [K in keyof R]: Static<U, P> }
   : never
 
 export type MappedProperties<O extends TObject, T extends TSchema> = {
@@ -713,12 +713,22 @@ export class TypeBuilder {
   }
 
   /** Creates a mapped object type whose properties assigned type U */
-  public Mapped<T extends TObject, U extends TSchema>(object: T, property: U): TMapped<T, U> {
-    const next = this.Clone(object)
-    for (const key of globalThis.Object.keys(object.properties)) {
-      next.properties[key] = property
+  public Mapped<T extends TObject, U extends TSchema>(object: T, property: U, options: ObjectOptions = {}): TMapped<T, U> {
+    const next: TObject = this.Clone(object)
+    for (const key of globalThis.Object.keys(next.properties)) {
+      const modifier = next.properties[key][Modifier]
+      switch (modifier) {
+        case 'ReadonlyOptional':
+        case 'Readonly':
+        case 'Optional':
+          next.properties[key] = { [Modifier]: modifier, ...property }
+          break
+        default:
+          next.properties[key] = { ...property }
+          break
+      }
     }
-    return next
+    return this.Create({ ...options, ...next })
   }
 
   /** Creates a never type */
@@ -996,13 +1006,3 @@ export class TypeBuilder {
 
 /** JSON Schema Type Builder with Static Type Resolution for TypeScript */
 export const Type = new TypeBuilder()
-
-const T = Type.Object({
-  x: Type.Number(),
-  y: Type.Optional(Type.Number()),
-  z: Type.Number(),
-})
-
-const M = Type.Mapped(T, Type.String())
-
-type M = Static<typeof M>

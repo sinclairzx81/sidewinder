@@ -1,11 +1,14 @@
 import { Type, Static } from '@sidewinder/type'
 
 const T = Type.Object({
-    x: Type.Number(),
-    y: Type.Number(),
-    z: Type.Number()
+    x: Type.ReadonlyOptional(Type.Number()),
+    y: Type.Readonly(Type.Number()),
+    z: Type.Optional(Type.Number()),
+    w: Type.Number(),
 })
 
-const M = Type.Mapped(Type.Omit(T, ['z']), Type.Boolean())
+const M = Type.Mapped(T, Type.String())
+
+console.log(M)
 
 type M = Static<typeof M>
