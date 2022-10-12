@@ -5,16 +5,16 @@ import { Assert } from '../../assert/index'
 // Diff Factory
 // -----------------------------------------------------------------
 
-function Update(path: string, value: unknown): Edit<unknown> {
-  return { type: 'update', path, value } as any
+function Update(path: string, value: unknown): Edit {
+  return { type: 'update', path, value }
 }
 
-function Insert(path: string, value: unknown): Edit<unknown> {
-  return { type: 'insert', path, value } as any
+function Insert(path: string, value: unknown): Edit {
+  return { type: 'insert', path, value }
 }
 
-function Delete(path: string): Edit<unknown> {
-  return { type: 'delete', path } as any
+function Delete(path: string): Edit {
+  return { type: 'delete', path }
 }
 
 describe('value/delta/Diff', () => {
