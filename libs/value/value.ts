@@ -34,8 +34,7 @@ import { ValueCreate } from './create'
 import { ValueCheck } from './check'
 import { ValueDelta, Edit } from './delta'
 import { ValueHash } from './hash'
-
-export type { Edit } from './delta'
+export { Edit, Insert, Update, Delete } from './delta'
 
 /** Value performs immutable operations on values */
 export namespace Value {
@@ -77,7 +76,7 @@ export namespace Value {
   }
 
   /** Returns edits to transform the current value into the next value */
-  export function Diff<T>(current: T, next: T): Edit<T>[] {
+  export function Diff<T>(current: T, next: T): Edit[] {
     return ValueDelta.Diff(current, next)
   }
 
@@ -87,7 +86,7 @@ export namespace Value {
   }
 
   /** Returns a new value with edits applied to the given value */
-  export function Patch<T>(current: T, edits: Edit<T>[]): T {
+  export function Patch<T>(current: T, edits: Edit[]): T {
     return ValueDelta.Patch(current, edits) as T
   }
 }
