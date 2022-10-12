@@ -364,6 +364,14 @@ export interface TOmit<T extends TObject, Properties extends ObjectPropertyKeys<
 
 export interface TPartial<T extends TObject> extends TObject {
   static: Partial<Static<T, this['params']>>
+  properties: {
+    // prettier-ignore
+    [K in keyof T['properties']]: 
+      T['properties'][K] extends TReadonlyOptional<infer U> ? TReadonlyOptional<U> : 
+      T['properties'][K] extends TReadonly<infer U>         ? TReadonlyOptional<U> : 
+      T['properties'][K] extends TOptional<infer U>         ? TOptional<U> : 
+      TOptional<T['properties'][K]>
+  }
 }
 
 // --------------------------------------------------------------------------
@@ -436,6 +444,14 @@ export interface TRef<T extends TSchema = TSchema> extends TSchema {
 
 export interface TRequired<T extends TObject | TRef<TObject>> extends TObject {
   static: Required<Static<T, this['params']>>
+  properties: {
+    // prettier-ignore
+    [K in keyof T['properties']]: 
+      T['properties'][K] extends TReadonlyOptional<infer U> ? TReadonly<U> :  
+      T['properties'][K] extends TReadonly<infer U>         ? TReadonly<U> :
+      T['properties'][K] extends TOptional<infer U>         ? U :  
+      T['properties'][K]
+  }
 }
 
 // --------------------------------------------------------------------------
