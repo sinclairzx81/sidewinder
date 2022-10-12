@@ -33,6 +33,7 @@ import { ValueClone } from './clone'
 import { ValueCreate } from './create'
 import { ValueCheck } from './check'
 import { ValueDelta, Edit } from './delta'
+import { ValueHash } from './hash'
 
 export type { Edit } from './delta'
 
@@ -78,6 +79,11 @@ export namespace Value {
   /** Returns edits to transform the current value into the next value */
   export function Diff<T>(current: T, next: T): Edit<T>[] {
     return ValueDelta.Diff(current, next)
+  }
+
+  /** Returns a computed 64-bit hash code for the given value. This function uses the fnv1a64 non-cryptographic hashing algorithm */
+  export function Hash(value: unknown): bigint {
+    return ValueHash.Hash(value)
   }
 
   /** Returns a new value with edits applied to the given value */
