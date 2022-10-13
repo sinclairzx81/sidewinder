@@ -27,6 +27,7 @@ THE SOFTWARE.
 ---------------------------------------------------------------------------*/
 
 import * as Types from '@sidewinder/type'
+import { ValueAssign, Assignable } from './assign'
 import { ValueEqual } from './equal'
 import { ValueCast } from './cast'
 import { ValueClone } from './clone'
@@ -36,8 +37,13 @@ import { ValueDelta, Edit } from './delta'
 import { ValueHash } from './hash'
 export { Edit, Insert, Update, Delete } from './delta'
 
-/** Value performs immutable operations on values */
+/** The value namespace runs operations on values */
 export namespace Value {
+  /** Mutably assigns the values of next on current while retaining current array and objects references. */
+  export function Assign(current: Assignable, next: Assignable): void {
+    ValueAssign.Assign(current, next)
+  }
+
   /** Casts a value into a given type. The return value will retain as much information of the original value as possible. Cast will convert string, number and boolean values if a reasonable conversion is possible. */
   export function Upcast<T extends Types.TSchema, R extends Types.TSchema[]>(schema: T, references: [...R], value: unknown): Types.Static<T>
   /** Casts a value into a given type. The return value will retain as much information of the original value as possible. Cast will convert string, number and boolean values if a reasonable conversion is possible. */
