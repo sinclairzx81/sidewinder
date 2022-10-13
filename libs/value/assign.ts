@@ -28,25 +28,26 @@ THE SOFTWARE.
 
 import { Is, TypedArrayType } from './is'
 import { ValuePointer } from './pointer'
+import { ValueClone } from './clone'
 
 export class ValueAssignMismatchError extends Error {
   constructor() {
-    super('ValueAssign: Cannot assign next on current due to type mismatch')
+    super('ValueAssign: Cannot assign due type mismatch of assignable values')
   }
 }
 
 export class ValueAssignInvalidAssignmentType extends Error {
   constructor() {
-    super('ValueAssign: Can only assign object and array types')
+    super('ValueAssign: Only object and array values are assignable')
   }
 }
 
 export type Assignable = { [key: string]: unknown } | unknown[]
 
 export namespace ValueAssign {
-  export function Object(root: Assignable, path: string, current: unknown, next: Record<string, unknown>) {
+  function Object(root: Assignable, path: string, current: unknown, next: Record<string, unknown>) {
     if (!Is.Object(current)) {
-      ValuePointer.Set(root, path, next)
+      ValuePointer.Set(root, path, ValueClone.Clone(next))
     } else {
       const currentKeys = globalThis.Object.keys(current)
       const nextKeys = globalThis.Object.keys(next)
@@ -68,7 +69,7 @@ export namespace ValueAssign {
 
   function Array(root: Assignable, path: string, current: unknown, next: unknown[]) {
     if (!Is.Array(current)) {
-      ValuePointer.Set(root, path, next)
+      ValuePointer.Set(root, path, ValueClone.Clone(next))
     } else {
       for (let index = 0; index < next.length; index++) {
         Visit(root, `${path}/${index}`, current[index], next[index])
@@ -78,10 +79,17 @@ export namespace ValueAssign {
   }
 
   function TypedArray(root: Assignable, path: string, current: unknown, next: TypedArrayType) {
-    ValuePointer.Set(root, path, next)
+    if (Is.TypedArray(current) && current.length === next.length) {
+      for (let i = 0; i < current.length; i++) {
+        current[i] = next[i]
+      }
+    } else {
+      ValuePointer.Set(root, path, ValueClone.Clone(next))
+    }
   }
 
   function Value(root: Assignable, path: string, current: unknown, next: unknown) {
+    if (current === next) return
     ValuePointer.Set(root, path, next)
   }
 
@@ -97,7 +105,7 @@ export namespace ValueAssign {
     }
   }
 
-  /** Performs a deep mutable assignment writing the values of next on the current value. */
+  /** Performs a mutable transform of the current value into the next value by assigning values from next on current and preserves the current values internal object and array references. */
   export function Assign(current: Assignable, next: Assignable): void {
     if (Is.TypedArray(current) || Is.Value(current) || Is.TypedArray(next) || Is.Value(next)) {
       throw new ValueAssignInvalidAssignmentType()

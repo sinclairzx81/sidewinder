@@ -39,7 +39,7 @@ export { Edit, Insert, Update, Delete } from './delta'
 
 /** The value namespace runs operations on values */
 export namespace Value {
-  /** Mutably assigns the values of next on current while retaining current array and objects references. */
+  /** Performs a mutable transform of the current value into the next value by assigning values from next on current and preserves the current values internal object and array references. */
   export function Assign(current: Assignable, next: Assignable): void {
     ValueAssign.Assign(current, next)
   }
