@@ -200,7 +200,7 @@ export class WebService<Contract extends TContract, Context extends TSchema = TS
       // -----------------------------------------------------------------------
       // ECONNRESET: Catch errors writing output buffer
       // -----------------------------------------------------------------------
-      response.on('error', error => reject(error))
+      response.on('error', (error) => reject(error))
 
       const contentType = this.contract.format === 'json' ? 'application/json' : 'application/x-msgpack'
       const contentLength = data.length.toString()
@@ -401,8 +401,12 @@ export class WebService<Contract extends TContract, Context extends TSchema = TS
         await this.#writeExecuteResult(clientId, response, rpcRequestResult.value(), executeResult.value())
         await this.#onCloseCallback(rpcContextResult.value())
       }
-    } catch(error) {
-      this.#dispatchError(clientId, error)
+    } catch (error) {
+      if (!(error instanceof Error)) {
+        this.#dispatchError(clientId, new Error('Unknown error occurred accepting web request'))
+      } else {
+        this.#dispatchError(clientId, error)
+      }
     }
   }
 
