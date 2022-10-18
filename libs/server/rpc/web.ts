@@ -193,16 +193,23 @@ export class WebService<Contract extends TContract, Context extends TSchema = TS
 
   /** Writes a response buffer */
   #writeResponseBuffer(response: ServerResponse, status: number, data: Uint8Array): Promise<void> {
-    return new Promise((resolve) => {
-      const contentType = this.contract.format === 'json' ? 'application/json' : 'application/x-msgpack'
-      const contentLength = data.length.toString()
-      response.writeHead(status, { 'Content-Type': contentType, 'Content-Length': contentLength })
-      const version = Platform.version()
-      if (version.major < 16) {
-        // Node 14: Fallback
-        response.end(Buffer.from(data), () => resolve())
-      } else {
-        response.end(data, () => resolve())
+    return new Promise((resolve, reject) => {
+      // -----------------------------------------------------------------------
+      // ECONNRESET: Try to ensure no errors occur when writing output buffer
+      // -----------------------------------------------------------------------
+      try {
+        const contentType = this.contract.format === 'json' ? 'application/json' : 'application/x-msgpack'
+        const contentLength = data.length.toString()
+        response.writeHead(status, { 'Content-Type': contentType, 'Content-Length': contentLength })
+        const version = Platform.version()
+        if (version.major < 16) {
+          // Node 14: Fallback
+          response.end(Buffer.from(data), () => resolve())
+        } else {
+          response.end(data, () => resolve())
+        }
+      } catch(error) {
+        reject(error)
       }
     })
   }
@@ -361,33 +368,42 @@ export class WebService<Contract extends TContract, Context extends TSchema = TS
 
   /** Accepts an incoming HTTP request and processes it as JSON RPC method call. This method is called automatically by the Host. */
   public async accept(clientId: string, request: IncomingMessage, response: ServerResponse) {
-    // -----------------------------------------------------------------
-    // Preflight
-    // -----------------------------------------------------------------
-    const checkContentTypeResult = await this.#checkContentType(clientId, request)
-    if (!checkContentTypeResult.ok()) return this.#writeInvalidContentType(clientId, response)
+    // -----------------------------------------------------------------------
+    // ECONNRESET: Try to ensure no errors occur when writing output buffer
+    // -----------------------------------------------------------------------
+    request.on('error', (error) => console.error('IncomingMessage: Error:', error))
+    response.on('error', (error) => console.error('ServerResponse: Error:', error))
 
-    const rpcContextResult = await this.#readRpcContext(clientId, request)
-    if (!rpcContextResult.ok()) return this.#writeAuthorizationError(clientId, response)
+    try {
+      // -----------------------------------------------------------------
+      // Preflight
+      // -----------------------------------------------------------------
+      const checkContentTypeResult = await this.#checkContentType(clientId, request)
+      if (!checkContentTypeResult.ok()) return this.#writeInvalidContentType(clientId, response)
 
-    const rpcContextCheckResult = this.#checkRpcContext(rpcContextResult.value())
-    if (!rpcContextCheckResult.ok()) return this.#writeRpcContextInvalidError(clientId, response)
+      const rpcContextResult = await this.#readRpcContext(clientId, request)
+      if (!rpcContextResult.ok()) return this.#writeAuthorizationError(clientId, response)
 
-    const rpcRequestResult = await this.#readRpcRequest(request)
-    if (!rpcRequestResult.ok()) return this.#writeRpcRequestInvalidError(clientId, response)
+      const rpcContextCheckResult = this.#checkRpcContext(rpcContextResult.value())
+      if (!rpcContextCheckResult.ok()) return this.#writeRpcContextInvalidError(clientId, response)
 
-    // -----------------------------------------------------------------
-    // Execute
-    // -----------------------------------------------------------------
-    await this.#onConnectCallback(rpcContextResult.value())
-    const executeResult = await this.#executeRpcRequest(rpcContextResult.value(), rpcRequestResult.value())
-    if (!executeResult.ok()) {
-      this.#dispatchError(clientId, executeResult.error())
-      await this.#writeExecuteError(clientId, response, rpcRequestResult.value(), executeResult.error())
-      await this.#onCloseCallback(rpcContextResult.value())
-    } else {
-      await this.#writeExecuteResult(clientId, response, rpcRequestResult.value(), executeResult.value())
-      await this.#onCloseCallback(rpcContextResult.value())
+      const rpcRequestResult = await this.#readRpcRequest(request)
+      if (!rpcRequestResult.ok()) return this.#writeRpcRequestInvalidError(clientId, response)
+
+      // -----------------------------------------------------------------
+      // Execute
+      // -----------------------------------------------------------------
+      await this.#onConnectCallback(rpcContextResult.value())
+      const executeResult = await this.#executeRpcRequest(rpcContextResult.value(), rpcRequestResult.value())
+      if (!executeResult.ok()) {
+        this.#dispatchError(clientId, executeResult.error())
+        await this.#writeExecuteError(clientId, response, rpcRequestResult.value(), executeResult.error())
+        await this.#onCloseCallback(rpcContextResult.value())
+      } else {
+        await this.#writeExecuteResult(clientId, response, rpcRequestResult.value(), executeResult.value())
+        await this.#onCloseCallback(rpcContextResult.value())
+      }
+    } catch {
     }
   }
 
