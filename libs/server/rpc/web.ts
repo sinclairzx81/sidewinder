@@ -185,8 +185,11 @@ export class WebService<Contract extends TContract, Context extends TSchema = TS
     if (request.method!.toLowerCase() !== 'post') return Promise.reject(new Error('Can only read from http post requests'))
     return new Promise((resolve, reject) => {
       const buffers: Buffer[] = []
-      request.on('data', (buffer) => buffers.push(buffer))
+      // -----------------------------------------------------------------------
+      // ECONNRESET: Catch errors reading input buffer
+      // -----------------------------------------------------------------------
       request.on('error', (error) => reject(error))
+      request.on('data', (buffer) => buffers.push(buffer))
       request.on('end', () => resolve(Buffer.concat(buffers)))
     })
   }
@@ -195,21 +198,19 @@ export class WebService<Contract extends TContract, Context extends TSchema = TS
   #writeResponseBuffer(response: ServerResponse, status: number, data: Uint8Array): Promise<void> {
     return new Promise((resolve, reject) => {
       // -----------------------------------------------------------------------
-      // ECONNRESET: Try to ensure no errors occur when writing output buffer
+      // ECONNRESET: Catch errors writing output buffer
       // -----------------------------------------------------------------------
-      try {
-        const contentType = this.contract.format === 'json' ? 'application/json' : 'application/x-msgpack'
-        const contentLength = data.length.toString()
-        response.writeHead(status, { 'Content-Type': contentType, 'Content-Length': contentLength })
-        const version = Platform.version()
-        if (version.major < 16) {
-          // Node 14: Fallback
-          response.end(Buffer.from(data), () => resolve())
-        } else {
-          response.end(data, () => resolve())
-        }
-      } catch(error) {
-        reject(error)
+      response.on('error', error => reject(error))
+
+      const contentType = this.contract.format === 'json' ? 'application/json' : 'application/x-msgpack'
+      const contentLength = data.length.toString()
+      response.writeHead(status, { 'Content-Type': contentType, 'Content-Length': contentLength })
+      const version = Platform.version()
+      if (version.major < 16) {
+        // Node 14: Fallback
+        response.end(Buffer.from(data), () => resolve())
+      } else {
+        response.end(data, () => resolve())
       }
     })
   }
@@ -369,11 +370,8 @@ export class WebService<Contract extends TContract, Context extends TSchema = TS
   /** Accepts an incoming HTTP request and processes it as JSON RPC method call. This method is called automatically by the Host. */
   public async accept(clientId: string, request: IncomingMessage, response: ServerResponse) {
     // -----------------------------------------------------------------------
-    // ECONNRESET: Try to ensure no errors occur when writing output buffer
+    // ECONNRESET: Try to catch errors writing to output
     // -----------------------------------------------------------------------
-    request.on('error', (error) => console.error('IncomingMessage: Error:', error))
-    response.on('error', (error) => console.error('ServerResponse: Error:', error))
-
     try {
       // -----------------------------------------------------------------
       // Preflight
@@ -403,7 +401,8 @@ export class WebService<Contract extends TContract, Context extends TSchema = TS
         await this.#writeExecuteResult(clientId, response, rpcRequestResult.value(), executeResult.value())
         await this.#onCloseCallback(rpcContextResult.value())
       }
-    } catch {
+    } catch(error) {
+      this.#dispatchError(clientId, error)
     }
   }
 
