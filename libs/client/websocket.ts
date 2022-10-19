@@ -168,7 +168,7 @@ export class WebSocketClient<Contract extends TContract> {
     const handle = this.responder.register('client')
     const request = RpcProtocol.encodeRequest(handle, method, params)
     const message = this.encoder.encode(request)
-    this.socket.send(message)
+    await this.socket.send(message)
     return await this.responder.wait(handle)
   }
 
@@ -184,7 +184,7 @@ export class WebSocketClient<Contract extends TContract> {
         this.assertCanSend()
         const request = RpcProtocol.encodeRequest(undefined, method as string, params)
         const message = this.encoder.encode(request)
-        this.socket.send(message)
+        await this.socket.send(message)
       } catch (error) {
         this.onErrorCallback(error)
       }
@@ -203,7 +203,7 @@ export class WebSocketClient<Contract extends TContract> {
     if (rpcRequest.id === undefined || rpcRequest.id === null) return
     const response = RpcProtocol.encodeResult(rpcRequest.id, result)
     const buffer = this.encoder.encode(response)
-    this.socket.send(buffer)
+    await this.socket.send(buffer)
   }
 
   private async sendResponseWithError(rpcRequest: RpcRequest, error: Error) {
@@ -211,14 +211,14 @@ export class WebSocketClient<Contract extends TContract> {
     if (error instanceof Exception) {
       const response = RpcProtocol.encodeError(rpcRequest.id, { code: error.code, message: error.message, data: error.data })
       const buffer = this.encoder.encode(response)
-      this.socket.send(buffer)
+      await this.socket.send(buffer)
     } else {
       const code = RpcErrorCode.InternalServerError
       const message = 'Internal Server Error'
       const data = {}
       const response = RpcProtocol.encodeError(rpcRequest.id, { code, message, data })
       const buffer = this.encoder.encode(response)
-      this.socket.send(buffer)
+      await this.socket.send(buffer)
     }
   }
 
