@@ -27,6 +27,7 @@ THE SOFTWARE.
 ---------------------------------------------------------------------------*/
 
 export type DebounceCallback = () => Promise<unknown> | unknown
+export type ErrorCallback = (error: Error) => void
 
 export class Debounce {
   private callback: DebounceCallback | null
@@ -42,39 +43,43 @@ export class Debounce {
     this.waiting = false
   }
 
-  public async run(callback: DebounceCallback) {
+  public run(callback: DebounceCallback, errorCallback: ErrorCallback = () => {}) {
     if (this.deferred) {
-      this.runDeferred(callback)
+      this.#runDeferred(callback, errorCallback)
     } else {
-      this.runDefault(callback)
+      this.#runDefault(callback, errorCallback)
     }
   }
 
-  private async runDeferred(callback: DebounceCallback) {
+  async #runDeferred(callback: DebounceCallback, errorCallback: ErrorCallback) {
     if (this.waiting) {
       this.callback = callback
       return
     }
     this.waiting = true
-    callback()
-    await this.delay()
+    this.#execute(callback).catch(errorCallback)
+    await this.#delay()
     while (this.callback !== null) {
-      this.callback()
+      this.#execute(this.callback).catch(errorCallback)
       this.callback = null
-      await this.delay()
+      await this.#delay()
     }
     this.waiting = false
   }
 
-  private async runDefault(callback: DebounceCallback) {
+  async #runDefault(callback: DebounceCallback, errorCallback: ErrorCallback) {
     if (this.waiting) return
     this.waiting = true
-    callback()
-    await this.delay()
+    this.#execute(callback).catch(errorCallback)
+    await this.#delay()
     this.waiting = false
   }
 
-  private delay() {
+  async #execute(callback: DebounceCallback) {
+    await callback()
+  }
+
+  #delay() {
     return new Promise((resolve) => setTimeout(resolve, this.millisecond))
   }
 }

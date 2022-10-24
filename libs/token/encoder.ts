@@ -27,9 +27,10 @@ THE SOFTWARE.
 ---------------------------------------------------------------------------*/
 
 import { sign } from 'jsonwebtoken'
-import { TObject } from '@sidewinder/type'
+import { TObject, TUnion } from '@sidewinder/type'
 import { Validator } from '@sidewinder/validator'
 import { Format } from './format'
+import * as crypto from 'node:crypto'
 
 export class TokenEncoderTypeError extends Error {
   constructor(public readonly errors: any[], errorText: string) {
@@ -37,15 +38,23 @@ export class TokenEncoderTypeError extends Error {
   }
 }
 
-export class TokenEncoder<Claims extends TObject> {
+export interface TokenEncoderOptions {
+  useEncryption: boolean
+}
+
+export class TokenEncoder<Claims extends TObject | TUnion<TObject[]>> {
   private readonly tokenValidator: Validator<Claims>
 
-  constructor(private readonly schema: Claims, private readonly privateKey: string) {
+  constructor(private readonly schema: Claims, private readonly privateKey: string, private readonly options: TokenEncoderOptions = { useEncryption: false }) {
     this.privateKey = Format.key(this.privateKey)
     this.tokenValidator = new Validator(this.schema)
   }
 
-  private validateType(token: Claims['static']) {
+  // ---------------------------------------------------------
+  // Type Verification
+  // ---------------------------------------------------------
+
+  #validateType(token: Claims['static']) {
     const check = this.tokenValidator.check(token)
     if (!check.success) {
       throw new TokenEncoderTypeError(check.errors, check.errorText)
@@ -54,9 +63,35 @@ export class TokenEncoder<Claims extends TObject> {
     }
   }
 
+  // ---------------------------------------------------------
+  // Encryption
+  // ---------------------------------------------------------
+
+  // Segments this string into buffers under the RSA_padding_add_PKCS1_type_1 length. These
+  // buffers are encrypted individually, mapped to base64 then concatinated with a period
+  // delimiter (inline with jsonwebtoken delimiting)
+  *#chunk(encoded: string): IterableIterator<Uint8Array> {
+    const buffer = Buffer.from(encoded)
+    const length = 200
+    let index = 0
+    while (index < buffer.length) {
+      yield buffer.subarray(index, index + length)
+      index += length
+    }
+  }
+
+  #encrypt(encoded: string): string {
+    return [...this.#chunk(encoded)].map((buffer) => crypto.privateEncrypt(this.privateKey, buffer).toString('base64')).join('.')
+  }
+
+  // ---------------------------------------------------------
+  // Encode
+  // ---------------------------------------------------------
+
   /** Encodes the given claims and returns a string token */
   public encode(claims: Claims['static']): string {
-    const checked = this.validateType(claims)
-    return sign(checked, this.privateKey, { algorithm: 'RS256' })
+    const checked = this.#validateType(claims)
+    const signed = sign(checked, this.privateKey, { algorithm: 'RS256' })
+    return this.options.useEncryption ? this.#encrypt(signed) : signed
   }
 }

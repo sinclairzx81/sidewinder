@@ -50,6 +50,7 @@ describe('token/TokenDecoder', () => {
       decoder.decode(encoded)
     })
   })
+
   it('should throw on decode if decoded data is invalid', () => {
     Assert.throws(() => {
       const [privateKey, publicKey] = Generate.KeyPair()
@@ -63,6 +64,33 @@ describe('token/TokenDecoder', () => {
       })
       const encoder = new TokenEncoder(T1, privateKey)
       const decoder = new TokenDecoder(T2, publicKey)
+      const encoded = encoder.encode({ name: 'dave', roles: ['admin', 'moderator'] })
+      decoder.decode(encoded)
+    })
+  })
+
+  it('should decode token with encryption', () => {
+    const [privateKey, publicKey] = Generate.KeyPair()
+    const T = Type.Object({
+      name: Type.String(),
+      roles: Type.Array(Type.String()),
+    })
+    const encoder = new TokenEncoder(T, privateKey, { useEncryption: true })
+    const decoder = new TokenDecoder(T, publicKey, { useEncryption: true })
+    const encoded = encoder.encode({ name: 'dave', roles: ['admin', 'moderator'] })
+    decoder.decode(encoded)
+  })
+
+  it('should throw on decode token with encryption when data in bad', () => {
+    Assert.throws(() => {
+      const [privateKey, publicKey] = Generate.KeyPair()
+      const T = Type.Object({
+        name: Type.String(),
+        roles: Type.Array(Type.String()),
+      })
+
+      const encoder = new TokenEncoder(T, privateKey, { useEncryption: false })
+      const decoder = new TokenDecoder(T, publicKey, { useEncryption: true })
       const encoded = encoder.encode({ name: 'dave', roles: ['admin', 'moderator'] })
       decoder.decode(encoded)
     })

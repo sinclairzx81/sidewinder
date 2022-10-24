@@ -13,6 +13,7 @@ describe('token/TokenEncoder', () => {
     const encoded = encoder.encode({ name: 'dave', roles: ['admin', 'moderator'] })
     Assert.isTypeOf(encoded, 'string')
   })
+
   it('should throw if private key is invalid', () => {
     Assert.throws(() => {
       const privateKey = 'nonsense'
@@ -24,6 +25,7 @@ describe('token/TokenEncoder', () => {
       encoder.encode({ name: 'dave', roles: ['admin', 'moderator'] })
     })
   })
+
   it('should throw on encode if data is invalid', () => {
     Assert.throws(() => {
       const [privateKey] = Generate.KeyPair()
@@ -35,5 +37,16 @@ describe('token/TokenEncoder', () => {
       // @ts-ignore
       const encoded = encoder.encode({ name: 1, roles: ['admin', 'moderator'] })
     })
+  })
+
+  it('should encode a token with encryption', () => {
+    const [privateKey] = Generate.KeyPair()
+    const T = Type.Object({
+      name: Type.String(),
+      roles: Type.Array(Type.String()),
+    })
+    const encoder = new TokenEncoder(T, privateKey, { useEncryption: true })
+    const encoded = encoder.encode({ name: 'dave', roles: ['admin', 'moderator'] })
+    Assert.isTypeOf(encoded, 'string')
   })
 })
