@@ -42,7 +42,6 @@ export class RedisSub<Schema extends TSchema> {
     this.validator = new Validator(this.schema)
     this.encoder = new RedisEncoder(this.schema)
     this.channel = new Channel<Static<Schema>>()
-    console.log('subscribing')
     this.redis.subscribe(this.encodeKey())
     this.redis.on('message', (channel, value) => this.onMessage(channel, value))
   }
