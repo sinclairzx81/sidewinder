@@ -4,7 +4,7 @@ import { compilePackage, packPackage } from './build/index'
 // Packages
 // -------------------------------------------------------------
 
-const version = '0.10.14'
+const version = '0.10.15'
 const packages = [
     ['async',     version, 'Sidewinder Async'],
     ['buffer',    version, 'Sidewinder Buffer'],
@@ -18,6 +18,7 @@ const packages = [
     ['mongo',     version, 'Sidewinder Mongo'],
     ['path',      version, 'Sidewinder Path'],
     ['platform',  version, 'Sidewinder Platform'],
+    ['query',     version, 'Sidewinder Query'],
     ['redis',     version, 'Sidewinder Redis'],
     ['server',    version, 'Sidewinder Server'],
     ['token',     version, 'Sidewinder Token'],

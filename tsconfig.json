@@ -20,6 +20,7 @@
             "@sidewinder/mongo":     ["libs/mongo/index.ts"],
             "@sidewinder/path":      ["libs/path/index.ts"],
             "@sidewinder/platform":  ["libs/platform/index.ts"],
+            "@sidewinder/query":     ["libs/query/index.ts"],
             "@sidewinder/redis":     ["libs/redis/index.ts"],
             "@sidewinder/server":    ["libs/server/index.ts"],
             "@sidewinder/token":     ["libs/token/index.ts"],
