@@ -2,20 +2,20 @@ import { SyncChannel } from '@sidewinder/channel'
 import { Assert } from '../assert/index'
 
 describe('channel/SyncChannel', () => {
-  it('should send value and end', () => {
+  it('Should send value and end', () => {
     const channel = new SyncChannel()
     channel.send(0)
     channel.end()
   })
 
-  it('should send value, error and end without throw', () => {
+  it('Should send value, error and end without throw', () => {
     const channel = new SyncChannel()
     channel.send(0)
     channel.error(new Error('error'))
     channel.end()
   })
 
-  it('should receive next value then end', async () => {
+  it('Should receive next value then end', async () => {
     const channel = new SyncChannel()
     Assert.intoAsync(async () => {
       await channel.send(0)
@@ -28,7 +28,7 @@ describe('channel/SyncChannel', () => {
     Assert.equal(eof, null)
   })
 
-  it('should receive next values then end', async () => {
+  it('Should receive next values then end', async () => {
     const channel = new SyncChannel()
     Assert.intoAsync(async () => {
       await channel.send(0)
@@ -50,7 +50,7 @@ describe('channel/SyncChannel', () => {
     Assert.equal(eof, null)
   })
 
-  it('should throw on receive if send error', async () => {
+  it('Should throw on receive if send error', async () => {
     const channel = new SyncChannel()
     Assert.intoAsync(async () => {
       await channel.send(0)
@@ -66,7 +66,7 @@ describe('channel/SyncChannel', () => {
     Assert.isInstanceOf(value2, Error)
   })
 
-  it('should end on receiver immediately following an error', async () => {
+  it('Should end on receiver immediately following an error', async () => {
     const channel = new SyncChannel()
     Assert.intoAsync(async () => {
       await channel.send(0)
@@ -84,7 +84,7 @@ describe('channel/SyncChannel', () => {
     Assert.equal(eof, null)
   })
 
-  it('should receive eof for all subsequent reads on an ended channel', async () => {
+  it('Should receive eof for all subsequent reads on an ended channel', async () => {
     const channel = new SyncChannel()
     Assert.intoAsync(async () => {
       await channel.send(0)
@@ -105,13 +105,13 @@ describe('channel/SyncChannel', () => {
   // Specialized
   // -----------------------------------------------------------------
 
-  it('should timeout on send if there are no receivers', async () => {
+  it('Should timeout on send if there are no receivers', async () => {
     const channel = new SyncChannel(1)
     await channel.send(0)
     await Assert.timeout(() => channel.send(1))
   }).timeout(1000)
 
-  it('should timeout on receive if there are no senders', async () => {
+  it('Should timeout on receive if there are no senders', async () => {
     const channel = new SyncChannel(1)
     await Assert.timeout(() => channel.next())
   }).timeout(1000)

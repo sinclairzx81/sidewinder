@@ -5,7 +5,7 @@ describe('async/Debounce', () => {
   // -------------------------------------------------------
   // Sync
   // -------------------------------------------------------
-  it('should should run non-deferred sync', async () => {
+  it('Should should run non-deferred sync', async () => {
     const debounce = new Debounce(10, false)
     const buffer: number[] = []
     for (let i = 0; i < 10; i++) {
@@ -14,7 +14,7 @@ describe('async/Debounce', () => {
     Assert.deepEqual(buffer, [0])
   })
 
-  it('should should run deferred sync', async () => {
+  it('Should should run deferred sync', async () => {
     const debounce = new Debounce(10, true)
     const buffer: number[] = []
     for (let i = 0; i < 10; i++) {
@@ -24,7 +24,7 @@ describe('async/Debounce', () => {
     Assert.deepEqual(buffer, [0, 9])
   })
 
-  it('should raise non-deferred error callback for sync', async () => {
+  it('Should raise non-deferred error callback for sync', async () => {
     const debounce = new Debounce(10, false)
     let value: any = null
     debounce.run(
@@ -39,7 +39,7 @@ describe('async/Debounce', () => {
     Assert.notEqual(value, null)
   })
 
-  it('should raise deferred error callback for sync', async () => {
+  it('Should raise deferred error callback for sync', async () => {
     const debounce = new Debounce(10, true)
     let value: any = null
     debounce.run(
@@ -58,7 +58,7 @@ describe('async/Debounce', () => {
   // Async
   // -------------------------------------------------------
 
-  it('should should run non-deferred async', async () => {
+  it('Should should run non-deferred async', async () => {
     const debounce = new Debounce(10, false)
     const buffer: number[] = []
     for (let i = 0; i < 10; i++) {
@@ -67,7 +67,7 @@ describe('async/Debounce', () => {
     Assert.deepEqual(buffer, [0])
   })
 
-  it('should should run deferred async', async () => {
+  it('Should should run deferred async', async () => {
     const debounce = new Debounce(10, true)
     const buffer: number[] = []
     for (let i = 0; i < 10; i++) {
@@ -77,7 +77,7 @@ describe('async/Debounce', () => {
     Assert.deepEqual(buffer, [0, 9])
   })
 
-  it('should raise non-deferred error callback for async', async () => {
+  it('Should raise non-deferred error callback for async', async () => {
     const debounce = new Debounce(10, false)
     let value: any = null
     debounce.run(
@@ -92,7 +92,7 @@ describe('async/Debounce', () => {
     Assert.notEqual(value, null)
   })
 
-  it('should raise deferred error callback for async', async () => {
+  it('Should raise deferred error callback for async', async () => {
     const debounce = new Debounce(10, true)
     let value: any = null
     debounce.run(

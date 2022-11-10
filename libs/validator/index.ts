@@ -26,7 +26,4 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-// import types from 'ajv'  # Auto Dependency Resolution during Build
-
-export * from './compiler'
 export * from './validator'

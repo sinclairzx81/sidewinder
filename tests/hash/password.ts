@@ -2,24 +2,24 @@ import { Assert } from '../assert/index'
 import { PasswordHash } from '@sidewinder/hash'
 
 describe('hash/PasswordHash', () => {
-  it('should hash a password', async () => {
+  it('Should hash a password', async () => {
     const hash = await PasswordHash.hash('this_is_a_password')
     Assert.isTypeOf(hash, 'string')
   })
 
-  it('should check a password success', async () => {
+  it('Should check a password success', async () => {
     const hash = await PasswordHash.hash('this_is_a_password')
     const result = await PasswordHash.compare('this_is_a_password', hash)
     Assert.equal(result, true)
   })
 
-  it('should check a password fail', async () => {
+  it('Should check a password fail', async () => {
     const hash = await PasswordHash.hash('this_is_a_password')
     const result = await PasswordHash.compare('this_is_another_password', hash)
     Assert.equal(result, false)
   })
 
-  it('should check a password with varying iteration', async () => {
+  it('Should check a password with varying iteration', async () => {
     const hash0 = await PasswordHash.hash('this_is_a_password', 0)
     const hash1 = await PasswordHash.hash('this_is_a_password', 1)
     const hash2 = await PasswordHash.hash('this_is_a_password', 2)

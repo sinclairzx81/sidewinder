@@ -6,7 +6,7 @@ describe('redis/RedisMap', () => {
   // Set
   // ---------------------------------------------------------
 
-  it('should set values', async () => {
+  it('Should set values', async () => {
     const database = resolveDatabase()
     const map = database.map('vectors')
     await map.set('A', [0, 0, 0])
@@ -16,7 +16,7 @@ describe('redis/RedisMap', () => {
     Assert.deepEqual(size, 3)
   })
 
-  it('should set overlap values', async () => {
+  it('Should set overlap values', async () => {
     const database = resolveDatabase()
     const map = database.map('vectors')
     await map.set('A', [0, 0, 0])
@@ -26,7 +26,7 @@ describe('redis/RedisMap', () => {
     Assert.deepEqual(size, 1)
   })
 
-  it('should set and get values', async () => {
+  it('Should set and get values', async () => {
     const database = resolveDatabase()
     const map = database.map('vectors')
     await map.set('A', [0, 0, 0])
@@ -40,7 +40,7 @@ describe('redis/RedisMap', () => {
     Assert.deepEqual(value2, [2, 0, 0])
   })
 
-  it('should set and delete values', async () => {
+  it('Should set and delete values', async () => {
     const database = resolveDatabase()
     const map = database.map('vectors')
     await map.set('A', [0, 0, 0])
@@ -58,7 +58,7 @@ describe('redis/RedisMap', () => {
     Assert.deepEqual(value2, [2, 0, 0])
   })
 
-  it('should set and clear values', async () => {
+  it('Should set and clear values', async () => {
     const database = resolveDatabase()
     const map = database.map('vectors')
     await map.set('A', [0, 0, 0])
@@ -75,7 +75,7 @@ describe('redis/RedisMap', () => {
     Assert.deepEqual(value2, undefined)
   })
 
-  it('should return correct has value', async () => {
+  it('Should return correct has value', async () => {
     const database = resolveDatabase()
     const map = database.map('vectors')
     await map.set('A', [0, 0, 0])
@@ -89,7 +89,7 @@ describe('redis/RedisMap', () => {
   // Type Assertions
   // ---------------------------------------------------------
 
-  it('should throw set invalid value', async () => {
+  it('Should throw set invalid value', async () => {
     const database = resolveDatabase()
     const map = database.array('vectors')
     // @ts-ignore

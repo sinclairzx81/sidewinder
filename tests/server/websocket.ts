@@ -13,7 +13,7 @@ describe('server/WebSocketService', () => {
   // ------------------------------------------------------------------
   // Lifetimes
   // ------------------------------------------------------------------
-  it('should dispatch lifetime events', async () => {
+  it('Should dispatch lifetime events', async () => {
     const buffer = [] as any[]
     const port = Assert.nextPort()
     const service = new WebSocketService(Contract)
@@ -42,7 +42,7 @@ describe('server/WebSocketService', () => {
 
     Assert.deepEqual(buffer, ['server:authorize', 'server:connect', 'server:call', 'server:close'])
   })
-  it('should dispatch multiple lifetime events for subsequent calls', async () => {
+  it('Should dispatch multiple lifetime events for subsequent calls', async () => {
     const buffer = [] as any[]
     const port = Assert.nextPort()
     const service = new WebSocketService(Contract)
@@ -75,7 +75,7 @@ describe('server/WebSocketService', () => {
     Assert.deepEqual(buffer, ['server:authorize', 'server:connect', 'server:call', 'server:call', 'server:call', 'server:call', 'server:close'])
   })
 
-  it('should dispatch only authorize event on authorization fail', async () => {
+  it('Should dispatch only authorize event on authorization fail', async () => {
     const buffer = [] as any[]
     const port = Assert.nextPort()
     const service = new WebSocketService(Contract)
@@ -109,7 +109,7 @@ describe('server/WebSocketService', () => {
   // Error Handling
   // ------------------------------------------------------------------
 
-  it('should not crash service on synchronous error', async () => {
+  it('Should not crash service on synchronous error', async () => {
     const buffer = [] as any[]
     const port = Assert.nextPort()
     const service = new WebSocketService(Contract)
@@ -131,7 +131,7 @@ describe('server/WebSocketService', () => {
     Assert.deepEqual(buffer, ['client:error', 'client:error', 'client:error', 'client:error'])
   })
 
-  it('should not crash on service asynchronous error', async () => {
+  it('Should not crash on service asynchronous error', async () => {
     const buffer = [] as any[]
     const port = Assert.nextPort()
     const service = new WebSocketService(Contract)
@@ -157,7 +157,7 @@ describe('server/WebSocketService', () => {
   // Context
   // ------------------------------------------------------------------
 
-  it('should construct context on authorize and propagate to lifetime events', async () => {
+  it('Should construct context on authorize and propagate to lifetime events', async () => {
     const buffer = [] as any[]
     const port = Assert.nextPort()
     const Context = Type.Object({ x: Type.Number(), y: Type.Number(), z: Type.Number() })
@@ -192,7 +192,7 @@ describe('server/WebSocketService', () => {
     ])
   })
 
-  it('should disconnect on service failure to construct context', async () => {
+  it('Should disconnect on service failure to construct context', async () => {
     const buffer = [] as any[]
     const port = Assert.nextPort()
     const Context = Type.Object({ x: Type.Number(), y: Type.Number(), z: Type.Number() })
@@ -226,7 +226,7 @@ describe('server/WebSocketService', () => {
   // Contexts
   // ------------------------------------------------------------------
 
-  it('should forward service level context into method', async () => {
+  it('Should forward service level context into method', async () => {
     const buffer = [] as any[]
     const port = Assert.nextPort()
     const context = Type.Tuple([Type.Number(), Type.Number(), Type.Number()])
@@ -246,7 +246,7 @@ describe('server/WebSocketService', () => {
     Assert.deepEqual(buffer[0], [1, 2, 3])
   })
 
-  it('should forward method level context into method', async () => {
+  it('Should forward method level context into method', async () => {
     const buffer = [] as any[]
     const port = Assert.nextPort()
     const service = new WebSocketService(Contract)
@@ -268,7 +268,7 @@ describe('server/WebSocketService', () => {
     Assert.deepEqual(buffer[0], [1, 2, 3])
   })
 
-  it('should forward service and method level context into method', async () => {
+  it('Should forward service and method level context into method', async () => {
     const buffer = [] as any[]
     const port = Assert.nextPort()
     const context = Type.Tuple([Type.Number(), Type.Number(), Type.Number()])
@@ -296,7 +296,7 @@ describe('server/WebSocketService', () => {
   // Authorization
   // ------------------------------------------------------------------
 
-  it('should reject failed authorization attempts at the service level', async () => {
+  it('Should reject failed authorization attempts at the service level', async () => {
     const port = Assert.nextPort()
     const service = new WebSocketService(Contract)
     service.event('authorize', () => {
@@ -313,7 +313,7 @@ describe('server/WebSocketService', () => {
     Assert.isInstanceOf(error, Error)
   })
 
-  it('should reject failed authorization attempts at the method level', async () => {
+  it('Should reject failed authorization attempts at the method level', async () => {
     const port = Assert.nextPort()
     const service = new WebSocketService(Contract)
     service.method(

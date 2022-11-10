@@ -31,49 +31,9 @@ import { ValueCreate } from './create'
 import { ValueCheck } from './check'
 import { ValueClone } from './clone'
 
-namespace UnionValueCast {
-  // ----------------------------------------------------------------------------------------------
-  // The following will score a schema against a value. For objects, the score is the tally of
-  // points awarded for each property of the value. Property points are (1.0 / propertyCount)
-  // to prevent large property counts biasing results. Properties that match literal values are
-  // maximally awarded as literals are typically used as union discriminator fields.
-  // ----------------------------------------------------------------------------------------------
-  function Score(schema: Types.TSchema, references: Types.TSchema[], value: any): number {
-    if (schema[Types.Kind] === 'Object' && typeof value === 'object' && value !== null) {
-      const object = schema as Types.TObject
-      const keys = Object.keys(value)
-      const entries = globalThis.Object.entries(object.properties)
-      const [point, max] = [1 / entries.length, entries.length]
-      return entries.reduce((acc, [key, schema]) => {
-        const literal = schema[Types.Kind] === 'Literal' && schema.const === value[key] ? max : 0
-        const checks = ValueCheck.Check(schema, references, value[key]) ? point : 0
-        const exists = keys.includes(key) ? point : 0
-        return acc + (literal + checks + exists)
-      }, 0)
-    } else {
-      return ValueCheck.Check(schema, references, value) ? 1 : 0
-    }
-  }
-  function Select(union: Types.TUnion, references: Types.TSchema[], value: any): Types.TSchema {
-    let [select, best] = [union.anyOf[0], 0]
-    for (const schema of union.anyOf) {
-      const score = Score(schema, references, value)
-      if (score > best) {
-        select = schema
-        best = score
-      }
-    }
-    return select
-  }
-
-  export function Create(union: Types.TUnion, references: Types.TSchema[], value: any) {
-    return ValueCheck.Check(union, references, value) ? ValueClone.Clone(value) : ValueCast.Cast(Select(union, references, value), references, value)
-  }
-}
-
-// -----------------------------------------------------------
+// ----------------------------------------------------------------------------------------------
 // Errors
-// -----------------------------------------------------------
+// ----------------------------------------------------------------------------------------------
 
 export class ValueCastReferenceTypeError extends Error {
   constructor(public readonly schema: Types.TRef | Types.TSelf) {
@@ -104,10 +64,57 @@ export class ValueCastUnknownTypeError extends Error {
   }
 }
 
+// ----------------------------------------------------------------------------------------------
+// The following will score a schema against a value. For objects, the score is the tally of
+// points awarded for each property of the value. Property points are (1.0 / propertyCount)
+// to prevent large property counts biasing results. Properties that match literal values are
+// maximally awarded as literals are typically used as union discriminator fields.
+// ----------------------------------------------------------------------------------------------
+
+namespace UnionCastCreate {
+  function Score(schema: Types.TSchema, references: Types.TSchema[], value: any): number {
+    if (schema[Types.Kind] === 'Object' && typeof value === 'object' && value !== null) {
+      const object = schema as Types.TObject
+      const keys = Object.keys(value)
+      const entries = globalThis.Object.entries(object.properties)
+      const [point, max] = [1 / entries.length, entries.length]
+      return entries.reduce((acc, [key, schema]) => {
+        const literal = schema[Types.Kind] === 'Literal' && schema.const === value[key] ? max : 0
+        const checks = ValueCheck.Check(schema, references, value[key]) ? point : 0
+        const exists = keys.includes(key) ? point : 0
+        return acc + (literal + checks + exists)
+      }, 0)
+    } else {
+      return ValueCheck.Check(schema, references, value) ? 1 : 0
+    }
+  }
+
+  function Select(union: Types.TUnion, references: Types.TSchema[], value: any): Types.TSchema {
+    let [select, best] = [union.anyOf[0], 0]
+    for (const schema of union.anyOf) {
+      const score = Score(schema, references, value)
+      if (score > best) {
+        select = schema
+        best = score
+      }
+    }
+    return select
+  }
+
+  export function Create(union: Types.TUnion, references: Types.TSchema[], value: any) {
+    if (union.default !== undefined) {
+      return union.default
+    } else {
+      const schema = Select(union, references, value)
+      return ValueCast.Cast(schema, references, value)
+    }
+  }
+}
+
 export namespace ValueCast {
-  // -----------------------------------------------------------
+  // ----------------------------------------------------------------------------------------------
   // Guards
-  // -----------------------------------------------------------
+  // ----------------------------------------------------------------------------------------------
 
   function IsArray(value: unknown): value is unknown[] {
     return typeof value === 'object' && globalThis.Array.isArray(value)
@@ -145,9 +152,9 @@ export namespace ValueCast {
     return value === false || (IsNumber(value) && value === 0) || (IsBigInt(value) && value === 0n) || (IsString(value) && (value.toLowerCase() === 'false' || value === '0'))
   }
 
-  // -----------------------------------------------------------
+  // ----------------------------------------------------------------------------------------------
   // Convert
-  // -----------------------------------------------------------
+  // ----------------------------------------------------------------------------------------------
 
   function TryConvertString(value: unknown) {
     return IsValueToString(value) ? value.toString() : value
@@ -165,12 +172,12 @@ export namespace ValueCast {
     return IsValueTrue(value) ? true : IsValueFalse(value) ? false : value
   }
 
-  // -----------------------------------------------------------
+  // ----------------------------------------------------------------------------------------------
   // Cast
-  // -----------------------------------------------------------
+  // ----------------------------------------------------------------------------------------------
 
   function Any(schema: Types.TAny, references: Types.TSchema[], value: any): any {
-    return ValueCheck.Check(schema, references, value) ? value : ValueCreate.Create(schema, references)
+    return ValueCheck.Check(schema, references, value) ? ValueClone.Clone(value) : ValueCreate.Create(schema, references)
   }
 
   function Array(schema: Types.TArray, references: Types.TSchema[], value: any): any {
@@ -201,8 +208,8 @@ export namespace ValueCast {
     return result
   }
 
-  function Enum(schema: Types.TEnum<any>, references: Types.TSchema[], value: any): any {
-    return ValueCheck.Check(schema, references, value) ? value : ValueCreate.Create(schema, references)
+  function Date(schema: Types.TDate, references: Types.TSchema[], value: any): any {
+    return ValueCheck.Check(schema, references, value) ? ValueClone.Clone(value) : ValueCreate.Create(schema, references)
   }
 
   function Function(schema: Types.TFunction, references: Types.TSchema[], value: any): any {
@@ -215,7 +222,7 @@ export namespace ValueCast {
   }
 
   function Literal(schema: Types.TLiteral, references: Types.TSchema[], value: any): any {
-    return ValueCheck.Check(schema, references, value) ? value : ValueCreate.Create(schema, references)
+    return ValueCheck.Check(schema, references, value) ? ValueClone.Clone(value) : ValueCreate.Create(schema, references)
   }
 
   function Never(schema: Types.TNever, references: Types.TSchema[], value: any): any {
@@ -223,7 +230,7 @@ export namespace ValueCast {
   }
 
   function Null(schema: Types.TNull, references: Types.TSchema[], value: any): any {
-    return ValueCheck.Check(schema, references, value) ? value : ValueCreate.Create(schema, references)
+    return ValueCheck.Check(schema, references, value) ? ValueClone.Clone(value) : ValueCreate.Create(schema, references)
   }
 
   function Number(schema: Types.TNumber, references: Types.TSchema[], value: any): any {
@@ -240,6 +247,14 @@ export namespace ValueCast {
       if (!required.has(key) && value[key] === undefined) continue
       result[key] = Visit(property, references, value[key])
     }
+    // additional schema properties
+    if (typeof schema.additionalProperties === 'object') {
+      const propertyKeys = globalThis.Object.keys(schema.properties)
+      for (const objectKey of globalThis.Object.keys(value)) {
+        if (propertyKeys.includes(objectKey)) continue
+        result[objectKey] = Visit(schema.additionalProperties, references, value[objectKey])
+      }
+    }
     return result
   }
 
@@ -249,7 +264,7 @@ export namespace ValueCast {
 
   function Record(schema: Types.TRecord<any, any>, references: Types.TSchema[], value: any): any {
     if (ValueCheck.Check(schema, references, value)) return ValueClone.Clone(value)
-    if (value === null || typeof value !== 'object' || globalThis.Array.isArray(value)) return ValueCreate.Create(schema, references)
+    if (value === null || typeof value !== 'object' || globalThis.Array.isArray(value) || value instanceof globalThis.Date) return ValueCreate.Create(schema, references)
     const subschemaKey = globalThis.Object.keys(schema.patternProperties)[0]
     const subschema = schema.patternProperties[subschemaKey]
     const result = {} as Record<string, any>
@@ -288,23 +303,23 @@ export namespace ValueCast {
   }
 
   function Undefined(schema: Types.TUndefined, references: Types.TSchema[], value: any): any {
-    return ValueCheck.Check(schema, references, value) ? value : ValueCreate.Create(schema, references)
+    return ValueCheck.Check(schema, references, value) ? ValueClone.Clone(value) : ValueCreate.Create(schema, references)
   }
 
   function Union(schema: Types.TUnion, references: Types.TSchema[], value: any): any {
-    return UnionValueCast.Create(schema, references, value)
+    return ValueCheck.Check(schema, references, value) ? ValueClone.Clone(value) : UnionCastCreate.Create(schema, references, value)
   }
 
   function Uint8Array(schema: Types.TUint8Array, references: Types.TSchema[], value: any): any {
-    return ValueCheck.Check(schema, references, value) ? value : ValueCreate.Create(schema, references)
+    return ValueCheck.Check(schema, references, value) ? ValueClone.Clone(value) : ValueCreate.Create(schema, references)
   }
 
   function Unknown(schema: Types.TUnknown, references: Types.TSchema[], value: any): any {
-    return ValueCheck.Check(schema, references, value) ? value : ValueCreate.Create(schema, references)
+    return ValueCheck.Check(schema, references, value) ? ValueClone.Clone(value) : ValueCreate.Create(schema, references)
   }
 
   function Void(schema: Types.TVoid, references: Types.TSchema[], value: any): any {
-    return ValueCheck.Check(schema, references, value) ? value : ValueCreate.Create(schema, references)
+    return ValueCheck.Check(schema, references, value) ? ValueClone.Clone(value) : ValueCreate.Create(schema, references)
   }
 
   export function Visit(schema: Types.TSchema, references: Types.TSchema[], value: any): any {
@@ -319,8 +334,8 @@ export namespace ValueCast {
         return Boolean(anySchema, anyReferences, value)
       case 'Constructor':
         return Constructor(anySchema, anyReferences, value)
-      case 'Enum':
-        return Enum(anySchema, anyReferences, value)
+      case 'Date':
+        return Date(anySchema, anyReferences, value)
       case 'Function':
         return Function(anySchema, anyReferences, value)
       case 'Integer':
@@ -360,7 +375,6 @@ export namespace ValueCast {
       case 'Void':
         return Void(anySchema, anyReferences, value)
       default:
-        console.log(anySchema)
         throw new ValueCastUnknownTypeError(anySchema)
     }
   }

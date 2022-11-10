@@ -27,6 +27,7 @@ THE SOFTWARE.
 ---------------------------------------------------------------------------*/
 
 import * as Types from '@sidewinder/type'
+import { Format } from '@sidewinder/type/format'
 
 export class ValueCheckUnknownTypeError extends Error {
   constructor(public readonly schema: Types.TSchema) {
@@ -61,12 +62,29 @@ export namespace ValueCheck {
   function Constructor(schema: Types.TConstructor, references: Types.TSchema[], value: any): boolean {
     return Visit(schema.returns, references, value.prototype)
   }
-
+  function Date(schema: Types.TDate, references: Types.TSchema[], value: any): boolean {
+    if (!(value instanceof globalThis.Date)) {
+      return false
+    }
+    if (schema.exclusiveMinimumTimestamp && !(value.getTime() > schema.exclusiveMinimumTimestamp)) {
+      return false
+    }
+    if (schema.exclusiveMaximumTimestamp && !(value.getTime() < schema.exclusiveMaximumTimestamp)) {
+      return false
+    }
+    if (schema.minimumTimestamp && !(value.getTime() >= schema.minimumTimestamp)) {
+      return false
+    }
+    if (schema.maximumTimestamp && !(value.getTime() <= schema.maximumTimestamp)) {
+      return false
+    }
+    return true
+  }
   function Function(schema: Types.TFunction, references: Types.TSchema[], value: any): boolean {
     return typeof value === 'function'
   }
 
-  function Integer(schema: Types.TNumeric, references: Types.TSchema[], value: any): boolean {
+  function Integer(schema: Types.TInteger, references: Types.TSchema[], value: any): boolean {
     if (!(typeof value === 'number')) {
       return false
     }
@@ -103,7 +121,7 @@ export namespace ValueCheck {
     return value === null
   }
 
-  function Number(schema: Types.TNumeric, references: Types.TSchema[], value: any): boolean {
+  function Number(schema: Types.TNumber, references: Types.TSchema[], value: any): boolean {
     if (!(typeof value === 'number')) {
       return false
     }
@@ -149,6 +167,14 @@ export namespace ValueCheck {
         }
       }
     }
+    if (typeof schema.additionalProperties === 'object') {
+      for (const objectKey of globalThis.Object.keys(value)) {
+        if (propertyKeys.includes(objectKey)) continue
+        if (!Visit(schema.additionalProperties as Types.TSchema, references, value[objectKey])) {
+          return false
+        }
+      }
+    }
     for (const propertyKey of propertyKeys) {
       const propertySchema = schema.properties[propertyKey]
       if (schema.required && schema.required.includes(propertyKey)) {
@@ -171,7 +197,7 @@ export namespace ValueCheck {
   }
 
   function Record(schema: Types.TRecord<any, any>, references: Types.TSchema[], value: any): boolean {
-    if (!(typeof value === 'object' && value !== null && !globalThis.Array.isArray(value))) {
+    if (!(typeof value === 'object' && value !== null && !globalThis.Array.isArray(value) && !(value instanceof globalThis.Date))) {
       return false
     }
     const [keyPattern, valueSchema] = globalThis.Object.entries(schema.patternProperties)[0]
@@ -210,6 +236,11 @@ export namespace ValueCheck {
     if (schema.pattern !== undefined) {
       const regex = new RegExp(schema.pattern)
       if (!regex.test(value)) return false
+    }
+    if (schema.format !== undefined) {
+      if (!Format.Has(schema.format)) return false
+      const func = Format.Get(schema.format)!
+      return func(value)
     }
     return true
   }
@@ -274,6 +305,8 @@ export namespace ValueCheck {
         return Boolean(anySchema, anyReferences, value)
       case 'Constructor':
         return Constructor(anySchema, anyReferences, value)
+      case 'Date':
+        return Date(anySchema, anyReferences, value)
       case 'Function':
         return Function(anySchema, anyReferences, value)
       case 'Integer':

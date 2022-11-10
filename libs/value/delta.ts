@@ -31,6 +31,10 @@ import { Is, ObjectType, ArrayType, TypedArrayType, ValueType } from './is'
 import { ValueClone } from './clone'
 import { ValuePointer } from './pointer'
 
+// ---------------------------------------------------------------------
+// Operations
+// ---------------------------------------------------------------------
+
 export type Insert = Static<typeof Insert>
 export const Insert = Type.Object({
   type: Type.Literal('insert'),
@@ -53,6 +57,25 @@ export const Delete = Type.Object({
 
 export type Edit = Static<typeof Edit>
 export const Edit = Type.Union([Insert, Update, Delete])
+
+// ---------------------------------------------------------------------
+// Errors
+// ---------------------------------------------------------------------
+
+export class ValueDeltaObjectWithSymbolKeyError extends Error {
+  constructor(public readonly key: unknown) {
+    super('ValueDelta: Cannot diff objects with symbol keys')
+  }
+}
+export class ValueDeltaUnableToDiffUnknownValue extends Error {
+  constructor(public readonly value: unknown) {
+    super('ValueDelta: Unable to create diff edits for unknown value')
+  }
+}
+
+// ---------------------------------------------------------------------
+// ValueDelta
+// ---------------------------------------------------------------------
 
 export namespace ValueDelta {
   // ---------------------------------------------------------------------
@@ -80,20 +103,20 @@ export namespace ValueDelta {
     const currentKeys = [...globalThis.Object.keys(current), ...globalThis.Object.getOwnPropertySymbols(current)]
     const nextKeys = [...globalThis.Object.keys(next), ...globalThis.Object.getOwnPropertySymbols(next)]
     for (const key of currentKeys) {
-      if (typeof key === 'symbol') throw Error('ValueDelta: Cannot produce diff symbol keys')
+      if (typeof key === 'symbol') throw new ValueDeltaObjectWithSymbolKeyError(key)
       if (next[key] === undefined && nextKeys.includes(key)) yield Update(`${path}/${String(key)}`, undefined)
     }
     for (const key of nextKeys) {
       if (current[key] === undefined || next[key] === undefined) continue
-      if (typeof key === 'symbol') throw Error('ValueDelta: Cannot produce diff symbol keys')
+      if (typeof key === 'symbol') throw new ValueDeltaObjectWithSymbolKeyError(key)
       yield* Visit(`${path}/${String(key)}`, current[key], next[key])
     }
     for (const key of nextKeys) {
-      if (typeof key === 'symbol') throw Error('ValueDelta: Cannot produce diff symbol keys')
+      if (typeof key === 'symbol') throw new ValueDeltaObjectWithSymbolKeyError(key)
       if (current[key] === undefined) yield Insert(`${path}/${String(key)}`, next[key])
     }
     for (const key of currentKeys.reverse()) {
-      if (typeof key === 'symbol') throw Error('ValueDelta: Cannot produce diff symbol keys')
+      if (typeof key === 'symbol') throw new ValueDeltaObjectWithSymbolKeyError(key)
       if (next[key] === undefined && !nextKeys.includes(key)) yield Delete(`${path}/${String(key)}`)
     }
   }
@@ -135,11 +158,11 @@ export namespace ValueDelta {
     } else if (Is.Value(current)) {
       return yield* Value(path, current, next)
     } else {
-      throw new Error('ValueDelta: Cannot produce edits for value')
+      throw new ValueDeltaUnableToDiffUnknownValue(current)
     }
   }
 
-  export function Diff<T>(current: T, next: T): Edit[] {
+  export function Diff(current: unknown, next: unknown): Edit[] {
     return [...Visit('', current, next)]
   }
 
@@ -155,12 +178,12 @@ export namespace ValueDelta {
     return edits.length === 0
   }
 
-  export function Patch<T = any>(current: T, edits: Edit[]): T {
+  export function Patch<T = any>(current: unknown, edits: Edit[]): T {
     if (IsRootUpdate(edits)) {
       return ValueClone.Clone(edits[0].value) as T
     }
     if (IsIdentity(edits)) {
-      return ValueClone.Clone(current)
+      return ValueClone.Clone(current) as T
     }
     const clone = ValueClone.Clone(current)
     for (const edit of edits) {
@@ -179,6 +202,6 @@ export namespace ValueDelta {
         }
       }
     }
-    return clone
+    return clone as T
   }
 }

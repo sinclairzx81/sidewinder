@@ -91,13 +91,13 @@ export namespace ValueCreate {
     }
   }
 
-  function Enum(schema: Types.TEnum<any>, references: Types.TSchema[]): any {
+  function Date(schema: Types.TDate, references: Types.TSchema[]): any {
     if (schema.default !== undefined) {
       return schema.default
-    } else if (schema.anyOf.length === 0) {
-      throw new Error('ValueCreate.Enum: Cannot create default enum value as this enum has no items')
+    } else if (schema.minimumTimestamp !== undefined) {
+      return new globalThis.Date(schema.minimumTimestamp)
     } else {
-      return schema.anyOf[0].const
+      return new globalThis.Date(0)
     }
   }
 
@@ -291,8 +291,8 @@ export namespace ValueCreate {
         return Boolean(anySchema, anyReferences)
       case 'Constructor':
         return Constructor(anySchema, anyReferences)
-      case 'Enum':
-        return Enum(anySchema, anyReferences)
+      case 'Date':
+        return Date(anySchema, anyReferences)
       case 'Function':
         return Function(anySchema, anyReferences)
       case 'Integer':

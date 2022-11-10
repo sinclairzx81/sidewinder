@@ -3,7 +3,7 @@ import { Type } from '@sidewinder/type'
 import { Assert } from '../assert/index'
 
 describe('token/TokenDecoder', () => {
-  it('should decode a token', () => {
+  it('Should decode a token', () => {
     const [privateKey, publicKey] = Generate.KeyPair()
     const T = Type.Object({
       name: Type.String(),
@@ -19,7 +19,7 @@ describe('token/TokenDecoder', () => {
     Assert.deepEqual(decoded.roles, ['admin', 'moderator'])
   })
 
-  it('should throw if public key is invalid', () => {
+  it('Should throw if public key is invalid', () => {
     Assert.throws(() => {
       const [privateKey] = Generate.KeyPair()
       const publicKey = 'nonsense'
@@ -35,7 +35,7 @@ describe('token/TokenDecoder', () => {
     })
   })
 
-  it('should throw on decode if publicKey is invalid', () => {
+  it('Should throw on decode if publicKey is invalid', () => {
     Assert.throws(() => {
       const [privateKey1, publicKey1] = Generate.KeyPair()
       const [privateKey2, publicKey2] = Generate.KeyPair()
@@ -51,7 +51,7 @@ describe('token/TokenDecoder', () => {
     })
   })
 
-  it('should throw on decode if decoded data is invalid', () => {
+  it('Should throw on decode if decoded data is invalid', () => {
     Assert.throws(() => {
       const [privateKey, publicKey] = Generate.KeyPair()
       const T1 = Type.Object({
@@ -69,7 +69,7 @@ describe('token/TokenDecoder', () => {
     })
   })
 
-  it('should decode token with encryption', () => {
+  it('Should decode token with encryption', () => {
     const [privateKey, publicKey] = Generate.KeyPair()
     const T = Type.Object({
       name: Type.String(),
@@ -81,7 +81,7 @@ describe('token/TokenDecoder', () => {
     decoder.decode(encoded)
   })
 
-  it('should throw on decode token with encryption when data in bad', () => {
+  it('Should throw on decode token with encryption when data in bad', () => {
     Assert.throws(() => {
       const [privateKey, publicKey] = Generate.KeyPair()
       const T = Type.Object({
