@@ -20,14 +20,15 @@ export function * resolveFromPackageJson(version: string) {
 
 export function * resolveFromTsConfigJson(version: string) {
     const config = JSON.parse(fs.readFileSync('tsconfig.json', 'utf8'))
-    for(const module of Object.keys(config.compilerOptions.paths)) {
-        // This check omits packages with sub modules. Examples of this 
-        // include the @sidewinder/type package which houses the sub 
-        // packages @sidewinder/type/compiler, @sidewinder/type/conditional, 
-        // @sidewinder/type/errors, etc. We omit these from the package 
-        // dependencies as these are just compiled with the package.
-        if( module.split('/').length !== 2) continue
-        yield { name: module, version, local: true }
+    for(const packageName of Object.keys(config.compilerOptions.paths)) {
+        // The following checks the packages listed in tsconfig.json and
+        // omits submodule paths. This is due to some packages (such as
+        // the @sidewinder/type package) containing submodules which are
+        // compiled with the package (but not as a publishable package)
+        const components = packageName.split('/')
+        if(components.length < 2) continue
+        const name = `${components[0]}/${components[1]}` // only top level package
+        yield { name, version, local: true }
     }
 }
 
