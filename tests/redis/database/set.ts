@@ -6,7 +6,7 @@ describe('redis/RedisSet', () => {
   // add
   // ---------------------------------------------------------
 
-  it('should add values', async () => {
+  it('Should add values', async () => {
     const database = resolveDatabase()
     const set = database.set('vectors')
     await set.add([0, 0, 0])
@@ -16,20 +16,7 @@ describe('redis/RedisSet', () => {
     Assert.deepEqual(size, 3)
   })
 
-  it('should add values with overlap', async () => {
-    const database = resolveDatabase()
-    const set = database.set('vectors')
-    await set.add([0, 0, 0])
-    await set.add([1, 0, 0])
-    await set.add([2, 0, 0])
-    await set.add([0, 0, 0])
-    await set.add([1, 0, 0])
-    await set.add([2, 0, 0])
-    const size = await set.size()
-    Assert.deepEqual(size, 3)
-  })
-
-  it('should get values with overlap', async () => {
+  it('Should add values with overlap', async () => {
     const database = resolveDatabase()
     const set = database.set('vectors')
     await set.add([0, 0, 0])
@@ -42,7 +29,20 @@ describe('redis/RedisSet', () => {
     Assert.deepEqual(size, 3)
   })
 
-  it('should return correct has values', async () => {
+  it('Should get values with overlap', async () => {
+    const database = resolveDatabase()
+    const set = database.set('vectors')
+    await set.add([0, 0, 0])
+    await set.add([1, 0, 0])
+    await set.add([2, 0, 0])
+    await set.add([0, 0, 0])
+    await set.add([1, 0, 0])
+    await set.add([2, 0, 0])
+    const size = await set.size()
+    Assert.deepEqual(size, 3)
+  })
+
+  it('Should return correct has values', async () => {
     const database = resolveDatabase()
     const set = database.set('vectors')
     await set.add([0, 0, 0])
@@ -52,7 +52,7 @@ describe('redis/RedisSet', () => {
     Assert.deepEqual(value1, false)
   })
 
-  it('should clear set', async () => {
+  it('Should clear set', async () => {
     const database = resolveDatabase()
     const set = database.set('vectors')
     await set.add([0, 0, 0])
@@ -67,7 +67,7 @@ describe('redis/RedisSet', () => {
   // Iterator
   // ---------------------------------------------------------
 
-  it('should iterate set', async () => {
+  it('Should iterate set', async () => {
     const database = resolveDatabase()
     const set = database.set('vectors')
     await set.add([0, 0, 0])
@@ -84,7 +84,7 @@ describe('redis/RedisSet', () => {
   // Collect
   // ---------------------------------------------------------
 
-  it('should collect set', async () => {
+  it('Should collect set', async () => {
     const database = resolveDatabase()
     const set = database.set('vectors')
     await set.add([0, 0, 0])
@@ -98,7 +98,7 @@ describe('redis/RedisSet', () => {
   // Type Assertions
   // ---------------------------------------------------------
 
-  it('should throw add invalid value', async () => {
+  it('Should throw add invalid value', async () => {
     const database = resolveDatabase()
     const set = database.set('vectors')
     // @ts-ignore

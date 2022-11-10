@@ -27,7 +27,22 @@ THE SOFTWARE.
 ---------------------------------------------------------------------------*/
 
 import { TypeCompiler, TypeCheck } from '@sidewinder/type/compiler'
+import { Format } from '@sidewinder/type/format'
 import { TSchema } from '@sidewinder/type'
+import { FormatKind } from './formats'
+
+// -------------------------------------------------------------------------
+// Use Standard Formats
+// -------------------------------------------------------------------------
+
+Format.Set('date-time', (value) => FormatKind.isDateTime(value, true))
+Format.Set('date', (value) => FormatKind.isDate(value))
+Format.Set('time', (value) => FormatKind.isTime(value))
+Format.Set('email', (value) => FormatKind.isEmail(value))
+Format.Set('uuid', (value) => FormatKind.isUuid(value))
+Format.Set('url', (value) => FormatKind.isUrl(value))
+Format.Set('ipv6', (value) => FormatKind.isIPv6(value))
+Format.Set('ipv4', (value) => FormatKind.isIPv4(value))
 
 /** The Error type thrown on validator assert. */
 export class ValidateError extends Error {
@@ -54,7 +69,11 @@ export class Validator<T extends TSchema> {
   public check(value: unknown): ValidateResult {
     if (this.typeCheck.Check(value)) return { success: true, errors: [], errorText: '' }
     const errors = [...this.typeCheck.Errors(value)]
-    const errorText = errors.map((error) => `'${error.path}': ${error.message}`).join(' ')
+    const errorText = errors
+      .map((error) => {
+        return error.path === '' ? `${error.message}` : `${error.message} ${error.path}`
+      })
+      .join(', ')
     return { success: false, errors, errorText }
   }
 

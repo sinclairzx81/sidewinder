@@ -13,7 +13,7 @@ describe('server/WebService', () => {
   // ------------------------------------------------------------------
   // Lifetimes
   // ------------------------------------------------------------------
-  it('should dispatch lifetime events', async () => {
+  it('Should dispatch lifetime events', async () => {
     const buffer = [] as any[]
     const port = Assert.nextPort()
     const service = new WebService(Contract)
@@ -41,7 +41,7 @@ describe('server/WebService', () => {
 
     Assert.deepEqual(buffer, ['authorize', 'connect', 'call', 'close'])
   })
-  it('should dispatch lifetime events for subsequent requests', async () => {
+  it('Should dispatch lifetime events for subsequent requests', async () => {
     const buffer = [] as any[]
     const port = Assert.nextPort()
     const service = new WebService(Contract)
@@ -71,7 +71,7 @@ describe('server/WebService', () => {
     Assert.deepEqual(buffer, ['authorize', 'connect', 'call', 'close', 'authorize', 'connect', 'call', 'close'])
   })
 
-  it('should terminate on failed authorize', async () => {
+  it('Should terminate on failed authorize', async () => {
     const buffer = [] as any[]
     const port = Assert.nextPort()
     const service = new WebService(Contract)
@@ -105,7 +105,7 @@ describe('server/WebService', () => {
   // ------------------------------------------------------------------
   // Errors
   // ------------------------------------------------------------------
-  it('should not crash on synchronous error', async () => {
+  it('Should not crash on synchronous error', async () => {
     const buffer = [] as any[]
     const port = Assert.nextPort()
     const service = new WebService(Contract)
@@ -126,7 +126,7 @@ describe('server/WebService', () => {
 
     Assert.deepEqual(buffer, ['error', 'error', 'error', 'error'])
   })
-  it('should not crash on asynchronous error', async () => {
+  it('Should not crash on asynchronous error', async () => {
     const buffer = [] as any[]
     const port = Assert.nextPort()
     const service = new WebService(Contract)
@@ -152,7 +152,7 @@ describe('server/WebService', () => {
   // Contexts
   // ------------------------------------------------------------------
 
-  it('should forward service level context into method', async () => {
+  it('Should forward service level context into method', async () => {
     const buffer = [] as any[]
     const port = Assert.nextPort()
     const context = Type.Tuple([Type.Number(), Type.Number(), Type.Number()])
@@ -172,7 +172,7 @@ describe('server/WebService', () => {
     Assert.deepEqual(buffer[0], [1, 2, 3])
   })
 
-  it('should forward method level context into method', async () => {
+  it('Should forward method level context into method', async () => {
     const buffer = [] as any[]
     const port = Assert.nextPort()
     const service = new WebService(Contract)
@@ -194,7 +194,7 @@ describe('server/WebService', () => {
     Assert.deepEqual(buffer[0], [1, 2, 3])
   })
 
-  it('should forward service and method level context into method', async () => {
+  it('Should forward service and method level context into method', async () => {
     const buffer = [] as any[]
     const port = Assert.nextPort()
     const context = Type.Tuple([Type.Number(), Type.Number(), Type.Number()])
@@ -222,7 +222,7 @@ describe('server/WebService', () => {
   // Authorization
   // ------------------------------------------------------------------
 
-  it('should reject failed authorization attempts at the service level', async () => {
+  it('Should reject failed authorization attempts at the service level', async () => {
     const port = Assert.nextPort()
     const service = new WebService(Contract)
     service.event('authorize', () => {
@@ -240,7 +240,7 @@ describe('server/WebService', () => {
     Assert.equal(error.message, 'Authorization Failed')
   })
 
-  it('should reject failed authorization attempts at the method level', async () => {
+  it('Should reject failed authorization attempts at the method level', async () => {
     const port = Assert.nextPort()
     const service = new WebService(Contract)
     service.method(

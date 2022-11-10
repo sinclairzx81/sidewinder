@@ -16,10 +16,4 @@ describe('format/Format', () => {
     Format.Set('test#format3', () => true)
     Assert.equal(Format.Has('test#format3'), true)
   })
-
-  it('Should clear formats', () => {
-    Format.Set('test#format4', () => true)
-    Format.Clear()
-    Assert.equal(Format.Has('test#format4'), false)
-  })
 })

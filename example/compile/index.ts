@@ -2,31 +2,20 @@ import { Type } from '@sidewinder/contract'
 import { WebClient } from '@sidewinder/client'
 import { WebService, Host } from '@sidewinder/server'
 
-const Contract = Type.Contract({
-    format: 'msgpack',
-    server: {
-        test: Type.Function([Type.Number()], Type.Number())
-    }
+import { Validator } from '@sidewinder/validator'
+import { Value } from '@sidewinder/value'
+
+const T = Type.Object({
+    email: Type.String({ format: 'ipv4' })
 })
 
-const service = new WebService(Contract)
+const validator = new Validator(T)
 
-service.event('authorize', () => {
-    return 'hello'
-})
+const date = new Date()
 
-service.method('test', (context, data) => {
-    return 1
-})
+console.log(date.toISOString())
 
-const host = new Host()
-host.use('/', service)
-host.listen(5000)
-
-
-const client = new WebClient(Contract, 'http://localhost:5000')
-
-client.call('test', 1).then(result => {
-    
-})
+console.log(validator.check({
+    email: '10.0.0.0'
+}))
 

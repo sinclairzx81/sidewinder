@@ -3,7 +3,7 @@ import { Type } from '@sidewinder/type'
 import { Assert } from '../assert/index'
 
 describe('token/TokenEncoder', () => {
-  it('should encode a token', () => {
+  it('Should encode a token', () => {
     const [privateKey] = Generate.KeyPair()
     const T = Type.Object({
       name: Type.String(),
@@ -14,7 +14,7 @@ describe('token/TokenEncoder', () => {
     Assert.isTypeOf(encoded, 'string')
   })
 
-  it('should throw if private key is invalid', () => {
+  it('Should throw if private key is invalid', () => {
     Assert.throws(() => {
       const privateKey = 'nonsense'
       const T = Type.Object({
@@ -26,7 +26,7 @@ describe('token/TokenEncoder', () => {
     })
   })
 
-  it('should throw on encode if data is invalid', () => {
+  it('Should throw on encode if data is invalid', () => {
     Assert.throws(() => {
       const [privateKey] = Generate.KeyPair()
       const T = Type.Object({
@@ -39,7 +39,7 @@ describe('token/TokenEncoder', () => {
     })
   })
 
-  it('should encode a token with encryption', () => {
+  it('Should encode a token with encryption', () => {
     const [privateKey] = Generate.KeyPair()
     const T = Type.Object({
       name: Type.String(),

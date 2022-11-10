@@ -2,19 +2,19 @@ import { Queue } from '@sidewinder/channel'
 import { Assert } from '../assert/index'
 
 describe('channel/Queue', () => {
-  it('should enqueue value', () => {
+  it('Should enqueue value', () => {
     const queue = new Queue()
     queue.enqueue(0)
   })
 
-  it('should dequeue value', async () => {
+  it('Should dequeue value', async () => {
     const queue = new Queue()
     queue.enqueue(0)
     const value = await queue.dequeue()
     Assert.equal(value, 0)
   })
 
-  it('should dequeue many values', async () => {
+  it('Should dequeue many values', async () => {
     const queue = new Queue()
     queue.enqueue(0)
     queue.enqueue(1)
@@ -27,14 +27,14 @@ describe('channel/Queue', () => {
     Assert.deepEqual([value0, value1, value2, value3], [0, 1, 2, 3])
   })
 
-  it('should dequeue value on next tick', async () => {
+  it('Should dequeue value on next tick', async () => {
     const queue = new Queue()
     setTimeout(() => queue.enqueue(0))
     const value = await queue.dequeue()
     Assert.equal(value, 0)
   })
 
-  it('should dequeue many values on next tick', async () => {
+  it('Should dequeue many values on next tick', async () => {
     const queue = new Queue()
     setTimeout(() => {
       queue.enqueue(0)
@@ -49,7 +49,7 @@ describe('channel/Queue', () => {
     Assert.deepEqual([value0, value1, value2, value3], [0, 1, 2, 3])
   })
 
-  it('should report accurate bufferAmount', () => {
+  it('Should report accurate bufferAmount', () => {
     const queue = new Queue()
     queue.enqueue(0)
     queue.enqueue(1)
@@ -58,7 +58,7 @@ describe('channel/Queue', () => {
     Assert.equal(queue.bufferedAmount, 4)
   })
 
-  it('should report accurate bufferAmount on dequeue', async () => {
+  it('Should report accurate bufferAmount on dequeue', async () => {
     const queue = new Queue()
     queue.enqueue(0)
     queue.enqueue(1)

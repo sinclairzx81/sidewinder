@@ -2,18 +2,18 @@ import { Channel, Select } from '@sidewinder/channel'
 import { Assert } from '../assert/index'
 
 describe('channel/Select', () => {
-  it('should select on single channel', () => {
+  it('Should select on single channel', () => {
     const channel = new Channel()
     Select([channel])
   })
 
-  it('should select on multiple channels', () => {
+  it('Should select on multiple channels', () => {
     const channel0 = new Channel()
     const channel1 = new Channel()
     Select([channel0, channel1])
   })
 
-  it('should receive select from single channel', async () => {
+  it('Should receive select from single channel', async () => {
     const channel = new Channel()
     const select = Select([channel])
     channel.send(0)
@@ -33,7 +33,7 @@ describe('channel/Select', () => {
     Assert.equal(eof, null)
   })
 
-  it('should receive select from multiple channels', async () => {
+  it('Should receive select from multiple channels', async () => {
     const channel0 = new Channel()
     const channel1 = new Channel()
     const channel2 = new Channel()
@@ -73,7 +73,7 @@ describe('channel/Select', () => {
     Assert.equal(eof, null)
   })
 
-  it('should timeout if one of multiple channels never ends', async () => {
+  it('Should timeout if one of multiple channels never ends', async () => {
     const channel0 = new Channel()
     const channel1 = new Channel()
     const channel2 = new Channel()
@@ -104,7 +104,7 @@ describe('channel/Select', () => {
     await Assert.timeout(async () => await select.next(), 200)
   })
 
-  it('should throw if single channel errors', async () => {
+  it('Should throw if single channel errors', async () => {
     const channel = new Channel()
     const select = Select([channel])
     channel.send(0)
@@ -118,7 +118,7 @@ describe('channel/Select', () => {
     Assert.isInstanceOf(value2, Error)
   })
 
-  it('should throw if one of multiple channels errors', async () => {
+  it('Should throw if one of multiple channels errors', async () => {
     const channel0 = new Channel()
     const channel1 = new Channel()
     const select = Select([channel0, channel1])

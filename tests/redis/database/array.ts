@@ -6,7 +6,7 @@ describe('redis/RedisArray', () => {
   // Push
   // ---------------------------------------------------------
 
-  it('should push value', async () => {
+  it('Should push value', async () => {
     const database = resolveDatabase()
     const array = database.array('vectors')
     await array.push([0, 0, 0])
@@ -14,7 +14,7 @@ describe('redis/RedisArray', () => {
     Assert.deepEqual(length, 1)
   })
 
-  it('should push multiple values', async () => {
+  it('Should push multiple values', async () => {
     const database = resolveDatabase()
     const array = database.array('vectors')
     await array.push([0, 0, 0], [1, 1, 1])
@@ -26,7 +26,7 @@ describe('redis/RedisArray', () => {
     Assert.deepEqual(value1, [1, 1, 1])
   })
 
-  it('should push and get value', async () => {
+  it('Should push and get value', async () => {
     const database = resolveDatabase()
     const array = database.array('vectors')
     await array.push([0, 1, 2])
@@ -36,7 +36,7 @@ describe('redis/RedisArray', () => {
     Assert.deepEqual(length, 1)
   })
 
-  it('should push and pop value', async () => {
+  it('Should push and pop value', async () => {
     const database = resolveDatabase()
     const array = database.array('vectors')
     await array.push([0, 1, 2])
@@ -46,7 +46,7 @@ describe('redis/RedisArray', () => {
     Assert.deepEqual(length, 0)
   })
 
-  it('should push and shift value', async () => {
+  it('Should push and shift value', async () => {
     const database = resolveDatabase()
     const array = database.array('vectors')
     await array.push([0, 1, 2])
@@ -60,7 +60,7 @@ describe('redis/RedisArray', () => {
   // Unshift
   // ---------------------------------------------------------
 
-  it('should unshift value', async () => {
+  it('Should unshift value', async () => {
     const database = resolveDatabase()
     const array = database.array('vectors')
     await array.unshift([0, 0, 0])
@@ -68,7 +68,7 @@ describe('redis/RedisArray', () => {
     Assert.deepEqual(length, 1)
   })
 
-  it('should unshift multiple values', async () => {
+  it('Should unshift multiple values', async () => {
     const database = resolveDatabase()
     const array = database.array('vectors')
     await array.unshift([0, 0, 0], [1, 1, 1])
@@ -80,7 +80,7 @@ describe('redis/RedisArray', () => {
     Assert.deepEqual(value1, [1, 1, 1])
   })
 
-  it('should unshift and get value', async () => {
+  it('Should unshift and get value', async () => {
     const database = resolveDatabase()
     const array = database.array('vectors')
     await array.unshift([0, 1, 2])
@@ -90,7 +90,7 @@ describe('redis/RedisArray', () => {
     Assert.deepEqual(length, 1)
   })
 
-  it('should unshift and pop value', async () => {
+  it('Should unshift and pop value', async () => {
     const database = resolveDatabase()
     const array = database.array('vectors')
     await array.unshift([0, 1, 2])
@@ -104,7 +104,7 @@ describe('redis/RedisArray', () => {
   // Shift
   // ---------------------------------------------------------
 
-  it('should shift values', async () => {
+  it('Should shift values', async () => {
     const database = resolveDatabase()
     const array = database.array('vectors')
     await array.push([0, 0, 0])
@@ -121,7 +121,7 @@ describe('redis/RedisArray', () => {
   // Pop
   // ---------------------------------------------------------
 
-  it('should pop values', async () => {
+  it('Should pop values', async () => {
     const database = resolveDatabase()
     const array = database.array('vectors')
     await array.push([0, 0, 0])
@@ -138,7 +138,7 @@ describe('redis/RedisArray', () => {
   // Set
   // ---------------------------------------------------------
 
-  it('should set value at index', async () => {
+  it('Should set value at index', async () => {
     const database = resolveDatabase()
     const array = database.array('vectors')
     await array.push([0, 0, 0])
@@ -156,7 +156,7 @@ describe('redis/RedisArray', () => {
   // Clear
   // ---------------------------------------------------------
 
-  it('should clear values', async () => {
+  it('Should clear values', async () => {
     const database = resolveDatabase()
     const array = database.array('vectors')
     await array.push([0, 0, 0])
@@ -174,7 +174,7 @@ describe('redis/RedisArray', () => {
   // Iterate
   // ---------------------------------------------------------
 
-  it('should iterate values in an array', async () => {
+  it('Should iterate values in an array', async () => {
     const database = resolveDatabase()
     const array = database.array('vectors')
     await array.push([0, 0, 0])
@@ -197,7 +197,7 @@ describe('redis/RedisArray', () => {
   // Collect
   // ---------------------------------------------------------
 
-  it('should collect values in an array', async () => {
+  it('Should collect values in an array', async () => {
     const database = resolveDatabase()
     const array = database.array('vectors')
     await array.push([0, 0, 0])
@@ -217,21 +217,21 @@ describe('redis/RedisArray', () => {
   // Type Assertions
   // ---------------------------------------------------------
 
-  it('should throw push on invalid value', async () => {
+  it('Should throw push on invalid value', async () => {
     const database = resolveDatabase()
     const array = database.array('vectors')
     // @ts-ignore
     await Assert.throwsAsync(async () => await array.push([0, 0]))
   })
 
-  it('should throw unshift on invalid value', async () => {
+  it('Should throw unshift on invalid value', async () => {
     const database = resolveDatabase()
     const array = database.array('vectors')
     // @ts-ignore
     await Assert.throwsAsync(async () => await array.unshift([0, 0]))
   })
 
-  it('should throw set on invalid value', async () => {
+  it('Should throw set on invalid value', async () => {
     const database = resolveDatabase()
     const array = database.array('vectors')
     // @ts-ignore
