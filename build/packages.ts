@@ -11,15 +11,29 @@ export interface Package {
 // Resolve Local and Remote Packages
 // -----------------------------------------------------------------------
 
-export function * getPackages(version: string) {
+export function * resolveFromPackageJson(version: string) {
     const packageJson = JSON.parse(fs.readFileSync('package.json', 'utf8'))
     for(const [name, version] of Object.entries<string>(packageJson.dependencies)) {
         yield { name, version, local: false }
-    }
+    } 
+}
+
+export function * resolveFromTsConfigJson(version: string) {
     const config = JSON.parse(fs.readFileSync('tsconfig.json', 'utf8'))
     for(const module of Object.keys(config.compilerOptions.paths)) {
+        // This check omits packages with sub modules. Examples of this 
+        // include the @sidewinder/type package which houses the sub 
+        // packages @sidewinder/type/compiler, @sidewinder/type/conditional, 
+        // @sidewinder/type/errors, etc. We omit these from the package 
+        // dependencies as these are just compiled with the package.
+        if( module.split('/').length !== 2) continue
         yield { name: module, version, local: true }
     }
+}
+
+export function * getPackages(version: string) {
+    yield * resolveFromPackageJson(version)
+    yield * resolveFromTsConfigJson(version)
 }
 
 // -----------------------------------------------------------------------
@@ -27,7 +41,6 @@ export function * getPackages(version: string) {
 // -----------------------------------------------------------------------
 
 function * enumerateFileContents(directory: string): Generator<string> {
-  
     for(const content of fs.readdirSync(directory)) {
         const filepath = path.join(directory, content)
         const stat = fs.statSync(filepath)
