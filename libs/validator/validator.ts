@@ -26,8 +26,8 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
+import { TypeCompiler, TypeCheck } from '@sidewinder/type/compiler'
 import { TSchema } from '@sidewinder/type'
-import { Compiler, ValidateFunction } from './compiler'
 
 /** The Error type thrown on validator assert. */
 export class ValidateError extends Error {
@@ -45,29 +45,17 @@ export interface ValidateResult {
 
 /** Provides runtime validation for Sidewinder Types */
 export class Validator<T extends TSchema> {
-  private readonly compiler: Compiler<T>
-  constructor(private readonly schema: T, private readonly referencedSchemas: TSchema[] = []) {
-    this.compiler = new Compiler<T>(this.schema, this.referencedSchemas)
+  private readonly typeCheck: TypeCheck<T>
+  constructor(schema: T, references: TSchema[] = []) {
+    this.typeCheck = TypeCompiler.Compile(schema, references)
   }
 
   /** Check if the given data conforms to this validators schema. */
-  public check(data: unknown): ValidateResult {
-    try {
-      const result = this.compiler.validate(data)
-      if (!result) {
-        const errors = this.compiler.errors()!
-        const errorText = this.compiler.errorsText()
-        return { success: false, errors, errorText }
-      } else {
-        return { success: true, errors: [], errorText: '' }
-      }
-    } catch (error) {
-      if (error instanceof Error) {
-        return { success: false, errors: [error], errorText: error.message }
-      } else {
-        return { success: false, errors: [], errorText: 'Unknown error validating schema' }
-      }
-    }
+  public check(value: unknown): ValidateResult {
+    if (this.typeCheck.Check(value)) return { success: true, errors: [], errorText: '' }
+    const errors = [...this.typeCheck.Errors(value)]
+    const errorText = errors.map((error) => `'${error.path}': ${error.message}`).join(' ')
+    return { success: false, errors, errorText }
   }
 
   /** Asserts if the given data conforms to this validators schema. */

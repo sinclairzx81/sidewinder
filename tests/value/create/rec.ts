@@ -2,7 +2,7 @@ import { Value } from '@sidewinder/value'
 import { Type } from '@sidewinder/type'
 import { Assert } from '../../assert/index'
 
-describe('value/create/Rec', () => {
+describe('value/create/Recursive', () => {
   it('Should create value', () => {
     const T = Type.Recursive((Self) =>
       Type.Object({

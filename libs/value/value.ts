@@ -27,6 +27,7 @@ THE SOFTWARE.
 ---------------------------------------------------------------------------*/
 
 import * as Types from '@sidewinder/type'
+import { ValueErrors, ValueError } from '@sidewinder/type/errors'
 import { ValueAssign, Assignable } from './assign'
 import { ValueEqual } from './equal'
 import { ValueCast } from './cast'
@@ -35,6 +36,7 @@ import { ValueCreate } from './create'
 import { ValueCheck } from './check'
 import { ValueDelta, Edit } from './delta'
 import { ValueHash } from './hash'
+
 export { Edit, Insert, Update, Delete } from './delta'
 
 /** The value namespace runs operations on values */
@@ -69,6 +71,15 @@ export namespace Value {
   export function Check(...args: any[]) {
     const [schema, references, value] = args.length === 3 ? [args[0], args[1], args[2]] : [args[0], [], args[1]]
     return ValueCheck.Check(schema, references, value)
+  }
+
+  /** Returns an iterator for each error in this value. */
+  export function Errors<T extends Types.TSchema, R extends Types.TSchema[]>(schema: T, references: [...R], value: unknown): IterableIterator<ValueError>
+  /** Returns an iterator for each error in this value. */
+  export function Errors<T extends Types.TSchema>(schema: T, value: unknown): IterableIterator<ValueError>
+  export function* Errors(...args: any[]) {
+    const [schema, references, value] = args.length === 3 ? [args[0], args[1], args[2]] : [args[0], [], args[1]]
+    yield* ValueErrors.Errors(schema, references, value)
   }
 
   /** Returns true if left and right values are structurally equal */
