@@ -168,7 +168,7 @@ export class WebSocketClient<Contract extends TContract> {
     const handle = this.responder.register('client')
     const request = RpcProtocol.encodeRequest(handle, method, params)
     const message = this.encoder.encode(request)
-    await this.socket.send(message)
+    this.socketSendInternal(message).catch((error) => this.responder.reject(handle, error)) // must reject on error (retry socket)
     return await this.responder.wait(handle)
   }
 
@@ -184,7 +184,9 @@ export class WebSocketClient<Contract extends TContract> {
         this.assertCanSend()
         const request = RpcProtocol.encodeRequest(undefined, method as string, params)
         const message = this.encoder.encode(request)
-        await this.socket.send(message)
+        await this.socketSendInternal(message).catch((error) => {
+          /** ignore */
+        })
       } catch (error) {
         this.onErrorCallback(error)
       }
@@ -203,7 +205,7 @@ export class WebSocketClient<Contract extends TContract> {
     if (rpcRequest.id === undefined || rpcRequest.id === null) return
     const response = RpcProtocol.encodeResult(rpcRequest.id, result)
     const buffer = this.encoder.encode(response)
-    await this.socket.send(buffer)
+    await this.socketSendInternal(buffer)
   }
 
   private async sendResponseWithError(rpcRequest: RpcRequest, error: Error) {
@@ -211,14 +213,14 @@ export class WebSocketClient<Contract extends TContract> {
     if (error instanceof Exception) {
       const response = RpcProtocol.encodeError(rpcRequest.id, { code: error.code, message: error.message, data: error.data })
       const buffer = this.encoder.encode(response)
-      await this.socket.send(buffer)
+      await this.socketSendInternal(buffer)
     } else {
       const code = RpcErrorCode.InternalServerError
       const message = 'Internal Server Error'
       const data = {}
       const response = RpcProtocol.encodeError(rpcRequest.id, { code, message, data })
       const buffer = this.encoder.encode(response)
-      await this.socket.send(buffer)
+      await this.socketSendInternal(buffer)
     }
   }
 
@@ -242,6 +244,20 @@ export class WebSocketClient<Contract extends TContract> {
       const { message, code, data } = rpcResponse.error
       this.responder.reject(rpcResponse.id, new Exception(message, code, data))
     }
+  }
+
+  // -------------------------------------------------------------------------------------------
+  // Socket Send Internal
+  // -------------------------------------------------------------------------------------------
+
+  /**
+   * Internal Socket Send. This is required as the Retry send is asynchronous, while the
+   * standard web socket is synchronous. Note that in the instance the retry socket is
+   * called without a retry buffer, this results in an immediate throw. In this scenario,
+   * the responder must remove it's handle and reject to the caller.
+   */
+  private async socketSendInternal(message: unknown) {
+    return await this.socket.send(message)
   }
 
   // -------------------------------------------------------------------------------------------

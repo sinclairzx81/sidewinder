@@ -75,7 +75,7 @@ export class Responder {
 
   /** Resolves a deferred with the given result */
   public resolve(handle: string, result: unknown) {
-    if (!this.entries.has(handle)) return console.log('NO HANDLE')
+    if (!this.entries.has(handle)) return
     const deferred = this.entries.get(handle)!
     deferred.resolve(result)
   }
@@ -89,8 +89,10 @@ export class Responder {
 
   /** Rejects all deferreds matching the given context */
   public rejectFor(context: string, error: unknown) {
-    for (const [handle, deferred] of this.entries) {
-      if (deferred.context === context) deferred.reject(error)
+    for (const deferred of this.entries.values()) {
+      if (deferred.context === context) {
+        deferred.reject(error)
+      }
     }
   }
 }
