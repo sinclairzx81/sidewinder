@@ -27,5 +27,6 @@ THE SOFTWARE.
 ---------------------------------------------------------------------------*/
 
 export * from './collection'
+export * from './cursor'
 export * from './database'
 export * from './type'
