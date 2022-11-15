@@ -184,9 +184,7 @@ export class WebSocketClient<Contract extends TContract> {
         this.assertCanSend()
         const request = RpcProtocol.encodeRequest(undefined, method as string, params)
         const message = this.encoder.encode(request)
-        await this.socketSendInternal(message).catch((error) => {
-          /** ignore */
-        })
+        await this.socketSendInternal(message)
       } catch (error) {
         this.onErrorCallback(error)
       }
