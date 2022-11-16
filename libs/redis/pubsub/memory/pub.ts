@@ -26,7 +26,35 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-export * from './memory/index'
-export * from './redis/index'
-export * from './pub'
-export * from './sub'
+import { TSchema, Static } from '@sidewinder/type'
+import { Validator, ValidateError } from '@sidewinder/validator'
+import { Topics } from './topics'
+import { Pub } from '../pub'
+
+/** In-Memory publisher */
+export class MemoryPub<T extends TSchema> implements Pub<Static<T>> {
+  readonly #validator: Validator<T>
+  #ended: boolean
+
+  constructor(private readonly schema: T, private readonly topic: string) {
+    this.#validator = new Validator(this.schema)
+    this.#ended = false
+  }
+
+  /** Sends a message */
+  public async send(value: Static<T>) {
+    if (this.#ended) return
+    this.#assertValue(value)
+    Topics.send(this.topic, value)
+  }
+
+  /** Disposes of this publisher */
+  public dispose() {
+    this.#ended = true
+  }
+
+  #assertValue(value: unknown) {
+    const result = this.#validator.check(value)
+    if (!result.success) throw new ValidateError(result.errors)
+  }
+}

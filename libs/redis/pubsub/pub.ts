@@ -26,56 +26,10 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-import { Redis, RedisOptions } from 'ioredis'
-import { Validator } from '@sidewinder/validator'
-import { RedisEncoder } from '../encoder'
-import { RedisConnect } from '../connect'
-import { Static, TSchema } from '../type'
-
-export class RedisPub<Schema extends TSchema> {
-  private readonly validator: Validator<TSchema>
-  private readonly encoder: RedisEncoder
-  private ended: boolean
-
-  constructor(private readonly schema: Schema, public readonly topic: string, private readonly redis: Redis) {
-    this.validator = new Validator(this.schema)
-    this.encoder = new RedisEncoder(this.schema)
-    this.ended = false
-  }
-
-  /** Publishes the given value to the topic. */
-  public async send(value: Static<Schema>): Promise<void> {
-    if (this.ended) return
-    this.validator.assert(value)
-    await this.redis.publish(this.encodeKey(), this.encoder.encode(value))
-  }
-
+/** Interface for Publisher Channels */
+export interface Pub<T> {
+  /** Sends a value to this publisher */
+  send(value: T): Promise<void>
   /** Disposes of this publisher */
-  public dispose() {
-    this.ended = true
-    this.redis.disconnect(false)
-  }
-
-  // ------------------------------------------------------------
-  // Key Encoding
-  // ------------------------------------------------------------
-
-  private encodeKey() {
-    return `sw::topic:${this.topic}`
-  }
-
-  // ------------------------------------------------------------
-  // Connect
-  // ------------------------------------------------------------
-
-  /** Connects to Redis with the given parameters */
-  public static connect<Schema extends TSchema = TSchema>(schema: Schema, topic: string, port?: number, host?: string, options?: RedisOptions): Promise<RedisPub<Schema>>
-  /** Connects to Redis with the given parameters */
-  public static connect<Schema extends TSchema = TSchema>(schema: Schema, topic: string, host?: string, options?: RedisOptions): Promise<RedisPub<Schema>>
-  /** Connects to Redis with the given parameters */
-  public static connect<Schema extends TSchema = TSchema>(schema: Schema, topic: string, options: RedisOptions): Promise<RedisPub<Schema>>
-  public static async connect(...args: any[]): Promise<any> {
-    const [schema, topic, params] = [args[0], args[1], args.slice(2)]
-    return new RedisPub(schema, topic, await RedisConnect.connect(...params))
-  }
+  dispose(): void
 }

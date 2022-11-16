@@ -26,7 +26,5 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-export * from './memory/index'
-export * from './redis/index'
 export * from './pub'
 export * from './sub'
