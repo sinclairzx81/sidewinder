@@ -1,6 +1,6 @@
 /*--------------------------------------------------------------------------
 
-@sidewinder/type/format
+@sidewinder/type/custom
 
 The MIT License (MIT)
 
@@ -26,29 +26,4 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-export type FormatValidationFunction = (value: string) => boolean
-
-/** Provides functions to create user defined string formats */
-export namespace Format {
-  const formats = new Map<string, FormatValidationFunction>()
-
-  /** Clears all user defined string formats */
-  export function Clear() {
-    return formats.clear()
-  }
-
-  /** Returns true if the user defined string format exists */
-  export function Has(format: string) {
-    return formats.has(format)
-  }
-
-  /** Sets a validation function for a user defined string format */
-  export function Set(format: string, func: FormatValidationFunction) {
-    formats.set(format, func)
-  }
-
-  /** Gets a validation function for a user defined string format */
-  export function Get(format: string) {
-    return formats.get(format)
-  }
-}
+export * from './custom'

@@ -28,10 +28,11 @@ THE SOFTWARE.
 
 import * as Types from '@sidewinder/type'
 import { Format } from '@sidewinder/type/format'
+import { Custom } from '@sidewinder/type/custom'
 
 export class ValueCheckUnknownTypeError extends Error {
   constructor(public readonly schema: Types.TSchema) {
-    super('ValueCheck: Unknown type')
+    super(`ValueCheck: ${schema[Types.Kind] ? `Unknown type '${schema[Types.Kind]}'` : 'Unknown type'}`)
   }
 }
 
@@ -297,6 +298,12 @@ export namespace ValueCheck {
     return value === null
   }
 
+  function UserDefined(schema: Types.TSchema, references: Types.TSchema[], value: unknown): boolean {
+    if (!Custom.Has(schema[Types.Kind])) return false
+    const func = Custom.Get(schema[Types.Kind])!
+    return func(schema, value)
+  }
+
   function Visit<T extends Types.TSchema>(schema: T, references: Types.TSchema[], value: any): boolean {
     const anyReferences = schema.$id === undefined ? references : [schema, ...references]
     const anySchema = schema as any
@@ -348,7 +355,8 @@ export namespace ValueCheck {
       case 'Void':
         return Void(anySchema, anyReferences, value)
       default:
-        throw new ValueCheckUnknownTypeError(anySchema)
+        if (!Custom.Has(anySchema[Types.Kind])) throw new ValueCheckUnknownTypeError(anySchema)
+        return UserDefined(anySchema, anyReferences, value)
     }
   }
 

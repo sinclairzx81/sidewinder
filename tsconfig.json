@@ -26,6 +26,7 @@
             "@sidewinder/token":            ["libs/token/index.ts"],
             "@sidewinder/type/compiler":    ["libs/type/compiler/index.ts"],
             "@sidewinder/type/conditional": ["libs/type/conditional/index.ts"],
+            "@sidewinder/type/custom":      ["libs/type/custom/index.ts"],
             "@sidewinder/type/errors":      ["libs/type/errors/index.ts"],
             "@sidewinder/type/format":      ["libs/type/format/index.ts"],
             "@sidewinder/type/guard":       ["libs/type/guard/index.ts"],

@@ -27,6 +27,7 @@ THE SOFTWARE.
 ---------------------------------------------------------------------------*/
 
 import * as Types from '@sidewinder/type'
+import { Custom } from '@sidewinder/type/custom'
 
 export class ValueCreateUnknownTypeError extends Error {
   constructor(public readonly schema: Types.TSchema) {
@@ -277,6 +278,14 @@ export namespace ValueCreate {
     return null
   }
 
+  function UserDefined(schema: Types.TSchema, references: Types.TSchema[]): any {
+    if (schema.default !== undefined) {
+      return schema.default
+    } else {
+      throw new Error('ValueCreate.UserDefined: User defined types must specify a default value')
+    }
+  }
+
   /** Creates a value from the given schema. If the schema specifies a default value, then that value is returned. */
   export function Visit<T extends Types.TSchema>(schema: T, references: Types.TSchema[]): Types.Static<T> {
     const anyReferences = schema.$id === undefined ? references : [schema, ...references]
@@ -332,7 +341,8 @@ export namespace ValueCreate {
       case 'Void':
         return Void(anySchema, anyReferences)
       default:
-        throw new ValueCreateUnknownTypeError(anySchema)
+        if (!Custom.Has(anySchema[Types.Kind])) throw new ValueCreateUnknownTypeError(anySchema)
+        return UserDefined(anySchema, anyReferences)
     }
   }
 

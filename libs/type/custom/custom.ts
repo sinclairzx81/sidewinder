@@ -1,6 +1,6 @@
 /*--------------------------------------------------------------------------
 
-@sidewinder/type/format
+@sidewinder/type/custom
 
 The MIT License (MIT)
 
@@ -26,29 +26,29 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-export type FormatValidationFunction = (value: string) => boolean
+export type CustomValidationFunction<TSchema> = (schema: TSchema, value: unknown) => boolean
 
-/** Provides functions to create user defined string formats */
-export namespace Format {
-  const formats = new Map<string, FormatValidationFunction>()
+/** Provides functions to create user defined types */
+export namespace Custom {
+  const customs = new Map<string, CustomValidationFunction<any>>()
 
-  /** Clears all user defined string formats */
+  /** Clears all user defined types */
   export function Clear() {
-    return formats.clear()
+    return customs.clear()
   }
 
-  /** Returns true if the user defined string format exists */
-  export function Has(format: string) {
-    return formats.has(format)
+  /** Returns true if this user defined type exists */
+  export function Has(kind: string) {
+    return customs.has(kind)
   }
 
-  /** Sets a validation function for a user defined string format */
-  export function Set(format: string, func: FormatValidationFunction) {
-    formats.set(format, func)
+  /** Sets a validation function for a user defined type */
+  export function Set<TSchema = unknown>(kind: string, func: CustomValidationFunction<TSchema>) {
+    customs.set(kind, func)
   }
 
-  /** Gets a validation function for a user defined string format */
-  export function Get(format: string) {
-    return formats.get(format)
+  /** Gets a custom validation function for a user defined type */
+  export function Get(kind: string) {
+    return customs.get(kind)
   }
 }

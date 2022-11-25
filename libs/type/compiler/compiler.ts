@@ -29,6 +29,7 @@ THE SOFTWARE.
 import { ValueErrors, ValueError } from '../errors/index'
 import { TypeGuard } from '../guard/index'
 import { Format } from '../format/index'
+import { Custom } from '../custom/index'
 import * as Types from '../type'
 
 // -------------------------------------------------------------------
@@ -232,9 +233,9 @@ export namespace TypeCompiler {
     // Reference: If we have seen this reference before we can just yield and return
     // the function call. If this isn't the case we defer to visit to generate and
     // set the function for subsequent passes. Consider for refactor.
-    if (names.has(schema.$ref)) return yield `(${CreateFunctionName(schema.$ref)}(${value}))`
-    if (!referenceMap.has(schema.$ref)) throw Error(`TypeCompiler.Ref: Cannot de-reference schema with $id '${schema.$ref}'`)
-    const reference = referenceMap.get(schema.$ref)!
+    if (state_local_function_names.has(schema.$ref)) return yield `(${CreateFunctionName(schema.$ref)}(${value}))`
+    if (!state_reference_map.has(schema.$ref)) throw Error(`TypeCompiler.Ref: Cannot de-reference schema with $id '${schema.$ref}'`)
+    const reference = state_reference_map.get(schema.$ref)!
     yield* Visit(reference, value)
   }
 
@@ -289,12 +290,18 @@ export namespace TypeCompiler {
     yield `(${value} === null)`
   }
 
+  function* UserDefined(schema: Types.TSchema, value: string): IterableIterator<string> {
+    const schema_key = `schema_key_${state_remote_custom_types.size}`
+    state_remote_custom_types.set(schema_key, schema)
+    yield `(custom('${schema[Types.Kind]}', '${schema_key}', ${value}))`
+  }
+
   function* Visit<T extends Types.TSchema>(schema: T, value: string): IterableIterator<string> {
     // Reference: Referenced schemas can originate from either additional schemas
     // or inline in the schema itself. Ideally the recursive path should align to
     // reference path. Consider for refactor.
-    if (schema.$id && !names.has(schema.$id)) {
-      names.add(schema.$id)
+    if (schema.$id && !state_local_function_names.has(schema.$id)) {
+      state_local_function_names.add(schema.$id)
       const name = CreateFunctionName(schema.$id)
       const body = CreateFunction(name, schema, 'value')
       PushFunction(body)
@@ -350,29 +357,32 @@ export namespace TypeCompiler {
       case 'Void':
         return yield* Void(anySchema, value)
       default:
-        throw new TypeCompilerUnknownTypeError(schema)
+        if (!Custom.Has(anySchema[Types.Kind])) throw new TypeCompilerUnknownTypeError(schema)
+        return yield* UserDefined(anySchema, value)
     }
   }
 
   // -------------------------------------------------------------------
-  // Compile State
+  // Compiler State
   // -------------------------------------------------------------------
 
-  const referenceMap = new Map<string, Types.TSchema>()
-  const locals = new Set<string>() // local variables and functions
-  const names = new Set<string>() // cache of local functions
+  const state_reference_map = new Map<string, Types.TSchema>() // tracks schemas with identifiers
+  const state_local_variables = new Set<string>() // local variables and functions
+  const state_local_function_names = new Set<string>() // local function names used call ref validators
+  const state_remote_custom_types = new Map<string, unknown>() // remote custom types used during compilation
 
   function ResetCompiler() {
-    referenceMap.clear()
-    locals.clear()
-    names.clear()
+    state_reference_map.clear()
+    state_local_variables.clear()
+    state_local_function_names.clear()
+    state_remote_custom_types.clear()
   }
 
   function AddReferences(schemas: Types.TSchema[] = []) {
     for (const schema of schemas) {
       if (!schema.$id) throw new Error(`TypeCompiler: Referenced schemas must specify an $id.`)
-      if (referenceMap.has(schema.$id)) throw new Error(`TypeCompiler: Duplicate schema $id found for '${schema.$id}'`)
-      referenceMap.set(schema.$id, schema)
+      if (state_reference_map.has(schema.$id)) throw new Error(`TypeCompiler: Duplicate schema $id found for '${schema.$id}'`)
+      state_reference_map.set(schema.$id, schema)
     }
   }
 
@@ -390,17 +400,17 @@ export namespace TypeCompiler {
   }
 
   function PushFunction(functionBody: string) {
-    locals.add(functionBody)
+    state_local_variables.add(functionBody)
   }
 
   function PushLocal(expression: string) {
-    const local = `local_${locals.size}`
-    locals.add(`const ${local} = ${expression}`)
+    const local = `local_${state_local_variables.size}`
+    state_local_variables.add(`const ${local} = ${expression}`)
     return local
   }
 
   function GetLocals() {
-    return [...locals.values()]
+    return [...state_local_variables.values()]
   }
 
   // -------------------------------------------------------------------
@@ -419,12 +429,21 @@ export namespace TypeCompiler {
   export function Compile<T extends Types.TSchema>(schema: T, references: Types.TSchema[] = []): TypeCheck<T> {
     TypeGuard.Assert(schema, references)
     const code = Build(schema, references)
-    const func1 = globalThis.Function('format', code)
-    const func2 = func1((format: string, value: string) => {
-      if (!Format.Has(format)) return false
-      const func = Format.Get(format)!
-      return func(value)
-    })
-    return new TypeCheck(schema, references, func2, code)
+    const custom_schemas = new Map(state_remote_custom_types)
+    const compiledFunction = globalThis.Function('custom', 'format', code)
+    const checkFunction = compiledFunction(
+      (kind: string, schema_key: string, value: unknown) => {
+        if (!Custom.Has(kind) || !custom_schemas.has(schema_key)) return false
+        const schema = custom_schemas.get(schema_key)!
+        const func = Custom.Get(kind)!
+        return func(schema, value)
+      },
+      (format: string, value: string) => {
+        if (!Format.Has(format)) return false
+        const func = Format.Get(format)!
+        return func(value)
+      },
+    )
+    return new TypeCheck(schema, references, checkFunction, code)
   }
 }
