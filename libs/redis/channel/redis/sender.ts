@@ -34,33 +34,33 @@ import { RedisConnect } from '../../connect'
 import { Message } from './message'
 
 export class RedisSender<T extends TSchema> implements SyncSender<Static<T>> {
-  private readonly encoder: RedisEncoder<Message<T>>
-  private ended: boolean
+  readonly #encoder: RedisEncoder<Message<T>>
+  #ended: boolean
   constructor(private readonly schema: TSchema, private readonly channel: string, private readonly redis: Redis) {
-    this.encoder = new RedisEncoder(Message(this.schema))
-    this.ended = false
+    this.#encoder = new RedisEncoder(Message(this.schema))
+    this.#ended = false
   }
 
   /** Sends the given value to this channel. If channel has ended no action. */
   public async send(value: Static<T>): Promise<void> {
-    if (this.ended) return
-    await this.redis.rpush(this.encodeKey(), this.encoder.encode({ type: 'next', value }))
+    if (this.#ended) return
+    await this.redis.rpush(this.encodeKey(), this.#encoder.encode({ type: 'next', value }))
   }
 
   /** Sends the given error to this channel causing the receiver to throw on next(). If channel has ended no action. */
   public async error(error: Error): Promise<void> {
-    if (this.ended) return
-    this.ended = true
-    await this.redis.rpush(this.encodeKey(), this.encoder.encode({ type: 'error', error: error.message }))
-    await this.redis.rpush(this.encodeKey(), this.encoder.encode({ type: 'end' }))
+    if (this.#ended) return
+    this.#ended = true
+    await this.redis.rpush(this.encodeKey(), this.#encoder.encode({ type: 'error', error: error.message }))
+    await this.redis.rpush(this.encodeKey(), this.#encoder.encode({ type: 'end' }))
     this.redis.disconnect()
   }
 
   /** Ends this channel. This will disconnect this sender from Redis. */
   public async end(): Promise<void> {
-    if (this.ended) return
-    this.ended = true
-    await this.redis.rpush(this.encodeKey(), this.encoder.encode({ type: 'end' }))
+    if (this.#ended) return
+    this.#ended = true
+    await this.redis.rpush(this.encodeKey(), this.#encoder.encode({ type: 'end' }))
     this.redis.disconnect(false)
   }
 

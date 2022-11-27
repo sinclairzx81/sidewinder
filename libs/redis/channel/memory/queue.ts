@@ -61,7 +61,7 @@ export class Queue<T> {
     this.#callbacks = new Map<QueueHandle, QueueCallbackFunction<T>>()
     this.#ordinal = 0
   }
-  
+
   public register(callback: QueueCallbackFunction<T>): number {
     const handle = this.#ordinal++
     this.#callbacks.set(handle, callback)

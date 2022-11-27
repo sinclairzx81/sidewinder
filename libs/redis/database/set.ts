@@ -27,10 +27,9 @@ THE SOFTWARE.
 ---------------------------------------------------------------------------*/
 
 import { Redis } from 'ioredis'
-import { Validator } from '@sidewinder/validator'
+import { Static, TSchema } from '@sidewinder/type'
 import { ValueHash } from '@sidewinder/hash'
 import { RedisEncoder, RedisDecoder } from '../codecs/index'
-import { Static, TSchema } from '../type'
 
 /**
  * A RedisSet is analogous to a JavaScript Set. It provides asynchronous add, delete and has methods
@@ -38,12 +37,12 @@ import { Static, TSchema } from '../type'
  * JavaScript objects and arrays to be safely added to sets.
  */
 export class RedisSet<T extends TSchema> {
-  private readonly encoder: RedisEncoder<T>
-  private readonly decoder: RedisDecoder<T>
+  readonly #encoder: RedisEncoder<T>
+  readonly #decoder: RedisDecoder<T>
 
   constructor(private readonly schema: T, private readonly redis: Redis, private readonly keyspace: string) {
-    this.encoder = new RedisEncoder(this.schema)
-    this.decoder = new RedisDecoder(this.schema)
+    this.#encoder = new RedisEncoder(this.schema)
+    this.#decoder = new RedisDecoder(this.schema)
   }
 
   /** Async iterator for this Set */
@@ -65,7 +64,7 @@ export class RedisSet<T extends TSchema> {
 
   /** Adds the given value to the Set */
   public async add(value: Static<T>) {
-    return this.redis.set(this.encodeKey(value), this.encoder.encode(value))
+    return this.redis.set(this.encodeKey(value), this.#encoder.encode(value))
   }
 
   /** Deletes the given value from the Set */
@@ -91,7 +90,7 @@ export class RedisSet<T extends TSchema> {
     for (const key of await this.redis.keys(this.encodeAllKeys())) {
       const value = await this.redis.get(key)
       if (value === null) continue
-      yield this.decoder.decode(value)
+      yield this.#decoder.decode(value)
     }
   }
 

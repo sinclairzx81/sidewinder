@@ -40,6 +40,7 @@ export class MemoryReceiverError extends Error {
 export class MemoryReceiver<T extends TSchema> implements Receiver<Static<T>> {
   readonly #validator: Validator<T>
   readonly #channel: Channel<Static<T>>
+
   constructor(private readonly schema: T, private readonly channel: string) {
     Queues.register(this.channel, (message) => this.#onMessage(message))
     this.#validator = new Validator(this.schema)

@@ -27,16 +27,17 @@ THE SOFTWARE.
 ---------------------------------------------------------------------------*/
 
 import { Redis } from 'ioredis'
+import { Static, TSchema } from '@sidewinder/type'
 import { RedisEncoder, RedisDecoder } from '../codecs/index'
-import { Static, TSchema } from '../type'
 
 /** A RedisArray is analogous to a JavaScript Array. It provides asynchronous push, shift, pop, unshift and indexing values in a remote Redis list. */
 export class RedisArray<T extends TSchema> {
-  readonly encoder: RedisEncoder<T>
-  readonly decoder: RedisDecoder<T>
+  readonly #encoder: RedisEncoder<T>
+  readonly #decoder: RedisDecoder<T>
+
   constructor(private readonly schema: T, private readonly redis: Redis, private readonly keyspace: string) {
-    this.encoder = new RedisEncoder(this.schema)
-    this.decoder = new RedisDecoder(this.schema)
+    this.#encoder = new RedisEncoder(this.schema)
+    this.#decoder = new RedisDecoder(this.schema)
   }
 
   /** Async iterator for this Array */
@@ -58,17 +59,17 @@ export class RedisArray<T extends TSchema> {
   public async get(index: number): Promise<Static<T> | undefined> {
     const value = await this.redis.lindex(this.resolveKey(), index)
     if (value === null) return undefined
-    return this.decoder.decode(value)
+    return this.#decoder.decode(value)
   }
 
   /** Sets the value at the given index */
   public async set(index: number, value: Static<T>): Promise<void> {
-    this.redis.lset(this.resolveKey(), index, this.encoder.encode(value))
+    this.redis.lset(this.resolveKey(), index, this.#encoder.encode(value))
   }
 
   /** Pushes a value to the end of this Array */
   public async push(...values: Static<T>[]) {
-    const mapped = values.map(value => this.encoder.encode(value))
+    const mapped = values.map((value) => this.#encoder.encode(value))
     for (const value of mapped) {
       await this.redis.rpush(this.resolveKey(), value)
     }
@@ -76,7 +77,7 @@ export class RedisArray<T extends TSchema> {
 
   /** Pushes a value to the start of this Array */
   public async unshift(...values: Static<T>[]): Promise<void> {
-    const mapped = values.map(value => this.encoder.encode(value))
+    const mapped = values.map((value) => this.#encoder.encode(value))
     for (const value of mapped.reverse()) {
       await this.redis.lpush(this.resolveKey(), value)
     }
@@ -86,14 +87,14 @@ export class RedisArray<T extends TSchema> {
   public async pop(): Promise<Static<T> | undefined> {
     const value = await this.redis.rpop(this.resolveKey())
     if (value === null) return undefined
-    return this.decoder.decode(value)
+    return this.#decoder.decode(value)
   }
 
   /** Shifts a value from the start of this Array or undefined if empty */
   public async shift(): Promise<Static<T> | undefined> {
     const value = await this.redis.lpop(this.resolveKey())
     if (value === null) return undefined
-    return this.decoder.decode(value)
+    return this.#decoder.decode(value)
   }
 
   /** Async iterator for this Array */
@@ -102,7 +103,7 @@ export class RedisArray<T extends TSchema> {
     const slice = 32
     for (let offset = 0; offset < length; offset += slice) {
       for (const value of await this.redis.lrange(this.resolveKey(), offset, offset + slice)) {
-        yield this.decoder.decode(value)
+        yield this.#decoder.decode(value)
       }
     }
   }
