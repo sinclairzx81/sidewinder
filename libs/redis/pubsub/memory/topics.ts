@@ -26,17 +26,19 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-export type TopicCallbackFunction = (value: unknown) => any
-export type TopicHandle = number
+export type PubSubTopicCallbackFunction = (value: unknown) => any
+export type PubSubTopicHandle = number
 
-export class Topic {
-  private readonly subscriptions: Map<TopicHandle, TopicCallbackFunction>
-  private ordinal: TopicHandle
+export class PubSubTopic {
+  private readonly subscriptions: Map<PubSubTopicHandle, PubSubTopicCallbackFunction>
+  private ordinal: PubSubTopicHandle
+
   constructor() {
-    this.subscriptions = new Map<TopicHandle, TopicCallbackFunction>()
+    this.subscriptions = new Map<PubSubTopicHandle, PubSubTopicCallbackFunction>()
     this.ordinal = 0
   }
-  public register(callback: TopicCallbackFunction): number {
+
+  public register(callback: PubSubTopicCallbackFunction): number {
     const handle = this.ordinal++
     this.subscriptions.set(handle, callback)
     return handle
@@ -53,14 +55,14 @@ export class Topic {
   }
 }
 
-export namespace Topics {
-  const topics = new Map<string, Topic>()
-  export function register(name: string, callback: TopicCallbackFunction): TopicHandle {
-    if (!topics.has(name)) topics.set(name, new Topic())
+export namespace PubSubTopics {
+  const topics = new Map<string, PubSubTopic>()
+  export function register(name: string, callback: PubSubTopicCallbackFunction): PubSubTopicHandle {
+    if (!topics.has(name)) topics.set(name, new PubSubTopic())
     const topic = topics.get(name)!
     return topic.register(callback)
   }
-  export function unregister(name: string, handle: TopicHandle): void {
+  export function unregister(name: string, handle: PubSubTopicHandle): void {
     if (!topics.has(name)) return
     const topic = topics.get(name)!
     return topic.unregister(handle)

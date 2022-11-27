@@ -26,7 +26,10 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-export * from './memory/index'
-export * from './redis/index'
-export * from './receiver'
-export * from './sender'
+export interface PubSubReceiver<T> {
+  [Symbol.asyncIterator](): AsyncIterableIterator<T>
+  /** Reads the next value from this subscriber */
+  next(): Promise<T | null>
+  /** Disposes of this subscriber */
+  dispose(): void
+}

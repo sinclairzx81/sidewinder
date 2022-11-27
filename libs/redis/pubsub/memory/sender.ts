@@ -27,47 +27,33 @@ THE SOFTWARE.
 ---------------------------------------------------------------------------*/
 
 import { TSchema, Static } from '@sidewinder/type'
-import { Channel } from '@sidewinder/channel'
-import { Validator } from '@sidewinder/validator'
-import { Topics } from './topics'
-import { Sub } from '../sub'
+import { Validator, ValidateError } from '@sidewinder/validator'
+import { PubSubTopics } from './topics'
+import { PubSubSender } from '../sender'
 
-/** In-Memory Subscriber */
-export class MemorySub<T extends TSchema> implements Sub<Static<T>> {
+export class MemoryPubSubSender<T extends TSchema> implements PubSubSender<Static<T>> {
   readonly #validator: Validator<T>
-  readonly #channel: Channel<Static<T>>
-  readonly #handle: number
+  #ended: boolean
+
   constructor(private readonly schema: T, private readonly topic: string) {
     this.#validator = new Validator(this.schema)
-    this.#channel = new Channel()
-    this.#handle = Topics.register(this.topic, (value) => this.#onMessage(value))
+    this.#ended = false
   }
 
-  /** Async iterator for this subscriber */
-  public async *[Symbol.asyncIterator](): AsyncIterableIterator<Static<T>> {
-    while (true) {
-      const next = await this.next()
-      if (next === null) return
-      yield next
-    }
+  /** Sends a message */
+  public async send(value: Static<T>) {
+    if (this.#ended) return
+    this.#assertValue(value)
+    PubSubTopics.send(this.topic, value)
   }
 
-  /** Awaits the next message from this subscriber. */
-  public async next(): Promise<Static<T> | null> {
-    const next = await this.#channel.next()
-    if (next === null) return null
-    return next
+  /** Disposes of this publisher */
+  public dispose() {
+    this.#ended = true
   }
 
-  /** Disposes of this subscriber. */
-  public dispose(): void {
-    Topics.unregister(this.topic, this.#handle)
-    this.#channel.end()
-  }
-
-  #onMessage(value: Static<T>) {
+  #assertValue(value: unknown) {
     const result = this.#validator.check(value)
-    if (!result.success) return
-    this.#channel.send(value)
+    if (!result.success) throw new ValidateError(result.errors)
   }
 }

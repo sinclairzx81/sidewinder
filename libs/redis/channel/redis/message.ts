@@ -1,6 +1,6 @@
 /*--------------------------------------------------------------------------
 
-@sidewinder/redis
+@sidewinder/channel
 
 The MIT License (MIT)
 
@@ -26,7 +26,29 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-export * from './memory/index'
-export * from './redis/index'
-export * from './receiver'
-export * from './sender'
+import { Type, TSchema } from '@sidewinder/type'
+
+export function NextMessage(schema: TSchema) {
+  return Type.Object({
+    type: Type.Literal('next'),
+    value: schema,
+  })
+}
+
+export function ErrorMessage() {
+  return Type.Object({
+    type: Type.Literal('error'),
+    error: Type.String(),
+  })
+}
+
+export function EndMessage() {
+  return Type.Object({
+    type: Type.Literal('end'),
+  })
+}
+
+export type Message<T extends TSchema> = ReturnType<typeof Message<T>>
+export function Message<T extends TSchema>(schema: T) {
+  return Type.Union([NextMessage(schema), ErrorMessage(), EndMessage()])
+}

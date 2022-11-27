@@ -26,7 +26,40 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-export * from './memory/index'
-export * from './redis/index'
-export * from './receiver'
-export * from './sender'
+import { Static, TSchema } from '@sidewinder/type'
+import { Validator } from '@sidewinder/validator'
+import { SyncSender } from '@sidewinder/channel'
+import { Queues } from './queue'
+
+export class MemorySenderError extends Error {
+  constructor(message: string) {
+    super(`MemorySender: ${message}`)
+  }
+}
+
+export class MemorySender<T extends TSchema> implements SyncSender<Static<T>> {
+  readonly #validator: Validator<T>
+  #closed: boolean
+  constructor(private readonly schema: T, private readonly channel: string) {
+    this.#validator = new Validator(this.schema)
+    this.#closed = false
+  }
+
+  public async send(value: Static<T, []>): Promise<void> {
+    if (this.#closed) throw new MemorySenderError('Sender is closed')
+    const check = this.#validator.check(value)
+    if (!check.success) throw new MemorySenderError(check.errorText)
+    Queues.send(this.channel, { type: 'next', value })
+  }
+
+  public async error(error: Error): Promise<void> {
+    Queues.send(this.channel, { type: 'error', error: error.message })
+    Queues.send(this.channel, { type: 'end' })
+    this.#closed = true
+  }
+
+  public async end(): Promise<void> {
+    Queues.send(this.channel, { type: 'end' })
+    this.#closed = true
+  }
+}

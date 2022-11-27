@@ -26,35 +26,24 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
+import { Validator } from '@sidewinder/validator'
 import { TSchema, Static } from '@sidewinder/type'
-import { Validator, ValidateError } from '@sidewinder/validator'
-import { Topics } from './topics'
-import { Pub } from '../pub'
 
-/** In-Memory publisher */
-export class MemoryPub<T extends TSchema> implements Pub<Static<T>> {
+export class RedisDecoderError extends Error {
+  constructor(message: string) {
+    super(`RedisDecoder: ${message}`)
+  }
+}
+
+export class RedisDecoder<T extends TSchema> {
   readonly #validator: Validator<T>
-  #ended: boolean
-
-  constructor(private readonly schema: T, private readonly topic: string) {
+  constructor(private readonly schema: T) {
     this.#validator = new Validator(this.schema)
-    this.#ended = false
   }
-
-  /** Sends a message */
-  public async send(value: Static<T>) {
-    if (this.#ended) return
-    this.#assertValue(value)
-    Topics.send(this.topic, value)
-  }
-
-  /** Disposes of this publisher */
-  public dispose() {
-    this.#ended = true
-  }
-
-  #assertValue(value: unknown) {
+  public decode(encoded: string): Static<T> {
+    const value = JSON.parse(encoded)
     const result = this.#validator.check(value)
-    if (!result.success) throw new ValidateError(result.errors)
+    if (!result.success) throw new RedisDecoderError(result.errorText)
+    return value
   }
 }

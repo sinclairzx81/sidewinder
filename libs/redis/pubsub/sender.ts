@@ -26,8 +26,7 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-/** Interface for Publisher Channels */
-export interface Pub<T> {
+export interface PubSubSender<T> {
   /** Sends a value to this publisher */
   send(value: T): Promise<void>
   /** Disposes of this publisher */

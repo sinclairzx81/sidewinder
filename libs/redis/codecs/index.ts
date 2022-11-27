@@ -26,16 +26,5 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-import { TSchema } from './type'
-
-export class RedisEncoder {
-  constructor(private readonly schema: TSchema) {}
-
-  public encode<T>(data: T): string {
-    return JSON.stringify(data)
-  }
-
-  public decode<T>(data: string): T {
-    return JSON.parse(data)
-  }
-}
+export * from './decoder'
+export * from './encoder'

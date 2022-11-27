@@ -27,54 +27,41 @@ THE SOFTWARE.
 ---------------------------------------------------------------------------*/
 
 import { Redis, RedisOptions } from 'ioredis'
-import { Receiver } from '@sidewinder/channel'
-import { Validator } from '@sidewinder/validator'
-import { RedisConnect } from '../connect'
-import { Static, TSchema } from '../type'
-import { Message, MessageValidator } from './message'
-import { RedisEncoder } from '../encoder'
+import { Static, TSchema } from '@sidewinder/type'
+import { SyncSender } from '@sidewinder/channel'
+import { RedisEncoder } from '../../codecs/index'
+import { RedisConnect } from '../../connect'
+import { Message } from './message'
 
-/**
- * A RedisReceiver is the receiving side of a Redis backed channel. There should only
- * be one RedisReceiver on a per channel basis. This receiver will disconnect from
- * Redis if it receives a end signal from the RedisSender.
- */
-export class RedisReceiver<Schema extends TSchema> implements Receiver<Static<Schema>> {
-  private readonly encoder: RedisEncoder
-  private readonly validator: Validator<TSchema>
-
+export class RedisSender<T extends TSchema> implements SyncSender<Static<T>> {
+  private readonly encoder: RedisEncoder<Message<T>>
+  private ended: boolean
   constructor(private readonly schema: TSchema, private readonly channel: string, private readonly redis: Redis) {
-    this.encoder = new RedisEncoder(this.schema)
-    this.validator = new Validator(this.schema)
+    this.encoder = new RedisEncoder(Message(this.schema))
+    this.ended = false
   }
 
-  /** Async iterator for this Receiver */
-  public async *[Symbol.asyncIterator]() {
-    while (true) {
-      const next = await this.next()
-      if (next === null) return
-      yield next
-    }
+  /** Sends the given value to this channel. If channel has ended no action. */
+  public async send(value: Static<T>): Promise<void> {
+    if (this.ended) return
+    await this.redis.rpush(this.encodeKey(), this.encoder.encode({ type: 'next', value }))
   }
 
-  /** Reads the next value from this Receiver */
-  public async next(): Promise<Static<Schema> | null> {
-    const [_, value] = await this.redis.blpop(this.encodeKey(), 0)
-    const message = this.encoder.decode<Static<typeof Message>>(value)
-    MessageValidator.assert(message)
-    switch (message.type) {
-      case 'next': {
-        this.validator.assert(message.value)
-        return message.value
-      }
-      case 'error': {
-        throw new Error(message.error)
-      }
-      case 'end': {
-        await this.redis.disconnect(false)
-        return null
-      }
-    }
+  /** Sends the given error to this channel causing the receiver to throw on next(). If channel has ended no action. */
+  public async error(error: Error): Promise<void> {
+    if (this.ended) return
+    this.ended = true
+    await this.redis.rpush(this.encodeKey(), this.encoder.encode({ type: 'error', error: error.message }))
+    await this.redis.rpush(this.encodeKey(), this.encoder.encode({ type: 'end' }))
+    this.redis.disconnect()
+  }
+
+  /** Ends this channel. This will disconnect this sender from Redis. */
+  public async end(): Promise<void> {
+    if (this.ended) return
+    this.ended = true
+    await this.redis.rpush(this.encodeKey(), this.encoder.encode({ type: 'end' }))
+    this.redis.disconnect(false)
   }
 
   // ------------------------------------------------------------
@@ -90,13 +77,13 @@ export class RedisReceiver<Schema extends TSchema> implements Receiver<Static<Sc
   // ------------------------------------------------------------
 
   /** Connects to Redis with the given parameters */
-  public static connect<Schema extends TSchema = TSchema>(schema: Schema, channel: string, port?: number, host?: string, options?: RedisOptions): Promise<RedisReceiver<Schema>>
+  public static connect<Schema extends TSchema = TSchema>(schema: Schema, channel: string, port?: number, host?: string, options?: RedisOptions): Promise<RedisSender<Schema>>
   /** Connects to Redis with the given parameters */
-  public static connect<Schema extends TSchema = TSchema>(schema: Schema, channel: string, host?: string, options?: RedisOptions): Promise<RedisReceiver<Schema>>
+  public static connect<Schema extends TSchema = TSchema>(schema: Schema, channel: string, host?: string, options?: RedisOptions): Promise<RedisSender<Schema>>
   /** Connects to Redis with the given parameters */
-  public static connect<Schema extends TSchema = TSchema>(schema: Schema, channel: string, options: RedisOptions): Promise<RedisReceiver<Schema>>
+  public static connect<Schema extends TSchema = TSchema>(schema: Schema, channel: string, options: RedisOptions): Promise<RedisSender<Schema>>
   public static async connect(...args: any[]): Promise<any> {
     const [schema, channel, params] = [args[0], args[1], args.slice(2)]
-    return new RedisReceiver(schema, channel, await RedisConnect.connect(...params))
+    return new RedisSender(schema, channel, await RedisConnect.connect(...params))
   }
 }

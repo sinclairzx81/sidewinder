@@ -28,17 +28,17 @@ THE SOFTWARE.
 
 import { Redis } from 'ioredis'
 import { Validator } from '@sidewinder/validator'
-import { RedisEncoder } from '../encoder'
+import { RedisEncoder, RedisDecoder } from '../codecs/index'
 import { Static, TSchema } from '../type'
 
 /** A RedisMap is analogous to a JavaScript Map. It provides asynchronous set, get, clear and key value enumeration. */
-export class RedisMap<Schema extends TSchema> {
-  private readonly validator: Validator<TSchema>
-  private readonly encoder: RedisEncoder
+export class RedisMap<T extends TSchema> {
+  private readonly encoder: RedisEncoder<T>
+  private readonly decoder: RedisDecoder<T>
 
-  constructor(private readonly schema: Schema, private readonly redis: Redis, private readonly keyspace: string) {
-    this.validator = new Validator(this.schema)
+  constructor(private readonly schema: T, private readonly redis: Redis, private readonly keyspace: string) {
     this.encoder = new RedisEncoder(this.schema)
+    this.decoder = new RedisDecoder(this.schema)
   }
 
   /** Async iterator for this Map */
@@ -46,7 +46,7 @@ export class RedisMap<Schema extends TSchema> {
     for (const key of await this.redis.keys(this.encodeKey('*'))) {
       const value = await this.redis.get(key)
       if (value === null) continue
-      yield [this.decodeKey(key), this.encoder.decode<Static<Schema>>(value)]
+      yield [this.decodeKey(key), this.decoder.decode(value)]
     }
   }
 
@@ -64,16 +64,15 @@ export class RedisMap<Schema extends TSchema> {
   }
 
   /** Sets the value for the given key */
-  public async set(key: string, value: Static<Schema>) {
-    this.validator.assert(value)
+  public async set(key: string, value: Static<T>) {
     return await this.redis.set(this.encodeKey(key), this.encoder.encode(value))
   }
 
   /** Gets the value for the given key */
-  public async get(key: string): Promise<Static<Schema> | undefined> {
+  public async get(key: string): Promise<Static<T> | undefined> {
     const value = await this.redis.get(this.encodeKey(key))
     if (value === null) return undefined
-    return this.encoder.decode(value)
+    return this.decoder.decode(value)
   }
 
   /** Deletes the given key */
@@ -88,20 +87,20 @@ export class RedisMap<Schema extends TSchema> {
   }
 
   /** Returns an async iterator for all entries in this Map */
-  public async *entries(): AsyncGenerator<[string, Static<Schema>]> {
+  public async *entries(): AsyncGenerator<[string, Static<T>]> {
     for (const key of await this.redis.keys(this.encodeKey('*'))) {
       const value = await this.redis.get(key)
       if (value === null) continue
-      yield [this.decodeKey(key), this.encoder.decode<Static<Schema>>(value)]
+      yield [this.decodeKey(key), this.decoder.decode(value)]
     }
   }
 
   /** Returns an async iterator to the values in this Map */
-  public async *values(): AsyncIterable<Static<Schema>> {
+  public async *values(): AsyncIterable<Static<T>> {
     for (const key of await this.redis.keys(this.encodeAllKeys())) {
       const value = await this.redis.get(key)
       if (value === null) continue
-      yield this.encoder.decode(value)
+      yield this.decoder.decode(value)
     }
   }
 
@@ -113,8 +112,8 @@ export class RedisMap<Schema extends TSchema> {
   }
 
   /** Returns all entries in this Map */
-  public async collect(): Promise<[string, Static<Schema>][]> {
-    const values: [string, Static<Schema>][] = []
+  public async collect(): Promise<[string, Static<T>][]> {
+    const values: [string, Static<T>][] = []
     for await (const value of this.entries()) {
       values.push(value)
     }

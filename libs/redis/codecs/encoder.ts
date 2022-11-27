@@ -26,11 +26,24 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-/** Interface for Subscriber Channels */
-export interface Sub<T> {
-  [Symbol.asyncIterator](): AsyncIterableIterator<T>
-  /** Reads the next value from this subscriber */
-  next(): Promise<T | null>
-  /** Disposes of this subscriber */
-  dispose(): void
+import { Validator } from '@sidewinder/validator'
+import { TSchema, Static } from '@sidewinder/type'
+
+export class RedisEncoderError extends Error {
+  constructor(message: string) {
+    super(`RedisEncoder: ${message}`)
+  }
+}
+
+export class RedisEncoder<T extends TSchema> {
+  readonly #validator: Validator<T>
+  constructor(private readonly schema: T) {
+    this.#validator = new Validator(this.schema)
+  }
+
+  public encode(value: Static<T>): string {
+    const result = this.#validator.check(value)
+    if (!result.success) throw new RedisEncoderError(result.errorText)
+    return JSON.stringify(value)
+  }
 }

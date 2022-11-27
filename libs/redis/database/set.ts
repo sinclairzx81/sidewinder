@@ -29,7 +29,7 @@ THE SOFTWARE.
 import { Redis } from 'ioredis'
 import { Validator } from '@sidewinder/validator'
 import { ValueHash } from '@sidewinder/hash'
-import { RedisEncoder } from '../encoder'
+import { RedisEncoder, RedisDecoder } from '../codecs/index'
 import { Static, TSchema } from '../type'
 
 /**
@@ -37,13 +37,13 @@ import { Static, TSchema } from '../type'
  * which are executed in a unqiue keyspace. The RedisSet supports arbituary object hashing allowing
  * JavaScript objects and arrays to be safely added to sets.
  */
-export class RedisSet<Schema extends TSchema> {
-  private readonly validator: Validator<TSchema>
-  private readonly encoder: RedisEncoder
+export class RedisSet<T extends TSchema> {
+  private readonly encoder: RedisEncoder<T>
+  private readonly decoder: RedisDecoder<T>
 
-  constructor(private readonly schema: Schema, private readonly redis: Redis, private readonly keyspace: string) {
-    this.validator = new Validator(this.schema)
+  constructor(private readonly schema: T, private readonly redis: Redis, private readonly keyspace: string) {
     this.encoder = new RedisEncoder(this.schema)
+    this.decoder = new RedisDecoder(this.schema)
   }
 
   /** Async iterator for this Set */
@@ -59,18 +59,17 @@ export class RedisSet<Schema extends TSchema> {
   }
 
   /** Returns true if this value is in the Set */
-  public async has(value: Static<Schema>): Promise<boolean> {
+  public async has(value: Static<T>): Promise<boolean> {
     return (await this.redis.exists(this.encodeKey(value))) > 0
   }
 
   /** Adds the given value to the Set */
-  public async add(value: Static<Schema>) {
-    this.validator.assert(value)
+  public async add(value: Static<T>) {
     return this.redis.set(this.encodeKey(value), this.encoder.encode(value))
   }
 
   /** Deletes the given value from the Set */
-  public async delete(value: Static<Schema>) {
+  public async delete(value: Static<T>) {
     return this.redis.del(this.encodeKey(value))
   }
 
@@ -88,17 +87,17 @@ export class RedisSet<Schema extends TSchema> {
   }
 
   /** Returns an async iterator for each value in this Set */
-  public async *values(): AsyncIterable<Static<Schema>> {
+  public async *values(): AsyncIterable<Static<T>> {
     for (const key of await this.redis.keys(this.encodeAllKeys())) {
       const value = await this.redis.get(key)
       if (value === null) continue
-      yield this.encoder.decode(value)
+      yield this.decoder.decode(value)
     }
   }
 
   /** Returns all values in this Set */
-  public async collect(): Promise<Static<Schema>[]> {
-    const values: Static<Schema>[] = []
+  public async collect(): Promise<Static<T>[]> {
+    const values: Static<T>[] = []
     for await (const value of this.values()) {
       values.push(value)
     }
@@ -113,7 +112,7 @@ export class RedisSet<Schema extends TSchema> {
     return `sw::set:${this.keyspace}:*`
   }
 
-  private encodeKey(value: Static<Schema>) {
+  private encodeKey(value: Static<T>) {
     const hash = ValueHash.hash(value)
     return `sw::set:${this.keyspace}:${hash}`
   }

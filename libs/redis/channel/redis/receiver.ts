@@ -26,43 +26,54 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
+import { Static, TSchema } from '@sidewinder/type'
+import { Receiver } from '@sidewinder/channel'
 import { Redis, RedisOptions } from 'ioredis'
-import { Validator } from '@sidewinder/validator'
-import { RedisEncoder } from '../../encoder'
+import { RedisDecoder } from '../../codecs/index'
 import { RedisConnect } from '../../connect'
-import { Static, TSchema } from '../../type'
-import { Pub } from '../pub'
+import { Message } from './message'
 
-export class RedisPub<T extends TSchema> implements Pub<Static<T>> {
-  readonly #validator: Validator<TSchema>
-  readonly #encoder: RedisEncoder
-  #ended: boolean
+export class RedisReceiver<T extends TSchema> implements Receiver<Static<T>> {
+  readonly #decoder: RedisDecoder<Message<T>>
 
-  constructor(private readonly schema: T, public readonly topic: string, private readonly redis: Redis) {
-    this.#validator = new Validator(this.schema)
-    this.#encoder = new RedisEncoder(this.schema)
-    this.#ended = false
+  constructor(private readonly schema: T, private readonly channel: string, private readonly redis: Redis) {
+    const message = Message(this.schema)
+    this.#decoder = new RedisDecoder<Message<T>>(message)
   }
 
-  /** Publishes the given value to the topic. */
-  public async send(value: Static<T>): Promise<void> {
-    if (this.#ended) return
-    this.#validator.assert(value)
-    await this.redis.publish(this.#encodeKey(), this.#encoder.encode(value))
+  /** Async iterator for this Receiver */
+  public async *[Symbol.asyncIterator]() {
+    while (true) {
+      const next = await this.next()
+      if (next === null) return
+      yield next
+    }
   }
 
-  /** Disposes of this publisher */
-  public dispose() {
-    this.#ended = true
-    this.redis.disconnect(false)
+  /** Reads the next value from this Receiver */
+  public async next(): Promise<Static<T> | null> {
+    const [_, value] = await this.redis.blpop(this.encodeKey(), 0)
+    const message = this.#decoder.decode(value)
+    switch (message.type) {
+      case 'next': {
+        return message.value
+      }
+      case 'error': {
+        throw new Error(message.error)
+      }
+      case 'end': {
+        await this.redis.disconnect(false)
+        return null
+      }
+    }
   }
 
   // ------------------------------------------------------------
   // Key Encoding
   // ------------------------------------------------------------
 
-  #encodeKey() {
-    return `sw::topic:${this.topic}`
+  private encodeKey() {
+    return `sw::channel:${this.channel}`
   }
 
   // ------------------------------------------------------------
@@ -70,13 +81,13 @@ export class RedisPub<T extends TSchema> implements Pub<Static<T>> {
   // ------------------------------------------------------------
 
   /** Connects to Redis with the given parameters */
-  public static connect<Schema extends TSchema = TSchema>(schema: Schema, topic: string, port?: number, host?: string, options?: RedisOptions): Promise<RedisPub<Schema>>
+  public static connect<Schema extends TSchema = TSchema>(schema: Schema, channel: string, port?: number, host?: string, options?: RedisOptions): Promise<RedisReceiver<Schema>>
   /** Connects to Redis with the given parameters */
-  public static connect<Schema extends TSchema = TSchema>(schema: Schema, topic: string, host?: string, options?: RedisOptions): Promise<RedisPub<Schema>>
+  public static connect<Schema extends TSchema = TSchema>(schema: Schema, channel: string, host?: string, options?: RedisOptions): Promise<RedisReceiver<Schema>>
   /** Connects to Redis with the given parameters */
-  public static connect<Schema extends TSchema = TSchema>(schema: Schema, topic: string, options: RedisOptions): Promise<RedisPub<Schema>>
+  public static connect<Schema extends TSchema = TSchema>(schema: Schema, channel: string, options: RedisOptions): Promise<RedisReceiver<Schema>>
   public static async connect(...args: any[]): Promise<any> {
-    const [schema, topic, params] = [args[0], args[1], args.slice(2)]
-    return new RedisPub(schema, topic, await RedisConnect.connect(...params))
+    const [schema, channel, params] = [args[0], args[1], args.slice(2)]
+    return new RedisReceiver(schema, channel, await RedisConnect.connect(...params))
   }
 }
