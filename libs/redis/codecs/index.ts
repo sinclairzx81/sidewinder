@@ -26,10 +26,5 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-/** Interface for Publisher Channels */
-export interface Pub<T> {
-  /** Sends a value to this publisher */
-  send(value: T): Promise<void>
-  /** Disposes of this publisher */
-  dispose(): void
-}
+export * from './decoder'
+export * from './encoder'

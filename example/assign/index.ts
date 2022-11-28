@@ -7,4 +7,3 @@ const B = { x: 2 }
 Value.Assign(A, B)
 
 console.log(A)
-

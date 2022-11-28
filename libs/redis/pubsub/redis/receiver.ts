@@ -27,44 +27,41 @@ THE SOFTWARE.
 ---------------------------------------------------------------------------*/
 
 import { Redis, RedisOptions } from 'ioredis'
-import { Channel } from '@sidewinder/channel'
-import { Validator } from '@sidewinder/validator'
-import { RedisEncoder } from '../../encoder'
-import { Static, TSchema } from '../../type'
+import { Static, TSchema } from '@sidewinder/type'
+import { Channel, Receiver } from '@sidewinder/channel'
+import { RedisDecoder } from '../../codecs/index'
 import { RedisConnect } from '../../connect'
-import { Sub } from '../sub'
 
-export class RedisSub<T extends TSchema> implements Sub<Static<T>> {
-  readonly #validator: Validator<TSchema>
-  readonly #encoder: RedisEncoder
-  readonly #channel: Channel<Static<T>>
+/** Redis PubSub Receiver. This type uses broadcast semantics. */
+export class PubSubRedisReceiver<T extends TSchema> implements Receiver<Static<T>> {
+  readonly #decoder: RedisDecoder<T>
+  readonly #channel: Channel<unknown>
 
-  constructor(private readonly schema: TSchema, public readonly topic: string, private readonly redis: Redis) {
-    this.#validator = new Validator(this.schema)
-    this.#encoder = new RedisEncoder(this.schema)
-    this.#channel = new Channel<Static<T>>()
+  constructor(private readonly schema: T, public readonly channel: string, private readonly redis: Redis) {
+    this.#decoder = new RedisDecoder(this.schema)
+    this.#channel = new Channel<unknown>()
     this.redis.subscribe(this.#encodeKey())
-    this.redis.on('message', (channel, value) => this.#onMessage(channel, value))
+    this.redis.on('message', (event, value) => this.#onMessage(event, value))
   }
 
-  /** Async iterator for this subscriber. */
+  /** Async iterator for this Receiver */
   public async *[Symbol.asyncIterator]() {
     while (true) {
       const next = await this.next()
-      if (next === null) return null
+      if (next === null) return
       yield next
     }
   }
 
-  /** Receives the next message from this topic. */
+  /** Reads the next value from this Receiver */
   public async next(): Promise<Static<T> | null> {
     const next = await this.#channel.next()
     if (next === null) return null
     return next
   }
 
-  /** Disposes of this subscriber */
-  public dispose() {
+  /** Closes this receiver */
+  public close() {
     this.#channel.end()
     this.redis.disconnect(false)
   }
@@ -73,12 +70,12 @@ export class RedisSub<T extends TSchema> implements Sub<Static<T>> {
   // Events
   // ------------------------------------------------------------
 
-  #onMessage(event: string, value: string) {
+  #onMessage(_event: string, value: string) {
     try {
-      const data = this.#encoder.decode<Static<T>>(value)
-      this.#validator.assert(data)
-      this.#channel.send(data)
-    } catch {}
+      this.#channel.send(this.#decoder.decode(value))
+    } catch {
+      console.warn(`PubSubRedisReceiver: Invalid value received on '${this.channel}' channel.`, value)
+    }
   }
 
   // ------------------------------------------------------------
@@ -86,21 +83,21 @@ export class RedisSub<T extends TSchema> implements Sub<Static<T>> {
   // ------------------------------------------------------------
 
   #encodeKey() {
-    return `sw::topic:${this.topic}`
+    return `sw::topic:${this.channel}`
   }
 
   // ------------------------------------------------------------
-  // Connect
+  // Factory
   // ------------------------------------------------------------
 
   /** Connects to Redis with the given parameters */
-  public static connect<Schema extends TSchema = TSchema>(schema: Schema, topic: string, port?: number, host?: string, options?: RedisOptions): Promise<RedisSub<Schema>>
+  public static Create<T extends TSchema>(schema: T, topic: string, port?: number, host?: string, options?: RedisOptions): Promise<PubSubRedisReceiver<T>>
   /** Connects to Redis with the given parameters */
-  public static connect<Schema extends TSchema = TSchema>(schema: Schema, topic: string, host?: string, options?: RedisOptions): Promise<RedisSub<Schema>>
+  public static Create<T extends TSchema>(schema: T, topic: string, host?: string, options?: RedisOptions): Promise<PubSubRedisReceiver<T>>
   /** Connects to Redis with the given parameters */
-  public static connect<Schema extends TSchema = TSchema>(schema: Schema, topic: string, options: RedisOptions): Promise<RedisSub<Schema>>
-  public static async connect(...args: any[]): Promise<any> {
+  public static Create<T extends TSchema>(schema: T, topic: string, options: RedisOptions): Promise<PubSubRedisReceiver<T>>
+  public static async Create(...args: any[]): Promise<any> {
     const [schema, topic, params] = [args[0], args[1], args.slice(2)]
-    return new RedisSub(schema, topic, await RedisConnect.connect(...params))
+    return new PubSubRedisReceiver(schema, topic, await RedisConnect.Connect(...params))
   }
 }

@@ -26,7 +26,9 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
+export * from '@sidewinder/channel'
 export * from './channel/index'
+export * from './codecs/index'
 export * from './database/index'
 export * from './pubsub/index'
 export * from './type'

@@ -27,24 +27,24 @@ THE SOFTWARE.
 ---------------------------------------------------------------------------*/
 
 import { TSchema, Static } from '@sidewinder/type'
-import { Channel } from '@sidewinder/channel'
+import { Channel, Receiver } from '@sidewinder/channel'
 import { Validator } from '@sidewinder/validator'
-import { Topics } from './topics'
-import { Sub } from '../sub'
+import { MemoryChannels, SenderHandle } from './channels'
 
-/** In-Memory Subscriber */
-export class MemorySub<T extends TSchema> implements Sub<Static<T>> {
+/** In-Memory Redis PubSub Receiver. This type operates on memory queue and can be used in absense of Redis infrastructure */
+export class PubSubMemoryReceiver<T extends TSchema> implements Receiver<Static<T>> {
   readonly #validator: Validator<T>
   readonly #channel: Channel<Static<T>>
-  readonly #handle: number
-  constructor(private readonly schema: T, private readonly topic: string) {
+  readonly #handle: SenderHandle
+
+  constructor(private readonly schema: T, private readonly channel: string) {
     this.#validator = new Validator(this.schema)
     this.#channel = new Channel()
-    this.#handle = Topics.register(this.topic, (value) => this.#onMessage(value))
+    this.#handle = MemoryChannels.register(this.channel, this.#channel)
   }
 
-  /** Async iterator for this subscriber */
-  public async *[Symbol.asyncIterator](): AsyncIterableIterator<Static<T>> {
+  /** Async iterator for this Receiver */
+  public async *[Symbol.asyncIterator]() {
     while (true) {
       const next = await this.next()
       if (next === null) return
@@ -52,22 +52,32 @@ export class MemorySub<T extends TSchema> implements Sub<Static<T>> {
     }
   }
 
-  /** Awaits the next message from this subscriber. */
-  public async next(): Promise<Static<T> | null> {
-    const next = await this.#channel.next()
-    if (next === null) return null
-    return next
+  /** Reads the next value from this Receiver */
+  public async next(): Promise<Static<T, []> | null> {
+    while (true) {
+      const value = await this.#channel.next()
+      if (value === null) return null
+      const check = this.#validator.check(value)
+      if (!check.success) {
+        console.warn(`PubSubMemoryReceiver: Invalid value received on '${this.channel}' channel.`, value)
+        continue
+      }
+      return value
+    }
   }
 
-  /** Disposes of this subscriber. */
-  public dispose(): void {
-    Topics.unregister(this.topic, this.#handle)
+  /** Closes this receiver */
+  public close() {
     this.#channel.end()
+    MemoryChannels.unregister(this.channel, this.#handle)
   }
 
-  #onMessage(value: Static<T>) {
-    const result = this.#validator.check(value)
-    if (!result.success) return
-    this.#channel.send(value)
+  // --------------------------------------------------------
+  // Factory
+  // --------------------------------------------------------
+
+  /** Creates a PubSubMemoryReceiver with the given parameters */
+  public static Create<T extends TSchema>(schema: T, channel: string): PubSubMemoryReceiver<T> {
+    return new PubSubMemoryReceiver(schema, channel)
   }
 }

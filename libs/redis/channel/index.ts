@@ -1,6 +1,6 @@
 /*--------------------------------------------------------------------------
 
-@sidewinder/redis
+@sidewinder/channel
 
 The MIT License (MIT)
 
@@ -26,5 +26,5 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-export * from './receiver'
-export * from './sender'
+export * from './memory/index'
+export * from './redis/index'
