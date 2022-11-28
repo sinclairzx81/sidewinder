@@ -28,7 +28,7 @@ THE SOFTWARE.
 
 import { Redis } from 'ioredis'
 import { Static, TSchema } from '@sidewinder/type'
-import { ValueHash } from '@sidewinder/hash'
+import { Value } from '@sidewinder/value'
 import { RedisEncoder, RedisDecoder } from '../codecs/index'
 
 /**
@@ -112,7 +112,7 @@ export class RedisSet<T extends TSchema> {
   }
 
   private encodeKey(value: Static<T>) {
-    const hash = ValueHash.hash(value)
+    const hash = Value.Hash(value).toString()
     return `sw::set:${this.keyspace}:${hash}`
   }
 
