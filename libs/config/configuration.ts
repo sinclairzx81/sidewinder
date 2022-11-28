@@ -56,8 +56,8 @@ export class ConfigurationResolver<T extends TObject> {
     console.log(`${red}Errors:${esc}`)
     console.log()
     for (const error of [...typecheck.Errors(object)]) {
-      const cliname = '--' + error.path.slice(1).replace(/\//, '-').toLowerCase()
-      const envname = error.path.slice(1).replace(/\//, '_').toUpperCase()
+      const cliname = '--' + error.path.slice(1).replace(/\//g, '-').toLowerCase()
+      const envname = error.path.slice(1).replace(/\//g, '_').toUpperCase()
       console.log(`  ${gray}${cliname}${esc} ${envname} ${red}${error.message}${esc}`)
     }
     console.log()
