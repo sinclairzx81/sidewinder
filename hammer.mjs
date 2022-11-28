@@ -41,7 +41,7 @@ export async function clean() {
 // -------------------------------------------------------------
 
 export async function format() {
-    await shell('prettier --no-semi --single-quote --print-width 240 --trailing-comma all --write libs tests')
+    await shell('prettier --no-semi --single-quote --print-width 240 --trailing-comma all --write libs example tests')
 }
 
 // -------------------------------------------------------------

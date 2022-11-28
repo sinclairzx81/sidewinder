@@ -31,14 +31,11 @@ import { Receiver } from '@sidewinder/channel'
 import { Redis, RedisOptions } from 'ioredis'
 import { RedisDecoder } from '../../codecs/index'
 import { RedisConnect } from '../../connect'
-import { Message } from './message'
 
 export class RedisReceiver<T extends TSchema> implements Receiver<Static<T>> {
-  readonly #decoder: RedisDecoder<Message<T>>
-
+  readonly #decoder: RedisDecoder<T>
   constructor(private readonly schema: T, private readonly channel: string, private readonly redis: Redis) {
-    const message = Message(this.schema)
-    this.#decoder = new RedisDecoder<Message<T>>(message)
+    this.#decoder = new RedisDecoder<T>(this.schema)
   }
 
   /** Async iterator for this Receiver */
@@ -53,19 +50,7 @@ export class RedisReceiver<T extends TSchema> implements Receiver<Static<T>> {
   /** Reads the next value from this Receiver */
   public async next(): Promise<Static<T> | null> {
     const [_, value] = await this.redis.blpop(this.encodeKey(), 0)
-    const message = this.#decoder.decode(value)
-    switch (message.type) {
-      case 'next': {
-        return message.value
-      }
-      case 'error': {
-        throw new Error(message.error)
-      }
-      case 'end': {
-        await this.redis.disconnect(false)
-        return null
-      }
-    }
+    return this.#decoder.decode(value)
   }
 
   // ------------------------------------------------------------

@@ -29,7 +29,7 @@ THE SOFTWARE.
 import { Static, TSchema } from '@sidewinder/type'
 import { Validator } from '@sidewinder/validator'
 import { SyncSender } from '@sidewinder/channel'
-import { Queues } from './queue'
+import { MemoryChannels } from './channels'
 
 export class MemorySenderError extends Error {
   constructor(message: string) {
@@ -40,26 +40,27 @@ export class MemorySenderError extends Error {
 export class MemorySender<T extends TSchema> implements SyncSender<Static<T>> {
   readonly #validator: Validator<T>
   #closed: boolean
+
   constructor(private readonly schema: T, private readonly channel: string) {
     this.#validator = new Validator(this.schema)
     this.#closed = false
   }
 
+  /** Sends a value */
   public async send(value: Static<T, []>): Promise<void> {
     if (this.#closed) throw new MemorySenderError('Sender is closed')
     const check = this.#validator.check(value)
     if (!check.success) throw new MemorySenderError(check.errorText)
-    Queues.send(this.channel, { type: 'next', value })
+    MemoryChannels.send(this.channel, value)
   }
 
+  /** Ends this sender with an error */
   public async error(error: Error): Promise<void> {
-    Queues.send(this.channel, { type: 'error', error: error.message })
-    Queues.send(this.channel, { type: 'end' })
     this.#closed = true
   }
 
+  /** Ends this sender */
   public async end(): Promise<void> {
-    Queues.send(this.channel, { type: 'end' })
     this.#closed = true
   }
 }

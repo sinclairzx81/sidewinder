@@ -26,78 +26,74 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-// -------------------------------------------------------------------------
-// Message<T>
-// -------------------------------------------------------------------------
+import { Sender } from '@sidewinder/channel'
 
-export interface NextMessage<T> {
-  type: 'next'
-  value: T
-}
-
-export interface ErrorMessage {
-  type: 'error'
-  error: string
-}
-
-export interface EndMessage {
-  type: 'end'
-}
-
-export type Message<T> = NextMessage<T> | ErrorMessage | EndMessage
+export type SenderHandle = number
 
 // -------------------------------------------------------------------------
-// Queue<T>
+// MemoryChannel
 // -------------------------------------------------------------------------
 
-export type QueueCallbackFunction<T> = (message: Message<T>) => any
-export type QueueHandle = number
-
-export class Queue<T> {
-  readonly #callbacks: Map<QueueHandle, QueueCallbackFunction<T>>
-  #ordinal: QueueHandle
-
+export class MemoryChannel {
+  readonly #senders: Map<SenderHandle, Sender<unknown>>
+  readonly #buffer: unknown[]
+  #ordinal: SenderHandle
+  #index: number
   constructor() {
-    this.#callbacks = new Map<QueueHandle, QueueCallbackFunction<T>>()
+    this.#senders = new Map<SenderHandle, Sender<unknown>>()
+    this.#buffer = []
     this.#ordinal = 0
+    this.#index = 0
   }
 
-  public register(callback: QueueCallbackFunction<T>): number {
+  public register(sender: Sender<unknown>): SenderHandle {
     const handle = this.#ordinal++
-    this.#callbacks.set(handle, callback)
+    this.#senders.set(handle, sender)
+    this.#flush(sender)
     return handle
   }
 
-  public unregister(handle: number) {
-    this.#callbacks.delete(handle)
+  public send(value: unknown) {
+    const sender = this.#select()
+    if (sender === undefined) {
+      this.#buffer.push(value)
+    } else {
+      sender.send(value)
+    }
   }
 
-  public send(value: Message<T>) {
-    for (const callback of this.#callbacks.values()) {
-      callback(value)
+  #select(): Sender<unknown> | undefined {
+    const keys = [...this.#senders.keys()]
+    if (keys.length === 0) return
+    const index = this.#index % keys.length
+    this.#index += 1
+    return this.#senders.get(keys[index])
+  }
+
+  #flush(sender: Sender<unknown>): void {
+    while (this.#buffer.length > 0) {
+      const value = this.#buffer.shift()!
+      sender.send(value)
     }
   }
 }
 
 // -------------------------------------------------------------------------
-// Queues
+// MemoryChannels
 // -------------------------------------------------------------------------
 
-export namespace Queues {
-  const queues = new Map<string, Queue<any>>()
-  export function register(channel: string, callback: QueueCallbackFunction<any>): QueueHandle {
-    if (!queues.has(channel)) queues.set(channel, new Queue())
-    const topic = queues.get(channel)!
-    return topic.register(callback)
+export namespace MemoryChannels {
+  const memoryChannels = new Map<string, MemoryChannel>()
+
+  export function register(channel: string, sender: Sender<unknown>): SenderHandle {
+    if (!memoryChannels.has(channel)) memoryChannels.set(channel, new MemoryChannel())
+    const memoryChannel = memoryChannels.get(channel)!
+    return memoryChannel.register(sender)
   }
-  export function unregister(channel: string, handle: QueueHandle): void {
-    if (!queues.has(channel)) return
-    const topic = queues.get(channel)!
-    return topic.unregister(handle)
-  }
-  export function send(channel: string, value: any) {
-    if (!queues.has(channel)) return
-    const topic = queues.get(channel)!
-    topic.send(value)
+
+  export function send(channel: string, value: unknown) {
+    if (!memoryChannels.has(channel)) memoryChannels.set(channel, new MemoryChannel())
+    const memoryChannel = memoryChannels.get(channel)!
+    memoryChannel.send(value)
   }
 }

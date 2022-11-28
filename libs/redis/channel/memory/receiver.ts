@@ -29,7 +29,7 @@ THE SOFTWARE.
 import { Static, TSchema } from '@sidewinder/type'
 import { Channel, Receiver } from '@sidewinder/channel'
 import { Validator } from '@sidewinder/validator'
-import { Queues, Message, NextMessage, ErrorMessage, EndMessage } from './queue'
+import { MemoryChannels } from './channels'
 
 export class MemoryReceiverError extends Error {
   constructor(message: string) {
@@ -42,9 +42,9 @@ export class MemoryReceiver<T extends TSchema> implements Receiver<Static<T>> {
   readonly #channel: Channel<Static<T>>
 
   constructor(private readonly schema: T, private readonly channel: string) {
-    Queues.register(this.channel, (message) => this.#onMessage(message))
     this.#validator = new Validator(this.schema)
     this.#channel = new Channel()
+    const _handle = MemoryChannels.register(this.channel, this.#channel)
   }
 
   public async *[Symbol.asyncIterator]() {
@@ -56,31 +56,11 @@ export class MemoryReceiver<T extends TSchema> implements Receiver<Static<T>> {
   }
 
   public async next(): Promise<Static<T, []> | null> {
-    return await this.#channel.next()
-  }
-
-  #onNext(message: NextMessage<unknown>) {
-    const check = this.#validator.check(message.value)
-    if (!check.success) return
-    this.#channel.send(message.value)
-  }
-
-  #onError(message: ErrorMessage) {
-    this.#channel.error(new MemoryReceiverError(message.error))
-  }
-
-  #onEnd(message: EndMessage) {
-    this.#channel.end()
-  }
-
-  #onMessage(message: Message<unknown>) {
-    switch (message.type) {
-      case 'next':
-        return this.#onNext(message)
-      case 'error':
-        return this.#onError(message)
-      case 'end':
-        return this.#onEnd(message)
+    while (true) {
+      const next = await this.#channel.next()
+      const check = this.#validator.check(next)
+      if (!check.success) continue
+      return next
     }
   }
 }
