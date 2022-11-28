@@ -52,9 +52,15 @@ export class RedisReceiver<T extends TSchema> implements Receiver<Static<T>> {
 
   /** Reads the next value from this Receiver */
   public async next(): Promise<Static<T> | null> {
-    if (this.#closed) return null
-    const [_, value] = await this.redis.blpop(this.encodeKey(), 0)
-    return this.#decoder.decode(value)
+    while (true) {
+      if (this.#closed) return null
+      const [_, value] = await this.redis.blpop(this.encodeKey(), 0)
+      try {
+        return this.#decoder.decode(value)
+      } catch {
+        console.warn(`RedisReceiver: Invalid value received on '${this.channel}' channel.`, value)
+      }
+    }
   }
 
   /** Closes this receiver */
@@ -75,11 +81,11 @@ export class RedisReceiver<T extends TSchema> implements Receiver<Static<T>> {
   // Factory
   // ------------------------------------------------------------
 
-  /** Connects to Redis with the given parameters */
+  /** Creates a RedisReceiver with the given parameters */
   public static Create<T extends TSchema = TSchema>(schema: T, channel: string, port?: number, host?: string, options?: RedisOptions): Promise<RedisReceiver<T>>
-  /** Connects to Redis with the given parameters */
+  /** Creates a RedisReceiver with the given parameters */
   public static Create<T extends TSchema = TSchema>(schema: T, channel: string, host?: string, options?: RedisOptions): Promise<RedisReceiver<T>>
-  /** Connects to Redis with the given parameters */
+  /** Creates a RedisReceiver with the given parameters */
   public static Create<T extends TSchema = TSchema>(schema: T, channel: string, options: RedisOptions): Promise<RedisReceiver<T>>
   public static async Create(...args: any[]): Promise<any> {
     const [schema, channel, params] = [args[0], args[1], args.slice(2)]

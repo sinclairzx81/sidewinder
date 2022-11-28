@@ -55,11 +55,14 @@ export class PubSubMemoryReceiver<T extends TSchema> implements Receiver<Static<
   /** Reads the next value from this Receiver */
   public async next(): Promise<Static<T, []> | null> {
     while (true) {
-      const next = await this.#channel.next()
-      if (this.next === null) return null
-      const check = this.#validator.check(next)
-      if (!check.success) continue
-      return next
+      const value = await this.#channel.next()
+      if (value === null) return null
+      const check = this.#validator.check(value)
+      if (!check.success) {
+        console.warn(`PubSubMemoryReceiver: Invalid value received on '${this.channel}' channel.`, value)
+        continue
+      }
+      return value
     }
   }
 
@@ -73,6 +76,7 @@ export class PubSubMemoryReceiver<T extends TSchema> implements Receiver<Static<
   // Factory
   // --------------------------------------------------------
 
+  /** Creates a PubSubMemoryReceiver with the given parameters */
   public static Create<T extends TSchema>(schema: T, channel: string): PubSubMemoryReceiver<T> {
     return new PubSubMemoryReceiver(schema, channel)
   }

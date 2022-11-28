@@ -72,6 +72,7 @@ export class PubSubMemorySender<T extends TSchema> implements SyncSender<Static<
   // Factory
   // --------------------------------------------------------
 
+  /** Creates a PubSubMemorySender with the given parameters */
   public static Create<T extends TSchema>(schema: T, channel: string): PubSubMemorySender<T> {
     return new PubSubMemorySender(schema, channel)
   }

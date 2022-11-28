@@ -68,6 +68,7 @@ export class MemorySender<T extends TSchema> implements SyncSender<Static<T>> {
   // Factory
   // --------------------------------------------------------
 
+  /** Creates a MemorySender with the given parameters */
   public static Create<T extends TSchema>(schema: T, channel: string): MemorySender<T> {
     return new MemorySender(schema, channel)
   }

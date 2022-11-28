@@ -73,7 +73,9 @@ export class PubSubRedisReceiver<T extends TSchema> implements Receiver<Static<T
   #onMessage(_event: string, value: string) {
     try {
       this.#channel.send(this.#decoder.decode(value))
-    } catch {}
+    } catch {
+      console.warn(`PubSubRedisReceiver: Invalid value received on '${this.channel}' channel.`, value)
+    }
   }
 
   // ------------------------------------------------------------

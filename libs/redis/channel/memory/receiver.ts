@@ -60,11 +60,14 @@ export class MemoryReceiver<T extends TSchema> implements Receiver<Static<T>> {
   /** Reads the next value from this Receiver */
   public async next(): Promise<Static<T, []> | null> {
     while (true) {
-      const next = await this.#channel.next()
-      if (this.next === null) return null
-      const check = this.#validator.check(next)
-      if (!check.success) continue
-      return next
+      const value = await this.#channel.next()
+      if (value === null) return null
+      const check = this.#validator.check(value)
+      if (!check.success) {
+        console.warn(`MemoryReceiver: Invalid value received on '${this.channel}' channel.`, value)
+        continue
+      }
+      return value
     }
   }
 
@@ -78,6 +81,7 @@ export class MemoryReceiver<T extends TSchema> implements Receiver<Static<T>> {
   // Factory
   // --------------------------------------------------------
 
+  /** Creates a MemoryReceiver with the given parameters */
   public static Create<T extends TSchema>(schema: T, channel: string): MemoryReceiver<T> {
     return new MemoryReceiver(schema, channel)
   }
