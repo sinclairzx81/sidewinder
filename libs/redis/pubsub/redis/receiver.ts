@@ -27,28 +27,26 @@ THE SOFTWARE.
 ---------------------------------------------------------------------------*/
 
 import { Redis, RedisOptions } from 'ioredis'
-import { Channel } from '@sidewinder/channel'
+import { Static, TSchema } from '@sidewinder/type'
+import { Channel, Receiver } from '@sidewinder/channel'
 import { RedisDecoder } from '../../codecs/index'
-import { Static, TSchema } from '../../type'
 import { RedisConnect } from '../../connect'
-import { PubSubReceiver } from '../receiver'
 
-export class RedisPubSubReceiver<T extends TSchema> implements PubSubReceiver<Static<T>> {
-  readonly #encoder: RedisDecoder<T>
-  readonly #channel: Channel<Static<T>>
+export class RedisPubSubReceiver<T extends TSchema> implements Receiver<Static<T>> {
+  readonly #decoder: RedisDecoder<T>
+  readonly #channel: Channel<unknown>
 
-  constructor(private readonly schema: T, public readonly topic: string, private readonly redis: Redis) {
-    this.#encoder = new RedisDecoder(this.schema)
-    this.#channel = new Channel<Static<T>>()
+  constructor(private readonly schema: T, public readonly channel: string, private readonly redis: Redis) {
+    this.#decoder = new RedisDecoder(this.schema)
+    this.#channel = new Channel<unknown>()
     this.redis.subscribe(this.#encodeKey())
-    this.redis.on('message', (channel, value) => this.#onMessage(channel, value))
+    this.redis.on('message', (event, value) => this.#onMessage(event, value))
   }
 
-  /** Async iterator for this subscriber. */
   public async *[Symbol.asyncIterator]() {
     while (true) {
       const next = await this.next()
-      if (next === null) return null
+      if (next === null) return
       yield next
     }
   }
@@ -72,7 +70,7 @@ export class RedisPubSubReceiver<T extends TSchema> implements PubSubReceiver<St
 
   #onMessage(event: string, value: string) {
     try {
-      this.#channel.send(this.#encoder.decode(value))
+      this.#channel.send(this.#decoder.decode(value))
     } catch {}
   }
 
@@ -81,7 +79,7 @@ export class RedisPubSubReceiver<T extends TSchema> implements PubSubReceiver<St
   // ------------------------------------------------------------
 
   #encodeKey() {
-    return `sw::topic:${this.topic}`
+    return `sw::topic:${this.channel}`
   }
 
   // ------------------------------------------------------------
@@ -99,3 +97,8 @@ export class RedisPubSubReceiver<T extends TSchema> implements PubSubReceiver<St
     return new RedisPubSubReceiver(schema, topic, await RedisConnect.connect(...params))
   }
 }
+
+import { Type } from '@sidewinder/type'
+
+const receiver = new RedisPubSubReceiver(Type.String(), null as any, null as any)
+receiver.next()

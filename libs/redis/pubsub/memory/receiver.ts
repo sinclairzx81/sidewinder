@@ -27,23 +27,21 @@ THE SOFTWARE.
 ---------------------------------------------------------------------------*/
 
 import { TSchema, Static } from '@sidewinder/type'
-import { Channel } from '@sidewinder/channel'
+import { Channel, Receiver } from '@sidewinder/channel'
 import { Validator } from '@sidewinder/validator'
-import { PubSubTopics } from './topics'
-import { PubSubReceiver } from '../receiver'
+import { MemoryChannels } from './channels'
 
-export class MemoryPubSubReceiver<T extends TSchema> implements PubSubReceiver<Static<T>> {
+export class MemoryPubSubReceiver<T extends TSchema> implements Receiver<Static<T>> {
   readonly #validator: Validator<T>
   readonly #channel: Channel<Static<T>>
-  readonly #handle: number
-  constructor(private readonly schema: T, private readonly topic: string) {
+
+  constructor(private readonly schema: T, private readonly channel: string) {
     this.#validator = new Validator(this.schema)
     this.#channel = new Channel()
-    this.#handle = PubSubTopics.register(this.topic, (value) => this.#onMessage(value))
+    MemoryChannels.register(this.channel, this.#channel)
   }
 
-  /** Async iterator for this subscriber */
-  public async *[Symbol.asyncIterator](): AsyncIterableIterator<Static<T>> {
+  public async *[Symbol.asyncIterator]() {
     while (true) {
       const next = await this.next()
       if (next === null) return
@@ -51,22 +49,13 @@ export class MemoryPubSubReceiver<T extends TSchema> implements PubSubReceiver<S
     }
   }
 
-  /** Awaits the next message from this subscriber. */
-  public async next(): Promise<Static<T> | null> {
-    const next = await this.#channel.next()
-    if (next === null) return null
-    return next
-  }
-
-  /** Disposes of this subscriber. */
-  public dispose(): void {
-    PubSubTopics.unregister(this.topic, this.#handle)
-    this.#channel.end()
-  }
-
-  #onMessage(value: Static<T>) {
-    const result = this.#validator.check(value)
-    if (!result.success) return
-    this.#channel.send(value)
+  public async next(): Promise<Static<T, []> | null> {
+    while (true) {
+      const next = await this.#channel.next()
+      if (this.next === null) return null
+      const check = this.#validator.check(next)
+      if (!check.success) continue
+      return next
+    }
   }
 }

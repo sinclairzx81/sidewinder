@@ -58,6 +58,7 @@ export class MemoryReceiver<T extends TSchema> implements Receiver<Static<T>> {
   public async next(): Promise<Static<T, []> | null> {
     while (true) {
       const next = await this.#channel.next()
+      if (this.next === null) return null
       const check = this.#validator.check(next)
       if (!check.success) continue
       return next

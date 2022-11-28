@@ -27,33 +27,40 @@ THE SOFTWARE.
 ---------------------------------------------------------------------------*/
 
 import { TSchema, Static } from '@sidewinder/type'
-import { Validator, ValidateError } from '@sidewinder/validator'
-import { PubSubTopics } from './topics'
-import { PubSubSender } from '../sender'
+import { Validator } from '@sidewinder/validator'
+import { SyncSender } from '@sidewinder/channel'
+import { MemoryChannels } from './channels'
 
-export class MemoryPubSubSender<T extends TSchema> implements PubSubSender<Static<T>> {
+export class MemoryPubSubSenderError extends Error {
+  constructor(message: string) {
+    super(`MemoryPubSubSender: ${message}`)
+  }
+}
+
+export class MemoryPubSubSender<T extends TSchema> implements SyncSender<Static<T>> {
   readonly #validator: Validator<T>
-  #ended: boolean
+  #closed: boolean
 
-  constructor(private readonly schema: T, private readonly topic: string) {
+  constructor(private readonly schema: T, private readonly channel: string) {
     this.#validator = new Validator(this.schema)
-    this.#ended = false
+    this.#closed = false
   }
 
-  /** Sends a message */
-  public async send(value: Static<T>) {
-    if (this.#ended) return
-    this.#assertValue(value)
-    PubSubTopics.send(this.topic, value)
+  /** Sends a value */
+  public async send(value: Static<T, []>): Promise<void> {
+    if (this.#closed) throw new MemoryPubSubSenderError('Sender is closed')
+    const check = this.#validator.check(value)
+    if (!check.success) throw new MemoryPubSubSenderError(check.errorText)
+    MemoryChannels.send(this.channel, value)
   }
 
-  /** Disposes of this publisher */
-  public dispose() {
-    this.#ended = true
+  /** Ends this sender with an error */
+  public async error(error: Error): Promise<void> {
+    this.#closed = true
   }
 
-  #assertValue(value: unknown) {
-    const result = this.#validator.check(value)
-    if (!result.success) throw new ValidateError(result.errors)
+  /** Ends this sender */
+  public async end(): Promise<void> {
+    this.#closed = true
   }
 }
