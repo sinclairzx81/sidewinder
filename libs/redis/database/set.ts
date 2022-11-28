@@ -26,10 +26,10 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-import { Redis } from 'ioredis'
 import { Static, TSchema } from '@sidewinder/type'
 import { Value } from '@sidewinder/value'
 import { RedisEncoder, RedisDecoder } from '../codecs/index'
+import { Store } from '../store/index'
 
 /**
  * A RedisSet is analogous to a JavaScript Set. It provides asynchronous add, delete and has methods
@@ -40,67 +40,66 @@ export class RedisSet<T extends TSchema> {
   readonly #encoder: RedisEncoder<T>
   readonly #decoder: RedisDecoder<T>
 
-  constructor(private readonly schema: T, private readonly redis: Redis, private readonly keyspace: string) {
+  constructor(private readonly schema: T, private readonly store: Store, private readonly keyspace: string) {
     this.#encoder = new RedisEncoder(this.schema)
     this.#decoder = new RedisDecoder(this.schema)
   }
 
   /** Async iterator for this Set */
   public async *[Symbol.asyncIterator]() {
-    yield* this.values()
-  }
-
-  /** Clears all values in the Set */
-  public async clear() {
-    for (const key of await this.redis.keys(this.encodeAllKeys())) {
-      await this.redis.del(key)
-    }
-  }
-
-  /** Returns true if this value is in the Set */
-  public async has(value: Static<T>): Promise<boolean> {
-    return (await this.redis.exists(this.encodeKey(value))) > 0
-  }
-
-  /** Adds the given value to the Set */
-  public async add(value: Static<T>) {
-    return this.redis.set(this.encodeKey(value), this.#encoder.encode(value))
-  }
-
-  /** Deletes the given value from the Set */
-  public async delete(value: Static<T>) {
-    return this.redis.del(this.encodeKey(value))
-  }
-
-  /** Returns the number of entries in this Set */
-  public async size(): Promise<number> {
-    const keys = await this.redis.keys(this.encodeAllKeys())
-    return keys.length
-  }
-
-  /** Returns an async iterator each key in this Set  */
-  public async *keys(): AsyncIterable<string> {
-    for (const key of await this.redis.keys(this.encodeAllKeys())) {
-      yield this.decodeKey(key)
-    }
-  }
-
-  /** Returns an async iterator for each value in this Set */
-  public async *values(): AsyncIterable<Static<T>> {
-    for (const key of await this.redis.keys(this.encodeAllKeys())) {
-      const value = await this.redis.get(key)
+    for (const key of await this.store.keys(this.encodeAllKeys())) {
+      const value = await this.store.get(key)
       if (value === null) continue
       yield this.#decoder.decode(value)
     }
   }
 
-  /** Returns all values in this Set */
-  public async collect(): Promise<Static<T>[]> {
-    const values: Static<T>[] = []
-    for await (const value of this.values()) {
-      values.push(value)
+  /** Clears all values in the Set */
+  public async clear() {
+    for (const key of await this.store.keys(this.encodeAllKeys())) {
+      await this.store.del(key)
     }
-    return values
+  }
+
+  /** Returns true if this value is in the Set */
+  public async has(value: Static<T>): Promise<boolean> {
+    return (await this.store.exists(this.encodeKey(value))) > 0
+  }
+
+  /** Adds the given value to the Set */
+  public async add(value: Static<T>) {
+    return this.store.set(this.encodeKey(value), this.#encoder.encode(value))
+  }
+
+  /** Deletes the given value from the Set */
+  public async delete(value: Static<T>) {
+    return this.store.del(this.encodeKey(value))
+  }
+
+  /** Returns the number of entries in this Set */
+  public async size(): Promise<number> {
+    const keys = await this.store.keys(this.encodeAllKeys())
+    return keys.length
+  }
+
+  /** Returns all keys in this Set  */
+  public async keys(): Promise<string[]> {
+    const buffer: string[] = []
+    for (const key of await this.store.keys(this.encodeAllKeys())) {
+      buffer.push(this.decodeKey(key))
+    }
+    return buffer
+  }
+
+  /** Returns all values in this Set */
+  public async values(): Promise<Static<T>[]> {
+    const buffer: Static<T>[] = []
+    for (const key of await this.store.keys(this.encodeAllKeys())) {
+      const value = await this.store.get(key)
+      if (value === null) continue
+      buffer.push(this.#decoder.decode(value))
+    }
+    return buffer
   }
 
   // ------------------------------------------------------------

@@ -26,32 +26,40 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
+import { TypeCompiler, TypeCheck } from '@sidewinder/type/compiler'
 import { Static, TObject } from '@sidewinder/type'
-import { Validator, ValidateResult } from '@sidewinder/validator'
 import { ArgumentsResolver, DocumentResolver, EnvironmentResolver } from './resolvers/index'
 import { Documentation } from './documentation/index'
 import { JsonPointer } from './pointer/index'
 import { Descriptors } from './descriptors/index'
 
-export class ConfigurationResolver<Schema extends TObject> {
+export class ConfigurationResolver<T extends TObject> {
   private readonly environmentResolver: EnvironmentResolver
   private readonly argumentResolver: ArgumentsResolver
   private readonly documentResolver: DocumentResolver
-  private readonly validator: Validator<Schema>
+  private readonly typecheck: TypeCheck<T>
 
-  constructor(private readonly schema: Schema, private readonly env: object, private readonly argv: string[]) {
+  constructor(private readonly schema: T, private readonly env: object, private readonly argv: string[]) {
     this.environmentResolver = new EnvironmentResolver(this.env)
     this.argumentResolver = new ArgumentsResolver(this.argv)
     this.documentResolver = new DocumentResolver()
-    this.validator = new Validator(this.schema)
+    this.typecheck = TypeCompiler.Compile(this.schema)
   }
 
-  private exitWithResult(result: ValidateResult, object: unknown) {
+  private exitWithResult(typecheck: TypeCheck<T>, object: unknown) {
+    const red = '\x1b[91m'
+    const gray = '\x1b[90m'
+    const esc = `\x1b[0m`
     const documentation = Documentation.resolve(this.schema)
-    const error = result.errorText.replace(/\//g, '.')
     console.log(documentation)
     console.log()
-    console.log('Error:', error)
+    console.log(`${red}Errors:${esc}`)
+    console.log()
+    for (const error of [...typecheck.Errors(object)]) {
+      const cliname = '--' + error.path.slice(1).replace(/\//, '-').toLowerCase()
+      const envname = error.path.slice(1).replace(/\//, '_').toUpperCase()
+      console.log(`  ${gray}${cliname}${esc} ${envname} ${red}${error.message}${esc}`)
+    }
     console.log()
     process.exit(1)
   }
@@ -76,7 +84,7 @@ export class ConfigurationResolver<Schema extends TObject> {
   }
 
   /** Resolves the configuration object */
-  public resolve(configFileOrObject?: string | Partial<Static<Schema>>): Static<Schema> {
+  public resolve(configFileOrObject?: string | Partial<Static<T>>): Static<T> {
     // Check for help
     if (this.shouldHelp()) {
       console.log(Documentation.resolve(this.schema))
@@ -110,9 +118,8 @@ export class ConfigurationResolver<Schema extends TObject> {
     }
 
     // Check Object
-    const result = this.validator.check(object)
-    if (result.success) return object as Static<Schema>
-    return this.exitWithResult(result, object) as never
+    if (this.typecheck.Check(object)) return object as Static<T>
+    return this.exitWithResult(this.typecheck, object) as never
   }
 }
 

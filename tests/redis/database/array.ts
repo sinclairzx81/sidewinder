@@ -204,7 +204,7 @@ describe('redis/RedisArray', () => {
     await array.push([1, 0, 0])
     await array.push([2, 0, 0])
     await array.push([3, 0, 0])
-    const buffer = await array.collect()
+    const buffer = await array.values()
     Assert.deepEqual(buffer, [
       [0, 0, 0],
       [1, 0, 0],

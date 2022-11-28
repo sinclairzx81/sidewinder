@@ -26,10 +26,19 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-export * from '@sidewinder/channel'
-export * from './channel/index'
-export * from './codecs/index'
-export * from './database/index'
-export * from './pubsub/index'
-export * from './store/index'
-export * from './type'
+export interface Store {
+  del(key: string): Promise<void>
+  llen(key: string): Promise<number>
+  lset(key: string, index: number, value: string): Promise<void>
+  lindex(key: string, index: number): Promise<string | null>
+  rpush(key: string, value: string): Promise<void>
+  lpush(key: string, value: string): Promise<void>
+  rpop(key: string): Promise<string | null>
+  lpop(key: string): Promise<string | null>
+  lrange(key: string, start: number, end: number): Promise<string[]>
+  get(key: string): Promise<string | null>
+  keys(pattern: string): Promise<string[]>
+  exists(key: string): Promise<number>
+  set(key: string, value: string): Promise<void>
+  disconnect(): void
+}
