@@ -38,7 +38,7 @@ export class TokenDatabase extends RedisDatabase<typeof TokenDatabaseSchema> {
 
 async function createRedisStore() {
   return await RedisStore.Create('redis://172.30.1.1:6379')
-  return MemoryStore.Create()
+  // return MemoryStore.Create()
 }
 
 async function test() {
@@ -47,12 +47,21 @@ async function test() {
   console.log(await tokens.getToken(key))
   console.log(await tokens.deleteToken(key))
   console.log(await tokens.getToken(key))
-  await tokens.array('test').clear()
-  await tokens.array('test').push('hello')
-  await tokens.array('test').push('world')
-  // await tokens.array('test').clear()
+  //    await tokens.array('test').clear()
+  await tokens.array('test').push('A')
+  await tokens.array('test').push('B')
+  await tokens.array('test').push('C')
+  await tokens.array('test').push('D')
+  await tokens.array('test').push('E')
+  await tokens.array('test').push('F')
+  await tokens.array('test').push('G')
+  await tokens.array('test').push('H')
+
+  console.log(await tokens.map('token').keys())
+
+  console.log(await tokens.array('test').slice(1, 1 + 4))
   console.log(await tokens.array('test').length())
-  console.log([...(await tokens.array('test').collect())])
+  console.log([...(await tokens.array('test').values())])
 }
 
 test()

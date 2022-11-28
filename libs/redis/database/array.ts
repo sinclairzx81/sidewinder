@@ -42,7 +42,13 @@ export class RedisArray<T extends TSchema> {
 
   /** Async iterator for this Array */
   public async *[Symbol.asyncIterator]() {
-    yield* this.elements()
+    const length = await this.store.llen(this.resolveKey())
+    const slice = 32
+    for (let offset = 0; offset < length; offset += slice) {
+      for (const value of await this.store.lrange(this.resolveKey(), offset, offset + slice)) {
+        yield this.#decoder.decode(value)
+      }
+    }
   }
 
   /** Clears this Array */
@@ -97,24 +103,22 @@ export class RedisArray<T extends TSchema> {
     return this.#decoder.decode(value)
   }
 
-  /** Async iterator for this Array */
-  public async *elements() {
+  /** Returns a array slice */
+  public async slice(start: number, end: number) {
+    return await this.store.lrange(this.resolveKey(), start, end)
+  }
+
+  /** Returns all values in this Array */
+  public async values(): Promise<Static<T>[]> {
+    const buffer: Static<T>[] = []
     const length = await this.store.llen(this.resolveKey())
     const slice = 32
     for (let offset = 0; offset < length; offset += slice) {
       for (const value of await this.store.lrange(this.resolveKey(), offset, offset + slice)) {
-        yield this.#decoder.decode(value)
+        buffer.push(this.#decoder.decode(value))
       }
     }
-  }
-
-  /** Returns all values in this Array */
-  public async collect(): Promise<Static<T>[]> {
-    const values: Static<T>[] = []
-    for await (const value of this.elements()) {
-      values.push(value)
-    }
-    return values
+    return buffer
   }
 
   // ------------------------------------------------------------

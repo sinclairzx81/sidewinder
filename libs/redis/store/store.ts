@@ -30,7 +30,7 @@ export interface Store {
   del(key: string): Promise<void>
   llen(key: string): Promise<number>
   lset(key: string, index: number, value: string): Promise<void>
-  lindex(key: string, index: number): Promise<string>
+  lindex(key: string, index: number): Promise<string | null>
   rpush(key: string, value: string): Promise<void>
   lpush(key: string, value: string): Promise<void>
   rpop(key: string): Promise<string>

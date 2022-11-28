@@ -47,7 +47,11 @@ export class RedisSet<T extends TSchema> {
 
   /** Async iterator for this Set */
   public async *[Symbol.asyncIterator]() {
-    yield* this.values()
+    for (const key of await this.store.keys(this.encodeAllKeys())) {
+      const value = await this.store.get(key)
+      if (value === null) continue
+      yield this.#decoder.decode(value)
+    }
   }
 
   /** Clears all values in the Set */
@@ -78,29 +82,24 @@ export class RedisSet<T extends TSchema> {
     return keys.length
   }
 
-  /** Returns an async iterator each key in this Set  */
-  public async *keys(): AsyncIterable<string> {
+  /** Returns all keys in this Set  */
+  public async keys(): Promise<string[]> {
+    const buffer: string[] = []
     for (const key of await this.store.keys(this.encodeAllKeys())) {
-      yield this.decodeKey(key)
+      buffer.push(this.decodeKey(key))
     }
-  }
-
-  /** Returns an async iterator for each value in this Set */
-  public async *values(): AsyncIterable<Static<T>> {
-    for (const key of await this.store.keys(this.encodeAllKeys())) {
-      const value = await this.store.get(key)
-      if (value === null) continue
-      yield this.#decoder.decode(value)
-    }
+    return buffer
   }
 
   /** Returns all values in this Set */
-  public async collect(): Promise<Static<T>[]> {
-    const values: Static<T>[] = []
-    for await (const value of this.values()) {
-      values.push(value)
+  public async values(): Promise<Static<T>[]> {
+    const buffer: Static<T>[] = []
+    for (const key of await this.store.keys(this.encodeAllKeys())) {
+      const value = await this.store.get(key)
+      if (value === null) continue
+      buffer.push(this.#decoder.decode(value))
     }
-    return values
+    return buffer
   }
 
   // ------------------------------------------------------------

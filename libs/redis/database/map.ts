@@ -85,38 +85,35 @@ export class RedisMap<T extends TSchema> {
     return keys.length
   }
 
-  /** Returns an async iterator for all entries in this Map */
-  public async *entries(): AsyncGenerator<[string, Static<T>]> {
+  /** Returns an array to all entries in this Map */
+  public async entries(): Promise<[string, Static<T>][]> {
+    const buffer: [string, Static<T>][] = []
     for (const key of await this.store.keys(this.encodeKey('*'))) {
       const value = await this.store.get(key)
       if (value === null) continue
-      yield [this.decodeKey(key), this.#decoder.decode(value)]
+      buffer.push([this.decodeKey(key), this.#decoder.decode(value)])
     }
+    return buffer
   }
 
-  /** Returns an async iterator to the values in this Map */
-  public async *values(): AsyncIterable<Static<T>> {
+  /** Returns an array to all values in this Map */
+  public async values(): Promise<Static<T>[]> {
+    const buffer: Static<T>[] = []
     for (const key of await this.store.keys(this.encodeAllKeys())) {
       const value = await this.store.get(key)
       if (value === null) continue
-      yield this.#decoder.decode(value)
+      buffer.push(this.#decoder.decode(value))
     }
+    return buffer
   }
 
-  /** Returns an async iterator to the keys in this Map */
-  public async *keys(): AsyncIterable<string> {
+  /** Returns an array to all keys in this map */
+  public async keys(): Promise<string[]> {
+    const buffer: string[] = []
     for (const key of await this.store.keys(this.encodeAllKeys())) {
-      yield this.decodeKey(key)
+      buffer.push(this.decodeKey(key))
     }
-  }
-
-  /** Returns all entries in this Map */
-  public async collect(): Promise<[string, Static<T>][]> {
-    const values: [string, Static<T>][] = []
-    for await (const value of this.entries()) {
-      values.push(value)
-    }
-    return values
+    return buffer
   }
 
   // ------------------------------------------------------------

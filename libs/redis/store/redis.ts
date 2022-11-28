@@ -54,7 +54,7 @@ export class RedisStore implements Store {
     await this.redis.lset(key, index, value)
   }
 
-  public async lindex(key: string, index: number): Promise<string> {
+  public async lindex(key: string, index: number): Promise<string | null> {
     return await this.redis.lindex(key, index)
   }
 
