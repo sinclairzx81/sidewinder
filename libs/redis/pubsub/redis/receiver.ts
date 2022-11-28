@@ -32,7 +32,8 @@ import { Channel, Receiver } from '@sidewinder/channel'
 import { RedisDecoder } from '../../codecs/index'
 import { RedisConnect } from '../../connect'
 
-export class RedisPubSubReceiver<T extends TSchema> implements Receiver<Static<T>> {
+/** Redis PubSub Receiver. This type uses broadcast semantics. */
+export class PubSubRedisReceiver<T extends TSchema> implements Receiver<Static<T>> {
   readonly #decoder: RedisDecoder<T>
   readonly #channel: Channel<unknown>
 
@@ -43,6 +44,7 @@ export class RedisPubSubReceiver<T extends TSchema> implements Receiver<Static<T
     this.redis.on('message', (event, value) => this.#onMessage(event, value))
   }
 
+  /** Async iterator for this Receiver */
   public async *[Symbol.asyncIterator]() {
     while (true) {
       const next = await this.next()
@@ -51,15 +53,15 @@ export class RedisPubSubReceiver<T extends TSchema> implements Receiver<Static<T
     }
   }
 
-  /** Receives the next message from this topic. */
+  /** Reads the next value from this Receiver */
   public async next(): Promise<Static<T> | null> {
     const next = await this.#channel.next()
     if (next === null) return null
     return next
   }
 
-  /** Disposes of this subscriber */
-  public dispose() {
+  /** Closes this receiver */
+  public close() {
     this.#channel.end()
     this.redis.disconnect(false)
   }
@@ -68,7 +70,7 @@ export class RedisPubSubReceiver<T extends TSchema> implements Receiver<Static<T
   // Events
   // ------------------------------------------------------------
 
-  #onMessage(event: string, value: string) {
+  #onMessage(_event: string, value: string) {
     try {
       this.#channel.send(this.#decoder.decode(value))
     } catch {}
@@ -83,22 +85,17 @@ export class RedisPubSubReceiver<T extends TSchema> implements Receiver<Static<T
   }
 
   // ------------------------------------------------------------
-  // Connect
+  // Factory
   // ------------------------------------------------------------
 
   /** Connects to Redis with the given parameters */
-  public static connect<Schema extends TSchema = TSchema>(schema: Schema, topic: string, port?: number, host?: string, options?: RedisOptions): Promise<RedisPubSubReceiver<Schema>>
+  public static Create<T extends TSchema>(schema: T, topic: string, port?: number, host?: string, options?: RedisOptions): Promise<PubSubRedisReceiver<T>>
   /** Connects to Redis with the given parameters */
-  public static connect<Schema extends TSchema = TSchema>(schema: Schema, topic: string, host?: string, options?: RedisOptions): Promise<RedisPubSubReceiver<Schema>>
+  public static Create<T extends TSchema>(schema: T, topic: string, host?: string, options?: RedisOptions): Promise<PubSubRedisReceiver<T>>
   /** Connects to Redis with the given parameters */
-  public static connect<Schema extends TSchema = TSchema>(schema: Schema, topic: string, options: RedisOptions): Promise<RedisPubSubReceiver<Schema>>
-  public static async connect(...args: any[]): Promise<any> {
+  public static Create<T extends TSchema>(schema: T, topic: string, options: RedisOptions): Promise<PubSubRedisReceiver<T>>
+  public static async Create(...args: any[]): Promise<any> {
     const [schema, topic, params] = [args[0], args[1], args.slice(2)]
-    return new RedisPubSubReceiver(schema, topic, await RedisConnect.connect(...params))
+    return new PubSubRedisReceiver(schema, topic, await RedisConnect.Connect(...params))
   }
 }
-
-import { Type } from '@sidewinder/type'
-
-const receiver = new RedisPubSubReceiver(Type.String(), null as any, null as any)
-receiver.next()

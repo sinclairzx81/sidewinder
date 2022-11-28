@@ -53,6 +53,10 @@ export class MemoryChannel {
     return handle
   }
 
+  public unregister(handle: SenderHandle): void {
+    this.#senders.delete(handle)
+  }
+
   public send(value: unknown) {
     const sender = this.#select()
     if (sender === undefined) {
@@ -84,13 +88,16 @@ export class MemoryChannel {
 
 export namespace MemoryChannels {
   const memoryChannels = new Map<string, MemoryChannel>()
-
   export function register(channel: string, sender: Sender<unknown>): SenderHandle {
     if (!memoryChannels.has(channel)) memoryChannels.set(channel, new MemoryChannel())
     const memoryChannel = memoryChannels.get(channel)!
     return memoryChannel.register(sender)
   }
-
+  export function unregister(channel: string, handle: SenderHandle): void {
+    if (!memoryChannels.has(channel)) return
+    const memoryChannel = memoryChannels.get(channel)!
+    return memoryChannel.unregister(handle)
+  }
   export function send(channel: string, value: unknown) {
     if (!memoryChannels.has(channel)) memoryChannels.set(channel, new MemoryChannel())
     const memoryChannel = memoryChannels.get(channel)!

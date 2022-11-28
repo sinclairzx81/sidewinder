@@ -36,7 +36,7 @@ export class MemorySenderError extends Error {
     super(`MemorySender: ${message}`)
   }
 }
-
+/** In-Memory Redis Sender. This type operates on memory queue and can be used in absense of Redis infrastructure */
 export class MemorySender<T extends TSchema> implements SyncSender<Static<T>> {
   readonly #validator: Validator<T>
   #closed: boolean
@@ -46,7 +46,7 @@ export class MemorySender<T extends TSchema> implements SyncSender<Static<T>> {
     this.#closed = false
   }
 
-  /** Sends a value */
+  /** Sends a value to this sender */
   public async send(value: Static<T, []>): Promise<void> {
     if (this.#closed) throw new MemorySenderError('Sender is closed')
     const check = this.#validator.check(value)
@@ -54,13 +54,21 @@ export class MemorySender<T extends TSchema> implements SyncSender<Static<T>> {
     MemoryChannels.send(this.channel, value)
   }
 
-  /** Ends this sender with an error */
+  /** Sends an error to this sender and closes. Note that redis channels do not transmit the error. */
   public async error(error: Error): Promise<void> {
     this.#closed = true
   }
 
-  /** Ends this sender */
+  /** Ends this sender and closes */
   public async end(): Promise<void> {
     this.#closed = true
+  }
+
+  // --------------------------------------------------------
+  // Factory
+  // --------------------------------------------------------
+
+  public static Create<T extends TSchema>(schema: T, channel: string): MemorySender<T> {
+    return new MemorySender(schema, channel)
   }
 }

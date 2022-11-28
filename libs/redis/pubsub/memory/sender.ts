@@ -31,13 +31,13 @@ import { Validator } from '@sidewinder/validator'
 import { SyncSender } from '@sidewinder/channel'
 import { MemoryChannels } from './channels'
 
-export class MemoryPubSubSenderError extends Error {
+export class PubSubMemorySenderError extends Error {
   constructor(message: string) {
-    super(`MemoryPubSubSender: ${message}`)
+    super(`PubSubMemorySender: ${message}`)
   }
 }
-
-export class MemoryPubSubSender<T extends TSchema> implements SyncSender<Static<T>> {
+/** In-Memory Redis PubSub Sender. This type operates on memory queue and can be used in absense of Redis infrastructure */
+export class PubSubMemorySender<T extends TSchema> implements SyncSender<Static<T>> {
   readonly #validator: Validator<T>
   #closed: boolean
 
@@ -46,21 +46,33 @@ export class MemoryPubSubSender<T extends TSchema> implements SyncSender<Static<
     this.#closed = false
   }
 
-  /** Sends a value */
+  /** Sends a value to this sender */
   public async send(value: Static<T, []>): Promise<void> {
-    if (this.#closed) throw new MemoryPubSubSenderError('Sender is closed')
+    if (this.#closed) throw new PubSubMemorySenderError('Sender is closed')
     const check = this.#validator.check(value)
-    if (!check.success) throw new MemoryPubSubSenderError(check.errorText)
+    if (!check.success) throw new PubSubMemorySenderError(check.errorText)
     MemoryChannels.send(this.channel, value)
   }
 
-  /** Ends this sender with an error */
+  /** Sends an error to this sender and closes. Note that redis channels do not transmit the error. */
   public async error(error: Error): Promise<void> {
+    this.#dispose()
+  }
+
+  /** Ends this sender and closes */
+  public async end(): Promise<void> {
+    this.#dispose()
+  }
+
+  #dispose() {
     this.#closed = true
   }
 
-  /** Ends this sender */
-  public async end(): Promise<void> {
-    this.#closed = true
+  // --------------------------------------------------------
+  // Factory
+  // --------------------------------------------------------
+
+  public static Create<T extends TSchema>(schema: T, channel: string): PubSubMemorySender<T> {
+    return new PubSubMemorySender(schema, channel)
   }
 }

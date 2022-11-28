@@ -29,16 +29,23 @@ THE SOFTWARE.
 import { Timeout } from '@sidewinder/async'
 import IORedis, { RedisOptions, Redis } from 'ioredis'
 
+export class RedisConnectError extends Error {
+  constructor(message: string) {
+    super(`RedisConnect: ${message}`)
+  }
+}
+
+/** Connects to Redis and provides functionality to Timeout */
 export namespace RedisConnect {
   /** Connects to Redis with the given parameters */
-  export function connect(port?: number, host?: string, options?: RedisOptions): Promise<Redis>
+  export function Connect(port?: number, host?: string, options?: RedisOptions): Promise<Redis>
   /** Connects to Redis with the given parameters */
-  export function connect(host?: string, options?: RedisOptions): Promise<Redis>
+  export function Connect(host?: string, options?: RedisOptions): Promise<Redis>
   /** Connects to Redis with the given parameters */
-  export function connect(options: RedisOptions): Promise<Redis>
-  export async function connect(...args: any[]): Promise<any> {
+  export function Connect(options: RedisOptions): Promise<Redis>
+  export async function Connect(...args: any[]): Promise<any> {
     const redis = new IORedis(...args)
-    await Timeout.run(async () => await redis.echo('echo'), 8000, new Error('Connection to Redis timed out'))
+    await Timeout.run(async () => await redis.echo('echo'), 8000, new RedisConnectError('Connection to Redis timed out'))
     return redis
   }
 }

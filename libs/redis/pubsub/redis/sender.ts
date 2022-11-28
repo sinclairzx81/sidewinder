@@ -27,35 +27,38 @@ THE SOFTWARE.
 ---------------------------------------------------------------------------*/
 
 import { Redis, RedisOptions } from 'ioredis'
-import { SyncSender, Sender } from '@sidewinder/channel'
+import { SyncSender } from '@sidewinder/channel'
 import { Static, TSchema } from '@sidewinder/type'
 import { RedisEncoder } from '../../codecs/index'
 import { RedisConnect } from '../../connect'
 
-export class RedisPubSubSender<T extends TSchema> implements SyncSender<Static<T>> {
+/** Redis PubSub Sender. This type uses broadcast semantics. */
+export class PubSubRedisSender<T extends TSchema> implements SyncSender<Static<T>> {
   readonly #encoder: RedisEncoder<T>
   #ended: boolean
 
-  constructor(private readonly schema: T, public readonly topic: string, private readonly redis: Redis) {
+  constructor(private readonly schema: T, private readonly channel: string, private readonly redis: Redis) {
     this.#encoder = new RedisEncoder(this.schema)
     this.#ended = false
   }
 
-  /** Publishes the given value to the topic. */
+  /** Sends a value to this sender */
   public async send(value: Static<T>): Promise<void> {
     if (this.#ended) return
     await this.redis.publish(this.#encodeKey(), this.#encoder.encode(value))
   }
 
+  /** Sends an error to this sender and closes. Note that redis channels do not transmit the error. */
   public async error(error: Error): Promise<void> {
-    this.dispose()
-  }
-  public async end(): Promise<void> {
-    this.dispose()
+    this.#dispose()
   }
 
-  /** Disposes of this publisher */
-  public dispose() {
+  /** Ends this sender and closes */
+  public async end(): Promise<void> {
+    this.#dispose()
+  }
+
+  #dispose() {
     this.#ended = true
     this.redis.disconnect(false)
   }
@@ -65,21 +68,21 @@ export class RedisPubSubSender<T extends TSchema> implements SyncSender<Static<T
   // ------------------------------------------------------------
 
   #encodeKey() {
-    return `sw::topic:${this.topic}`
+    return `sw::topic:${this.channel}`
   }
 
   // ------------------------------------------------------------
-  // Connect
+  // Factory
   // ------------------------------------------------------------
 
   /** Connects to Redis with the given parameters */
-  public static connect<Schema extends TSchema = TSchema>(schema: Schema, topic: string, port?: number, host?: string, options?: RedisOptions): Promise<RedisPubSubSender<Schema>>
+  public static Create<T extends TSchema>(schema: T, channel: string, port?: number, host?: string, options?: RedisOptions): Promise<PubSubRedisSender<T>>
   /** Connects to Redis with the given parameters */
-  public static connect<Schema extends TSchema = TSchema>(schema: Schema, topic: string, host?: string, options?: RedisOptions): Promise<RedisPubSubSender<Schema>>
+  public static Create<T extends TSchema>(schema: T, channel: string, host?: string, options?: RedisOptions): Promise<PubSubRedisSender<T>>
   /** Connects to Redis with the given parameters */
-  public static connect<Schema extends TSchema = TSchema>(schema: Schema, topic: string, options: RedisOptions): Promise<RedisPubSubSender<Schema>>
-  public static async connect(...args: any[]): Promise<any> {
+  public static Create<T extends TSchema>(schema: T, channel: string, options: RedisOptions): Promise<PubSubRedisSender<T>>
+  public static async Create(...args: any[]): Promise<any> {
     const [schema, topic, params] = [args[0], args[1], args.slice(2)]
-    return new RedisPubSubSender(schema, topic, await RedisConnect.connect(...params))
+    return new PubSubRedisSender(schema, topic, await RedisConnect.Connect(...params))
   }
 }

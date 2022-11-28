@@ -26,5 +26,5 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-export * from './sender'
 export * from './receiver'
+export * from './sender'

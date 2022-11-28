@@ -28,5 +28,3 @@ THE SOFTWARE.
 
 export * from './memory/index'
 export * from './redis/index'
-export * from './receiver'
-export * from './sender'

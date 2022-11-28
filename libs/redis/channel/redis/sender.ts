@@ -38,6 +38,7 @@ export class RedisSenderError extends Error {
   }
 }
 
+/** Redis Sender. This type uses multi sender, single receiver semantics. */
 export class RedisSender<T extends TSchema> implements SyncSender<Static<T>> {
   readonly #encoder: RedisEncoder<T>
   #closed: boolean
@@ -46,20 +47,20 @@ export class RedisSender<T extends TSchema> implements SyncSender<Static<T>> {
     this.#closed = false
   }
 
-  /** Sends a value. */
+  /** Sends a value to this sender */
   public async send(value: Static<T>): Promise<void> {
     if (this.#closed) throw new RedisSenderError('Sender is closed')
     await this.redis.rpush(this.encodeKey(), this.#encoder.encode(value))
   }
 
-  /** Ends this sender with an error. */
+  /** Sends an error to this sender and closes. Note that redis channels do not transmit the error. */
   public async error(error: Error): Promise<void> {
     if (this.#closed) return
     this.#closed = true
     this.redis.disconnect()
   }
 
-  /** Ends this sender. */
+  /** Ends this sender and closes */
   public async end(): Promise<void> {
     if (this.#closed) return
     this.#closed = true
@@ -75,17 +76,17 @@ export class RedisSender<T extends TSchema> implements SyncSender<Static<T>> {
   }
 
   // ------------------------------------------------------------
-  // Connect
+  // Factory
   // ------------------------------------------------------------
 
   /** Connects to Redis with the given parameters */
-  public static connect<Schema extends TSchema = TSchema>(schema: Schema, channel: string, port?: number, host?: string, options?: RedisOptions): Promise<RedisSender<Schema>>
+  public static Create<T extends TSchema = TSchema>(schema: T, channel: string, port?: number, host?: string, options?: RedisOptions): Promise<RedisSender<T>>
   /** Connects to Redis with the given parameters */
-  public static connect<Schema extends TSchema = TSchema>(schema: Schema, channel: string, host?: string, options?: RedisOptions): Promise<RedisSender<Schema>>
+  public static Create<T extends TSchema = TSchema>(schema: T, channel: string, host?: string, options?: RedisOptions): Promise<RedisSender<T>>
   /** Connects to Redis with the given parameters */
-  public static connect<Schema extends TSchema = TSchema>(schema: Schema, channel: string, options: RedisOptions): Promise<RedisSender<Schema>>
-  public static async connect(...args: any[]): Promise<any> {
+  public static Create<T extends TSchema = TSchema>(schema: T, channel: string, options: RedisOptions): Promise<RedisSender<T>>
+  public static async Create(...args: any[]): Promise<any> {
     const [schema, channel, params] = [args[0], args[1], args.slice(2)]
-    return new RedisSender(schema, channel, await RedisConnect.connect(...params))
+    return new RedisSender(schema, channel, await RedisConnect.Connect(...params))
   }
 }

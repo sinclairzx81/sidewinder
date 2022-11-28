@@ -29,18 +29,21 @@ THE SOFTWARE.
 import { TSchema, Static } from '@sidewinder/type'
 import { Channel, Receiver } from '@sidewinder/channel'
 import { Validator } from '@sidewinder/validator'
-import { MemoryChannels } from './channels'
+import { MemoryChannels, SenderHandle } from './channels'
 
-export class MemoryPubSubReceiver<T extends TSchema> implements Receiver<Static<T>> {
+/** In-Memory Redis PubSub Receiver. This type operates on memory queue and can be used in absense of Redis infrastructure */
+export class PubSubMemoryReceiver<T extends TSchema> implements Receiver<Static<T>> {
   readonly #validator: Validator<T>
   readonly #channel: Channel<Static<T>>
+  readonly #handle: SenderHandle
 
   constructor(private readonly schema: T, private readonly channel: string) {
     this.#validator = new Validator(this.schema)
     this.#channel = new Channel()
-    MemoryChannels.register(this.channel, this.#channel)
+    this.#handle = MemoryChannels.register(this.channel, this.#channel)
   }
 
+  /** Async iterator for this Receiver */
   public async *[Symbol.asyncIterator]() {
     while (true) {
       const next = await this.next()
@@ -49,6 +52,7 @@ export class MemoryPubSubReceiver<T extends TSchema> implements Receiver<Static<
     }
   }
 
+  /** Reads the next value from this Receiver */
   public async next(): Promise<Static<T, []> | null> {
     while (true) {
       const next = await this.#channel.next()
@@ -57,5 +61,19 @@ export class MemoryPubSubReceiver<T extends TSchema> implements Receiver<Static<
       if (!check.success) continue
       return next
     }
+  }
+
+  /** Closes this receiver */
+  public close() {
+    this.#channel.end()
+    MemoryChannels.unregister(this.channel, this.#handle)
+  }
+
+  // --------------------------------------------------------
+  // Factory
+  // --------------------------------------------------------
+
+  public static Create<T extends TSchema>(schema: T, channel: string): PubSubMemoryReceiver<T> {
+    return new PubSubMemoryReceiver(schema, channel)
   }
 }

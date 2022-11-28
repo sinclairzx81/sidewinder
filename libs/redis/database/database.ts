@@ -33,6 +33,7 @@ import { RedisArray } from './array'
 import { RedisMap } from './map'
 import { RedisSet } from './set'
 
+/** Typed Redis Database */
 export class RedisDatabase<Database extends TDatabase = TDatabase> {
   constructor(private readonly schema: Database, private readonly redis: Redis) {}
 
@@ -62,14 +63,18 @@ export class RedisDatabase<Database extends TDatabase = TDatabase> {
     this.redis.disconnect(false)
   }
 
+  // --------------------------------------------------------
+  // Factory
+  // --------------------------------------------------------
+
   /** Connects to Redis with the given parameters */
-  public static connect<Database extends TDatabase = TDatabase>(schema: Database, port?: number, host?: string, options?: RedisOptions): Promise<RedisDatabase<Database>>
+  public static Create<Database extends TDatabase = TDatabase>(schema: Database, port?: number, host?: string, options?: RedisOptions): Promise<RedisDatabase<Database>>
   /** Connects to Redis with the given parameters */
-  public static connect<Database extends TDatabase = TDatabase>(schema: Database, host?: string, options?: RedisOptions): Promise<RedisDatabase<Database>>
+  public static Create<Database extends TDatabase = TDatabase>(schema: Database, host?: string, options?: RedisOptions): Promise<RedisDatabase<Database>>
   /** Connects to Redis with the given parameters */
-  public static connect<Database extends TDatabase = TDatabase>(schema: Database, options: RedisOptions): Promise<RedisDatabase<Database>>
-  public static async connect(...args: any[]): Promise<any> {
+  public static Create<Database extends TDatabase = TDatabase>(schema: Database, options: RedisOptions): Promise<RedisDatabase<Database>>
+  public static async Create(...args: any[]): Promise<any> {
     const [schema, params] = [args[0], args.slice(1)]
-    return new RedisDatabase(schema, await RedisConnect.connect(...params))
+    return new RedisDatabase(schema, await RedisConnect.Connect(...params))
   }
 }

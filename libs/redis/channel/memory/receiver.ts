@@ -29,7 +29,7 @@ THE SOFTWARE.
 import { Static, TSchema } from '@sidewinder/type'
 import { Channel, Receiver } from '@sidewinder/channel'
 import { Validator } from '@sidewinder/validator'
-import { MemoryChannels } from './channels'
+import { MemoryChannels, SenderHandle } from './channels'
 
 export class MemoryReceiverError extends Error {
   constructor(message: string) {
@@ -37,16 +37,18 @@ export class MemoryReceiverError extends Error {
   }
 }
 
+/** In-Memory Redis Receiver. This type operates on memory queue and can be used in absense of Redis infrastructure */
 export class MemoryReceiver<T extends TSchema> implements Receiver<Static<T>> {
   readonly #validator: Validator<T>
   readonly #channel: Channel<Static<T>>
+  readonly #handle: SenderHandle
 
   constructor(private readonly schema: T, private readonly channel: string) {
     this.#validator = new Validator(this.schema)
     this.#channel = new Channel()
-    const _handle = MemoryChannels.register(this.channel, this.#channel)
+    this.#handle = MemoryChannels.register(this.channel, this.#channel)
   }
-
+  /** Async iterator for this Receiver */
   public async *[Symbol.asyncIterator]() {
     while (true) {
       const next = await this.next()
@@ -55,6 +57,7 @@ export class MemoryReceiver<T extends TSchema> implements Receiver<Static<T>> {
     }
   }
 
+  /** Reads the next value from this Receiver */
   public async next(): Promise<Static<T, []> | null> {
     while (true) {
       const next = await this.#channel.next()
@@ -63,5 +66,19 @@ export class MemoryReceiver<T extends TSchema> implements Receiver<Static<T>> {
       if (!check.success) continue
       return next
     }
+  }
+
+  /** Closes this receiver */
+  public close() {
+    this.#channel.end()
+    MemoryChannels.unregister(this.channel, this.#handle)
+  }
+
+  // --------------------------------------------------------
+  // Factory
+  // --------------------------------------------------------
+
+  public static Create<T extends TSchema>(schema: T, channel: string): MemoryReceiver<T> {
+    return new MemoryReceiver(schema, channel)
   }
 }
