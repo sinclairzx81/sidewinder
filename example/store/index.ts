@@ -13,6 +13,9 @@ export const TokenDatabaseSchema = Type.Database({
   maps: {
     token: Token,
   },
+  sets: {
+    token: Type.Tuple([Type.Number(), Type.Number(), Type.Number()]),
+  },
 })
 
 export class TokenDatabase extends RedisDatabase<typeof TokenDatabaseSchema> {
@@ -37,31 +40,36 @@ export class TokenDatabase extends RedisDatabase<typeof TokenDatabaseSchema> {
 }
 
 async function createRedisStore() {
-  return await RedisStore.Create('redis://172.30.1.1:6379')
+  // return await RedisStore.Create('redis://172.30.1.1:6379')
   return MemoryStore.Create()
 }
 
 async function test() {
   const tokens = new TokenDatabase(await createRedisStore())
-  const key = await tokens.setToken({ value: 'hello' })
-  console.log(await tokens.getToken(key))
-  console.log(await tokens.deleteToken(key))
-  console.log(await tokens.getToken(key))
-  await tokens.array('test').clear()
-  await tokens.array('test').push('A')
-  await tokens.array('test').push('B')
-  await tokens.array('test').push('C')
-  await tokens.array('test').push('D')
-  await tokens.array('test').push('E')
-  await tokens.array('test').push('F')
-  await tokens.array('test').push('G')
-  await tokens.array('test').push('H')
+  tokens.set('token').add([1, 0, 0])
+  tokens.set('token').add([0, 1, 0])
+  tokens.set('token').add([0, 0, 1])
 
-  console.log(await tokens.map('token').keys())
+  console.log(await tokens.set('token').values())
+  // const key = await tokens.setToken({ value: 'hello' })
+  // console.log(await tokens.getToken(key))
+  // console.log(await tokens.deleteToken(key))
+  // console.log(await tokens.getToken(key))
+  // await tokens.array('test').clear()
+  // await tokens.array('test').push('A')
+  // await tokens.array('test').push('B')
+  // await tokens.array('test').push('C')
+  // await tokens.array('test').push('D')
+  // await tokens.array('test').push('E')
+  // await tokens.array('test').push('F')
+  // await tokens.array('test').push('G')
+  // await tokens.array('test').push('H')
 
-  console.log(await tokens.array('test').slice(1, 1 + 4))
-  console.log(await tokens.array('test').length())
-  console.log([...(await tokens.array('test').values())])
+  // console.log(await tokens.map('token').keys())
+
+  // console.log(await tokens.array('test').slice(1, 1 + 4))
+  // console.log(await tokens.array('test').length())
+  // console.log([...(await tokens.array('test').values())])
 }
 
 test()

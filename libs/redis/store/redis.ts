@@ -66,11 +66,11 @@ export class RedisStore implements Store {
     await this.redis.lpush(key, value)
   }
 
-  public async rpop(key: string): Promise<string> {
+  public async rpop(key: string): Promise<string | null> {
     return await this.redis.rpop(key)
   }
 
-  public async lpop(key: string): Promise<string> {
+  public async lpop(key: string): Promise<string | null> {
     return await this.redis.lpop(key)
   }
 

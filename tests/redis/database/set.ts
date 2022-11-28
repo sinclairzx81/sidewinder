@@ -90,7 +90,7 @@ describe('redis/RedisSet', () => {
     await set.add([0, 0, 0])
     await set.add([1, 0, 0])
     await set.add([2, 0, 0])
-    const buffer = await set.collect()
+    const buffer = await set.values()
     Assert.deepEqual(buffer.length, 3)
   })
 

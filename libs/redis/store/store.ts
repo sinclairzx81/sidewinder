@@ -33,8 +33,8 @@ export interface Store {
   lindex(key: string, index: number): Promise<string | null>
   rpush(key: string, value: string): Promise<void>
   lpush(key: string, value: string): Promise<void>
-  rpop(key: string): Promise<string>
-  lpop(key: string): Promise<string>
+  rpop(key: string): Promise<string | null>
+  lpop(key: string): Promise<string | null>
   lrange(key: string, start: number, end: number): Promise<string[]>
   get(key: string): Promise<string | null>
   keys(pattern: string): Promise<string[]>

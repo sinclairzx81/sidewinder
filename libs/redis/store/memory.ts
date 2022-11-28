@@ -78,18 +78,18 @@ export class MemoryStore implements Store {
     array.unshift(value)
   }
 
-  public async rpop(key: string): Promise<string> {
+  public async rpop(key: string): Promise<string | null> {
     this.#ensureKey(key)
     const array = this.#data.get(key)!
     const value = array.pop()
-    return value || ''
+    return value || null
   }
 
-  public async lpop(key: string): Promise<string> {
+  public async lpop(key: string): Promise<string | null> {
     this.#ensureKey(key)
     const array = this.#data.get(key)!
     const value = array.shift()
-    return value || ''
+    return value || null
   }
 
   public async lrange(key: string, start: number, end: number): Promise<string[]> {
@@ -105,9 +105,10 @@ export class MemoryStore implements Store {
   }
 
   public async keys(pattern: string): Promise<string[]> {
+    const regex = new RegExp(`^` + pattern.replace(/\*/g, '(.*)') + '$')
     const buffer: string[] = []
     for (const key of this.#data.keys()) {
-      if (key.indexOf(pattern) === 0) {
+      if (key.match(regex)) {
         buffer.push(key)
       }
     }
