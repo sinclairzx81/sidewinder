@@ -26,7 +26,7 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-import { TObject, TSchema, Kind } from '@sidewinder/type'
+import { TObject, TSchema, Modifier, Kind } from '@sidewinder/type'
 
 export namespace Documentation {
   function argName(path: string[]) {
@@ -49,11 +49,13 @@ export namespace Documentation {
       .trim()
       .padEnd(12)
   }
+
   function typeName(type: string, optional: boolean) {
     const blue = '\x1b[36m'
     const esc = `\x1b[0m`
     return `${blue}${type}${optional ? '?' : ''}${esc}`.padEnd(18)
   }
+
   function* object(key: string, path: string[], schema: TSchema): Iterable<string> {
     for (const [key, propertySchema] of Object.entries(schema.properties)) {
       yield* visit(key, [...path, key], propertySchema as TSchema)
@@ -61,7 +63,7 @@ export namespace Documentation {
   }
 
   function* primitive(key: string, path: string[], schema: TSchema): Iterable<string> {
-    const optional = schema.default !== undefined || schema.modifier === 'Optional' || schema.modifier === 'ReadonlyOptional'
+    const optional = schema.default !== undefined || schema[Modifier] === 'Optional' || schema[Modifier] === 'ReadonlyOptional'
     const description = schema.description !== undefined ? schema.description : ''
     const line = [`${argName(path)}`, `${envName(path)}`, `${typeName(schema.type, optional)}`, `${description}`].filter((segment) => segment.length > 0).join(' ')
     yield `  ${line}`
@@ -94,6 +96,8 @@ export namespace Documentation {
   }
 
   export function resolve(schema: TObject): string {
-    return ['Options:', '', ...gather(schema)].join('\n')
+    const blue = '\x1b[36m'
+    const esc = `\x1b[0m`
+    return [`${blue}Options:${esc}`, '', ...gather(schema)].join('\n')
   }
 }
