@@ -46,11 +46,15 @@ async function createRedisStore() {
 
 async function test() {
   const tokens = new TokenDatabase(await createRedisStore())
-  tokens.set('token').add([1, 0, 0])
-  tokens.set('token').add([0, 1, 0])
-  tokens.set('token').add([0, 0, 1])
-
-  console.log(await tokens.set('token').values())
+  tokens.map('token').set('A', { value: 'A' })
+  tokens.map('token').set('B', { value: 'B' })
+  tokens.map('token').set('C', { value: 'C' })
+  tokens.map('token').expire('A', 2)
+  tokens.map('token').expire('B', 4)
+  tokens.map('token').expire('C', 6)
+  setInterval(async () => {
+    console.log(await tokens.map('token').values())
+  }, 100)
   // const key = await tokens.setToken({ value: 'hello' })
   // console.log(await tokens.getToken(key))
   // console.log(await tokens.deleteToken(key))

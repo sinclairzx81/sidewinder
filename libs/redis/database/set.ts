@@ -54,7 +54,7 @@ export class RedisSet<T extends TSchema> {
     }
   }
 
-  /** Clears all values in the Set */
+  /** Clears this Set */
   public async clear() {
     for (const key of await this.store.keys(this.encodeAllKeys())) {
       await this.store.del(key)
@@ -74,6 +74,11 @@ export class RedisSet<T extends TSchema> {
   /** Deletes the given value from the Set */
   public async delete(value: Static<T>) {
     return this.store.del(this.encodeKey(value))
+  }
+
+  /** Sets a value to expire after the given seconds have elapsed */
+  public async expire(value: Static<T>, seconds: number): Promise<void> {
+    await this.store.expire(this.encodeKey(value), seconds)
   }
 
   /** Returns the number of entries in this Set */

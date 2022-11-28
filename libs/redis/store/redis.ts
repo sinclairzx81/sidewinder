@@ -90,6 +90,10 @@ export class RedisStore implements Store {
     return await this.redis.exists(key)
   }
 
+  public async expire(key: string, seconds: number): Promise<void> {
+    await this.redis.expire(key, seconds)
+  }
+
   public async set(key: string, value: string): Promise<void> {
     await this.redis.set(key, value)
   }

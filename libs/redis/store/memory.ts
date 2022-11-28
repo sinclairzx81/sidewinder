@@ -119,6 +119,10 @@ export class MemoryStore implements Store {
     return this.#data.has(key) ? 1 : 0
   }
 
+  public async expire(key: string, seconds: number): Promise<void> {
+    setTimeout(() => this.#data.delete(key), seconds * 1000)
+  }
+
   public async set(key: string, value: string): Promise<void> {
     this.#ensureKey(key)
     const array = this.#data.get(key)!

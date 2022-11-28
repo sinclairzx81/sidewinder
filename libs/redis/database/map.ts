@@ -49,7 +49,7 @@ export class RedisMap<T extends TSchema> {
     }
   }
 
-  /** Clears all this Map */
+  /** Clears this Map */
   public async clear() {
     for (const key of await this.store.keys(this.encodeAllKeys())) {
       await this.store.del(key)
@@ -72,6 +72,11 @@ export class RedisMap<T extends TSchema> {
     const value = await this.store.get(this.encodeKey(key))
     if (value === null) return undefined
     return this.#decoder.decode(value)
+  }
+
+  /** Sets a key to expire after the given seconds have elapsed */
+  public async expire(key: string, seconds: number): Promise<void> {
+    await this.store.expire(this.encodeKey(key), seconds)
   }
 
   /** Deletes the given key */
