@@ -138,8 +138,17 @@ export class MemoryStore implements Store {
   // Factory
   // --------------------------------------------------------
 
+  /** Creates a singleton instance of a memory store */
+  public static Singleton(): Store {
+    if (singleton.length === 0) singleton.push(new MemoryStore())
+    return singleton[0]
+  }
+
   /** Creates a new in memory redis store */
   public static Create(): Store {
     return new MemoryStore()
   }
 }
+
+// external: static construction on some javascript build tooling may fail
+const singleton: MemoryStore[] = []
