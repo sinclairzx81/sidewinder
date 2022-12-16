@@ -82,7 +82,7 @@ export class WebSocketClient<Contract extends TContract> {
   private onConnectCallback: WebSocketClientConnectCallback = () => {}
   private onErrorCallback: WebSocketClientErrorCallback = () => {}
   private onCloseCallback: WebSocketClientCloseCallback = () => {}
-  
+
   private readonly encoder: Encoder
   private readonly methods: ClientMethods
   private readonly socket: RetryWebSocket | WebSocket

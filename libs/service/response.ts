@@ -26,6 +26,11 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-export * from './request'
-export * from './response'
-export * from './socket'
+export abstract class ServiceResponse {
+  /** Writes the response Http header */
+  abstract writeHead(status: number, headers: Record<string, any>): void
+  /** Writes this buffer to the response */
+  abstract write(buffer: Uint8Array): Promise<void>
+  /** Ends this response */
+  abstract end(): Promise<void>
+}

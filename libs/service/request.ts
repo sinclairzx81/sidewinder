@@ -96,9 +96,18 @@ export type HeaderKeys =
   | 'www-authenticate'
 
 export abstract class ServiceRequest {
+  /** Gets the remote IP Address */
   abstract get ipAddress(): string
+
+  /** Gets the Http method */
   abstract get method(): string
+
+  /** Gets the Http headers */
   abstract get headers(): Map<string, string>
+
+  /** Gets the Http Url Querystring */
   abstract get query(): Map<string, string>
+
+  /** Reads this request as a Uint8Array */
   abstract buffer(): Promise<Uint8Array>
 }

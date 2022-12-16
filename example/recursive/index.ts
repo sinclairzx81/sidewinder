@@ -3,8 +3,9 @@
 // through sidewinder services.
 // -----------------------------------------------------------------
 
-import { Type, Host, WebService } from '@sidewinder/server'
+import { Type, WebService } from '@sidewinder/service'
 import { WebClient } from '@sidewinder/client'
+import { Host } from '@sidewinder/host'
 
 // -----------------------------------------------------------
 // Node
@@ -48,9 +49,7 @@ export class GraphService extends WebService<typeof GraphContract> {
 // -----------------------------------------------------------
 
 const host = new Host()
-
 host.use('/graph', new GraphService())
-
 host.listen(5000)
 
 // -----------------------------------------------------------

@@ -26,12 +26,12 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-import { ServiceRequest, ServiceResponse } from '../abstract/index'
 import { Exception, Static, Type, TSchema, TString, TContract, TFunction, AuthorizeFunction, AuthorizeFunctionReturnType, ContractMethodParamters, ContractMethodReturnType } from '@sidewinder/contract'
 import { ServiceMethods, RpcErrorCode, RpcProtocol, RpcRequest, RpcResponse } from './methods/index'
 import { Encoder, JsonEncoder, MsgPackEncoder } from './encoder/index'
 import { Validator } from '@sidewinder/validator'
-import { HttpService } from '../http/http'
+import { ServiceRequest } from '../request'
+import { ServiceResponse } from '../response'
 
 // --------------------------------------------------------------------------
 // WebService Request Pipeline
@@ -72,7 +72,7 @@ export type WebServiceCloseCallback<Context> = (context: Context) => Promise<voi
 export type WebServiceErrorCallback = (clientId: string, error: unknown) => Promise<void> | void
 
 /** A JSON RPC 2.0 based HTTP service that supports remote method invocation via HTTP POST requests. */
-export class WebService<Contract extends TContract, Context extends TSchema = TString> extends HttpService {
+export class WebService<Contract extends TContract, Context extends TSchema = TString> {
   #onAuthorizeCallback: WebServiceAuthorizeCallback<Static<Context>>
   #onConnectCallback: WebServiceConnectCallback<Static<Context>>
   #onCloseCallback: WebServiceCloseCallback<Static<Context>>
@@ -87,7 +87,6 @@ export class WebService<Contract extends TContract, Context extends TSchema = TS
    * @param context The context this service should use.
    */
   constructor(private readonly contract: Contract, private readonly context: Context = Type.String() as any) {
-    super()
     this.#contextValidator = new Validator(this.context)
     this.#onAuthorizeCallback = (clientId: string) => clientId as any
     this.#onConnectCallback = () => {}
