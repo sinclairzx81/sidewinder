@@ -26,9 +26,9 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
+import { ServerResponse } from 'node:http'
 import { ServiceResponse } from '@sidewinder/service'
 import { Platform } from '@sidewinder/platform'
-import { ServerResponse } from 'node:http'
 
 export class NodeServiceResponse extends ServiceResponse {
   readonly #response: ServerResponse
