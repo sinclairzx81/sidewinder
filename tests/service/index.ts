@@ -1,2 +1,2 @@
-import './web'
-import './websocket'
+import './rpc'
+import './rpc-socket'

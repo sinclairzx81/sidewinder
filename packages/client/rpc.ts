@@ -31,7 +31,7 @@ import { RpcProtocol } from './methods/index'
 import { Encoder, MsgPackEncoder, JsonEncoder } from './encoder/index'
 import { Request } from './request/index'
 
-/** A JSON RPC 2.0 based HTTP client used to connect to Sidewinder WebService endpoints. */
+/** A JSON RPC 2.0 based Http client used to connect to Sidewinder WebService endpoints. */
 export class RpcClient<Contract extends TContract> {
   private readonly encoder: Encoder
 
@@ -45,7 +45,7 @@ export class RpcClient<Contract extends TContract> {
     Parameters extends ContractMethodParamters<Static<Contract>['server'][Method]>,
     ReturnType extends ContractMethodReturnType<Static<Contract>['server'][Method]>,
   >(method: Method, ...params: Parameters): Promise<ReturnType> {
-    this.assertMethodExists(method as string)
+    this.#assertMethodExists(method as string)
     const request = RpcProtocol.encodeRequest('unknown', method as string, params)
     const encoded = this.encoder.encode(request)
     const decoded = this.encoder.decode(await Request.call(this.contract, this.endpoint, this.additionalHeaders, encoded))
@@ -64,7 +64,7 @@ export class RpcClient<Contract extends TContract> {
 
   /** Sends a message to a remote service method and ignores the result */
   public send<Method extends keyof Static<Contract>['server'], Parameters extends ContractMethodParamters<Static<Contract>['server'][Method]>>(method: Method, ...params: Parameters) {
-    this.assertMethodExists(method as string)
+    this.#assertMethodExists(method as string)
     const request = RpcProtocol.encodeRequest('unknown', method as string, params)
     const encoded = this.encoder.encode(request)
     Request.call(this.contract, this.endpoint, this.additionalHeaders, encoded).catch(() => {
@@ -72,7 +72,7 @@ export class RpcClient<Contract extends TContract> {
     })
   }
 
-  private assertMethodExists(method: string) {
+  #assertMethodExists(method: string) {
     if (!Object.keys(this.contract.server).includes(method)) throw new Error(`Method '${method}' not defined in contract`)
   }
 }

@@ -44,7 +44,7 @@ host.listen(5000)
 
 async function test(method: string, endpoint: string) {
   const headers = { x: '0', y: '1', z: '2' }
-  await fetch(endpoint, {
+  await Fetch(endpoint, {
     method: method,
     headers,
     body: method === 'get' ? undefined : JSON.stringify({ a: 10, b: 20, c: 30 }),
