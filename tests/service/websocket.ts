@@ -1,5 +1,5 @@
 import { Type, Exception } from '@sidewinder/contract'
-import { WebSocketService } from '@sidewinder/service'
+import { RpcSocketService } from '@sidewinder/service'
 import { WebSocketClient } from '@sidewinder/client'
 import { Host } from '@sidewinder/host'
 import { Assert } from '../assert/index'
@@ -17,7 +17,7 @@ describe('server/WebSocketService', () => {
   it('Should dispatch lifetime events', async () => {
     const buffer = [] as any[]
     const port = Assert.nextPort()
-    const service = new WebSocketService(Contract)
+    const service = new RpcSocketService(Contract)
     service.event('authorize', (clientId) => {
       buffer.push('server:authorize')
       return clientId
@@ -46,7 +46,7 @@ describe('server/WebSocketService', () => {
   it('Should dispatch multiple lifetime events for subsequent calls', async () => {
     const buffer = [] as any[]
     const port = Assert.nextPort()
-    const service = new WebSocketService(Contract)
+    const service = new RpcSocketService(Contract)
     service.event('authorize', (clientId) => {
       buffer.push('server:authorize')
       return clientId
@@ -79,7 +79,7 @@ describe('server/WebSocketService', () => {
   it('Should dispatch only authorize event on authorization fail', async () => {
     const buffer = [] as any[]
     const port = Assert.nextPort()
-    const service = new WebSocketService(Contract)
+    const service = new RpcSocketService(Contract)
     service.event('authorize', () => {
       buffer.push('server:authorize')
       throw 1
@@ -113,7 +113,7 @@ describe('server/WebSocketService', () => {
   it('Should not crash service on synchronous error', async () => {
     const buffer = [] as any[]
     const port = Assert.nextPort()
-    const service = new WebSocketService(Contract)
+    const service = new RpcSocketService(Contract)
     service.method('test', () => {
       throw Error()
     })
@@ -135,7 +135,7 @@ describe('server/WebSocketService', () => {
   it('Should not crash on service asynchronous error', async () => {
     const buffer = [] as any[]
     const port = Assert.nextPort()
-    const service = new WebSocketService(Contract)
+    const service = new RpcSocketService(Contract)
     service.method('test', async () => {
       throw Error()
     })
@@ -162,7 +162,7 @@ describe('server/WebSocketService', () => {
     const buffer = [] as any[]
     const port = Assert.nextPort()
     const Context = Type.Object({ x: Type.Number(), y: Type.Number(), z: Type.Number() })
-    const service = new WebSocketService(Contract, Context)
+    const service = new RpcSocketService(Contract, Context)
     service.event('authorize', () => {
       return { x: 1, y: 2, z: 3 }
     })
@@ -197,7 +197,7 @@ describe('server/WebSocketService', () => {
     const buffer = [] as any[]
     const port = Assert.nextPort()
     const Context = Type.Object({ x: Type.Number(), y: Type.Number(), z: Type.Number() })
-    const service = new WebSocketService(Contract, Context)
+    const service = new RpcSocketService(Contract, Context)
     // @ts-ignore
     service.event('authorize', () => {
       return { x: 1, y: 2 }
@@ -231,7 +231,7 @@ describe('server/WebSocketService', () => {
     const buffer = [] as any[]
     const port = Assert.nextPort()
     const context = Type.Tuple([Type.Number(), Type.Number(), Type.Number()])
-    const service = new WebSocketService(Contract, context)
+    const service = new RpcSocketService(Contract, context)
     service.event('authorize', () => [1, 2, 3])
     service.method('test', (context) => {
       buffer.push(context)
@@ -250,7 +250,7 @@ describe('server/WebSocketService', () => {
   it('Should forward method level context into method', async () => {
     const buffer = [] as any[]
     const port = Assert.nextPort()
-    const service = new WebSocketService(Contract)
+    const service = new RpcSocketService(Contract)
     service.method(
       'test',
       () => [1, 2, 3],
@@ -273,7 +273,7 @@ describe('server/WebSocketService', () => {
     const buffer = [] as any[]
     const port = Assert.nextPort()
     const context = Type.Tuple([Type.Number(), Type.Number(), Type.Number()])
-    const service = new WebSocketService(Contract, context)
+    const service = new RpcSocketService(Contract, context)
     service.event('authorize', () => [1, 2, 3])
     service.method(
       'test',
@@ -299,7 +299,7 @@ describe('server/WebSocketService', () => {
 
   it('Should reject failed authorization attempts at the service level', async () => {
     const port = Assert.nextPort()
-    const service = new WebSocketService(Contract)
+    const service = new RpcSocketService(Contract)
     service.event('authorize', () => {
       throw 1
     })
@@ -316,7 +316,7 @@ describe('server/WebSocketService', () => {
 
   it('Should reject failed authorization attempts at the method level', async () => {
     const port = Assert.nextPort()
-    const service = new WebSocketService(Contract)
+    const service = new RpcSocketService(Contract)
     service.method(
       'test',
       () => {

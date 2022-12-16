@@ -1,10 +1,10 @@
 import { Type, Exception } from '@sidewinder/contract'
-import { WebSocketService } from '@sidewinder/service'
+import { RpcSocketService } from '@sidewinder/service'
 import { Host } from '@sidewinder/host'
 import { WebSocketClient, WebSocketClientOptions } from '@sidewinder/client'
 import { Assert } from '../../assert/index'
 
-export type ContextCallback = (host: Host, service: WebSocketService<typeof Contract>, client: WebSocketClient<typeof Contract>, port: number) => Promise<void>
+export type ContextCallback = (host: Host, service: RpcSocketService<typeof Contract>, client: WebSocketClient<typeof Contract>, port: number) => Promise<void>
 
 const Contract = Type.Contract({
   format: 'msgpack',
@@ -35,7 +35,7 @@ function context(callback: ContextCallback, options?: WebSocketClientOptions) {
     const port = Assert.nextPort()
     let store: string = ''
 
-    const service = new WebSocketService(Contract)
+    const service = new RpcSocketService(Contract)
     service.method('send:store', (clientId, data) => {
       store = data
     })

@@ -1,4 +1,4 @@
-import { Type, WebService } from '@sidewinder/service'
+import { Type, RpcService } from '@sidewinder/service'
 import { Host } from '@sidewinder/host'
 import { WebClient } from '@sidewinder/client'
 import { MathServiceContract } from '../shared/index'
@@ -14,7 +14,7 @@ export const MathServiceContext = Type.Object({
   roles: Type.Array(Type.String()),
 })
 
-export class MathService extends WebService<typeof MathServiceContract, typeof MathServiceContext> {
+export class MathService extends RpcService<typeof MathServiceContract, typeof MathServiceContext> {
   constructor() {
     super(MathServiceContract, MathServiceContext)
   }

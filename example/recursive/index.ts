@@ -3,7 +3,7 @@
 // through sidewinder services.
 // -----------------------------------------------------------------
 
-import { Type, WebService } from '@sidewinder/service'
+import { Type, RpcService } from '@sidewinder/service'
 import { WebClient } from '@sidewinder/client'
 import { Host } from '@sidewinder/host'
 
@@ -34,7 +34,7 @@ const GraphContract = Type.Contract({
 // Service
 // -----------------------------------------------------------
 
-export class GraphService extends WebService<typeof GraphContract> {
+export class GraphService extends RpcService<typeof GraphContract> {
   constructor() {
     super(GraphContract)
   }

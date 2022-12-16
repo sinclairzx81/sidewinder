@@ -1,5 +1,5 @@
 import { Type, Exception } from '@sidewinder/contract'
-import { WebService } from '@sidewinder/service'
+import { RpcService } from '@sidewinder/service'
 import { Host } from '@sidewinder/host'
 import { WebClient } from '@sidewinder/client'
 import { Assert } from '../assert/index'
@@ -17,7 +17,7 @@ describe('server/WebService', () => {
   it('Should dispatch lifetime events', async () => {
     const buffer = [] as any[]
     const port = Assert.nextPort()
-    const service = new WebService(Contract)
+    const service = new RpcService(Contract)
     service.event('authorize', (context, request) => {
       buffer.push('authorize')
       return context
@@ -45,7 +45,7 @@ describe('server/WebService', () => {
   it('Should dispatch lifetime events for subsequent requests', async () => {
     const buffer = [] as any[]
     const port = Assert.nextPort()
-    const service = new WebService(Contract)
+    const service = new RpcService(Contract)
     service.event('authorize', (context) => {
       buffer.push('authorize')
       return context
@@ -75,7 +75,7 @@ describe('server/WebService', () => {
   it('Should terminate on failed authorize', async () => {
     const buffer = [] as any[]
     const port = Assert.nextPort()
-    const service = new WebService(Contract)
+    const service = new RpcService(Contract)
     service.event('authorize', () => {
       buffer.push('authorize')
       throw Error('No')
@@ -109,7 +109,7 @@ describe('server/WebService', () => {
   it('Should not crash on synchronous error', async () => {
     const buffer = [] as any[]
     const port = Assert.nextPort()
-    const service = new WebService(Contract)
+    const service = new RpcService(Contract)
     service.method('test', () => {
       throw Error()
     })
@@ -130,7 +130,7 @@ describe('server/WebService', () => {
   it('Should not crash on asynchronous error', async () => {
     const buffer = [] as any[]
     const port = Assert.nextPort()
-    const service = new WebService(Contract)
+    const service = new RpcService(Contract)
     service.method('test', async () => {
       throw Error()
     })
@@ -157,7 +157,7 @@ describe('server/WebService', () => {
     const buffer = [] as any[]
     const port = Assert.nextPort()
     const context = Type.Tuple([Type.Number(), Type.Number(), Type.Number()])
-    const service = new WebService(Contract, context)
+    const service = new RpcService(Contract, context)
     service.event('authorize', () => [1, 2, 3])
     service.method('test', (context) => {
       buffer.push(context)
@@ -176,7 +176,7 @@ describe('server/WebService', () => {
   it('Should forward method level context into method', async () => {
     const buffer = [] as any[]
     const port = Assert.nextPort()
-    const service = new WebService(Contract)
+    const service = new RpcService(Contract)
     service.method(
       'test',
       () => [1, 2, 3],
@@ -199,7 +199,7 @@ describe('server/WebService', () => {
     const buffer = [] as any[]
     const port = Assert.nextPort()
     const context = Type.Tuple([Type.Number(), Type.Number(), Type.Number()])
-    const service = new WebService(Contract, context)
+    const service = new RpcService(Contract, context)
     service.event('authorize', () => [1, 2, 3])
     service.method(
       'test',
@@ -225,7 +225,7 @@ describe('server/WebService', () => {
 
   it('Should reject failed authorization attempts at the service level', async () => {
     const port = Assert.nextPort()
-    const service = new WebService(Contract)
+    const service = new RpcService(Contract)
     service.event('authorize', () => {
       throw 1
     })
@@ -243,7 +243,7 @@ describe('server/WebService', () => {
 
   it('Should reject failed authorization attempts at the method level', async () => {
     const port = Assert.nextPort()
-    const service = new WebService(Contract)
+    const service = new RpcService(Contract)
     service.method(
       'test',
       () => {

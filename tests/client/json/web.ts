@@ -1,10 +1,10 @@
 import { Type, Exception } from '@sidewinder/contract'
-import { WebService } from '@sidewinder/service'
+import { RpcService } from '@sidewinder/service'
 import { Host } from '@sidewinder/host'
 import { WebClient } from '@sidewinder/client'
 import { Assert } from '../../assert/index'
 
-export type ContextCallback = (host: Host, service: WebService<typeof Contract>, client: WebClient<typeof Contract>, port: number) => Promise<void>
+export type ContextCallback = (host: Host, service: RpcService<typeof Contract>, client: WebClient<typeof Contract>, port: number) => Promise<void>
 
 const Contract = Type.Contract({
   format: 'json',
@@ -26,7 +26,7 @@ function context(callback: ContextCallback) {
   return async () => {
     const port = Assert.nextPort()
     let store: string = ''
-    const service = new WebService(Contract)
+    const service = new RpcService(Contract)
     service.method('send:store', (clientId, data) => {
       store = data
     })

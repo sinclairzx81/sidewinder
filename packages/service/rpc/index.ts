@@ -28,5 +28,5 @@ THE SOFTWARE.
 
 export * from './encoder/index'
 export * from './methods/index'
-export * from './web'
-export * from './websocket'
+export * from './service'
+export * from './socket-service'

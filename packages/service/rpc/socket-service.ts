@@ -33,10 +33,10 @@ import { Validator } from '@sidewinder/validator'
 import { ServiceSocket, MessageEvent, CloseEvent, ErrorEvent } from '../socket'
 import { ServiceRequest } from '../request'
 
-export type WebSocketServiceAuthorizeCallback<Context> = (clientId: string, request: ServiceRequest) => Promise<Context> | Context
-export type WebSocketServiceConnectCallback<Context> = (context: Context) => Promise<unknown> | unknown
-export type WebSocketServiceCloseCallback<Context> = (context: Context) => Promise<unknown> | unknown
-export type WebSocketServiceErrorCallback = (context: string, error: unknown) => Promise<unknown> | unknown
+export type RpcSocketServiceAuthorizeCallback<Context> = (clientId: string, request: ServiceRequest) => Promise<Context> | Context
+export type RpcSocketServiceConnectCallback<Context> = (context: Context) => Promise<unknown> | unknown
+export type RpcSocketServiceCloseCallback<Context> = (context: Context) => Promise<unknown> | unknown
+export type RpcSocketServiceErrorCallback = (context: string, error: unknown) => Promise<unknown> | unknown
 
 /**
  * A JSON RPC 2.0 based WebSocket service that supports remote method invocation over
@@ -44,11 +44,11 @@ export type WebSocketServiceErrorCallback = (context: string, error: unknown) =>
  * and offers additional functions to enable this service to call remote methods on its
  * clients.
  */
-export class WebSocketService<Contract extends TContract, Context extends TSchema = TString> {
-  #onAuthorizeCallback: WebSocketServiceAuthorizeCallback<Static<Context>>
-  #onConnectCallback: WebSocketServiceConnectCallback<Static<Context>>
-  #onCloseCallback: WebSocketServiceCloseCallback<Static<Context>>
-  #onErrorCallback: WebSocketServiceErrorCallback
+export class RpcSocketService<Contract extends TContract, Context extends TSchema = TString> {
+  #onAuthorizeCallback: RpcSocketServiceAuthorizeCallback<Static<Context>>
+  #onConnectCallback: RpcSocketServiceConnectCallback<Static<Context>>
+  #onCloseCallback: RpcSocketServiceCloseCallback<Static<Context>>
+  #onErrorCallback: RpcSocketServiceErrorCallback
 
   readonly #contextValidator: Validator<Context>
   readonly #contexts: Map<string, Static<Context>>
@@ -82,26 +82,26 @@ export class WebSocketService<Contract extends TContract, Context extends TSchem
    * that conforms to the services context or throw if the user is not authorized. This context is reused for
    * subsequence calls on this service.
    */
-  public event(event: 'authorize', callback: WebSocketServiceAuthorizeCallback<Static<Context>>): WebSocketServiceAuthorizeCallback<Static<Context>>
+  public event(event: 'authorize', callback: RpcSocketServiceAuthorizeCallback<Static<Context>>): RpcSocketServiceAuthorizeCallback<Static<Context>>
 
   /**
    * Subscribes to connect events. This event is raised immediately following a successful 'authorize' event only.
    * This event receives the context returned from a successful authorization.
    */
-  public event(event: 'connect', callback: WebSocketServiceConnectCallback<Static<Context>>): WebSocketServiceConnectCallback<Static<Context>>
+  public event(event: 'connect', callback: RpcSocketServiceConnectCallback<Static<Context>>): RpcSocketServiceConnectCallback<Static<Context>>
 
   /**
    * Subscribes to close events. This event is raised whenever the remote WebSocket disconnects from the service.
    * Callers should use this event to clean up any associated state created for the connection. This event receives
    * the context returned from a successful authorization.
    */
-  public event(event: 'close', callback: WebSocketServiceCloseCallback<Static<Context>>): WebSocketServiceCloseCallback<Static<Context>>
+  public event(event: 'close', callback: RpcSocketServiceCloseCallback<Static<Context>>): RpcSocketServiceCloseCallback<Static<Context>>
 
   /**
    * Subscribes to error events. This event is raised for any socket transport errors and is usually following
    * immediately by a close event. This event receives the initial clientId string value only.
    */
-  public event(event: 'error', callback: WebSocketServiceErrorCallback): WebSocketServiceErrorCallback
+  public event(event: 'error', callback: RpcSocketServiceErrorCallback): RpcSocketServiceErrorCallback
 
   public event(event: string, callback: (...args: any[]) => any): any {
     switch (event) {

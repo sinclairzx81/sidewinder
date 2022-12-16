@@ -66,17 +66,17 @@ class PipelineResult<Value> {
 // WebService
 // --------------------------------------------------------------------------
 
-export type WebServiceAuthorizeCallback<Context> = (clientId: string, request: ServiceRequest) => Promise<Context> | Context
-export type WebServiceConnectCallback<Context> = (context: Context) => Promise<void> | void
-export type WebServiceCloseCallback<Context> = (context: Context) => Promise<void> | void
-export type WebServiceErrorCallback = (clientId: string, error: unknown) => Promise<void> | void
+export type RpcServiceAuthorizeCallback<Context> = (clientId: string, request: ServiceRequest) => Promise<Context> | Context
+export type RpcServiceConnectCallback<Context> = (context: Context) => Promise<void> | void
+export type RpcServiceCloseCallback<Context> = (context: Context) => Promise<void> | void
+export type RpcServiceErrorCallback = (clientId: string, error: unknown) => Promise<void> | void
 
 /** A JSON RPC 2.0 based HTTP service that supports remote method invocation via HTTP POST requests. */
-export class WebService<Contract extends TContract, Context extends TSchema = TString> {
-  #onAuthorizeCallback: WebServiceAuthorizeCallback<Static<Context>>
-  #onConnectCallback: WebServiceConnectCallback<Static<Context>>
-  #onCloseCallback: WebServiceCloseCallback<Static<Context>>
-  #onErrorCallback: WebServiceErrorCallback
+export class RpcService<Contract extends TContract, Context extends TSchema = TString> {
+  #onAuthorizeCallback: RpcServiceAuthorizeCallback<Static<Context>>
+  #onConnectCallback: RpcServiceConnectCallback<Static<Context>>
+  #onCloseCallback: RpcServiceCloseCallback<Static<Context>>
+  #onErrorCallback: RpcServiceErrorCallback
   readonly #contextValidator: Validator<Context>
   readonly #methods: ServiceMethods
   readonly #encoder: Encoder
@@ -102,26 +102,26 @@ export class WebService<Contract extends TContract, Context extends TSchema = TS
    * this event is mandatory if the service provides a context schema. The authorize event must return a value
    * that conforms to the services context or throw if the user is not authorized.
    */
-  public event(event: 'authorize', callback: WebServiceAuthorizeCallback<Static<Context>>): WebServiceAuthorizeCallback<Static<Context>>
+  public event(event: 'authorize', callback: RpcServiceAuthorizeCallback<Static<Context>>): RpcServiceAuthorizeCallback<Static<Context>>
 
   /**
    * Subscribes to connect events. This event is raised immediately following a successful 'authorize' event only.
    * This event receives the context returned from a successful authorization.
    */
-  public event(event: 'connect', callback: WebServiceConnectCallback<Static<Context>>): WebServiceConnectCallback<Static<Context>>
+  public event(event: 'connect', callback: RpcServiceConnectCallback<Static<Context>>): RpcServiceConnectCallback<Static<Context>>
 
   /**
    * Subscribes to close events. This event is raised whenever the remote Http request is about to close.
    * Callers should use this event to clean up any associated state created for the request. This event receives
    * the context returned from a successful authorization.
    */
-  public event(event: 'close', callback: WebServiceCloseCallback<Static<Context>>): WebServiceCloseCallback<Static<Context>>
+  public event(event: 'close', callback: RpcServiceCloseCallback<Static<Context>>): RpcServiceCloseCallback<Static<Context>>
 
   /**
    * Subscribes to error events. This event is raised if there are any http transport errors. This event
    * is usually immediately followed by a close event.
    */
-  public event(event: 'error', callback: WebServiceErrorCallback): WebServiceErrorCallback
+  public event(event: 'error', callback: RpcServiceErrorCallback): RpcServiceErrorCallback
 
   /** Subscribes to events */
   public event(event: string, callback: (...args: any[]) => any): any {
