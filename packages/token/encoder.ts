@@ -26,11 +26,11 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
+import * as crypto from 'node:crypto'
 import { sign } from 'jsonwebtoken'
 import { TObject, TUnion } from '@sidewinder/type'
 import { Validator } from '@sidewinder/validator'
 import { Format } from './format'
-import * as crypto from 'node:crypto'
 
 export class TokenEncoderTypeError extends Error {
   constructor(public readonly errors: any[], errorText: string) {

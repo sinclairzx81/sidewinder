@@ -29,7 +29,6 @@ THE SOFTWARE.
 import { ServiceRequest } from '../request'
 import { ServiceResponse } from '../response'
 import { RestMiddleware, RestMiddlewareFunction, RestMiddlewareNextFunction } from './middleware'
-import { HttpService } from '../http/http'
 import { RestRequest } from './request'
 import { RestResponse } from './response'
 import { Pattern } from './pattern'
@@ -45,12 +44,11 @@ export type RestRoute = {
   callback: RestCallback
 }
 
-export class RestService extends HttpService {
+export class RestService {
   #onErrorCallback: RestServiceErrorCallback
   readonly #middleware: RestMiddleware[]
   readonly #routes: RestRoute[]
   constructor() {
-    super()
     this.#onErrorCallback = () => {}
     this.#middleware = []
     this.#routes = []
