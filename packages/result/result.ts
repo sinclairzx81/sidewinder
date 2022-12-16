@@ -27,31 +27,31 @@ THE SOFTWARE.
 ---------------------------------------------------------------------------*/
 
 export class Result<Value> {
-    #value: Value | undefined
-    #error: Error | undefined
-    constructor(value?: Value, error?: Error) {
-        this.#value = value
-        this.#error = error
-    }
-    public ok() {
-        return this.#error === undefined
-    }
+  #value: Value | undefined
+  #error: Error | undefined
+  constructor(value?: Value, error?: Error) {
+    this.#value = value
+    this.#error = error
+  }
+  public ok() {
+    return this.#error === undefined
+  }
 
-    public value() {
-        if (this.ok()) return this.#value!
-        throw new Error('Result has no value')
-    }
+  public value() {
+    if (this.ok()) return this.#value!
+    throw new Error('Result has no value')
+  }
 
-    public error() {
-        if (!this.ok()) return this.#error!
-        throw new Error('Result has no error')
-    }
+  public error() {
+    if (!this.ok()) return this.#error!
+    throw new Error('Result has no error')
+  }
 
-    public static ok<T>(value: T): Result<T> {
-        return new Result(value, undefined)
-    }
+  public static ok<T>(value: T): Result<T> {
+    return new Result(value, undefined)
+  }
 
-    public static error<T>(error: Error): Result<T> {
-        return new Result(undefined as any, error)
-    }
+  public static error<T>(error: Error): Result<T> {
+    return new Result(undefined as any, error)
+  }
 }
