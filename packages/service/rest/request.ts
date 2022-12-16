@@ -27,7 +27,6 @@ THE SOFTWARE.
 ---------------------------------------------------------------------------*/
 
 import { Buffer } from '@sidewinder/buffer'
-import { ReadonlyMap, HttpHeaderKeys } from '../http/index'
 import { ServiceRequest } from '../request'
 
 export class RestRequest {
@@ -44,17 +43,17 @@ export class RestRequest {
   }
 
   /** Gets the http headers for this request */
-  public get headers(): ReadonlyMap<HttpHeaderKeys> {
-    return this.headers
+  public get headers() {
+    return this.#request.headers
   }
 
   /** Gets the parsed querystring parameters for this request */
-  public get query(): ReadonlyMap<string> {
-    return this.query
+  public get query() {
+    return this.#request.query
   }
 
   /** Gets the parsed params obtain from the url pattern */
-  public get params(): ReadonlyMap<string> {
+  public get params(): Map<string, string> {
     return this.#params
   }
 
