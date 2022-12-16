@@ -13,14 +13,14 @@ const packages = [
     ['config',    version, 'Sidewinder Config'],
     ['contract',  version, 'Sidewinder Contract'],
     ['events',    version, 'Sidewinder Events'],
-    ['hash',      version, 'Sidewinder Hashing'],
+    ['host',      version, 'Sidewinder Host'],
     ['mime',      version, 'Sidewinder Mime'],
     ['mongo',     version, 'Sidewinder Mongo'],
     ['path',      version, 'Sidewinder Path'],
     ['platform',  version, 'Sidewinder Platform'],
     ['query',     version, 'Sidewinder Query'],
     ['redis',     version, 'Sidewinder Redis'],
-    ['server',    version, 'Sidewinder Server'],
+    ['service',   version, 'Sidewinder Service'],
     ['token',     version, 'Sidewinder Token'],
     ['type',      version, 'Sidewinder Type'],
     ['validator', version, 'Sidewinder Validator'],
@@ -41,7 +41,7 @@ export async function clean() {
 // -------------------------------------------------------------
 
 export async function format() {
-    await shell('prettier --no-semi --single-quote --print-width 240 --trailing-comma all --write libs example tests')
+    await shell('prettier --no-semi --single-quote --print-width 240 --trailing-comma all --write packages example tests build')
 }
 
 // -------------------------------------------------------------
