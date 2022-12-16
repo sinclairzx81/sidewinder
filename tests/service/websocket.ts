@@ -1,6 +1,7 @@
 import { Type, Exception } from '@sidewinder/contract'
-import { Host, WebSocketService } from '@sidewinder/server'
+import { WebSocketService } from '@sidewinder/service'
 import { WebSocketClient } from '@sidewinder/client'
+import { Host } from '@sidewinder/host'
 import { Assert } from '../assert/index'
 
 const Contract = Type.Contract({

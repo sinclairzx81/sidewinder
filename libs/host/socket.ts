@@ -37,6 +37,9 @@ export class NodeServiceSocket extends ServiceSocket {
     super()
     this.#socket = socket
     this.#events = new Events()
+    this.#socket.addEventListener('message', event => this.#events.send('message', { data: event.data }))
+    this.#socket.addEventListener('error', event => this.#events.send('error', event))
+    this.#socket.addEventListener('close', event => this.#events.send('close', event))
   }
   public on(event: 'message', handler: EventHandler<MessageEvent>): EventListener
   public on(event: 'error', handler: EventHandler<ErrorEvent>): EventListener

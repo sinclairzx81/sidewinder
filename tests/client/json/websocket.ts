@@ -1,5 +1,6 @@
 import { Type, Exception } from '@sidewinder/contract'
-import { Host, WebSocketService } from '@sidewinder/server'
+import { WebSocketService } from '@sidewinder/service'
+import { Host } from '@sidewinder/host'
 import { WebSocketClient, WebSocketClientOptions } from '@sidewinder/client'
 import { Assert } from '../../assert/index'
 
