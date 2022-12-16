@@ -1,10 +1,10 @@
 import { Type, Exception } from '@sidewinder/contract'
 import { RpcSocketService } from '@sidewinder/service'
 import { Host } from '@sidewinder/host'
-import { WebSocketClient, WebSocketClientOptions } from '@sidewinder/client'
+import { RpcSocketClient, WebSocketClientOptions } from '@sidewinder/client'
 import { Assert } from '../../assert/index'
 
-export type ContextCallback = (host: Host, service: RpcSocketService<typeof Contract>, client: WebSocketClient<typeof Contract>, port: number) => Promise<void>
+export type ContextCallback = (host: Host, service: RpcSocketService<typeof Contract>, client: RpcSocketClient<typeof Contract>, port: number) => Promise<void>
 
 const Contract = Type.Contract({
   format: 'msgpack',
@@ -62,7 +62,7 @@ function context(callback: ContextCallback, options?: WebSocketClientOptions) {
     host.use(service)
     await host.listen(port)
 
-    const client = new WebSocketClient(Contract, `ws://localhost:${port}`, options)
+    const client = new RpcSocketClient(Contract, `ws://localhost:${port}`, options)
     await callback(host, service, client, port)
     client.close()
     await host.dispose()
@@ -297,7 +297,7 @@ describe('client/WebSocketClient:Json', () => {
   it(
     'should raise lifetime events in order (client close)',
     context(async (host, service, _client, port) => {
-      const client = new WebSocketClient(Contract, `ws://localhost:${port}`)
+      const client = new RpcSocketClient(Contract, `ws://localhost:${port}`)
       const buffer = [] as string[]
       client.event('connect', () => buffer.push('connect'))
       client.event('close', () => buffer.push('close'))
@@ -312,7 +312,7 @@ describe('client/WebSocketClient:Json', () => {
     'should raise lifetime events in order (host close)',
     context(async (host, service, _client, port) => {
       const buffer = [] as string[]
-      const client = new WebSocketClient(Contract, `ws://localhost:${port}`)
+      const client = new RpcSocketClient(Contract, `ws://localhost:${port}`)
       client.event('connect', () => buffer.push('connect'))
       client.event('close', () => buffer.push('close'))
       await client.call('basic:add', 1, 2)

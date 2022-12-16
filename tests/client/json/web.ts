@@ -1,10 +1,10 @@
 import { Type, Exception } from '@sidewinder/contract'
 import { RpcService } from '@sidewinder/service'
 import { Host } from '@sidewinder/host'
-import { WebClient } from '@sidewinder/client'
+import { RpcClient } from '@sidewinder/client'
 import { Assert } from '../../assert/index'
 
-export type ContextCallback = (host: Host, service: RpcService<typeof Contract>, client: WebClient<typeof Contract>, port: number) => Promise<void>
+export type ContextCallback = (host: Host, service: RpcService<typeof Contract>, client: RpcClient<typeof Contract>, port: number) => Promise<void>
 
 const Contract = Type.Contract({
   format: 'json',
@@ -48,7 +48,7 @@ function context(callback: ContextCallback) {
     host.use(service)
     await host.listen(port)
 
-    const client = new WebClient(Contract, `http://localhost:${port}`)
+    const client = new RpcClient(Contract, `http://localhost:${port}`)
     await callback(host, service, client, port)
     await host.dispose()
   }
@@ -152,7 +152,7 @@ describe('client/WebClient:Json', () => {
           'basic:add': Type.Function([Type.Number(), Type.Number()], Type.Number()),
         },
       })
-      const client = new WebClient(Contract, `http://localhost:${port}`)
+      const client = new RpcClient(Contract, `http://localhost:${port}`)
       const error = await client.call('basic:add', 1, 2).catch((error) => error)
       Assert.isInstanceOf(error, Error)
     }),

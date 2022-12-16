@@ -74,7 +74,11 @@ export class RestRequest {
 
   /** Reads the body of this request as a Uint8Array */
   public async arrayBuffer(): Promise<Uint8Array> {
-    return await this.#request.read()
+    const buffers: Uint8Array[] = []
+    for await (const buffer of this.#request) {
+      buffers.push(buffer)
+    }
+    return Buffer.concat(buffers)
   }
 
   /** Reads the body of this request as text */

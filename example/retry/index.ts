@@ -1,4 +1,4 @@
-import { WebSocketClient, Type } from '@sidewinder/client'
+import { RpcSocketClient, Type } from '@sidewinder/client'
 import { WebSocketService, Host } from '@sidewinder/server'
 
 const Contract = Type.Contract({
@@ -9,7 +9,7 @@ const Contract = Type.Contract({
 })
 
 async function client() {
-  const client = new WebSocketClient(Contract, 'ws://localhost:5000/math', {
+  const client = new RpcSocketClient(Contract, 'ws://localhost:5000/math', {
     autoReconnectBuffer: false,
     autoReconnectEnabled: true,
     autoReconnectTimeout: 4000,

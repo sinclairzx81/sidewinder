@@ -32,7 +32,7 @@ import { Encoder, MsgPackEncoder, JsonEncoder } from './encoder/index'
 import { Request } from './request/index'
 
 /** A JSON RPC 2.0 based HTTP client used to connect to Sidewinder WebService endpoints. */
-export class WebClient<Contract extends TContract> {
+export class RpcClient<Contract extends TContract> {
   private readonly encoder: Encoder
 
   constructor(private readonly contract: Contract, private readonly endpoint: string, private readonly additionalHeaders: Record<string, string> = {}) {

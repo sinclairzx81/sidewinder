@@ -1,7 +1,7 @@
 import { Type, Exception } from '@sidewinder/contract'
 import { RpcService } from '@sidewinder/service'
 import { Host } from '@sidewinder/host'
-import { WebClient } from '@sidewinder/client'
+import { RpcClient } from '@sidewinder/client'
 import { Assert } from '../assert/index'
 
 const Contract = Type.Contract({
@@ -36,7 +36,7 @@ describe('server/WebService', () => {
     host.use(service)
     host.listen(port)
 
-    const client = new WebClient(Contract, `http://localhost:${port}`)
+    const client = new RpcClient(Contract, `http://localhost:${port}`)
     await client.call('test')
     await host.dispose()
 
@@ -64,7 +64,7 @@ describe('server/WebService', () => {
     host.use(service)
     host.listen(port)
 
-    const client = new WebClient(Contract, `http://localhost:${port}`)
+    const client = new RpcClient(Contract, `http://localhost:${port}`)
     await client.call('test')
     await client.call('test')
     await host.dispose()
@@ -94,7 +94,7 @@ describe('server/WebService', () => {
     host.use(service)
     host.listen(port)
 
-    const client = new WebClient(Contract, `http://localhost:${port}`)
+    const client = new RpcClient(Contract, `http://localhost:${port}`)
     await client.call('test').catch(() => buffer.push('error'))
     await host.dispose()
 
@@ -118,7 +118,7 @@ describe('server/WebService', () => {
     host.use(service)
     host.listen(port)
 
-    const client = new WebClient(Contract, `http://localhost:${port}`)
+    const client = new RpcClient(Contract, `http://localhost:${port}`)
     await client.call('test').catch(() => buffer.push('error'))
     await client.call('test').catch(() => buffer.push('error'))
     await client.call('test').catch(() => buffer.push('error'))
@@ -139,7 +139,7 @@ describe('server/WebService', () => {
     host.use(service)
     host.listen(port)
 
-    const client = new WebClient(Contract, `http://localhost:${port}`)
+    const client = new RpcClient(Contract, `http://localhost:${port}`)
     await client.call('test').catch(() => buffer.push('error'))
     await client.call('test').catch(() => buffer.push('error'))
     await client.call('test').catch(() => buffer.push('error'))
@@ -167,7 +167,7 @@ describe('server/WebService', () => {
     host.use(service)
     host.listen(port)
 
-    const client = new WebClient(Contract, `http://localhost:${port}`)
+    const client = new RpcClient(Contract, `http://localhost:${port}`)
     await client.call('test')
     await host.dispose()
     Assert.deepEqual(buffer[0], [1, 2, 3])
@@ -189,7 +189,7 @@ describe('server/WebService', () => {
     host.use(service)
     host.listen(port)
 
-    const client = new WebClient(Contract, `http://localhost:${port}`)
+    const client = new RpcClient(Contract, `http://localhost:${port}`)
     await client.call('test')
     await host.dispose()
     Assert.deepEqual(buffer[0], [1, 2, 3])
@@ -213,7 +213,7 @@ describe('server/WebService', () => {
     host.use(service)
     host.listen(port)
 
-    const client = new WebClient(Contract, `http://localhost:${port}`)
+    const client = new RpcClient(Contract, `http://localhost:${port}`)
     await client.call('test')
     await host.dispose()
     Assert.deepEqual(buffer[0], [1, 2, 3, 4, 5, 6])
@@ -234,7 +234,7 @@ describe('server/WebService', () => {
     host.use(service)
     host.listen(port)
 
-    const client = new WebClient(Contract, `http://localhost:${port}`)
+    const client = new RpcClient(Contract, `http://localhost:${port}`)
     const error = (await client.call('test').catch((error: Error) => error)) as Error
     await host.dispose()
     Assert.isInstanceOf(error, Exception)
@@ -256,7 +256,7 @@ describe('server/WebService', () => {
     host.use(service)
     host.listen(port)
 
-    const client = new WebClient(Contract, `http://localhost:${port}`)
+    const client = new RpcClient(Contract, `http://localhost:${port}`)
     const error = (await client.call('test').catch((error: Error) => error)) as Error
     await host.dispose()
     Assert.isInstanceOf(error, Exception)

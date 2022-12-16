@@ -4,7 +4,7 @@
 // -----------------------------------------------------------------
 
 import { Type, RpcService } from '@sidewinder/service'
-import { WebClient } from '@sidewinder/client'
+import { RpcClient } from '@sidewinder/client'
 import { Host } from '@sidewinder/host'
 
 // -----------------------------------------------------------
@@ -57,7 +57,7 @@ host.listen(5000)
 // -----------------------------------------------------------
 
 async function start() {
-  const client = new WebClient(GraphContract, 'http://localhost:5000/graph')
+  const client = new RpcClient(GraphContract, 'http://localhost:5000/graph')
 
   const result = await client.call('echo', [
     {

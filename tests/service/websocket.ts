@@ -1,6 +1,6 @@
 import { Type, Exception } from '@sidewinder/contract'
 import { RpcSocketService } from '@sidewinder/service'
-import { WebSocketClient } from '@sidewinder/client'
+import { RpcSocketClient } from '@sidewinder/client'
 import { Host } from '@sidewinder/host'
 import { Assert } from '../assert/index'
 
@@ -36,7 +36,7 @@ describe('server/WebSocketService', () => {
     host.use(service)
     host.listen(port)
 
-    const client = new WebSocketClient(Contract, `ws://localhost:${port}`)
+    const client = new RpcSocketClient(Contract, `ws://localhost:${port}`)
     await client.call('test')
     client.close()
     await host.dispose()
@@ -65,7 +65,7 @@ describe('server/WebSocketService', () => {
     host.use(service)
     host.listen(port)
 
-    const client = new WebSocketClient(Contract, `ws://localhost:${port}`)
+    const client = new RpcSocketClient(Contract, `ws://localhost:${port}`)
     await client.call('test')
     await client.call('test')
     await client.call('test')
@@ -98,7 +98,7 @@ describe('server/WebSocketService', () => {
     host.use(service)
     host.listen(port)
 
-    const client = new WebSocketClient(Contract, `ws://localhost:${port}`)
+    const client = new RpcSocketClient(Contract, `ws://localhost:${port}`)
     await client.call('test').catch(() => buffer.push('client:error'))
     client.close()
     await host.dispose()
@@ -121,7 +121,7 @@ describe('server/WebSocketService', () => {
     host.use(service)
     host.listen(port)
 
-    const client = new WebSocketClient(Contract, `ws://localhost:${port}`)
+    const client = new RpcSocketClient(Contract, `ws://localhost:${port}`)
     await client.call('test').catch(() => buffer.push('client:error'))
     await client.call('test').catch(() => buffer.push('client:error'))
     await client.call('test').catch(() => buffer.push('client:error'))
@@ -144,7 +144,7 @@ describe('server/WebSocketService', () => {
     host.use(service)
     host.listen(port)
 
-    const client = new WebSocketClient(Contract, `ws://localhost:${port}`)
+    const client = new RpcSocketClient(Contract, `ws://localhost:${port}`)
     await client.call('test').catch(() => buffer.push('client:error'))
     await client.call('test').catch(() => buffer.push('client:error'))
     await client.call('test').catch(() => buffer.push('client:error'))
@@ -176,7 +176,7 @@ describe('server/WebSocketService', () => {
     host.use(service)
     host.listen(port)
 
-    const client = new WebSocketClient(Contract, `ws://localhost:${port}`)
+    const client = new RpcSocketClient(Contract, `ws://localhost:${port}`)
     await client.call('test').catch(() => {})
     await client.call('test').catch(() => {})
     await client.call('test').catch(() => {})
@@ -212,7 +212,7 @@ describe('server/WebSocketService', () => {
     host.use(service)
     host.listen(port)
 
-    const client = new WebSocketClient(Contract, `ws://localhost:${port}`)
+    const client = new RpcSocketClient(Contract, `ws://localhost:${port}`)
     await client.call('test').catch(() => buffer.push('client:error'))
     await client.call('test').catch(() => buffer.push('client:error'))
     await client.call('test').catch(() => buffer.push('client:error'))
@@ -241,7 +241,7 @@ describe('server/WebSocketService', () => {
     host.use(service)
     host.listen(port)
 
-    const client = new WebSocketClient(Contract, `ws://localhost:${port}`)
+    const client = new RpcSocketClient(Contract, `ws://localhost:${port}`)
     await client.call('test')
     await host.dispose()
     Assert.deepEqual(buffer[0], [1, 2, 3])
@@ -263,7 +263,7 @@ describe('server/WebSocketService', () => {
     host.use(service)
     host.listen(port)
 
-    const client = new WebSocketClient(Contract, `ws://localhost:${port}`)
+    const client = new RpcSocketClient(Contract, `ws://localhost:${port}`)
     await client.call('test')
     await host.dispose()
     Assert.deepEqual(buffer[0], [1, 2, 3])
@@ -287,7 +287,7 @@ describe('server/WebSocketService', () => {
     host.use(service)
     host.listen(port)
 
-    const client = new WebSocketClient(Contract, `ws://localhost:${port}`)
+    const client = new RpcSocketClient(Contract, `ws://localhost:${port}`)
     await client.call('test')
     await host.dispose()
     Assert.deepEqual(buffer[0], [1, 2, 3, 4, 5, 6])
@@ -308,7 +308,7 @@ describe('server/WebSocketService', () => {
     host.use(service)
     host.listen(port)
 
-    const client = new WebSocketClient(Contract, `ws://localhost:${port}`)
+    const client = new RpcSocketClient(Contract, `ws://localhost:${port}`)
     const error = (await client.call('test').catch((error: Error) => error)) as Error
     await host.dispose()
     Assert.isInstanceOf(error, Error)
@@ -329,7 +329,7 @@ describe('server/WebSocketService', () => {
     host.use(service)
     host.listen(port)
 
-    const client = new WebSocketClient(Contract, `ws://localhost:${port}`)
+    const client = new RpcSocketClient(Contract, `ws://localhost:${port}`)
     const error = (await client.call('test').catch((error: Error) => error)) as Error
     await host.dispose()
     Assert.isInstanceOf(error, Exception)

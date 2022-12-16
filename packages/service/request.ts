@@ -96,6 +96,8 @@ export type HeaderKeys =
   | 'www-authenticate'
 
 export abstract class ServiceRequest {
+  abstract [Symbol.asyncIterator](): AsyncIterableIterator<Uint8Array>
+
   /** Gets the remote IP Address */
   abstract get ipAddress(): string
 
@@ -111,6 +113,6 @@ export abstract class ServiceRequest {
   /** Gets the Http Url Querystring */
   abstract get query(): Map<string, string>
 
-  /** Reads this request as a Uint8Array */
-  abstract read(): Promise<Uint8Array>
+  /** Reads the next buffer from this request or null if EOF */
+  abstract read(): Promise<Uint8Array | null>
 }

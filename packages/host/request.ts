@@ -29,9 +29,11 @@ THE SOFTWARE.
 import { IncomingMessage } from 'node:http'
 import { ServiceRequest } from '@sidewinder/service'
 import { Buffer } from '@sidewinder/buffer'
+import { Channel } from '@sidewinder/channel'
 import * as qs from 'qs'
 
 export class NodeServiceRequest extends ServiceRequest {
+  readonly #channel: Channel<Uint8Array>
   readonly #request: IncomingMessage
   readonly #ipAddress: string
   readonly #headers: Map<string, string>
@@ -40,9 +42,22 @@ export class NodeServiceRequest extends ServiceRequest {
   constructor(request: IncomingMessage) {
     super()
     this.#request = request
+    this.#request.pause()
+    this.#request.on('data', (buffer) => this.#onData(buffer))
+    this.#request.on('error', (error) => this.#onError(error))
+    this.#request.on('end', () => this.#onEnd())
+    this.#channel = new Channel<Uint8Array>()
     this.#ipAddress = this.#readIpAddress(request)
     this.#headers = this.#readHeaders(request)
     this.#query = this.#readQuery(request)
+  }
+
+  public async *[Symbol.asyncIterator]() {
+    while (true) {
+      const next = await this.read()
+      if (next === null) return
+      yield next
+    }
   }
 
   public get url(): string {
@@ -65,13 +80,24 @@ export class NodeServiceRequest extends ServiceRequest {
     return this.#query
   }
 
-  public read(): Promise<Uint8Array> {
-    return new Promise((resolve, reject) => {
-      const buffers: Buffer[] = []
-      this.#request.on('error', (error) => reject(error))
-      this.#request.on('data', (buffer) => buffers.push(buffer))
-      this.#request.on('end', () => resolve(Buffer.concat(buffers)))
-    })
+  public async read(): Promise<Uint8Array | null> {
+    this.#request.resume()
+    const next = await this.#channel.next()
+    this.#request.pause()
+    return next
+  }
+
+  #onData(buffer: Buffer) {
+    this.#channel.send(buffer)
+  }
+
+  #onError(error: Error) {
+    this.#channel.error(error)
+    this.#channel.end()
+  }
+
+  #onEnd() {
+    this.#channel.end()
   }
 
   // ------------------------------------------------------------------------------

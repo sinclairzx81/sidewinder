@@ -179,7 +179,11 @@ export class RpcService<Contract extends TContract, Context extends TSchema = TS
   /** Reads the request as a Uint8Array */
   async #readRequestBuffer(request: ServiceRequest): Promise<Uint8Array> {
     if (request.method !== 'post') throw new Error('Can only read from http post requests')
-    return await request.read()
+    const buffers: Uint8Array[] = []
+    for await (const buffer of request) {
+      buffers.push(buffer)
+    }
+    return Buffer.concat(buffers)
   }
 
   /** Writes a response buffer */

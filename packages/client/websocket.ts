@@ -78,7 +78,7 @@ function into(callback: Function) {
 }
 
 /** A JSON RPC 2.0 based WebSocket client used to connect to Sidewinder WebSocketService endpoints. */
-export class WebSocketClient<Contract extends TContract> {
+export class RpcSocketClient<Contract extends TContract> {
   private onConnectCallback: WebSocketClientConnectCallback = () => {}
   private onErrorCallback: WebSocketClientErrorCallback = () => {}
   private onCloseCallback: WebSocketClientCloseCallback = () => {}

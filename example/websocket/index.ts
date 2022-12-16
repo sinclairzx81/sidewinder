@@ -1,6 +1,6 @@
 import { Type } from '@sidewinder/contract'
 import { Host, WebSocketService } from '@sidewinder/server'
-import { WebSocketClient } from '@sidewinder/client'
+import { RpcSocketClient } from '@sidewinder/client'
 
 // ---------------------------------------------------------------------
 // Contract
@@ -47,7 +47,7 @@ host.listen(5000)
 // ---------------------------------------------------------------------
 
 async function client() {
-  const client = new WebSocketClient(MathContract, 'ws://localhost:5000/math')
+  const client = new RpcSocketClient(MathContract, 'ws://localhost:5000/math')
   console.log('add', await client.call('add', 1, 2))
   console.log('sub', await client.call('sub', 1, 2))
   console.log('mul', await client.call('mul', 1, 2))

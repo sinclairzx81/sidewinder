@@ -1,6 +1,6 @@
 import { Type, RpcService } from '@sidewinder/service'
 import { Host } from '@sidewinder/host'
-import { WebClient } from '@sidewinder/client'
+import { RpcClient } from '@sidewinder/client'
 import { MathServiceContract } from '../shared/index'
 import cors from 'cors'
 
@@ -59,7 +59,7 @@ host.listen(5001)
 // -----------------------------------------------------------------
 
 async function clientTest() {
-  const client = new WebClient(MathServiceContract, 'http://localhost:5001/math?token=<signed-token>')
+  const client = new RpcClient(MathServiceContract, 'http://localhost:5001/math?token=<signed-token>')
   const add = await client.call('add', 1, 2)
   const sub = await client.call('sub', 1, 2)
   const mul = await client.call('mul', 1, 2)
