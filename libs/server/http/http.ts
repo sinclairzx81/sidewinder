@@ -26,8 +26,8 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-import { IncomingMessage, ServerResponse } from 'http'
-
+import { ServiceRequest, ServiceResponse } from '../abstract/index'
+import { Buffer } from '@sidewinder/buffer'
 // --------------------------------------------------------------------------
 // HttpHeaderKeys
 // --------------------------------------------------------------------------
@@ -109,7 +109,8 @@ export interface ReadonlyMap<K extends string> {
 
 /** Raw Http Service. Accepts all Http requests for any Http method. */
 export class HttpService {
-  public accept(clientId: string, request: IncomingMessage, response: ServerResponse) {
-    response.end('HttpService: accept() method not implemented')
+  public async accept(clientId: string, request: ServiceRequest, response: ServiceResponse) {
+    await response.write(Buffer.encode('HttpService: accept() method not implemented'))
+    await response.end()
   }
 }

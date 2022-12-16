@@ -26,15 +26,12 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-import type { IncomingMessage, ServerResponse } from 'http'
-
+import { ServiceRequest, ServiceResponse } from '../abstract/index'
 import { Exception, Static, Type, TSchema, TString, TContract, TFunction, AuthorizeFunction, AuthorizeFunctionReturnType, ContractMethodParamters, ContractMethodReturnType } from '@sidewinder/contract'
 import { ServiceMethods, RpcErrorCode, RpcProtocol, RpcRequest, RpcResponse } from './methods/index'
 import { Encoder, JsonEncoder, MsgPackEncoder } from './encoder/index'
-import { Platform } from '@sidewinder/platform'
 import { Validator } from '@sidewinder/validator'
 import { HttpService } from '../http/http'
-import { Request } from './request'
 
 // --------------------------------------------------------------------------
 // WebService Request Pipeline
@@ -69,7 +66,7 @@ class PipelineResult<Value> {
 // WebService
 // --------------------------------------------------------------------------
 
-export type WebServiceAuthorizeCallback<Context> = (clientId: string, request: Request) => Promise<Context> | Context
+export type WebServiceAuthorizeCallback<Context> = (clientId: string, request: ServiceRequest) => Promise<Context> | Context
 export type WebServiceConnectCallback<Context> = (context: Context) => Promise<void> | void
 export type WebServiceCloseCallback<Context> = (context: Context) => Promise<void> | void
 export type WebServiceErrorCallback = (clientId: string, error: unknown) => Promise<void> | void
@@ -181,38 +178,45 @@ export class WebService<Contract extends TContract, Context extends TSchema = TS
   // ---------------------------------------------------------------------
 
   /** Reads the request as a Uint8Array */
-  #readRequestBuffer(request: IncomingMessage): Promise<Uint8Array> {
-    if (request.method!.toLowerCase() !== 'post') return Promise.reject(new Error('Can only read from http post requests'))
-    return new Promise((resolve, reject) => {
-      const buffers: Buffer[] = []
-      // -----------------------------------------------------------------------
-      // ECONNRESET: Catch errors reading input buffer
-      // -----------------------------------------------------------------------
-      request.on('error', (error) => reject(error))
-      request.on('data', (buffer) => buffers.push(buffer))
-      request.on('end', () => resolve(Buffer.concat(buffers)))
-    })
+  async #readRequestBuffer(request: ServiceRequest): Promise<Uint8Array> {
+    if(request.method !== 'post') throw new Error('Can only read from http post requests')
+    return await request.buffer()
+    // if (request.method!.toLowerCase() !== 'post') return Promise.reject(new Error('Can only read from http post requests'))
+    // return new Promise((resolve, reject) => {
+    //   const buffers: Buffer[] = []
+    //   // -----------------------------------------------------------------------
+    //   // ECONNRESET: Catch errors reading input buffer
+    //   // -----------------------------------------------------------------------
+    //   request.on('error', (error) => reject(error))
+    //   request.on('data', (buffer) => buffers.push(buffer))
+    //   request.on('end', () => resolve(Buffer.concat(buffers)))
+    // })
   }
 
   /** Writes a response buffer */
-  #writeResponseBuffer(response: ServerResponse, status: number, data: Uint8Array): Promise<void> {
-    return new Promise((resolve, reject) => {
-      // -----------------------------------------------------------------------
-      // ECONNRESET: Catch errors writing output buffer
-      // -----------------------------------------------------------------------
-      response.on('error', (error) => reject(error))
+ async  #writeResponseBuffer(response: ServiceResponse, status: number, data: Uint8Array): Promise<void> {
+    const contentType = this.contract.format === 'json' ? 'application/json' : 'application/x-msgpack'
+    const contentLength = data.length.toString()
+    await response.writeHead(status, { 'Content-Type': contentType, 'Content-Length': contentLength })
+    await response.write(data)
+    await response.end()
+    // return new Promise((resolve, reject) => {
+    //   // -----------------------------------------------------------------------
+    //   // ECONNRESET: Catch errors writing output buffer
+    //   // -----------------------------------------------------------------------
+    //   response.on('error', (error) => reject(error))
 
-      const contentType = this.contract.format === 'json' ? 'application/json' : 'application/x-msgpack'
-      const contentLength = data.length.toString()
-      response.writeHead(status, { 'Content-Type': contentType, 'Content-Length': contentLength })
-      const version = Platform.version()
-      if (version.major < 16) {
-        // Node 14: Fallback
-        response.end(Buffer.from(data), () => resolve())
-      } else {
-        response.end(data, () => resolve())
-      }
-    })
+    //   const contentType = this.contract.format === 'json' ? 'application/json' : 'application/x-msgpack'
+    //   const contentLength = data.length.toString()
+    //   response.writeHead(status, { 'Content-Type': contentType, 'Content-Length': contentLength })
+    //   const version = Platform.version()
+    //   if (version.major < 16) {
+    //     // Node 14: Fallback
+    //     response.end(Buffer.from(data), () => resolve())
+    //   } else {
+    //     response.end(data, () => resolve())
+    //   }
+    // })
   }
 
   // ---------------------------------------------------------------------
@@ -220,7 +224,7 @@ export class WebService<Contract extends TContract, Context extends TSchema = TS
   // ---------------------------------------------------------------------
 
   /** Reads the RpcRequest from the http request body */
-  async #readRpcRequest(request: IncomingMessage): Promise<PipelineResult<RpcRequest>> {
+  async #readRpcRequest(request: ServiceRequest): Promise<PipelineResult<RpcRequest>> {
     const buffer = await this.#readRequestBuffer(request)
     const decoded = RpcProtocol.decodeAny(this.#encoder.decode(buffer))
     if (decoded === undefined) return PipelineResult.error(Error('Unable to read protocol request'))
@@ -229,7 +233,7 @@ export class WebService<Contract extends TContract, Context extends TSchema = TS
   }
 
   /** Writes an RpcResponse to the Http Body */
-  async #writeRpcResponse(response: ServerResponse, status: number, rpcresponse: RpcResponse): Promise<void> {
+  async #writeRpcResponse(response: ServiceResponse, status: number, rpcresponse: RpcResponse): Promise<void> {
     const buffer = this.#encoder.encode(rpcresponse)
     this.#writeResponseBuffer(response, status, buffer).catch(() => {})
   }
@@ -238,9 +242,10 @@ export class WebService<Contract extends TContract, Context extends TSchema = TS
   // Content Type
   // ---------------------------------------------------------------------
 
-  async #checkContentType(clientId: string, request: IncomingMessage): Promise<PipelineResult<null>> {
+  async #checkContentType(clientId: string, request: ServiceRequest): Promise<PipelineResult<null>> {
     const expectedContentType = this.contract.format === 'json' ? 'application/json' : 'application/x-msgpack'
     const actualContentType = request.headers['content-type']
+    
     if (expectedContentType !== actualContentType) {
       return PipelineResult.error(new Error('Invalid Content Type'))
     } else {
@@ -252,9 +257,9 @@ export class WebService<Contract extends TContract, Context extends TSchema = TS
   // Context
   // ---------------------------------------------------------------------
 
-  async #readRpcContext(clientId: string, request: IncomingMessage): Promise<PipelineResult<Static<Context>>> {
+  async #readRpcContext(clientId: string, request: ServiceRequest): Promise<PipelineResult<Static<Context>>> {
     try {
-      const context = await this.#onAuthorizeCallback(clientId, new Request(request))
+      const context = await this.#onAuthorizeCallback(clientId, request)
       return PipelineResult.ok(context)
     } catch (error) {
       return PipelineResult.error(error as Error)
@@ -279,7 +284,7 @@ export class WebService<Contract extends TContract, Context extends TSchema = TS
     }
   }
 
-  async #writeInvalidContentType(clientId: string, response: ServerResponse) {
+  async #writeInvalidContentType(clientId: string, response: ServiceResponse) {
     const contentType = this.contract.format === 'json' ? 'application/json' : 'application/x-msgpack'
     return await this.#writeRpcResponse(
       response,
@@ -292,7 +297,7 @@ export class WebService<Contract extends TContract, Context extends TSchema = TS
     ).catch((error) => this.#dispatchError(clientId, error))
   }
 
-  async #writeAuthorizationError(clientId: string, response: ServerResponse) {
+  async #writeAuthorizationError(clientId: string, response: ServiceResponse) {
     return await this.#writeRpcResponse(
       response,
       401,
@@ -304,7 +309,7 @@ export class WebService<Contract extends TContract, Context extends TSchema = TS
     ).catch((error) => this.#dispatchError(clientId, error))
   }
 
-  async #writeRpcContextInvalidError(clientId: string, response: ServerResponse) {
+  async #writeRpcContextInvalidError(clientId: string, response: ServiceResponse) {
     return await this.#writeRpcResponse(
       response,
       500,
@@ -316,7 +321,7 @@ export class WebService<Contract extends TContract, Context extends TSchema = TS
     ).catch((error) => this.#dispatchError(clientId, error))
   }
 
-  async #writeRpcRequestInvalidError(clientId: string, response: ServerResponse) {
+  async #writeRpcRequestInvalidError(clientId: string, response: ServiceResponse) {
     return await this.#writeRpcResponse(
       response,
       400,
@@ -328,7 +333,7 @@ export class WebService<Contract extends TContract, Context extends TSchema = TS
     ).catch((error) => this.#dispatchError(clientId, error))
   }
 
-  async #writeExecuteError(clientId: string, response: ServerResponse, rpcRequest: RpcRequest, error: Error) {
+  async #writeExecuteError(clientId: string, response: ServiceResponse, rpcRequest: RpcRequest, error: Error) {
     if (rpcRequest.id === undefined) {
       await this.#writeResponseBuffer(response, 200, Buffer.from('{}')).catch((error) => this.#dispatchError(clientId, error))
     } else {
@@ -342,7 +347,7 @@ export class WebService<Contract extends TContract, Context extends TSchema = TS
     }
   }
 
-  async #writeExecuteResult(clientId: string, response: ServerResponse, rpcRequest: RpcRequest, result: unknown) {
+  async #writeExecuteResult(clientId: string, response: ServiceResponse, rpcRequest: RpcRequest, result: unknown) {
     if (rpcRequest.id === undefined) {
       await this.#writeResponseBuffer(response, 200, Buffer.from('{}')).catch((error) => this.#dispatchError(clientId, error))
     } else {
@@ -368,7 +373,7 @@ export class WebService<Contract extends TContract, Context extends TSchema = TS
   // -------------------------------------------------------------------------------------------
 
   /** Accepts an incoming HTTP request and processes it as JSON RPC method call. This method is called automatically by the Host. */
-  public async accept(clientId: string, request: IncomingMessage, response: ServerResponse) {
+  public async accept(clientId: string, request: ServiceRequest, response: ServiceResponse) {
     // -----------------------------------------------------------------------
     // ECONNRESET: Try to catch errors writing to output
     // -----------------------------------------------------------------------

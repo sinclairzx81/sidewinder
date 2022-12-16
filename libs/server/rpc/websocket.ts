@@ -26,16 +26,13 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
+import { ServiceRequest, ServiceSocket, MessageEvent, CloseEvent, ErrorEvent } from '../abstract/index'
 import { Exception, Static, Type, TSchema, TString, TContract, TFunction, AuthorizeFunction, AuthorizeFunctionReturnType, ContractMethodParamters, ContractMethodReturnType } from '@sidewinder/contract'
-import type { MessageEvent, CloseEvent, ErrorEvent } from 'ws'
-import type { IncomingMessage } from 'http'
-
-import { Validator } from '@sidewinder/validator'
 import { ServiceMethods, Responder, RpcErrorCode, RpcProtocol, RpcRequest, RpcResponse } from './methods/index'
 import { Encoder, JsonEncoder, MsgPackEncoder } from './encoder/index'
-import { Request } from './request'
+import { Validator } from '@sidewinder/validator'
 
-export type WebSocketServiceAuthorizeCallback<Context> = (clientId: string, request: Request) => Promise<Context> | Context
+export type WebSocketServiceAuthorizeCallback<Context> = (clientId: string, request: ServiceRequest) => Promise<Context> | Context
 export type WebSocketServiceConnectCallback<Context> = (context: Context) => Promise<unknown> | unknown
 export type WebSocketServiceCloseCallback<Context> = (context: Context) => Promise<unknown> | unknown
 export type WebSocketServiceErrorCallback = (context: string, error: unknown) => Promise<unknown> | unknown
@@ -54,7 +51,7 @@ export class WebSocketService<Contract extends TContract, Context extends TSchem
 
   readonly #contextValidator: Validator<Context>
   readonly #contexts: Map<string, Static<Context>>
-  readonly #sockets: Map<string, WebSocket>
+  readonly #sockets: Map<string, ServiceSocket>
   readonly #encoder: Encoder
   readonly #responder: Responder
   readonly #methods: ServiceMethods
@@ -71,7 +68,7 @@ export class WebSocketService<Contract extends TContract, Context extends TSchem
     this.#onErrorCallback = () => {}
     this.#onCloseCallback = () => {}
     this.#contexts = new Map<string, Static<Context>>()
-    this.#sockets = new Map<string, WebSocket>()
+    this.#sockets = new Map<string, ServiceSocket>()
     this.#encoder = this.contract.format === 'json' ? new JsonEncoder() : new MsgPackEncoder()
     this.#responder = new Responder()
     this.#methods = new ServiceMethods()
@@ -100,7 +97,7 @@ export class WebSocketService<Contract extends TContract, Context extends TSchem
   public event(event: 'close', callback: WebSocketServiceCloseCallback<Static<Context>>): WebSocketServiceCloseCallback<Static<Context>>
 
   /**
-   * Subcribes to error events. This event is raised for any socket transport errors and is usually following
+   * Subscribes to error events. This event is raised for any socket transport errors and is usually following
    * immediately by a close event. This event receives the initial clientId string value only.
    */
   public event(event: 'error', callback: WebSocketServiceErrorCallback): WebSocketServiceErrorCallback
@@ -197,9 +194,9 @@ export class WebSocketService<Contract extends TContract, Context extends TSchem
   // Host Functions
   // -------------------------------------------------------------------------------------------
 
-  public async upgrade(clientId: string, request: IncomingMessage): Promise<boolean> {
+  public async upgrade(clientId: string, request: ServiceRequest): Promise<boolean> {
     try {
-      const context = await this.#onAuthorizeCallback(clientId, new Request(request))
+      const context = await this.#onAuthorizeCallback(clientId, request)
       this.#contextValidator.assert(context)
       this.#contexts.set(clientId, context)
       return true
@@ -208,13 +205,11 @@ export class WebSocketService<Contract extends TContract, Context extends TSchem
     }
   }
 
-  public async accept(clientId: string, socket: any /** WebSocket */) {
-    // Do not want to force downstream implementations into requiring esModuleInterop */
+  public async accept(clientId: string, socket: ServiceSocket) {
     this.#sockets.set(clientId, socket)
-    socket.binaryType = 'arraybuffer'
-    socket.addEventListener('message', (event: MessageEvent) => this.#onMessageHandler(clientId, socket, event))
-    socket.addEventListener('error', (event: ErrorEvent) => this.#onErrorHandler(clientId, event))
-    socket.addEventListener('close', (event: CloseEvent) => this.#onCloseHandler(clientId, event))
+    socket.on('message', (event) => this.#onMessageHandler(clientId, socket, event))
+    socket.on('error', (event) => this.#onErrorHandler(clientId, event))
+    socket.on('close', (event) => this.#onCloseHandler(clientId, event))
     const context = this.#resolveContext(clientId)
     await this.#onConnectCallback(context)
   }
@@ -231,14 +226,14 @@ export class WebSocketService<Contract extends TContract, Context extends TSchem
     }
   }
 
-  async #sendResponseWithResult(socket: WebSocket, rpcRequest: RpcRequest, result: unknown) {
+  async #sendResponseWithResult(socket: ServiceSocket, rpcRequest: RpcRequest, result: unknown) {
     if (rpcRequest.id === undefined || rpcRequest.id === null) return
     const response = RpcProtocol.encodeResult(rpcRequest.id, result)
     const buffer = this.#encoder.encode(response)
     socket.send(buffer)
   }
 
-  async #sendResponseWithError(socket: WebSocket, rpcRequest: RpcRequest, error: Error) {
+  async #sendResponseWithError(socket: ServiceSocket, rpcRequest: RpcRequest, error: Error) {
     if (rpcRequest.id === undefined || rpcRequest.id === null) return
     if (error instanceof Exception) {
       const response = RpcProtocol.encodeError(rpcRequest.id, { code: error.code, message: error.message, data: error.data })
@@ -254,7 +249,7 @@ export class WebSocketService<Contract extends TContract, Context extends TSchem
     }
   }
 
-  async #executeRequest(clientId: string, socket: WebSocket, rpcRequest: RpcRequest) {
+  async #executeRequest(clientId: string, socket: ServiceSocket, rpcRequest: RpcRequest) {
     const context = this.#resolveContext(clientId)
     try {
       const result = await this.#methods.execute(context, rpcRequest.method, rpcRequest.params)
@@ -282,7 +277,7 @@ export class WebSocketService<Contract extends TContract, Context extends TSchem
   // Socket Events
   // -------------------------------------------------------------------------------------------
 
-  async #onMessageHandler(clientId: string, socket: WebSocket, event: MessageEvent) {
+  async #onMessageHandler(clientId: string, socket: ServiceSocket, event: MessageEvent) {
     try {
       const message = RpcProtocol.decodeAny(this.#encoder.decode(event.data as Uint8Array))
       if (message === undefined) return
