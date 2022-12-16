@@ -27,7 +27,7 @@ THE SOFTWARE.
 ---------------------------------------------------------------------------*/
 
 import { TContract } from '@sidewinder/contract'
-import { fetch } from '@sidewinder/web'
+import { Fetch } from '@sidewinder/fetch'
 
 export namespace Request {
   function createRequiredHeader(contract: TContract, body: Uint8Array) {
@@ -45,7 +45,7 @@ export namespace Request {
   export async function call(contract: TContract, endpoint: string, additionalHeaders: Record<string, string>, body: Uint8Array): Promise<Uint8Array> {
     const requiredHeaders = createRequiredHeader(contract, body)
     const headers = { ...additionalHeaders, ...requiredHeaders }
-    const response = await fetch(endpoint, { method: 'POST', body, headers })
+    const response = await Fetch(endpoint, { method: 'POST', body, headers })
     assertResponseType(contract, endpoint, response.headers.get('Content-Type') as string)
     const arraybuffer = await response.arrayBuffer()
     return new Uint8Array(arraybuffer)

@@ -1,6 +1,6 @@
 /*--------------------------------------------------------------------------
 
-@sidewinder/web
+@sidewinder/websocket
 
 The MIT License (MIT)
 
@@ -48,10 +48,10 @@ export interface RetryWebSocketOptions {
  * applying state on these events.
  */
 export class RetryWebSocket {
-  private readonly barrier: Barrier
-  private readonly events: Events
-  private socket: WebSocket | null
-  private explicitClosed: boolean
+  readonly #barrier: Barrier
+  readonly #events: Events
+  #socket: WebSocket | null
+  #explicitClosed: boolean
 
   constructor(
     private readonly endpoint: string,
@@ -61,10 +61,10 @@ export class RetryWebSocket {
       autoReconnectBuffer: false,
     },
   ) {
-    this.barrier = new Barrier()
-    this.events = new Events()
-    this.explicitClosed = false
-    this.socket = null
+    this.#barrier = new Barrier()
+    this.#events = new Events()
+    this.#explicitClosed = false
+    this.#socket = null
     this.establish()
   }
 
@@ -95,7 +95,7 @@ export class RetryWebSocket {
   public on(event: 'close', func: EventHandler<any>): EventListener
 
   public on(event: string, func: EventHandler<any>): EventListener {
-    return this.events.on(event, func)
+    return this.#events.on(event, func)
   }
 
   /**
@@ -122,7 +122,7 @@ export class RetryWebSocket {
   public once(event: 'close', func: EventHandler<any>): EventListener
 
   public once(event: string, func: EventHandler<any>): EventListener {
-    return this.events.once(event, func)
+    return this.#events.once(event, func)
   }
 
   /**
@@ -131,47 +131,47 @@ export class RetryWebSocket {
    * is false, this call will throw.
    */
   public async send(data: unknown) {
-    if (this.explicitClosed) {
+    if (this.#explicitClosed) {
       throw new Error('Socket has been closed')
     }
-    if (this.socket === null && this.options.autoReconnectBuffer === false) {
+    if (this.#socket === null && this.options.autoReconnectBuffer === false) {
       throw Error('Socket is not currently connected. Consider setting autoReconnectBuffer to true to buffer messages while disconnected.')
     }
-    await this.barrier.wait()
-    this.socket!.send(data)
+    await this.#barrier.wait()
+    this.#socket!.send(data)
   }
 
   /** Closes this Web Socket.  */
   public async close() {
-    this.explicitClosed = true
-    if (this.socket) this.socket.close()
-    this.events.send('close', void 0)
+    this.#explicitClosed = true
+    if (this.#socket) this.#socket.close()
+    this.#events.send('close', void 0)
   }
 
   private async establish() {
     while (true) {
-      if (this.explicitClosed) return
-      if (this.socket !== null) {
+      if (this.#explicitClosed) return
+      if (this.#socket !== null) {
         await Delay.wait(this.options.autoReconnectTimeout)
         continue
       }
       try {
-        this.socket = await this.connect()
-        this.events.send('open', void 0)
-        this.socket.on('message', (event) => {
-          this.events.send('message', event)
+        this.#socket = await this.connect()
+        this.#events.send('open', void 0)
+        this.#socket.on('message', (event) => {
+          this.#events.send('message', event)
         })
-        this.socket.on('error', (event) => {
-          this.events.send('error', event)
+        this.#socket.on('error', (event) => {
+          this.#events.send('error', event)
         })
-        this.socket.on('close', () => {
-          this.events.send('close', void 0)
-          this.barrier.pause()
-          this.socket = null
+        this.#socket.on('close', () => {
+          this.#events.send('close', void 0)
+          this.#barrier.pause()
+          this.#socket = null
         })
-        this.barrier.resume()
+        this.#barrier.resume()
       } catch (error) {
-        this.events.send('error', error)
+        this.#events.send('error', error)
         await Delay.wait(this.options.autoReconnectTimeout)
       }
     }

@@ -13,6 +13,7 @@ const packages = [
     ['config',    version, 'Sidewinder Config'],
     ['contract',  version, 'Sidewinder Contract'],
     ['events',    version, 'Sidewinder Events'],
+    ['fetch',     version, 'Sidewinder Fetch'],
     ['host',      version, 'Sidewinder Host'],
     ['mime',      version, 'Sidewinder Mime'],
     ['mongo',     version, 'Sidewinder Mongo'],
@@ -25,7 +26,7 @@ const packages = [
     ['type',      version, 'Sidewinder Type'],
     ['validator', version, 'Sidewinder Validator'],
     ['value',     version, 'Sidewinder Value'],
-    ['web',       version, 'Sidewinder Web'],
+    ['websocket', version, 'Sidewinder WebSocket'],
 ]
 
 // -------------------------------------------------------------

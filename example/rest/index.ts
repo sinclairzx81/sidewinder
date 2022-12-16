@@ -1,5 +1,6 @@
-import { Host, RestService } from '@sidewinder/server'
-import { fetch } from '@sidewinder/web'
+import { RestService } from '@sidewinder/service'
+import { Host } from '@sidewinder/host'
+import { Fetch } from '@sidewinder/fetch'
 
 export class Service extends RestService {
   private _error = super.event('error', (clientId, error) => {

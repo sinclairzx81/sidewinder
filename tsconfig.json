@@ -15,6 +15,7 @@
             "@sidewinder/config":           ["packages/config/index.ts"],
             "@sidewinder/contract":         ["packages/contract/index.ts"],
             "@sidewinder/events":           ["packages/events/index.ts"],
+            "@sidewinder/fetch":            ["packages/fetch/index.ts"],
             "@sidewinder/host":             ["packages/host/index.ts"],
             "@sidewinder/mime":             ["packages/mime/index.ts"],
             "@sidewinder/mongo":            ["packages/mongo/index.ts"],
@@ -33,7 +34,7 @@
             "@sidewinder/type":             ["packages/type/index.ts"],
             "@sidewinder/validator":        ["packages/validator/index.ts"],
             "@sidewinder/value":            ["packages/value/index.ts"],
-            "@sidewinder/web":              ["packages/web/index.ts"]
+            "@sidewinder/websocket":        ["packages/websocket/index.ts"]
         }
     }
 }

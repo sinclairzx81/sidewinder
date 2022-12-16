@@ -1,6 +1,6 @@
 /*--------------------------------------------------------------------------
 
-@sidewinder/web
+@sidewinder/fetch
 
 The MIT License (MIT)
 
@@ -26,11 +26,10 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-import type Fetch from 'node-fetch' // note: required for build dependency check
+// import type fetch from 'node-fetch' // note: required for build dependency check
 import { Platform } from '@sidewinder/platform'
 
-/** Browser and Node compatible Fetch */
-export async function fetch(input: RequestInfo, init?: RequestInit | undefined): Promise<Response> {
+export async function Fetch(input: RequestInfo, init?: RequestInit | undefined): Promise<Response> {
   if (Platform.platform() === 'browser') {
     return globalThis.fetch(input, init)
   } else {

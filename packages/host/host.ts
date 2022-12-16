@@ -26,13 +26,13 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-import { createServer as createHttpServer, Server, IncomingMessage } from 'http'
-import { createServer as createHttpsServer, ServerOptions } from 'https'
-import { Application, RequestHandler } from 'express'
-import { Socket } from 'net'
+import { createServer as createHttpServer, Server, IncomingMessage } from 'node:http'
+import { createServer as createHttpsServer, ServerOptions } from 'node:https'
 import { WebSocketServer } from 'ws'
-import { WebSocketService, WebService } from '@sidewinder/service'
+import { WebSocketService, WebService, RestService } from '@sidewinder/service'
+import { Socket } from 'node:net'
 import { v4 } from 'uuid'
+import { Application, RequestHandler } from 'express'
 import ws from 'ws'
 import express from 'express'
 
