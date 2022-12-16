@@ -179,44 +179,17 @@ export class WebService<Contract extends TContract, Context extends TSchema = TS
 
   /** Reads the request as a Uint8Array */
   async #readRequestBuffer(request: ServiceRequest): Promise<Uint8Array> {
-    if(request.method !== 'post') throw new Error('Can only read from http post requests')
+    if (request.method !== 'post') throw new Error('Can only read from http post requests')
     return await request.buffer()
-    // if (request.method!.toLowerCase() !== 'post') return Promise.reject(new Error('Can only read from http post requests'))
-    // return new Promise((resolve, reject) => {
-    //   const buffers: Buffer[] = []
-    //   // -----------------------------------------------------------------------
-    //   // ECONNRESET: Catch errors reading input buffer
-    //   // -----------------------------------------------------------------------
-    //   request.on('error', (error) => reject(error))
-    //   request.on('data', (buffer) => buffers.push(buffer))
-    //   request.on('end', () => resolve(Buffer.concat(buffers)))
-    // })
   }
 
   /** Writes a response buffer */
- async  #writeResponseBuffer(response: ServiceResponse, status: number, data: Uint8Array): Promise<void> {
+  async #writeResponseBuffer(response: ServiceResponse, status: number, data: Uint8Array): Promise<void> {
     const contentType = this.contract.format === 'json' ? 'application/json' : 'application/x-msgpack'
     const contentLength = data.length.toString()
     await response.writeHead(status, { 'Content-Type': contentType, 'Content-Length': contentLength })
     await response.write(data)
     await response.end()
-    // return new Promise((resolve, reject) => {
-    //   // -----------------------------------------------------------------------
-    //   // ECONNRESET: Catch errors writing output buffer
-    //   // -----------------------------------------------------------------------
-    //   response.on('error', (error) => reject(error))
-
-    //   const contentType = this.contract.format === 'json' ? 'application/json' : 'application/x-msgpack'
-    //   const contentLength = data.length.toString()
-    //   response.writeHead(status, { 'Content-Type': contentType, 'Content-Length': contentLength })
-    //   const version = Platform.version()
-    //   if (version.major < 16) {
-    //     // Node 14: Fallback
-    //     response.end(Buffer.from(data), () => resolve())
-    //   } else {
-    //     response.end(data, () => resolve())
-    //   }
-    // })
   }
 
   // ---------------------------------------------------------------------
@@ -244,8 +217,7 @@ export class WebService<Contract extends TContract, Context extends TSchema = TS
 
   async #checkContentType(clientId: string, request: ServiceRequest): Promise<PipelineResult<null>> {
     const expectedContentType = this.contract.format === 'json' ? 'application/json' : 'application/x-msgpack'
-    const actualContentType = request.headers['content-type']
-    
+    const actualContentType = request.headers.get('content-type')
     if (expectedContentType !== actualContentType) {
       return PipelineResult.error(new Error('Invalid Content Type'))
     } else {

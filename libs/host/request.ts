@@ -1,6 +1,6 @@
 /*--------------------------------------------------------------------------
 
-@sidewinder/server
+@sidewinder/host
 
 The MIT License (MIT)
 
@@ -26,47 +26,52 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-import { IncomingMessage } from 'http'
-import { parse as parseQueryString } from 'qs'
-import { ReadonlyMap, HttpHeaderKeys } from '../http/index'
+import { IncomingMessage } from 'node:http'
+import { ServiceRequest } from '@sidewinder/service'
+import { Buffer } from '@sidewinder/buffer'
+import * as qs from 'qs'
 
-/**
- * Request type passed to WebService and WebSocketService authorize handlers. This
- * type only provides access to the requests headers and querystring parameters.
- */
-export class Request {
+export class NodeServiceRequest extends ServiceRequest {
+  readonly #request: IncomingMessage
   readonly #ipAddress: string
   readonly #headers: Map<string, string>
   readonly #query: Map<string, string>
 
   constructor(request: IncomingMessage) {
+    super()
+    this.#request = request
     this.#ipAddress = this.#readIpAddress(request)
     this.#headers = this.#readHeaders(request)
     this.#query = this.#readQuery(request)
   }
 
-  // ------------------------------------------------------------------------------
-  // Publics
-  // ------------------------------------------------------------------------------
+  public get url(): string {
+    return this.#request.url || '/'
+  }
 
-  /**
-   * Gets the ip address associated with this request. This address will either
-   * be the raw socket remoteAddress, or in the instance of a load balancer, the
-   * x-forwarded-for address. If no address can be resolved, then this function
-   * returns 0.0.0.0.
-   */
   public get ipAddress(): string {
     return this.#ipAddress
   }
 
-  /** Gets the http headers for this request */
-  public get headers(): ReadonlyMap<HttpHeaderKeys> {
+  public get method(): string {
+    return this.#request.method !== undefined ? this.#request.method.toLowerCase() : 'unknown'
+  }
+
+  public get headers(): Map<string, string> {
     return this.#headers
   }
 
-  /** Gets the parsed querystring parameters for this request */
-  public get query(): ReadonlyMap<string> {
+  public get query(): Map<string, string> {
     return this.#query
+  }
+
+  public buffer(): Promise<Uint8Array> {
+    return new Promise((resolve, reject) => {
+      const buffers: Buffer[] = []
+      this.#request.on('error', (error) => reject(error))
+      this.#request.on('data', (buffer) => buffers.push(buffer))
+      this.#request.on('end', () => resolve(Buffer.concat(buffers)))
+    })
   }
 
   // ------------------------------------------------------------------------------
@@ -126,7 +131,7 @@ export class Request {
 
   #parseUrl(url: string): object {
     try {
-      return parseQueryString(url)
+      return qs.parse(url)
     } catch {
       return {}
     }

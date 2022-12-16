@@ -1,4 +1,5 @@
-import { Type, Host, WebService } from '@sidewinder/server'
+import { Type, WebService } from '@sidewinder/service'
+import { Host } from '@sidewinder/host'
 import { WebClient } from '@sidewinder/client'
 import { MathServiceContract } from '../shared/index'
 import cors from 'cors'
@@ -22,26 +23,26 @@ export class MathService extends WebService<typeof MathServiceContract, typeof M
   // Events
   // -----------------------------------------------------------------
 
-  on_authorize = this.event('authorize', (clientId, request) => {
+  onAuthorize = this.event('authorize', (clientId, request) => {
     console.log('server:authorize', clientId, request.query)
     return { clientId, name: 'dave', roles: [] }
   })
 
-  on_connect = this.event('connect', (context) => {
+  onConnect = this.event('connect', (context) => {
     console.log('server:connect', context)
   })
 
-  on_close = this.event('close', (context) => {
+  onClose = this.event('close', (context) => {
     console.log('server:close', context)
   })
 
   // -----------------------------------------------------------------
   // Methods
   // -----------------------------------------------------------------
-  add = this.method('add', (context, a, b) => a + b)
-  sub = this.method('sub', (context, a, b) => a - b)
-  mul = this.method('mul', (context, a, b) => a * b)
-  div = this.method('div', (context, a, b) => a / b)
+  onAdd = this.method('add', (context, a, b) => a + b)
+  onSub = this.method('sub', (context, a, b) => a - b)
+  onMul = this.method('mul', (context, a, b) => a * b)
+  onDiv = this.method('div', (context, a, b) => a / b)
 }
 
 // -----------------------------------------------------------------

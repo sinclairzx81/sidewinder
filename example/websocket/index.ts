@@ -13,7 +13,7 @@ export const MathContract = Type.Contract({
     sub: Type.Function([Type.Number(), Type.Number()], Type.Number()),
     mul: Type.Function([Type.Number(), Type.Number()], Type.Number()),
     div: Type.Function([Type.Number(), Type.Number()], Type.Number()),
-  }
+  },
 })
 
 // ---------------------------------------------------------------------
@@ -21,21 +21,21 @@ export const MathContract = Type.Contract({
 // ---------------------------------------------------------------------
 
 export class MathService extends WebSocketService<typeof MathContract> {
-    constructor() {
-        super(MathContract)
-    }
-    public onAdd = this.method('add', (context, a, b) => {
-        return a + b
-    })
-    public onSub = this.method('sub', (context, a, b) => {
-        return a - b
-    })
-    public onMul = this.method('mul', (context, a, b) => {
-        return a + b
-    })
-    public onDiv = this.method('div', (context, a, b) => {
-        return a / b
-    })
+  constructor() {
+    super(MathContract)
+  }
+  public onAdd = this.method('add', (context, a, b) => {
+    return a + b
+  })
+  public onSub = this.method('sub', (context, a, b) => {
+    return a - b
+  })
+  public onMul = this.method('mul', (context, a, b) => {
+    return a + b
+  })
+  public onDiv = this.method('div', (context, a, b) => {
+    return a / b
+  })
 }
 
 const host = new Host()
@@ -47,10 +47,10 @@ host.listen(5000)
 // ---------------------------------------------------------------------
 
 async function client() {
-    const client = new WebSocketClient(MathContract, 'ws://localhost:5000/math')
-    console.log('add', await client.call('add', 1, 2))
-    console.log('sub', await client.call('sub', 1, 2))
-    console.log('mul', await client.call('mul', 1, 2))
-    console.log('div', await client.call('div', 1, 2))
+  const client = new WebSocketClient(MathContract, 'ws://localhost:5000/math')
+  console.log('add', await client.call('add', 1, 2))
+  console.log('sub', await client.call('sub', 1, 2))
+  console.log('mul', await client.call('mul', 1, 2))
+  console.log('div', await client.call('div', 1, 2))
 }
 client()

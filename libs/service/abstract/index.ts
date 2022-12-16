@@ -1,6 +1,6 @@
 /*--------------------------------------------------------------------------
 
-@sidewinder/hash
+@sidewinder/service
 
 The MIT License (MIT)
 
@@ -26,21 +26,6 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-import { Buffer } from '@sidewinder/buffer'
-import { timingSafeEqual } from 'crypto'
-
-type Equatable = string | Uint8Array
-
-export namespace Equal {
-  /** Resolves Uint8Array from given equatable */
-  function resolve(c: Equatable) {
-    return typeof c === 'string' ? Buffer.encode(c) : c
-  }
-
-  /** Performs a timing safe equal on the given two equatable values */
-  export function equal(a: Equatable, b: Equatable): boolean {
-    const x = resolve(a)
-    const y = resolve(b)
-    return timingSafeEqual(x, y)
-  }
-}
+export * from './request'
+export * from './response'
+export * from './socket'

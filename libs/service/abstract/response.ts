@@ -1,6 +1,6 @@
 /*--------------------------------------------------------------------------
 
-@sidewinder/hash
+@sidewinder/service
 
 The MIT License (MIT)
 
@@ -26,18 +26,8 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-import objectHash from 'object-hash'
-import { Equal } from './equal'
-
-/** Hashes any valid JavaScript value */
-export namespace ValueHash {
-  /** Compares the value and hash using timing safe comparison. Returns true if match */
-  export function compare(value: unknown, hash: string) {
-    return Equal.equal(ValueHash.hash(value), hash)
-  }
-
-  /** Generates a sha1 hash of the given JavaScript value. Hashes are returned as hex strings. */
-  export function hash(value: unknown): string {
-    return objectHash(value as any, { algorithm: 'sha1', encoding: 'hex' })
-  }
+export abstract class ServiceResponse {
+  abstract writeHead(status: number, headers: Record<string, any>): void
+  abstract write(buffer: Uint8Array): Promise<void>
+  abstract end(): Promise<void>
 }

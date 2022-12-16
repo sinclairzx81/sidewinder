@@ -1,6 +1,6 @@
 /*--------------------------------------------------------------------------
 
-@sidewinder/hash
+@sidewinder/server
 
 The MIT License (MIT)
 
@@ -26,6 +26,7 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-export * from './equal'
-export * from './password'
-export * from './value'
+export * from './encoder/index'
+export * from './methods/index'
+export * from './web'
+export * from './websocket'
