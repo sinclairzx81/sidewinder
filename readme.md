@@ -114,7 +114,7 @@ const Contract = Type.Contract({
 // Service
 // ---------------------------------------------------------------------------
 
-class MathService extends WebService<typeof Contract> {
+class MathService extends RpcService<typeof Contract> {
   constructor() {
     super(Contract)
   }
@@ -138,7 +138,7 @@ class MathService extends WebService<typeof Contract> {
 // Client
 // ---------------------------------------------------------------------------
 
-const client = new WebClient(Contract, 'http://....')
+const client = new RpcClient(Contract, 'http://....')
 
 const result = await client.call('add', 1, 1)
 //    │                         │         │
@@ -160,8 +160,8 @@ Sidewinder services consist of three main components, a [Contract](libs/contract
 The following shows general usage.
 
 ```typescript
-import { WebService }  from '@sidewinder/service'
-import { WebClient }   from '@sidewinder/client'
+import { RpcService }  from '@sidewinder/service'
+import { RpcClient }   from '@sidewinder/client'
 import { Type }        from '@sidewinder/contract'
 import { Host }        from '@sidewinder/host'
 
@@ -195,7 +195,7 @@ const Contract = Type.Contract({
 //
 // ---------------------------------------------------------------------------
 
-class MathService extends WebService<typeof Contract> {
+class MathService extends RpcService<typeof Contract> {
   constructor() {
     super(Contract)
   }
@@ -221,7 +221,7 @@ host.listen(5000)
 //
 // ---------------------------------------------------------------------------
 
-const client = new WebClient(Contract, 'http://localhost:5000/math')
+const client = new RpcClient(Contract, 'http://localhost:5000/math')
 const add = await client.call('add', 1, 2)
 const sub = await client.call('sub', 1, 2)
 const mul = await client.call('mul', 1, 2)
