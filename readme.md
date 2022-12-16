@@ -9,7 +9,7 @@
 <br />
 <br />
 
-[<img src="https://img.shields.io/npm/v/@sidewinder/async?label=%40sidewinder%2Fasync">](https://www.npmjs.com/package/@sidewinder/async) [<img src="https://img.shields.io/npm/v/@sidewinder/buffer?label=%40sidewinder%2Fbuffer">](https://www.npmjs.com/package/@sidewinder/buffer) [<img src="https://img.shields.io/npm/v/@sidewinder/channel?label=%40sidewinder%2Fchannel">](https://www.npmjs.com/package/@sidewinder/channel) [<img src="https://img.shields.io/npm/v/@sidewinder/client?label=%40sidewinder%2Fclient">](https://www.npmjs.com/package/@sidewinder/client) [<img src="https://img.shields.io/npm/v/@sidewinder/config?label=%40sidewinder%2Fconfig">](https://www.npmjs.com/package/@sidewinder/config) [<img src="https://img.shields.io/npm/v/@sidewinder/contract?label=%40sidewinder%2Fcontract">](https://www.npmjs.com/package/@sidewinder/contract) [<img src="https://img.shields.io/npm/v/@sidewinder/events?label=%40sidewinder%2Fevents">](https://www.npmjs.com/package/@sidewinder/events) [<img src="https://img.shields.io/npm/v/@sidewinder/hash?label=%40sidewinder%2Fhash">](https://www.npmjs.com/package/@sidewinder/hash) [<img src="https://img.shields.io/npm/v/@sidewinder/mime?label=%40sidewinder%2Fmime">](https://www.npmjs.com/package/@sidewinder/mime) [<img src="https://img.shields.io/npm/v/@sidewinder/mongo?label=%40sidewinder%2Fmongo">](https://www.npmjs.com/package/@sidewinder/mongo) [<img src="https://img.shields.io/npm/v/@sidewinder/path?label=%40sidewinder%2Fpath">](https://www.npmjs.com/package/@sidewinder/path) [<img src="https://img.shields.io/npm/v/@sidewinder/platform?label=%40sidewinder%2Fplatform">](https://www.npmjs.com/package/@sidewinder/platform) [<img src="https://img.shields.io/npm/v/@sidewinder/query?label=%40sidewinder%2Fquery">](https://www.npmjs.com/package/@sidewinder/query) [<img src="https://img.shields.io/npm/v/@sidewinder/redis?label=%40sidewinder%2Fredis">](https://www.npmjs.com/package/@sidewinder/redis) [<img src="https://img.shields.io/npm/v/@sidewinder/server?label=%40sidewinder%2Fserver">](https://www.npmjs.com/package/@sidewinder/server) [<img src="https://img.shields.io/npm/v/@sidewinder/token?label=%40sidewinder%2Ftoken">](https://www.npmjs.com/package/@sidewinder/token) [<img src="https://img.shields.io/npm/v/@sidewinder/type?label=%40sidewinder%2Ftype">](https://www.npmjs.com/package/@sidewinder/type) [<img src="https://img.shields.io/npm/v/@sidewinder/validator?label=%40sidewinder%2Fvalidator">](https://www.npmjs.com/package/@sidewinder/validator) [<img src="https://img.shields.io/npm/v/@sidewinder/validator?label=%40sidewinder%2Fvalue">](https://www.npmjs.com/package/@sidewinder/value) [<img src="https://img.shields.io/npm/v/@sidewinder/web?label=%40sidewinder%2Fweb">](https://www.npmjs.com/package/@sidewinder/web) [![GitHub CI](https://github.com/sinclairzx81/sidewinder/workflows/GitHub%20CI/badge.svg)](https://github.com/sinclairzx81/sidewinder/actions) 
+[<img src="https://img.shields.io/npm/v/@sidewinder/async?label=%40sidewinder%2Fasync">](https://www.npmjs.com/package/@sidewinder/async) [<img src="https://img.shields.io/npm/v/@sidewinder/buffer?label=%40sidewinder%2Fbuffer">](https://www.npmjs.com/package/@sidewinder/buffer) [<img src="https://img.shields.io/npm/v/@sidewinder/channel?label=%40sidewinder%2Fchannel">](https://www.npmjs.com/package/@sidewinder/channel) [<img src="https://img.shields.io/npm/v/@sidewinder/client?label=%40sidewinder%2Fclient">](https://www.npmjs.com/package/@sidewinder/client) [<img src="https://img.shields.io/npm/v/@sidewinder/config?label=%40sidewinder%2Fconfig">](https://www.npmjs.com/package/@sidewinder/config) [<img src="https://img.shields.io/npm/v/@sidewinder/contract?label=%40sidewinder%2Fcontract">](https://www.npmjs.com/package/@sidewinder/contract) [<img src="https://img.shields.io/npm/v/@sidewinder/events?label=%40sidewinder%2Fevents">](https://www.npmjs.com/package/@sidewinder/events) [<img src="https://img.shields.io/npm/v/@sidewinder/hash?label=%40sidewinder%2Ffetch">](https://www.npmjs.com/package/@sidewinder/fetch) [<img src="https://img.shields.io/npm/v/@sidewinder/hash?label=%40sidewinder%2Fhost">](https://www.npmjs.com/package/@sidewinder/host) [<img src="https://img.shields.io/npm/v/@sidewinder/mime?label=%40sidewinder%2Fmime">](https://www.npmjs.com/package/@sidewinder/mime) [<img src="https://img.shields.io/npm/v/@sidewinder/mongo?label=%40sidewinder%2Fmongo">](https://www.npmjs.com/package/@sidewinder/mongo) [<img src="https://img.shields.io/npm/v/@sidewinder/path?label=%40sidewinder%2Fpath">](https://www.npmjs.com/package/@sidewinder/path) [<img src="https://img.shields.io/npm/v/@sidewinder/platform?label=%40sidewinder%2Fplatform">](https://www.npmjs.com/package/@sidewinder/platform) [<img src="https://img.shields.io/npm/v/@sidewinder/query?label=%40sidewinder%2Fquery">](https://www.npmjs.com/package/@sidewinder/query) [<img src="https://img.shields.io/npm/v/@sidewinder/redis?label=%40sidewinder%2Fredis">](https://www.npmjs.com/package/@sidewinder/redis) [<img src="https://img.shields.io/npm/v/@sidewinder/server?label=%40sidewinder%2Fserver">](https://www.npmjs.com/package/@sidewinder/server) [<img src="https://img.shields.io/npm/v/@sidewinder/token?label=%40sidewinder%2Ftoken">](https://www.npmjs.com/package/@sidewinder/token) [<img src="https://img.shields.io/npm/v/@sidewinder/type?label=%40sidewinder%2Ftype">](https://www.npmjs.com/package/@sidewinder/type) [<img src="https://img.shields.io/npm/v/@sidewinder/validator?label=%40sidewinder%2Fvalidator">](https://www.npmjs.com/package/@sidewinder/validator) [<img src="https://img.shields.io/npm/v/@sidewinder/validator?label=%40sidewinder%2Fvalue">](https://www.npmjs.com/package/@sidewinder/value) [<img src="https://img.shields.io/npm/v/@sidewinder/websocket?label=%40sidewinder%2Fwebsocket">](https://www.npmjs.com/package/@sidewinder/websocket) [![GitHub CI](https://github.com/sinclairzx81/sidewinder/workflows/GitHub%20CI/badge.svg)](https://github.com/sinclairzx81/sidewinder/actions) 
 
 
 
@@ -34,26 +34,27 @@ License MIT
 
 ### Packages
 
-- [Async](libs/async)
-- [Buffer](libs/buffer)
-- [Channel](libs/channel)
-- [Client](libs/client)
-- [Config](libs/config)
-- [Contract](libs/contract)
-- [Event](libs/events)
-- [Hash](libs/hash)
-- [Mime](libs/mime)
-- [Mongo](libs/mongo)
-- [Path](libs/path)
-- [Platform](libs/platform)
-- [Query](libs/query)
-- [Redis](libs/redis)
-- [Server](libs/server)
-- [Token](libs/token)
-- [Type](libs/type)
-- [Validator](libs/validator)
-- [Value](libs/value)
-- [Web](libs/web)
+- [Async](packages/async)
+- [Buffer](packages/buffer)
+- [Channel](packages/channel)
+- [Client](packages/client)
+- [Config](packages/config)
+- [Contract](packages/contract)
+- [Event](packages/events)
+- [Fetch](packages/fetch)
+- [Host](packages/host)
+- [Mime](packages/mime)
+- [Mongo](packages/mongo)
+- [Path](packages/path)
+- [Platform](packages/platform)
+- [Query](packages/query)
+- [Redis](packages/redis)
+- [Server](packages/server)
+- [Token](packages/token)
+- [Type](packages/type)
+- [Validator](packages/validator)
+- [Value](packages/value)
+- [WebSocket](packages/websocket)
 
 ## Install
 
@@ -66,28 +67,28 @@ $ npm install @sidewinder/validator  # Json Schema Validator
 
 # Service Packages
 $ npm install @sidewinder/contract   # Service Descriptions Contracts
+$ npm install @sidewinder/service    # Http and Web Socket Services
 $ npm install @sidewinder/client     # Http and Web Socket Clients
-$ npm install @sidewinder/server     # Http and Web Socket Services and Hosting
+$ npm install @sidewinder/host       # Web Server Host
 
 # Database and Infrastructure
 $ npm install @sidewinder/query      # Query Filter Syntax for Mongo
 $ npm install @sidewinder/mongo      # Type Safe Mongo
 $ npm install @sidewinder/redis      # Type Safe Redis
 
-# Application Messaging
+# Messaging
 $ npm install @sidewinder/async      # Asynchronous Primitives
 $ npm install @sidewinder/channel    # Asynchronous Channels
 $ npm install @sidewinder/events     # Portable Event Emitter
 
-# Hashing and Signing
-$ npm install @sidewinder/hash       # Hashing Functions
+# Signing
 $ npm install @sidewinder/token      # Type Safe Json Web Token
 
 # Environment
 $ npm install @sidewinder/buffer     # Operations on type Uint8Array
 $ npm install @sidewinder/config     # Type Safe Configurations
-$ npm install @sidewinder/path       # File System Pathing Utility
 $ npm install @sidewinder/platform   # Runtime Environment Checks
+$ npm install @sidewinder/path       # File System Pathing Utility
 ```
 
 <a name="TypeSafety"></a>
@@ -155,9 +156,10 @@ Sidewinder services consist of three main components, a [Contract](libs/contract
 The following shows general usage.
 
 ```typescript
-import { Type }             from '@sidewinder/contract'
-import { Host, WebService } from '@sidewinder/server'
-import { WebClient }        from '@sidewinder/client'
+import { WebService }  from '@sidewinder/service'
+import { WebClient }   from '@sidewinder/client'
+import { Type }        from '@sidewinder/contract'
+import { Host }        from '@sidewinder/host'
 
 // ---------------------------------------------------------------------------
 // Contract
@@ -217,10 +219,6 @@ const mul = await client.call('mul', 1, 2)
 const div = await client.call('div', 1, 2)
 console.log([add, sub, mul, div]) // [3, -1, 2, 0.5]
 ```
-
-
-
-
 
 <a name="ServiceAndMetadata"></a>
 
