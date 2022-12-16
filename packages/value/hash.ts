@@ -26,36 +26,47 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-export class ValueHashEncodeError extends Error {
+export class ValueHashError extends Error {
   constructor(public readonly value: unknown) {
-    super(`ValueHash: Unable to encode value`)
+    super(`Hash: Unable to hash value`)
   }
 }
 
 export namespace ValueHash {
-  type Byte = number
   enum ByteMarker {
-    Undefined = 0,
-    Null = 1,
-    Boolean = 2,
-    Number = 3,
-    Object = 4,
-    Array = 5,
+    Undefined,
+    Null,
+    Boolean,
+    Number,
+    String,
+    Object,
+    Array,
+    Date,
+    Uint8Array,
   }
 
   // ----------------------------------------------------
-  // Buffers
+  // State
   // ----------------------------------------------------
 
-  const [prime, size] = [1099511628211n, 2n ** 64n]
-  const bytes = globalThis.Array.from({ length: 256 }).map((_, i) => BigInt(i))
-  const f64 = new Float64Array(1)
-  const f64In = new DataView(f64.buffer)
-  const f64Out = new Uint8Array(f64.buffer)
+  let Hash = globalThis.BigInt('14695981039346656037')
+  const [Prime, Size] = [globalThis.BigInt('1099511628211'), globalThis.BigInt('2') ** globalThis.BigInt('64')]
+  const Bytes = globalThis.Array.from({ length: 256 }).map((_, i) => globalThis.BigInt(i))
+  const F64 = new globalThis.Float64Array(1)
+  const F64In = new globalThis.DataView(F64.buffer)
+  const F64Out = new globalThis.Uint8Array(F64.buffer)
 
   // ----------------------------------------------------
   // Guards
   // ----------------------------------------------------
+
+  function IsDate(value: unknown): value is Date {
+    return value instanceof globalThis.Date
+  }
+
+  function IsUint8Array(value: unknown): value is Uint8Array {
+    return value instanceof globalThis.Uint8Array
+  }
 
   function IsArray(value: unknown): value is Array<unknown> {
     return globalThis.Array.isArray(value)
@@ -74,7 +85,7 @@ export namespace ValueHash {
   }
 
   function IsObject(value: unknown): value is Record<string, unknown> {
-    return typeof value === 'object' && value !== null
+    return typeof value === 'object' && value !== null && !IsArray(value) && !IsDate(value) && !IsUint8Array(value)
   }
 
   function IsString(value: unknown): value is string {
@@ -89,73 +100,94 @@ export namespace ValueHash {
   // Encoding
   // ----------------------------------------------------
 
-  function* Array(value: Array<unknown>): IterableIterator<Byte> {
-    yield ByteMarker.Array
+  function Array(value: Array<unknown>) {
+    Fnv1A64(ByteMarker.Array)
     for (const item of value) {
-      yield* Visit(item)
+      Visit(item)
     }
   }
 
-  function* Boolean(value: boolean): IterableIterator<Byte> {
-    yield ByteMarker.Boolean
-    yield value ? 1 : 0
+  function Boolean(value: boolean) {
+    Fnv1A64(ByteMarker.Boolean)
+    Fnv1A64(value ? 1 : 0)
   }
 
-  function* Number(value: number): IterableIterator<Byte> {
-    yield ByteMarker.Number
-    f64In.setFloat64(0, value)
-    yield* f64Out
+  function Date(value: Date) {
+    Fnv1A64(ByteMarker.Date)
+    Visit(value.getTime())
   }
 
-  function* Object(value: Record<string, unknown>): IterableIterator<Byte> {
-    yield ByteMarker.Object
+  function Null(value: null) {
+    Fnv1A64(ByteMarker.Null)
+  }
+
+  function Number(value: number) {
+    Fnv1A64(ByteMarker.Number)
+    F64In.setFloat64(0, value)
+    for (const byte of F64Out) {
+      Fnv1A64(byte)
+    }
+  }
+
+  function Object(value: Record<string, unknown>) {
+    Fnv1A64(ByteMarker.Object)
     for (const key of globalThis.Object.keys(value).sort()) {
-      yield* Visit(key)
-      yield* Visit(value[key])
+      Visit(key)
+      Visit(value[key])
     }
   }
 
-  function* String(value: string): IterableIterator<Byte> {
+  function String(value: string) {
+    Fnv1A64(ByteMarker.String)
     for (let i = 0; i < value.length; i++) {
-      yield value.charCodeAt(i)
+      Fnv1A64(value.charCodeAt(i))
     }
   }
 
-  function* Undefined(value: undefined): IterableIterator<Byte> {
-    yield ByteMarker.Undefined
+  function Uint8Array(value: Uint8Array) {
+    Fnv1A64(ByteMarker.Uint8Array)
+    for (let i = 0; i < value.length; i++) {
+      Fnv1A64(value[i])
+    }
   }
 
-  function* Null(value: null): IterableIterator<Byte> {
-    yield ByteMarker.Null
+  function Undefined(value: undefined) {
+    return Fnv1A64(ByteMarker.Undefined)
   }
 
-  function* Visit(value: any): IterableIterator<Byte> {
-    if (IsObject(value)) {
-      yield* Object(value)
-    } else if (IsArray(value)) {
-      yield* Array(value)
+  function Visit(value: any) {
+    if (IsArray(value)) {
+      Array(value)
     } else if (IsBoolean(value)) {
-      yield* Boolean(value)
-    } else if (IsNumber(value)) {
-      yield* Number(value)
-    } else if (IsString(value)) {
-      yield* String(value)
-    } else if (IsUndefined(value)) {
-      yield* Undefined(value)
+      Boolean(value)
+    } else if (IsDate(value)) {
+      Date(value)
     } else if (IsNull(value)) {
-      yield* Null(value)
+      Null(value)
+    } else if (IsNumber(value)) {
+      Number(value)
+    } else if (IsObject(value)) {
+      Object(value)
+    } else if (IsString(value)) {
+      String(value)
+    } else if (IsUint8Array(value)) {
+      Uint8Array(value)
+    } else if (IsUndefined(value)) {
+      Undefined(value)
     } else {
-      throw new ValueHashEncodeError(value)
+      throw new ValueHashError(value)
     }
   }
 
-  /** Returns a computed hash code for the given value. This function uses the fnv1a64 non cryptographic hashing algorithm */
-  export function Hash(value: unknown): bigint {
-    let hash = 14695981039346656037n
-    for (const byte of Visit(value)) {
-      hash = hash ^ bytes[byte]
-      hash = (hash * prime) % size
-    }
-    return hash
+  function Fnv1A64(byte: number) {
+    Hash = Hash ^ Bytes[byte]
+    Hash = (Hash * Prime) % Size
+  }
+
+  /** Creates a FNV1A-64 non cryptographic hash of the given value */
+  export function Create(value: unknown) {
+    Hash = globalThis.BigInt('14695981039346656037')
+    Visit(value)
+    return Hash
   }
 }

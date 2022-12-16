@@ -99,7 +99,7 @@ export namespace Value {
 
   /** Returns a computed 64-bit hash code for the given value. This function uses the fnv1a64 non-cryptographic hashing algorithm */
   export function Hash(value: unknown): bigint {
-    return ValueHash.Hash(value)
+    return ValueHash.Create(value)
   }
 
   /** Returns a new value with edits applied to the given value */
