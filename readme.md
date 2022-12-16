@@ -114,21 +114,25 @@ const Contract = Type.Contract({
 // Service
 // ---------------------------------------------------------------------------
 
-const service = new WebService(Contract)
+class MathService extends WebService<typeof Contract> {
+  constructor() {
+    super(Contract)
+  }
 
-service.method('add', (clientId, a, b) => {
-    //        │           │      │
-    //        │           │      └─── params (a: number, b: number)
-    //        │           │
-    //        │           └─── unique client identifier
-    //        │
-    //        └─── method name inferred from contract
+  this.onAdd = this.method('add', (context, a, b) => {
+    //                      │           │      │
+    //                      │           │      └─── params (a: number, b: number)
+    //                      │           │
+    //                      │           └─── unique client identifier
+    //                      │
+    //                      └─── method name inferred from contract
     //
     //
-    //     ┌─── return inferred as `number`
-    //     │
+    //      ┌─── return inferred as `number`
+    //      │
     return a + b 
-})
+  })
+}
 
 // ---------------------------------------------------------------------------
 // Client
@@ -191,14 +195,19 @@ const Contract = Type.Contract({
 //
 // ---------------------------------------------------------------------------
 
-const service = new WebService(Contract)
-service.method('add', (context, a, b) => a + b)
-service.method('sub', (context, a, b) => a - b)
-service.method('mul', (context, a, b) => a * b)
-service.method('div', (context, a, b) => a / b)
+class MathService extends WebService<typeof Contract> {
+  constructor() {
+    super(Contract)
+  }
+  this.onAdd = this.method('add', (context, a, b) => a + b)
+  this.onSub = this.method('sub', (context, a, b) => a - b)
+  this.onMul = this.method('mul', (context, a, b) => a * b)
+  this.onDiv = this.method('div', (context, a, b) => a / b)
+}
+
 
 const host = new Host()
-host.use(service)
+host.use('/math', new MathService())
 host.listen(5000)
 
 // ---------------------------------------------------------------------------
@@ -212,7 +221,7 @@ host.listen(5000)
 //
 // ---------------------------------------------------------------------------
 
-const client = new WebClient(Contract, 'http://localhost:5000/')
+const client = new WebClient(Contract, 'http://localhost:5000/math')
 const add = await client.call('add', 1, 2)
 const sub = await client.call('sub', 1, 2)
 const mul = await client.call('mul', 1, 2)
