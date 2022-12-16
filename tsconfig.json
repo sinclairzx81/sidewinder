@@ -23,6 +23,7 @@
             "@sidewinder/platform":         ["packages/platform/index.ts"],
             "@sidewinder/query":            ["packages/query/index.ts"],
             "@sidewinder/redis":            ["packages/redis/index.ts"],
+            "@sidewinder/result":           ["packages/result/index.ts"],
             "@sidewinder/service":          ["packages/service/index.ts"],
             "@sidewinder/token":            ["packages/token/index.ts"],
             "@sidewinder/type/compiler":    ["packages/type/compiler/index.ts"],

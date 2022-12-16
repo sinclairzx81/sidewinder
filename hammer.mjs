@@ -21,6 +21,7 @@ const packages = [
     ['platform',  version, 'Sidewinder Platform'],
     ['query',     version, 'Sidewinder Query'],
     ['redis',     version, 'Sidewinder Redis'],
+    ['result',    version, 'Sidewinder Result'],
     ['service',   version, 'Sidewinder Service'],
     ['token',     version, 'Sidewinder Token'],
     ['type',      version, 'Sidewinder Type'],

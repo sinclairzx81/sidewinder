@@ -30,37 +30,9 @@ import { Exception, Static, Type, TSchema, TString, TContract, TFunction, Author
 import { ServiceMethods, RpcErrorCode, RpcProtocol, RpcRequest, RpcResponse } from './methods/index'
 import { Encoder, JsonEncoder, MsgPackEncoder } from './encoder/index'
 import { Validator } from '@sidewinder/validator'
+import { Result } from '@sidewinder/result'
 import { ServiceRequest } from '../request'
 import { ServiceResponse } from '../response'
-
-// --------------------------------------------------------------------------
-// WebService Request Pipeline
-// --------------------------------------------------------------------------
-
-class PipelineResult<Value> {
-  constructor(private readonly _value?: Value, private readonly _error?: Error) {}
-  public ok() {
-    return this._error === undefined
-  }
-
-  public value() {
-    if (this.ok()) return this._value!
-    throw new Error('Result has no value')
-  }
-
-  public error() {
-    if (!this.ok()) return this._error!
-    throw new Error('Result has no error')
-  }
-
-  public static ok<Result>(value: Result): PipelineResult<Result> {
-    return new PipelineResult(value, undefined)
-  }
-
-  public static error<Result>(error: Error): PipelineResult<Result> {
-    return new PipelineResult(undefined as any, error)
-  }
-}
 
 // --------------------------------------------------------------------------
 // WebService
@@ -81,11 +53,6 @@ export class RpcService<Contract extends TContract, Context extends TSchema = TS
   readonly #methods: ServiceMethods
   readonly #encoder: Encoder
 
-  /**
-   * Creates a new WebService
-   * @param contract The contract this service should use.
-   * @param context The context this service should use.
-   */
   constructor(private readonly contract: Contract, private readonly context: Context = Type.String() as any) {
     this.#contextValidator = new Validator(this.context)
     this.#onAuthorizeCallback = (clientId: string) => clientId as any
@@ -200,12 +167,12 @@ export class RpcService<Contract extends TContract, Context extends TSchema = TS
   // ---------------------------------------------------------------------
 
   /** Reads the RpcRequest from the http request body */
-  async #readRpcRequest(request: ServiceRequest): Promise<PipelineResult<RpcRequest>> {
+  async #readRpcRequest(request: ServiceRequest): Promise<Result<RpcRequest>> {
     const buffer = await this.#readRequestBuffer(request)
     const decoded = RpcProtocol.decodeAny(this.#encoder.decode(buffer))
-    if (decoded === undefined) return PipelineResult.error(Error('Unable to read protocol request'))
-    if (decoded.type !== 'request') return PipelineResult.error(Error('Protocol request was not of type request'))
-    return PipelineResult.ok(decoded.data)
+    if (decoded === undefined) return Result.error(Error('Unable to read protocol request'))
+    if (decoded.type !== 'request') return Result.error(Error('Protocol request was not of type request'))
+    return Result.ok(decoded.data)
   }
 
   /** Writes an RpcResponse to the Http Body */
@@ -218,13 +185,13 @@ export class RpcService<Contract extends TContract, Context extends TSchema = TS
   // Content Type
   // ---------------------------------------------------------------------
 
-  async #checkContentType(clientId: string, request: ServiceRequest): Promise<PipelineResult<null>> {
+  async #checkContentType(clientId: string, request: ServiceRequest): Promise<Result<null>> {
     const expectedContentType = this.contract.format === 'json' ? 'application/json' : 'application/x-msgpack'
     const actualContentType = request.headers.get('content-type')
     if (expectedContentType !== actualContentType) {
-      return PipelineResult.error(new Error('Invalid Content Type'))
+      return Result.error(new Error('Invalid Content Type'))
     } else {
-      return PipelineResult.ok(null)
+      return Result.ok(null)
     }
   }
 
@@ -232,19 +199,19 @@ export class RpcService<Contract extends TContract, Context extends TSchema = TS
   // Context
   // ---------------------------------------------------------------------
 
-  async #readRpcContext(clientId: string, request: ServiceRequest): Promise<PipelineResult<Static<Context>>> {
+  async #readRpcContext(clientId: string, request: ServiceRequest): Promise<Result<Static<Context>>> {
     try {
       const context = await this.#onAuthorizeCallback(clientId, request)
-      return PipelineResult.ok(context)
+      return Result.ok(context)
     } catch (error) {
-      return PipelineResult.error(error as Error)
+      return Result.error(error as Error)
     }
   }
 
-  #checkRpcContext(rpcContext: Static<Context>): PipelineResult<null> {
+  #checkRpcContext(rpcContext: Static<Context>): Result<null> {
     const result = this.#contextValidator.check(rpcContext)
-    if (result.success) return PipelineResult.ok(null)
-    return PipelineResult.error(new Error('Rpc Context is invalid'))
+    if (result.success) return Result.ok(null)
+    return Result.error(new Error('Rpc Context is invalid'))
   }
 
   // ---------------------------------------------------------------------
@@ -334,12 +301,12 @@ export class RpcService<Contract extends TContract, Context extends TSchema = TS
   // Execute
   // ------------------------------------------------------------------------
 
-  async #executeRpcRequest(rpcContext: Static<Context>, rpcRequest: RpcRequest): Promise<PipelineResult<any>> {
+  async #executeRpcRequest(rpcContext: Static<Context>, rpcRequest: RpcRequest): Promise<Result<any>> {
     try {
       const result = await this.#methods.execute(rpcContext, rpcRequest.method, rpcRequest.params)
-      return PipelineResult.ok(result)
+      return Result.ok(result)
     } catch (error) {
-      return PipelineResult.error(error as Error)
+      return Result.error(error as Error)
     }
   }
 
