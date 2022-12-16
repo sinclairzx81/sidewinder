@@ -17,9 +17,9 @@
 
 ## Overview
 
-Sidewinder is a strictly typed and runtime validated micro service framework built for Node and Browser environments. It is designed for web service architectures where each service needs to communicate with other services in complex ways and where challenges often arise verifying each service is communicating using strict communication contracts. 
+Sidewinder is a strictly typed and runtime validated micro service framework built for Node, Deno and the Browser environments. It is designed from the ground up to enable strict self documenting architectures where each service service communicates with each other services using strict communication contracts. 
 
-Sidewinder is developed primarily around a [runtime type system](https://github.com/sinclairzx81/typebox) based on JSON Schema. It encodes runtime type information into JavaScript directly then leverages the TypeScript language to statically infer associated static types at compile time. This approach enables distributed services to be statically checked with the TypeScript compiler, with the same runtime data assertions handled automatically by Sidewinder packages using standard JSON Schema validation.
+Sidewinder is developed around a [runtime type system](https://github.com/sinclairzx81/typebox) based on JSON Schema. This type system provides strict static type checking in TypeScript with the same data assertions carried out at runtime. It provides typed REST support and as well as RPC using the JSON RPC 2.0 as a communication protocol. The RPC implementation supports both uni direction (Http) and bi-directional communication (WebSocket). Sidewinder also implements runtime typed implementations for Redis and Mongo. 
 
 License MIT
 
@@ -33,6 +33,8 @@ License MIT
 - [Build Local](#BuildLocal)
 
 ### Packages
+
+Sidewinder consists of multiple installable packages with each providing distinct functionality useful for building micro services applications on the JavaScript platform. Each package is documented seperately.
 
 - [Async](packages/async)
 - [Buffer](packages/buffer)
