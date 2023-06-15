@@ -41,5 +41,7 @@ export interface Store {
   exists(key: string): Promise<number>
   expire(key: string, seconds: number): Promise<void>
   set(key: string, value: string): Promise<void>
+  setNew(key: string, value: string): Promise<void>
+  update(key: string, value: string): Promise<void>
   disconnect(): void
 }

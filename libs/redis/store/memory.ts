@@ -129,6 +129,17 @@ export class MemoryStore implements Store {
     array[0] = value
   }
 
+  public async setNew(key: string, value: string): Promise<void> {
+    if (this.#data.has(key)) return Promise.reject('Key already exists')
+    this.#data.set(key, [value])
+  }
+
+  public async update(key: string, value: string): Promise<void> {
+    const array = this.#data.get(key)
+    if (!array) return Promise.reject('Key not found')
+    array[0] = value
+  }
+
   #ensureKey(key: string) {
     if (this.#data.has(key)) return
     this.#data.set(key, [])

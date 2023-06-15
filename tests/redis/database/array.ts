@@ -7,7 +7,7 @@ describe('redis/RedisArray', () => {
   // ---------------------------------------------------------
 
   it('Should push value', async () => {
-    const database = resolveDatabase()
+    const database = await resolveDatabase()
     const array = database.array('vectors')
     await array.push([0, 0, 0])
     const length = await array.length()
@@ -15,7 +15,7 @@ describe('redis/RedisArray', () => {
   })
 
   it('Should push multiple values', async () => {
-    const database = resolveDatabase()
+    const database = await resolveDatabase()
     const array = database.array('vectors')
     await array.push([0, 0, 0], [1, 1, 1])
     const length = await array.length()
@@ -27,7 +27,7 @@ describe('redis/RedisArray', () => {
   })
 
   it('Should push and get value', async () => {
-    const database = resolveDatabase()
+    const database = await resolveDatabase()
     const array = database.array('vectors')
     await array.push([0, 1, 2])
     const value = await array.get(0)
@@ -37,7 +37,7 @@ describe('redis/RedisArray', () => {
   })
 
   it('Should push and pop value', async () => {
-    const database = resolveDatabase()
+    const database = await resolveDatabase()
     const array = database.array('vectors')
     await array.push([0, 1, 2])
     const value = await array.pop()
@@ -47,7 +47,7 @@ describe('redis/RedisArray', () => {
   })
 
   it('Should push and shift value', async () => {
-    const database = resolveDatabase()
+    const database = await resolveDatabase()
     const array = database.array('vectors')
     await array.push([0, 1, 2])
     const value = await array.shift()
@@ -61,7 +61,7 @@ describe('redis/RedisArray', () => {
   // ---------------------------------------------------------
 
   it('Should unshift value', async () => {
-    const database = resolveDatabase()
+    const database = await resolveDatabase()
     const array = database.array('vectors')
     await array.unshift([0, 0, 0])
     const length = await array.length()
@@ -69,7 +69,7 @@ describe('redis/RedisArray', () => {
   })
 
   it('Should unshift multiple values', async () => {
-    const database = resolveDatabase()
+    const database = await resolveDatabase()
     const array = database.array('vectors')
     await array.unshift([0, 0, 0], [1, 1, 1])
     const length = await array.length()
@@ -81,7 +81,7 @@ describe('redis/RedisArray', () => {
   })
 
   it('Should unshift and get value', async () => {
-    const database = resolveDatabase()
+    const database = await resolveDatabase()
     const array = database.array('vectors')
     await array.unshift([0, 1, 2])
     const value = await array.get(0)
@@ -91,7 +91,7 @@ describe('redis/RedisArray', () => {
   })
 
   it('Should unshift and pop value', async () => {
-    const database = resolveDatabase()
+    const database = await resolveDatabase()
     const array = database.array('vectors')
     await array.unshift([0, 1, 2])
     const value = await array.pop()
@@ -105,7 +105,7 @@ describe('redis/RedisArray', () => {
   // ---------------------------------------------------------
 
   it('Should shift values', async () => {
-    const database = resolveDatabase()
+    const database = await resolveDatabase()
     const array = database.array('vectors')
     await array.push([0, 0, 0])
     await array.push([1, 1, 1])
@@ -122,7 +122,7 @@ describe('redis/RedisArray', () => {
   // ---------------------------------------------------------
 
   it('Should pop values', async () => {
-    const database = resolveDatabase()
+    const database = await resolveDatabase()
     const array = database.array('vectors')
     await array.push([0, 0, 0])
     await array.push([1, 1, 1])
@@ -139,7 +139,7 @@ describe('redis/RedisArray', () => {
   // ---------------------------------------------------------
 
   it('Should set value at index', async () => {
-    const database = resolveDatabase()
+    const database = await resolveDatabase()
     const array = database.array('vectors')
     await array.push([0, 0, 0])
     await array.push([1, 1, 1])
@@ -157,7 +157,7 @@ describe('redis/RedisArray', () => {
   // ---------------------------------------------------------
 
   it('Should clear values', async () => {
-    const database = resolveDatabase()
+    const database = await resolveDatabase()
     const array = database.array('vectors')
     await array.push([0, 0, 0])
     await array.push([1, 1, 1])
@@ -175,7 +175,7 @@ describe('redis/RedisArray', () => {
   // ---------------------------------------------------------
 
   it('Should iterate values in an array', async () => {
-    const database = resolveDatabase()
+    const database = await resolveDatabase()
     const array = database.array('vectors')
     await array.push([0, 0, 0])
     await array.push([1, 0, 0])
@@ -198,7 +198,7 @@ describe('redis/RedisArray', () => {
   // ---------------------------------------------------------
 
   it('Should collect values in an array', async () => {
-    const database = resolveDatabase()
+    const database = await resolveDatabase()
     const array = database.array('vectors')
     await array.push([0, 0, 0])
     await array.push([1, 0, 0])
@@ -218,21 +218,21 @@ describe('redis/RedisArray', () => {
   // ---------------------------------------------------------
 
   it('Should throw push on invalid value', async () => {
-    const database = resolveDatabase()
+    const database = await resolveDatabase()
     const array = database.array('vectors')
     // @ts-ignore
     await Assert.throwsAsync(async () => await array.push([0, 0]))
   })
 
   it('Should throw unshift on invalid value', async () => {
-    const database = resolveDatabase()
+    const database = await resolveDatabase()
     const array = database.array('vectors')
     // @ts-ignore
     await Assert.throwsAsync(async () => await array.unshift([0, 0]))
   })
 
   it('Should throw set on invalid value', async () => {
-    const database = resolveDatabase()
+    const database = await resolveDatabase()
     const array = database.array('vectors')
     // @ts-ignore
     await Assert.throwsAsync(async () => await array.set(0, [0, 0]))

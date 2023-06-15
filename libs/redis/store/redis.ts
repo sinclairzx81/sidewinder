@@ -98,6 +98,17 @@ export class RedisStore implements Store {
     await this.redis.set(key, value)
   }
 
+  public async setNew(key: string, value: string): Promise<void> {
+    const result = await this.redis.set(key, value, 'NX')
+    if (!result) return Promise.reject('Failed to set new key')
+    return Promise.resolve()
+  }
+
+  public async update(key: string, value: string): Promise<void> {
+    const result = await this.redis.set(key, value, 'XX')
+    if (!result) return Promise.reject('Failed to update key')
+  }
+
   public disconnect(): void {
     this.redis.disconnect(false)
   }

@@ -67,6 +67,16 @@ export class RedisMap<T extends TSchema> {
     return await this.store.set(this.encodeKey(key), this.#encoder.encode(value))
   }
 
+  /** Adds the value for the given key, and throws if the key already exists */
+  public async add(key: string, value: Static<T>) {
+    return this.store.setNew(this.encodeKey(key), this.#encoder.encode(value))
+  }
+
+  /** Updates the value for the given key, and throws if the key does not exist*/
+  public async update(key: string, value: Static<T>) {
+    return this.store.update(this.encodeKey(key), this.#encoder.encode(value))
+  }
+
   /** Gets the value for the given key */
   public async get(key: string): Promise<Static<T> | undefined> {
     const value = await this.store.get(this.encodeKey(key))
