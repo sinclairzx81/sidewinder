@@ -28,9 +28,12 @@ THE SOFTWARE.
 
 import { Static, TSchema } from '@sidewinder/type'
 import { RedisEncoder, RedisDecoder } from '../codecs/index'
-import { Store } from '../store/index'
+import { SetOptions, Store } from '../store/index'
 
-/** A RedisMap is analogous to a JavaScript Map. It provides asynchronous set, get, clear and key value enumeration. */
+/** A RedisMap is analogous to a JavaScript Map. It provides asynchronous set, get, clear and key value enumeration.
+ *  There is one additional feature for RedisMap, where the set operation can be conditional based on whether the key
+ *  already exists in the map or not.
+ */
 export class RedisMap<T extends TSchema> {
   readonly #encoder: RedisEncoder<T>
   readonly #decoder: RedisDecoder<T>
@@ -62,19 +65,15 @@ export class RedisMap<T extends TSchema> {
     return result > 0
   }
 
-  /** Sets the value for the given key */
-  public async set(key: string, value: Static<T>) {
-    return await this.store.set(this.encodeKey(key), this.#encoder.encode(value))
-  }
-
-  /** Adds the value for the given key, and throws if the key already exists */
-  public async add(key: string, value: Static<T>) {
-    return this.store.setNew(this.encodeKey(key), this.#encoder.encode(value))
-  }
-
-  /** Updates the value for the given key, and throws if the key does not exist*/
-  public async update(key: string, value: Static<T>) {
-    return this.store.update(this.encodeKey(key), this.#encoder.encode(value))
+  /**
+   * Sets the value for the given key
+   * @param key The key to write to
+   * @param value The value to set
+   * @param options Optional set conditions
+   * @returns If the operation successfully updated data
+   */
+  public async set(key: string, value: Static<T>, options?: SetOptions) {
+    return await this.store.set(this.encodeKey(key), this.#encoder.encode(value), options)
   }
 
   /** Gets the value for the given key */

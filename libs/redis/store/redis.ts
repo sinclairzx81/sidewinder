@@ -28,7 +28,7 @@ THE SOFTWARE.
 
 import IORedis, { RedisOptions, Redis as RedisInstance } from 'ioredis'
 import { Timeout } from '@sidewinder/async'
-import { Store } from './store'
+import { SetOptions, Store } from './store'
 
 export { RedisOptions } from 'ioredis'
 
@@ -94,19 +94,17 @@ export class RedisStore implements Store {
     await this.redis.expire(key, seconds)
   }
 
-  public async set(key: string, value: string): Promise<void> {
-    await this.redis.set(key, value)
-  }
-
-  public async setNew(key: string, value: string): Promise<void> {
-    const result = await this.redis.set(key, value, 'NX')
-    if (!result) return Promise.reject('Failed to set new key')
-    return Promise.resolve()
-  }
-
-  public async update(key: string, value: string): Promise<void> {
-    const result = await this.redis.set(key, value, 'XX')
-    if (!result) return Promise.reject('Failed to update key')
+  public async set(key: string, value: string, options: SetOptions = {}): Promise<boolean> {
+    if (options.conditionalSet === 'exists') {
+      const result = await this.redis.set(key, value, 'XX')
+      return result === 'OK'
+    } else if (options.conditionalSet === 'not-exists') {
+      const result = await this.redis.set(key, value, 'NX')
+      return result === 'OK'
+    } else {
+      const result = await this.redis.set(key, value)
+      return result === 'OK'
+    }
   }
 
   public disconnect(): void {

@@ -26,7 +26,7 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-import { Store } from './store'
+import { SetOptions, Store } from './store'
 
 export class MemoryStoreError extends Error {
   constructor(message: string) {
@@ -37,9 +37,11 @@ export class MemoryStoreError extends Error {
 /** A RedisStore that is backed JavaScript memory. */
 export class MemoryStore implements Store {
   readonly #data: Map<string, string[]>
+  readonly #timeouts: Map<string, NodeJS.Timeout>
 
   constructor() {
     this.#data = new Map<string, string[]>()
+    this.#timeouts = new Map<string, NodeJS.Timeout>
   }
 
   public async del(key: string): Promise<void> {
@@ -120,24 +122,23 @@ export class MemoryStore implements Store {
   }
 
   public async expire(key: string, seconds: number): Promise<void> {
-    setTimeout(() => this.#data.delete(key), seconds * 1000)
+    setTimeout(() => {
+      this.#data.delete(key)
+      this.#timeouts.delete(key)
+    }, seconds * 1000)
   }
 
-  public async set(key: string, value: string): Promise<void> {
-    this.#ensureKey(key)
-    const array = this.#data.get(key)!
-    array[0] = value
-  }
+  public async set(key: string, value: string, options: SetOptions = {}): Promise<boolean> {
+    // Check for write conditions
+    if (options.conditionalSet === 'not-exists') {
+      if (this.#data.has(key)) return false
+    } else if (options.conditionalSet === 'exists') {
+      if (!this.#data.has(key)) return false
+    }
 
-  public async setNew(key: string, value: string): Promise<void> {
-    if (this.#data.has(key)) return Promise.reject('Key already exists')
+    // Set Data
     this.#data.set(key, [value])
-  }
-
-  public async update(key: string, value: string): Promise<void> {
-    const array = this.#data.get(key)
-    if (!array) return Promise.reject('Key not found')
-    array[0] = value
+    return true
   }
 
   #ensureKey(key: string) {
