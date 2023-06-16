@@ -37,11 +37,8 @@ export class MemoryStoreError extends Error {
 /** A RedisStore that is backed JavaScript memory. */
 export class MemoryStore implements Store {
   readonly #data: Map<string, string[]>
-  readonly #timeouts: Map<string, NodeJS.Timeout>
-
   constructor() {
     this.#data = new Map<string, string[]>()
-    this.#timeouts = new Map<string, NodeJS.Timeout>
   }
 
   public async del(key: string): Promise<void> {
@@ -122,10 +119,7 @@ export class MemoryStore implements Store {
   }
 
   public async expire(key: string, seconds: number): Promise<void> {
-    setTimeout(() => {
-      this.#data.delete(key)
-      this.#timeouts.delete(key)
-    }, seconds * 1000)
+    setTimeout(() => this.#data.delete(key), seconds * 1000)
   }
 
   public async set(key: string, value: string, options: SetOptions = {}): Promise<boolean> {
