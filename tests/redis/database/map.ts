@@ -29,9 +29,9 @@ describe('redis/RedisMap', () => {
   it('Should add new values', async () => {
     const database = await resolveDatabase()
     const map = database.map('vectors')
-    await map.set('A', [0, 0, 0], {conditionalSet: 'not-exists'})
-    await map.set('B', [1, 0, 0], {conditionalSet: 'not-exists'})
-    await map.set('C', [2, 0, 0], {conditionalSet: 'not-exists'})
+    await map.set('A', [0, 0, 0], { conditionalSet: 'not-exists' })
+    await map.set('B', [1, 0, 0], { conditionalSet: 'not-exists' })
+    await map.set('C', [2, 0, 0], { conditionalSet: 'not-exists' })
     const size = await map.size()
     Assert.deepEqual(size, 3)
   })
@@ -39,20 +39,20 @@ describe('redis/RedisMap', () => {
   it('Should not override when adding', async () => {
     const database = await resolveDatabase()
     const map = database.map('vectors')
-    await map.set('A', [0, 0, 0], {conditionalSet: 'not-exists'})
-    const result = await map.set('A', [1, 0, 0], {conditionalSet: 'not-exists' })
+    await map.set('A', [0, 0, 0], { conditionalSet: 'not-exists' })
+    const result = await map.set('A', [1, 0, 0], { conditionalSet: 'not-exists' })
     Assert.deepEqual(result, false)
     const a = await map.get('A')
-    Assert.deepEqual(a, [0,0,0])
+    Assert.deepEqual(a, [0, 0, 0])
   })
 
   it('Should update existing value', async () => {
     const database = await resolveDatabase()
     const map = database.map('vectors')
     await map.set('A', [0, 0, 0])
-    await map.set('A', [1, 0, 0], {conditionalSet: 'exists'})
+    await map.set('A', [1, 0, 0], { conditionalSet: 'exists' })
     const a = await map.get('A')
-    Assert.deepEqual(a, [1,0,0])
+    Assert.deepEqual(a, [1, 0, 0])
   })
 
   it('Should not update non-existent value', async () => {
