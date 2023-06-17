@@ -1,16 +1,25 @@
 import IORedis from 'ioredis-mock'
+import Redis from 'ioredis'
 import { Type, RedisDatabase, Store, RedisStore, MemoryStore } from '@sidewinder/redis'
 import { Assert } from '../assert/index'
 
-export function resolveMockStore(): Store {
-  return new IORedis(`redis://${Assert.randomUUID()}`) as any
+export async function resolveMockStore(): Promise<Store> {
+  const redis = new IORedis(`redis://${Assert.randomUUID}`)
+  await redis.flushall()
+  return new RedisStore(redis)
+}
+
+export async function resolveLocalRedis(): Promise<Store> {
+  const redis = new Redis()
+  await redis.flushall()
+  return new RedisStore(redis)
 }
 
 export function resolveMemoryStore(): Store {
   return MemoryStore.Create()
 }
 
-export function resolveDatabase() {
+export async function resolveDatabase() {
   const Vector = Type.Tuple([Type.Number(), Type.Number(), Type.Number()])
   const Schema = Type.Database({
     arrays: {
@@ -23,5 +32,5 @@ export function resolveDatabase() {
       vectors: Vector,
     },
   })
-  return new RedisDatabase(Schema, resolveMemoryStore())
+  return new RedisDatabase(Schema, await resolveMockStore())
 }

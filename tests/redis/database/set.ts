@@ -7,7 +7,7 @@ describe('redis/RedisSet', () => {
   // ---------------------------------------------------------
 
   it('Should add values', async () => {
-    const database = resolveDatabase()
+    const database = await resolveDatabase()
     const set = database.set('vectors')
     await set.add([0, 0, 0])
     await set.add([1, 0, 0])
@@ -17,7 +17,7 @@ describe('redis/RedisSet', () => {
   })
 
   it('Should add values with overlap', async () => {
-    const database = resolveDatabase()
+    const database = await resolveDatabase()
     const set = database.set('vectors')
     await set.add([0, 0, 0])
     await set.add([1, 0, 0])
@@ -30,7 +30,7 @@ describe('redis/RedisSet', () => {
   })
 
   it('Should get values with overlap', async () => {
-    const database = resolveDatabase()
+    const database = await resolveDatabase()
     const set = database.set('vectors')
     await set.add([0, 0, 0])
     await set.add([1, 0, 0])
@@ -43,7 +43,7 @@ describe('redis/RedisSet', () => {
   })
 
   it('Should return correct has values', async () => {
-    const database = resolveDatabase()
+    const database = await resolveDatabase()
     const set = database.set('vectors')
     await set.add([0, 0, 0])
     const value0 = await set.has([0, 0, 0])
@@ -53,7 +53,7 @@ describe('redis/RedisSet', () => {
   })
 
   it('Should clear set', async () => {
-    const database = resolveDatabase()
+    const database = await resolveDatabase()
     const set = database.set('vectors')
     await set.add([0, 0, 0])
     await set.add([1, 0, 0])
@@ -68,7 +68,7 @@ describe('redis/RedisSet', () => {
   // ---------------------------------------------------------
 
   it('Should iterate set', async () => {
-    const database = resolveDatabase()
+    const database = await resolveDatabase()
     const set = database.set('vectors')
     await set.add([0, 0, 0])
     await set.add([1, 0, 0])
@@ -85,7 +85,7 @@ describe('redis/RedisSet', () => {
   // ---------------------------------------------------------
 
   it('Should collect set', async () => {
-    const database = resolveDatabase()
+    const database = await resolveDatabase()
     const set = database.set('vectors')
     await set.add([0, 0, 0])
     await set.add([1, 0, 0])
@@ -99,7 +99,7 @@ describe('redis/RedisSet', () => {
   // ---------------------------------------------------------
 
   it('Should throw add invalid value', async () => {
-    const database = resolveDatabase()
+    const database = await resolveDatabase()
     const set = database.set('vectors')
     // @ts-ignore
     await Assert.throwsAsync(async () => await set.add([0, 0]))

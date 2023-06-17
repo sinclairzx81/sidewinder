@@ -26,7 +26,7 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-import { Store } from './store'
+import { SetOptions, Store } from './store'
 
 export class MemoryStoreError extends Error {
   constructor(message: string) {
@@ -37,7 +37,6 @@ export class MemoryStoreError extends Error {
 /** A RedisStore that is backed JavaScript memory. */
 export class MemoryStore implements Store {
   readonly #data: Map<string, string[]>
-
   constructor() {
     this.#data = new Map<string, string[]>()
   }
@@ -123,10 +122,17 @@ export class MemoryStore implements Store {
     setTimeout(() => this.#data.delete(key), seconds * 1000)
   }
 
-  public async set(key: string, value: string): Promise<void> {
-    this.#ensureKey(key)
-    const array = this.#data.get(key)!
-    array[0] = value
+  public async set(key: string, value: string, options: SetOptions = {}): Promise<boolean> {
+    // Check for write conditions
+    if (options.conditionalSet === 'not-exists') {
+      if (this.#data.has(key)) return false
+    } else if (options.conditionalSet === 'exists') {
+      if (!this.#data.has(key)) return false
+    }
+
+    // Set Data
+    this.#data.set(key, [value])
+    return true
   }
 
   #ensureKey(key: string) {

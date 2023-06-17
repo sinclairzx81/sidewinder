@@ -26,6 +26,10 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
+export interface SetOptions {
+  conditionalSet?: 'exists' | 'not-exists'
+}
+
 export interface Store {
   del(key: string): Promise<void>
   llen(key: string): Promise<number>
@@ -40,6 +44,6 @@ export interface Store {
   keys(pattern: string): Promise<string[]>
   exists(key: string): Promise<number>
   expire(key: string, seconds: number): Promise<void>
-  set(key: string, value: string): Promise<void>
+  set(key: string, value: string, options?: SetOptions): Promise<boolean>
   disconnect(): void
 }
