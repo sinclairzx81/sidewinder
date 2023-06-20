@@ -121,8 +121,11 @@ export class RedisStore implements Store {
   public static Create(host?: string, options?: RedisOptions): Promise<Store>
   /** Connects to Redis with the given parameters */
   public static Create(options: RedisOptions): Promise<Store>
-  public static async Create(...args: any[]): Promise<Store> {
-    const redis = new IORedis(...args)
+  public static async Create(arg1?: number | string | RedisOptions, arg2?: string | RedisOptions, arg3?: RedisOptions): Promise<Store> {
+    const redis = arg3 ? new IORedis(arg1 as number, arg2 as string, arg3)
+      : arg2 ? new IORedis(arg1 as string, arg2 as RedisOptions)
+      : arg1 ? new IORedis(arg1 as RedisOptions)
+      : new IORedis()
     await Timeout.run(async () => await redis.echo('echo'), 8000, new RedisStoreConnectError('Connection to Redis timed out'))
     return new RedisStore(redis)
   }
