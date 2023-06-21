@@ -52,7 +52,7 @@ const Schema = Type.Database({
   },
 })
 
-const database = await RedisDatabase.connect(Schema, 'redis://172.30.1.24:6379')
+const database = await RedisDatabase.Create(Schema, 'redis://172.30.1.24:6379')
 
 // Array<[number, number, number]>
 const array = database.array('vectors')
@@ -157,7 +157,7 @@ The RedisSender is analogous to a SyncSender Channel. It sends messages to a sin
 ```typescript
 import { Type, RedisSender } from '@sidewinder/redis'
 
-const sender = await RedisSender.connect(Type.String(), 'logs', 'redis://redis.domain.com:6379')
+const sender = await RedisSender.Create(Type.String(), 'logs', 'redis://redis.domain.com:6379')
 
 await sender.send('log message 1')
 await sender.send('log message 2')
@@ -176,7 +176,7 @@ The RedisReceiver is analogous to a Sidewinder Receiver Channel. It receives mes
 ```typescript
 import { Type, RedisReceiver } from '@sidewinder/redis'
 
-const receiver = await RedisReceiver.connect(Type.String(), 'logs', 'redis://redis.domain.com:6379')
+const receiver = await RedisReceiver.Create(Type.String(), 'logs', 'redis://redis.domain.com:6379')
 
 for await (const message of receiver) {
   console.log(message) // log message 1
@@ -201,7 +201,7 @@ The RedisPub type broadcasts messages out to subscribers of a single topic. Redi
 ```typescript
 import { Type, RedisPub } from '@sidewinder/redis'
 
-const sender = await RedisPub.connect(Type.String(), 'news', 'redis://redis.domain.com:6379')
+const sender = await RedisPub.Create(Type.String(), 'news', 'redis://redis.domain.com:6379')
 
 await sender.send('good news')
 await sender.send('bad news')
@@ -220,7 +220,7 @@ The RedisSub type can be used to receive messages sent to a single topic. This t
 ```typescript
 import { Type, RedisSub } from '@sidewinder/redis'
 
-const receiver = await RedisSub.connect(Type.String(), 'news', 'redis://redis.domain.com:6379')
+const receiver = await RedisSub.Create(Type.String(), 'news', 'redis://redis.domain.com:6379')
 
 for await (const message of receiver) {
   console.log(message) // good news

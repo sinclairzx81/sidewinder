@@ -40,69 +40,58 @@ export class MemoryStore implements Store {
   constructor() {
     this.#data = new Map<string, string[]>()
   }
-
   public async del(key: string): Promise<void> {
     this.#data.delete(key)
   }
-
   public async llen(key: string): Promise<number> {
     this.#ensureKey(key)
     const array = this.#data.get(key)!
     return array.length
   }
-
   public async lset(key: string, index: number, value: string): Promise<void> {
     this.#ensureKey(key)
     const array = this.#data.get(key)!
     if (index >= array.length) throw new MemoryStoreError('Index out of range')
     array[index] = value
   }
-
   public async lindex(key: string, index: number): Promise<string | null> {
     if (!this.#data.has(key)) return null
     const array = this.#data.get(key)!
     const value = array[index]
     return value || null
   }
-
   public async rpush(key: string, value: string): Promise<void> {
     this.#ensureKey(key)
     const array = this.#data.get(key)!
     array.push(value)
   }
-
   public async lpush(key: string, value: string): Promise<void> {
     this.#ensureKey(key)
     const array = this.#data.get(key)!
     array.unshift(value)
   }
-
   public async rpop(key: string): Promise<string | null> {
     this.#ensureKey(key)
     const array = this.#data.get(key)!
     const value = array.pop()
     return value || null
   }
-
   public async lpop(key: string): Promise<string | null> {
     this.#ensureKey(key)
     const array = this.#data.get(key)!
     const value = array.shift()
     return value || null
   }
-
   public async lrange(key: string, start: number, end: number): Promise<string[]> {
     this.#ensureKey(key)
     const array = this.#data.get(key)!
     return array.slice(start, end + 1)
   }
-
   public async get(key: string): Promise<string | null> {
     if (!this.#data.has(key)) return null
     const array = this.#data.get(key)!
     return array[0]
   }
-
   public async keys(pattern: string): Promise<string[]> {
     const regex = new RegExp(`^` + pattern.replace(/\*/g, '(.*)') + '$')
     const buffer: string[] = []
@@ -113,15 +102,12 @@ export class MemoryStore implements Store {
     }
     return buffer
   }
-
   public async exists(key: string): Promise<number> {
     return this.#data.has(key) ? 1 : 0
   }
-
   public async expire(key: string, seconds: number): Promise<void> {
     setTimeout(() => this.#data.delete(key), seconds * 1000)
   }
-
   public async set(key: string, value: string, options: SetOptions = {}): Promise<boolean> {
     // Check for write conditions
     if (options.conditionalSet === 'not-exists') {
