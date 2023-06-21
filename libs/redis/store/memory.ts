@@ -26,7 +26,7 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-import { SetOptions, Store } from './store'
+import { SetOptions, SortedSetRangeOptions, Store } from './store'
 
 export class MemoryStoreError extends Error {
   constructor(message: string) {
@@ -133,6 +133,22 @@ export class MemoryStore implements Store {
     // Set Data
     this.#data.set(key, [value])
     return true
+  }
+
+  public async zadd(key: string, members: [score: number, member: string][]): Promise<number> {
+    throw new Error('Not implemented')
+  }
+
+  public async zcard(key: string): Promise<number> {
+    throw new Error('Not implemented')
+  }
+
+  public async zincrby(key: string, increment: number, member: string): Promise<number> {
+    throw new Error('Not implemented')
+  }
+
+  public async zrange(key: string, start: number, stop: number, options?: SortedSetRangeOptions | undefined): Promise<string[]> {
+    throw new Error('Not implemented')
   }
 
   #ensureKey(key: string) {

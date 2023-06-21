@@ -21,6 +21,10 @@ export function resolveMemoryStore(): Store {
 
 export async function resolveDatabase() {
   const Vector = Type.Tuple([Type.Number(), Type.Number(), Type.Number()])
+  const User = Type.Object({
+    name: Type.String(),
+    age: Type.Number()
+  })
   const Schema = Type.Database({
     arrays: {
       vectors: Vector,
@@ -31,6 +35,9 @@ export async function resolveDatabase() {
     sets: {
       vectors: Vector,
     },
+    sortedsets: {
+      scores: User
+    }
   })
-  return new RedisDatabase(Schema, await resolveMockStore())
+  return new RedisDatabase(Schema, await resolveLocalRedis())
 }
