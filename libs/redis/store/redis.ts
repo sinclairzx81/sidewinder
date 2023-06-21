@@ -29,7 +29,6 @@ THE SOFTWARE.
 import IORedis, { RedisOptions, Redis as RedisInstance } from 'ioredis'
 import { Timeout } from '@sidewinder/async'
 import { SetOptions, Store } from './store'
-
 export { RedisOptions } from 'ioredis'
 
 export class RedisStoreConnectError extends Error {
@@ -41,59 +40,45 @@ export class RedisStoreConnectError extends Error {
 /** A RedisStore that is backed by a Redis instance. */
 export class RedisStore implements Store {
   constructor(private readonly redis: RedisInstance) {}
-
   public async del(key: string): Promise<void> {
     await this.redis.del(key)
   }
-
   public async llen(key: string): Promise<number> {
     return await this.redis.llen(key)
   }
-
   public async lset(key: string, index: number, value: string): Promise<void> {
     await this.redis.lset(key, index, value)
   }
-
   public async lindex(key: string, index: number): Promise<string | null> {
     return await this.redis.lindex(key, index)
   }
-
   public async rpush(key: string, value: string): Promise<void> {
     await this.redis.rpush(key, value)
   }
-
   public async lpush(key: string, value: string): Promise<void> {
     await this.redis.lpush(key, value)
   }
-
   public async rpop(key: string): Promise<string | null> {
     return await this.redis.rpop(key)
   }
-
   public async lpop(key: string): Promise<string | null> {
     return await this.redis.lpop(key)
   }
-
   public async lrange(key: string, start: number, end: number): Promise<string[]> {
     return await this.redis.lrange(key, start, end)
   }
-
   public async get(key: string): Promise<string | null> {
     return await this.redis.get(key)
   }
-
   public async keys(pattern: string): Promise<string[]> {
     return await this.redis.keys(pattern)
   }
-
   public async exists(key: string): Promise<number> {
     return await this.redis.exists(key)
   }
-
   public async expire(key: string, seconds: number): Promise<void> {
     await this.redis.expire(key, seconds)
   }
-
   public async set(key: string, value: string, options: SetOptions = {}): Promise<boolean> {
     if (options.conditionalSet === 'exists') {
       const result = await this.redis.set(key, value, 'XX')
@@ -106,7 +91,6 @@ export class RedisStore implements Store {
       return result === 'OK'
     }
   }
-
   public disconnect(): void {
     this.redis.disconnect(false)
   }
@@ -114,18 +98,15 @@ export class RedisStore implements Store {
   // --------------------------------------------------------
   // Factory
   // --------------------------------------------------------
-
   /** Connects to Redis with the given parameters */
   public static Create(port?: number, host?: string, options?: RedisOptions): Promise<Store>
   /** Connects to Redis with the given parameters */
   public static Create(host?: string, options?: RedisOptions): Promise<Store>
   /** Connects to Redis with the given parameters */
   public static Create(options: RedisOptions): Promise<Store>
-  public static async Create(arg1?: number | string | RedisOptions, arg2?: string | RedisOptions, arg3?: RedisOptions): Promise<Store> {
-    const redis = arg3 ? new IORedis(arg1 as number, arg2 as string, arg3)
-      : arg2 ? new IORedis(arg1 as string, arg2 as RedisOptions)
-      : arg1 ? new IORedis(arg1 as RedisOptions)
-      : new IORedis()
+  public static async Create(...args: unknown[]): Promise<Store> {
+    // @ts-ignore (we assume the overloaded arguments have appropriately narrowed)
+    const redis = new IORedis(...args)
     await Timeout.run(async () => await redis.echo('echo'), 8000, new RedisStoreConnectError('Connection to Redis timed out'))
     return new RedisStore(redis)
   }
