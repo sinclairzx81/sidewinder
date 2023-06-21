@@ -54,7 +54,9 @@ export class RedisReceiver<T extends TSchema> implements Receiver<Static<T>> {
   public async next(): Promise<Static<T> | null> {
     while (true) {
       if (this.#closed) return null
-      const [_, value] = await this.redis.blpop(this.encodeKey(), 0)
+      const response = await this.redis.blpop(this.encodeKey(), 0)
+      if (!response) return null
+      const [_, value] = response
       try {
         return this.#decoder.decode(value)
       } catch {

@@ -40,12 +40,10 @@ export class PubSubMemorySenderError extends Error {
 export class PubSubMemorySender<T extends TSchema> implements SyncSender<Static<T>> {
   readonly #validator: Validator<T>
   #closed: boolean
-
   constructor(private readonly schema: T, private readonly channel: string) {
     this.#validator = new Validator(this.schema)
     this.#closed = false
   }
-
   /** Sends a value to this sender */
   public async send(value: Static<T, []>): Promise<void> {
     if (this.#closed) throw new PubSubMemorySenderError('Sender is closed')
@@ -53,25 +51,20 @@ export class PubSubMemorySender<T extends TSchema> implements SyncSender<Static<
     if (!check.success) throw new PubSubMemorySenderError(check.errorText)
     MemoryChannels.send(this.channel, value)
   }
-
   /** Sends an error to this sender and closes. Note that redis channels do not transmit the error. */
   public async error(error: Error): Promise<void> {
     this.#dispose()
   }
-
   /** Ends this sender and closes */
   public async end(): Promise<void> {
     this.#dispose()
   }
-
   #dispose() {
     this.#closed = true
   }
-
   // --------------------------------------------------------
   // Factory
   // --------------------------------------------------------
-
   /** Creates a PubSubMemorySender with the given parameters */
   public static Create<T extends TSchema>(schema: T, channel: string): PubSubMemorySender<T> {
     return new PubSubMemorySender(schema, channel)
