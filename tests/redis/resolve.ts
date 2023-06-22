@@ -39,5 +39,5 @@ export async function resolveDatabase() {
       scores: User
     }
   })
-  return new RedisDatabase(Schema, await resolveLocalRedis())
+  return new RedisDatabase(Schema, await resolveMockStore())
 }
