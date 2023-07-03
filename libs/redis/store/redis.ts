@@ -39,7 +39,7 @@ export class RedisStoreConnectError extends Error {
 
 /** A RedisStore that is backed by a Redis instance. */
 export class RedisStore implements Store {
-  constructor(private readonly redis: RedisInstance) {}
+  constructor(public readonly redis: RedisInstance) {}
   public async del(key: string): Promise<void> {
     await this.redis.del(key)
   }
