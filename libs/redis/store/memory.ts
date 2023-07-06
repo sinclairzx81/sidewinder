@@ -26,7 +26,9 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
+import { Redis } from 'ioredis'
 import { SetOptions, SortedSetRangeOptions, Store } from './store'
+import IORedis from 'ioredis-mock'
 
 export class MemoryStoreError extends Error {
   constructor(message: string) {
@@ -36,114 +38,94 @@ export class MemoryStoreError extends Error {
 
 /** A RedisStore that is backed JavaScript memory. */
 export class MemoryStore implements Store {
-  readonly #data: Map<string, string[]>
+  readonly #store: Redis // ioredis-mock doesn't provide it's own type, just implements the ioredis one
   constructor() {
-    this.#data = new Map<string, string[]>()
+    this.#store = new IORedis()
+    this.#store.flushall()
   }
   public async del(key: string): Promise<void> {
-    this.#data.delete(key)
+    await this.#store.del(key)
   }
   public async llen(key: string): Promise<number> {
-    this.#ensureKey(key)
-    const array = this.#data.get(key)!
-    return array.length
+    return await this.#store.llen(key)
   }
   public async lset(key: string, index: number, value: string): Promise<void> {
-    this.#ensureKey(key)
-    const array = this.#data.get(key)!
-    if (index >= array.length) throw new MemoryStoreError('Index out of range')
-    array[index] = value
+    await this.#store.lset(key, index, value)
   }
   public async lindex(key: string, index: number): Promise<string | null> {
-    if (!this.#data.has(key)) return null
-    const array = this.#data.get(key)!
-    const value = array[index]
-    return value || null
+    return await this.#store.lindex(key, index)
   }
   public async rpush(key: string, value: string): Promise<void> {
-    this.#ensureKey(key)
-    const array = this.#data.get(key)!
-    array.push(value)
+    await this.#store.rpush(key, value)
   }
   public async lpush(key: string, value: string): Promise<void> {
-    this.#ensureKey(key)
-    const array = this.#data.get(key)!
-    array.unshift(value)
+    await this.#store.lpush(key, value)
   }
   public async rpop(key: string): Promise<string | null> {
-    this.#ensureKey(key)
-    const array = this.#data.get(key)!
-    const value = array.pop()
-    return value || null
+    return await this.#store.rpop(key)
   }
   public async lpop(key: string): Promise<string | null> {
-    this.#ensureKey(key)
-    const array = this.#data.get(key)!
-    const value = array.shift()
-    return value || null
+    return await this.#store.lpop(key)
   }
   public async lrange(key: string, start: number, end: number): Promise<string[]> {
-    this.#ensureKey(key)
-    const array = this.#data.get(key)!
-    return array.slice(start, end + 1)
+    return await this.#store.lrange(key, start, end)
   }
   public async get(key: string): Promise<string | null> {
-    if (!this.#data.has(key)) return null
-    const array = this.#data.get(key)!
-    return array[0]
+    return await this.#store.get(key)
   }
   public async keys(pattern: string): Promise<string[]> {
-    const regex = new RegExp(`^` + pattern.replace(/\*/g, '(.*)') + '$')
-    const buffer: string[] = []
-    for (const key of this.#data.keys()) {
-      if (key.match(regex)) {
-        buffer.push(key)
-      }
-    }
-    return buffer
+    return await this.#store.keys(pattern)
   }
   public async exists(key: string): Promise<number> {
-    return this.#data.has(key) ? 1 : 0
+    return await this.#store.exists(key)
   }
   public async expire(key: string, seconds: number): Promise<void> {
-    setTimeout(() => this.#data.delete(key), seconds * 1000)
+    await this.#store.expire(key, seconds)
   }
   public async set(key: string, value: string, options: SetOptions = {}): Promise<boolean> {
-    // Check for write conditions
-    if (options.conditionalSet === 'not-exists') {
-      if (this.#data.has(key)) return false
-    } else if (options.conditionalSet === 'exists') {
-      if (!this.#data.has(key)) return false
+    if (options.conditionalSet === 'exists') {
+      const result = await this.#store.set(key, value, 'XX')
+      return result === 'OK'
+    } else if (options.conditionalSet === 'not-exists') {
+      const result = await this.#store.set(key, value, 'NX')
+      return result === 'OK'
+    } else {
+      const result = await this.#store.set(key, value)
+      return result === 'OK'
     }
-
-    // Set Data
-    this.#data.set(key, [value])
-    return true
   }
 
   public async zadd(key: string, members: [score: number, member: string][]): Promise<number> {
-    throw new Error('Not implemented')
-  }
-
-  public async zcard(key: string): Promise<number> {
-    throw new Error('Not implemented')
+    return await this.#store.zadd(key, ...members.flat())
   }
 
   public async zincrby(key: string, increment: number, member: string): Promise<number> {
-    throw new Error('Not implemented')
+    const response = await this.#store.zincrby(key, increment, member)
+    return parseFloat(response)
   }
 
-  public async zrange(key: string, start: number, stop: number, options?: SortedSetRangeOptions | undefined): Promise<string[]> {
-    throw new Error('Not implemented')
+  public async zrange(key: string, start: number, stop: number, options: SortedSetRangeOptions = {}): Promise<string[]> {
+    if (options.reverseOrder) {
+      if (options.includeScores) {
+        return await this.#store.zrange(key, start, stop, 'REV', 'WITHSCORES')
+      } else {
+        return await this.#store.zrange(key, start, stop, 'REV')
+      }
+    } else {
+      if (options.includeScores) {
+        return await this.#store.zrange(key, start, stop, 'WITHSCORES')
+      } else {
+        return await this.#store.zrange(key, start, stop)
+      }
+    }
   }
 
-  #ensureKey(key: string) {
-    if (this.#data.has(key)) return
-    this.#data.set(key, [])
+  public async zcard(key: string): Promise<number> {
+    return await this.#store.zcard(key)
   }
 
   public disconnect(): void {
-    this.#data.clear()
+    this.#store.disconnect()
   }
 
   // --------------------------------------------------------
