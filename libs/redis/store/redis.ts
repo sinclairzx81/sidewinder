@@ -92,16 +92,13 @@ export class RedisStore implements Store {
       return result === 'OK'
     }
   }
-
   public async zadd(key: string, members: [score: number, member: string][]): Promise<number> {
     return await this.redis.zadd(key, ...members.flat())
   }
-
   public async zincrby(key: string, increment: number, member: string): Promise<number> {
     const response = await this.redis.zincrby(key, increment, member)
     return parseFloat(response)
   }
-
   public async zrange(key: string, start: number, stop: number, options: SortedSetRangeOptions = {}): Promise<string[]> {
     if (options.reverseOrder) {
       if (options.includeScores) {
@@ -117,15 +114,12 @@ export class RedisStore implements Store {
       }
     }
   }
-
   public async zcard(key: string): Promise<number> {
     return await this.redis.zcard(key)
   }
-
   public disconnect(): void {
     this.redis.disconnect(false)
   }
-
   // --------------------------------------------------------
   // Factory
   // --------------------------------------------------------

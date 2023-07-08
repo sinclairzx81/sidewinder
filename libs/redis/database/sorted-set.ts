@@ -47,7 +47,10 @@ export class RedisSortedSet<T extends TSchema> {
   }
 
   public async add(members: [score: number, member: Static<T>][]) {
-    return await this.store.zadd(this.#key, members.map(([score, member]) => [score, this.#encoder.encode(member)]))
+    return await this.store.zadd(
+      this.#key,
+      members.map(([score, member]) => [score, this.#encoder.encode(member)]),
+    )
   }
 
   public async count() {
@@ -69,7 +72,7 @@ export class RedisSortedSet<T extends TSchema> {
   }
 
   public async getRange(startIndex: number, endIndex: number, reverseOrder?: boolean): Promise<Static<T>[]> {
-    const results = await this.store.zrange(this.#key, startIndex, endIndex, {reverseOrder})
-    return results.map(result => this.#decoder.decode(result))
+    const results = await this.store.zrange(this.#key, startIndex, endIndex, { reverseOrder })
+    return results.map((result) => this.#decoder.decode(result))
   }
 }

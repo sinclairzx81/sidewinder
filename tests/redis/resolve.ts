@@ -23,7 +23,7 @@ export async function resolveDatabase() {
   const Vector = Type.Tuple([Type.Number(), Type.Number(), Type.Number()])
   const User = Type.Object({
     name: Type.String(),
-    age: Type.Number()
+    age: Type.Number(),
   })
   const Schema = Type.Database({
     arrays: {
@@ -36,8 +36,8 @@ export async function resolveDatabase() {
       vectors: Vector,
     },
     sortedsets: {
-      scores: User
-    }
+      scores: User,
+    },
   })
   return new RedisDatabase(Schema, await resolveMemoryStore())
 }

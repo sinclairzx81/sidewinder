@@ -35,54 +35,75 @@ export class MemoryStoreError extends Error {
     super(`MemoryStore: ${message}`)
   }
 }
+// external: static construction on some javascript build tooling may fail
+let singleton: MemoryStore | null = null
+/** Incremented on constructor to ensure transient instances */
+let instanceOrdinal = 0
 
 /** A RedisStore that is backed JavaScript memory. */
 export class MemoryStore implements Store {
   readonly #store: Redis // ioredis-mock doesn't provide it's own type, just implements the ioredis one
+  #closed: boolean
   constructor() {
-    this.#store = new IORedis()
-    this.#store.flushall()
+    const [connectionName, port] = [`connection:${instanceOrdinal}`, instanceOrdinal]
+    this.#store = new IORedis({ connectionName, port })
+    this.#closed = false
+    instanceOrdinal++
   }
   public async del(key: string): Promise<void> {
+    this.#assertConnected()
     await this.#store.del(key)
   }
   public async llen(key: string): Promise<number> {
+    this.#assertConnected()
     return await this.#store.llen(key)
   }
   public async lset(key: string, index: number, value: string): Promise<void> {
+    this.#assertConnected()
     await this.#store.lset(key, index, value)
   }
   public async lindex(key: string, index: number): Promise<string | null> {
+    this.#assertConnected()
     return await this.#store.lindex(key, index)
   }
   public async rpush(key: string, value: string): Promise<void> {
+    this.#assertConnected()
     await this.#store.rpush(key, value)
   }
   public async lpush(key: string, value: string): Promise<void> {
+    this.#assertConnected()
     await this.#store.lpush(key, value)
   }
   public async rpop(key: string): Promise<string | null> {
+    this.#assertConnected()
     return await this.#store.rpop(key)
   }
   public async lpop(key: string): Promise<string | null> {
+    this.#assertConnected()
     return await this.#store.lpop(key)
   }
   public async lrange(key: string, start: number, end: number): Promise<string[]> {
+    this.#assertConnected()
     return await this.#store.lrange(key, start, end)
   }
   public async get(key: string): Promise<string | null> {
+    this.#assertConnected()
     return await this.#store.get(key)
   }
   public async keys(pattern: string): Promise<string[]> {
+    this.#assertConnected()
     return await this.#store.keys(pattern)
   }
   public async exists(key: string): Promise<number> {
+    this.#assertConnected()
     return await this.#store.exists(key)
   }
   public async expire(key: string, seconds: number): Promise<void> {
+    this.#assertConnected()
     await this.#store.expire(key, seconds)
   }
   public async set(key: string, value: string, options: SetOptions = {}): Promise<boolean> {
+    this.#assertConnected()
     if (options.conditionalSet === 'exists') {
       const result = await this.#store.set(key, value, 'XX')
       return result === 'OK'
@@ -94,17 +115,17 @@ export class MemoryStore implements Store {
       return result === 'OK'
     }
   }
-
   public async zadd(key: string, members: [score: number, member: string][]): Promise<number> {
+    this.#assertConnected()
     return await this.#store.zadd(key, ...members.flat())
   }
-
   public async zincrby(key: string, increment: number, member: string): Promise<number> {
+    this.#assertConnected()
     const response = await this.#store.zincrby(key, increment, member)
     return parseFloat(response)
   }
-
   public async zrange(key: string, start: number, stop: number, options: SortedSetRangeOptions = {}): Promise<string[]> {
+    this.#assertConnected()
     if (options.reverseOrder) {
       if (options.includeScores) {
         return await this.#store.zrange(key, start, stop, 'REV', 'WITHSCORES')
@@ -119,30 +140,32 @@ export class MemoryStore implements Store {
       }
     }
   }
-
   public async zcard(key: string): Promise<number> {
+    this.#assertConnected()
     return await this.#store.zcard(key)
   }
-
-  public disconnect(): void {
-    this.#store.disconnect()
+  public disconnect() {
+    if (this.#closed) return
+    this.#closed = true
+    this.#store.flushall()
   }
-
+  // --------------------------------------------------------
+  // Assertion
+  // --------------------------------------------------------
+  #assertConnected() {
+    if (!this.#closed) return
+    throw new MemoryStoreError('Store is closed')
+  }
   // --------------------------------------------------------
   // Factory
   // --------------------------------------------------------
-
   /** Creates a singleton instance of a memory store */
   public static Singleton(): Store {
-    if (singleton.length === 0) singleton.push(new MemoryStore())
-    return singleton[0]
+    if (singleton === null) singleton = new MemoryStore()
+    return singleton
   }
-
   /** Creates a new in memory redis store */
   public static Create(): Store {
     return new MemoryStore()
   }
 }
-
-// external: static construction on some javascript build tooling may fail
-const singleton: MemoryStore[] = []
