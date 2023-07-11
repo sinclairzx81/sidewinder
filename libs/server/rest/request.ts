@@ -33,23 +33,21 @@ import { IncomingMessage } from 'http'
 
 export class RestRequest {
   readonly #ipAddress: string
-  readonly #context: Map<string, string>
+  readonly #context: Map<string, unknown>
   readonly #headers: Map<string, string>
   readonly #query: Map<string, string>
   readonly #params: Map<string, string>
 
   constructor(private readonly request: IncomingMessage, params: Record<string, string>, public readonly clientId: string) {
     this.#ipAddress = this.#readIpAddress(request)
-    this.#context = new Map<string, string>()
+    this.#context = new Map<string, unknown>()
     this.#headers = this.#readHeaders(request)
     this.#query = this.#readQuery(request)
     this.#params = this.#readParams(params)
   }
-
   // ------------------------------------------------------------------------------
   // Publics
   // ------------------------------------------------------------------------------
-
   /**
    * Gets the ip address associated with this request. This address will either
    * be the raw socket remoteAddress, or in the instance of a load balancer, the
@@ -59,8 +57,8 @@ export class RestRequest {
   public get ipAddress(): string {
     return this.#ipAddress
   }
-  /** Gets request context variables */
-  public get context(): Map<string, string> {
+  /** Gets or sets request context variables */
+  public get context(): Map<string, unknown> {
     return this.#context
   }
   /** Gets the http headers for this request */
