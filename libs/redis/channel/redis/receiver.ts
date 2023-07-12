@@ -28,7 +28,7 @@ THE SOFTWARE.
 
 import { Static, TSchema } from '@sidewinder/type'
 import { Receiver } from '@sidewinder/channel'
-import { Redis, RedisOptions } from 'ioredis'
+import { Cluster, Redis, RedisOptions } from 'ioredis'
 import { RedisDecoder } from '../../codecs/index'
 import { RedisConnect } from '../../connect'
 
@@ -36,7 +36,7 @@ import { RedisConnect } from '../../connect'
 export class RedisReceiver<T extends TSchema> implements Receiver<Static<T>> {
   readonly #decoder: RedisDecoder<T>
   #closed: boolean
-  constructor(private readonly schema: T, private readonly channel: string, private readonly redis: Redis) {
+  constructor(private readonly schema: T, private readonly channel: string, private readonly redis: Cluster | Redis) {
     this.#decoder = new RedisDecoder<T>(this.schema)
     this.#closed = false
   }

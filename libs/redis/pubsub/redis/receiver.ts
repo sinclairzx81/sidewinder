@@ -26,7 +26,7 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-import { Redis, RedisOptions } from 'ioredis'
+import { Cluster, Redis, RedisOptions } from 'ioredis'
 import { Static, TSchema } from '@sidewinder/type'
 import { Channel, Receiver } from '@sidewinder/channel'
 import { RedisDecoder } from '../../codecs/index'
@@ -37,7 +37,7 @@ export class PubSubRedisReceiver<T extends TSchema> implements Receiver<Static<T
   readonly #decoder: RedisDecoder<T>
   readonly #channel: Channel<unknown>
 
-  constructor(private readonly schema: T, public readonly channel: string, private readonly redis: Redis) {
+  constructor(private readonly schema: T, public readonly channel: string, private readonly redis: Cluster | Redis) {
     this.#decoder = new RedisDecoder(this.schema)
     this.#channel = new Channel<unknown>()
     this.redis.subscribe(this.#encodeKey())
