@@ -26,7 +26,7 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-import IORedis, { RedisOptions, Redis as RedisInstance } from 'ioredis'
+import IORedis, { RedisOptions, Redis as RedisInstance, Cluster as ClusterInstance } from 'ioredis'
 import { Timeout } from '@sidewinder/async'
 import { SetOptions, Store } from './store'
 export { RedisOptions } from 'ioredis'
@@ -39,7 +39,7 @@ export class RedisStoreConnectError extends Error {
 
 /** A RedisStore that is backed by a Redis instance. */
 export class RedisStore implements Store {
-  constructor(public readonly redis: RedisInstance) {}
+  constructor(public readonly redis: RedisInstance | ClusterInstance) {}
   public async del(key: string): Promise<void> {
     await this.redis.del(key)
   }

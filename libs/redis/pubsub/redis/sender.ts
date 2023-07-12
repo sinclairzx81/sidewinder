@@ -26,7 +26,7 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-import { Redis, RedisOptions } from 'ioredis'
+import { Cluster, Redis, RedisOptions } from 'ioredis'
 import { SyncSender } from '@sidewinder/channel'
 import { Static, TSchema } from '@sidewinder/type'
 import { RedisEncoder } from '../../codecs/index'
@@ -37,7 +37,7 @@ export class PubSubRedisSender<T extends TSchema> implements SyncSender<Static<T
   readonly #encoder: RedisEncoder<T>
   #ended: boolean
 
-  constructor(private readonly schema: T, private readonly channel: string, private readonly redis: Redis) {
+  constructor(private readonly schema: T, private readonly channel: string, private readonly redis: Cluster | Redis) {
     this.#encoder = new RedisEncoder(this.schema)
     this.#ended = false
   }
