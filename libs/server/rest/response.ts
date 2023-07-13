@@ -82,14 +82,14 @@ export class RestResponse {
     return await this.text(html, 'text/html')
   }
   // ------------------------------------------------------------------------------
-  // Privates
+  // Internals
   // ------------------------------------------------------------------------------
   #internalWriteHead(status: number, statusText: string = '', headers: Record<string, string> = {}) {
-    if (this.response.headersSent) return
+    if (this.response.headersSent || this.response.closed || this.response.destroyed) return
     this.response.writeHead(status, statusText, headers)
   }
   async #internalWrite(data: Uint8Array): Promise<void> {
-    if (this.response.destroyed) return
+    if (this.response.closed || this.response.destroyed) return
     return new Promise((resolve, reject) => {
       this.response.write(data, (error) => {
         if (error) return reject(error)
