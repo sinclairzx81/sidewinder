@@ -55,11 +55,13 @@ async function test(method: string, endpoint: string) {
     })
     .catch(() => console.log('error'))
 }
-
-for (let i = 0; i < 1; i++) {
-  test('get', 'http://localhost:5000/rest')
-  test('post', 'http://localhost:5000/rest')
-  test('patch', 'http://localhost:5000/rest')
-  test('delete', 'http://localhost:5000/rest')
-  test('put', 'http://localhost:5000/rest')
+async function start() {
+  for (let i = 0; i < 1000; i++) {
+    test('get', 'http://localhost:5000/rest')
+    test('post', 'http://localhost:5000/rest')
+    test('patch', 'http://localhost:5000/rest')
+    test('delete', 'http://localhost:5000/rest')
+    await test('put', 'http://localhost:5000/rest')
+  }
 }
+start()

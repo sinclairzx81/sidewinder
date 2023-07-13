@@ -60,21 +60,18 @@ export interface HostOptions {
    * (Default is 8000)
    */
   keepAliveTimeout: number
-
   /**
    * Disables client message compression.
    *
    * (Default is false)
    */
   disableFrameCompression: boolean
-
   /**
    * Sets the maximum number of concurrent Web Sockets able to connect to this Host.
    *
    * (Default is 16384)
    */
   maxSocketCount: number
-
   /**
    * Configuration options for auto scaling web processes in load balanced in environments.
    *
@@ -82,7 +79,6 @@ export interface HostOptions {
    */
   autoScaling?: AutoScalingOptions
 }
-
 function defaultHostOptions(options: Partial<HostOptions>): HostOptions {
   return {
     keepAliveTimeout: options.keepAliveTimeout !== undefined ? options.keepAliveTimeout : 8000,
@@ -91,7 +87,6 @@ function defaultHostOptions(options: Partial<HostOptions>): HostOptions {
     autoScaling: options.autoScaling !== undefined ? options.autoScaling : undefined,
   }
 }
-
 /**
  * A Host is a network service mount. It handles the details of listening
  * to network interfaces and allows multiple WebService, WebSocketService
@@ -109,48 +104,39 @@ export class Host {
   #socketCount: number
   #listening: boolean
   #disposed: boolean
-
   constructor(options: Partial<HostOptions> = {}) {
     this.#options = defaultHostOptions(options)
     this.#services = new Map<string, WebSocketService<any>>()
     this.#sockets = new Map<number, ws.WebSocket>()
     this.#application = express()
+    this.#application.disable('x-powered-by')
     this.#wsserver = new WebSocketServer({ noServer: true, ...(this.#options.disableFrameCompression ? { perMessageDeflate: false } : {}) })
-    this.#keepAliveInterval = setInterval(() => this.keepAlive(), this.#options.keepAliveTimeout)
+    this.#keepAliveInterval = setInterval(() => this.#keepAlive(), this.#options.keepAliveTimeout)
     this.#socketOrdinal = 0
     this.#socketCount = 0
     this.#listening = false
     this.#disposed = false
-    this.configureAutoScaling()
+    this.#configureAutoScaling()
   }
-
   /** Uses a WebSocketService to the specified path  */
   public use(path: string, service: WebSocketService<any, any>): void
-
   /** Uses a WebService to the specified path  */
   public use(path: string, service: WebService<any, any>): void
-
   /** Uses a HttpService to the specified path  */
   public use(path: string, service: HttpService): void
-
   /** Uses express middleware on the specified path  */
   public use(path: string, service: RequestHandler): void
-
   /** Uses a WebSocketService  */
   public use(service: WebSocketService<any, any>): void
-
   /** Uses a WebService */
   public use(service: WebService<any, any>): void
-
   /** Uses a HttpService */
   public use(service: HttpService): void
-
   /** Uses express middleware */
   public use(middleware: RequestHandler): void
-
   /** Uses a service */
   public use(...args: any[]): void {
-    this.assertDisposed()
+    this.#assertDisposed()
     if (args.length > 2 || args.length < 1) throw Error('Invalid parameters on use()')
     const [path, service] = args.length === 2 ? [args[0], args[1]] : ['/', args[0]]
     if (service instanceof WebSocketService) {
@@ -163,15 +149,14 @@ export class Host {
       this.#application.use(path, service)
     }
   }
-
   /** Listens on the given port and optional hostname */
   public listen(port: number, hostname: string = '0.0.0.0', options: ServerOptions = {}): Promise<void> {
-    this.assertDisposed()
-    this.assertNotListening()
+    this.#assertDisposed()
+    this.#assertNotListening()
     this.#listening = true
     return new Promise((resolve) => {
       this.#server = createHttpServer(this.#application)
-      this.#server.on('upgrade', (request, socket, head) => this.upgrade(request, socket as Socket, head))
+      this.#server.on('upgrade', (request, socket, head) => this.#upgrade(request, socket as Socket, head))
       // Node v18.4.0: https://github.com/nodejs/node/issues/43908
       if (hostname === '0.0.0.0') {
         this.#server.listen(port, () => resolve())
@@ -180,19 +165,17 @@ export class Host {
       }
     })
   }
-
   /** Listens on the given port and optional hostname. Requires key and cert properties to passed as options. */
   public listenTls(port: number, hostname: string = '0.0.0.0', options: ServerOptions = {}): Promise<void> {
-    this.assertDisposed()
-    this.assertNotListening()
+    this.#assertDisposed()
+    this.#assertNotListening()
     this.#listening = true
     return new Promise((resolve) => {
       this.#server = createHttpsServer(options, this.#application)
-      this.#server.on('upgrade', (request, socket, head) => this.upgrade(request, socket as Socket, head))
+      this.#server.on('upgrade', (request, socket, head) => this.#upgrade(request, socket as Socket, head))
       this.#server.listen(port, hostname, () => resolve())
     })
   }
-
   /** Disposes this host and terminates all connections */
   public async dispose(): Promise<void> {
     if (this.#disposed) return
@@ -213,9 +196,8 @@ export class Host {
       })
     })
   }
-
-  private async upgrade(request: IncomingMessage, socket: Socket, head: any) {
-    if (this.exceedSocketCount()) {
+  async #upgrade(request: IncomingMessage, socket: Socket, head: any) {
+    if (this.#exceedSocketCount()) {
       socket.destroy()
       return
     }
@@ -234,10 +216,10 @@ export class Host {
         return
       }
       this.#wsserver.handleUpgrade(request, socket, head, (socket: ws.WebSocket) => {
-        socket.on('close', () => this.decrementSocketCount())
-        this.incrementSocketCount()
+        socket.on('close', () => this.#decrementSocketCount())
+        this.#incrementSocketCount()
         service.accept(clientId, socket)
-        this.#sockets.set(this.nextSocketOrdinal(), socket)
+        this.#sockets.set(this.#nextSocketOrdinal(), socket)
       })
     } catch (error) {
       console.error('[Host] Error upgrading connection: ', error)
@@ -245,16 +227,14 @@ export class Host {
       socket.destroy()
     }
   }
-
-  private configureAutoScaling() {
+  #configureAutoScaling() {
     if (this.#options.autoScaling === undefined) return
     this.#application.get(this.#options.autoScaling.endpoint, (_, res) => {
       const status = this.#socketCount >= this.#options.autoScaling!.threshold ? 500 : 200
       res.status(status).json({ status })
     })
   }
-
-  private keepAlive() {
+  #keepAlive() {
     for (const [ordinal, socket] of this.#sockets) {
       socket.ping(void 0, false, (error) => {
         if (error === undefined || error === null) return
@@ -265,28 +245,22 @@ export class Host {
       })
     }
   }
-
-  private nextSocketOrdinal() {
+  #nextSocketOrdinal() {
     return this.#socketOrdinal++
   }
-
-  private incrementSocketCount() {
+  #incrementSocketCount() {
     this.#socketCount += 1
   }
-
-  private decrementSocketCount() {
+  #decrementSocketCount() {
     this.#socketCount -= 1
   }
-
-  private exceedSocketCount() {
+  #exceedSocketCount() {
     return this.#socketCount >= this.#options.maxSocketCount
   }
-
-  private assertNotListening() {
+  #assertNotListening() {
     if (this.#listening) throw Error('Host can only listen once')
   }
-
-  private assertDisposed() {
+  #assertDisposed() {
     if (this.#disposed) throw Error('Host is disposed')
   }
 }

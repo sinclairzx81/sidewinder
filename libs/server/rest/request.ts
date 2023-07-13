@@ -37,7 +37,6 @@ export class RestRequest {
   readonly #headers: Map<string, string>
   readonly #query: Map<string, string>
   readonly #params: Map<string, string>
-
   constructor(private readonly request: IncomingMessage, params: Record<string, string>, public readonly clientId: string) {
     this.#ipAddress = this.#readIpAddress(request)
     this.#context = new Map<string, unknown>()

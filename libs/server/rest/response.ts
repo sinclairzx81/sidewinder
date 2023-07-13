@@ -33,29 +33,24 @@ export class RestResponse {
   #headers: Record<string, string>
   #status: number = 200
   #statusText: string = ''
-
   constructor(private readonly response: ServerResponse) {
     this.#headers = {}
     this.#status = 200
     this.#statusText = ''
   }
-
   // ------------------------------------------------------------------------------
   // Publics
   // ------------------------------------------------------------------------------
-
   /** Sets the status text for this response. */
   public statusText(statusText: string): this {
     this.#statusText = statusText
     return this
   }
-
   /** Sets the status code for this response. */
   public status(status: number): this {
     this.#status = status
     return this
   }
-
   /** Sets the http headers for this response. */
   public headers(headers: Record<string, string | number>) {
     this.#headers = Object.keys(headers).reduce((acc, key) => {
@@ -63,10 +58,9 @@ export class RestResponse {
     }, {})
     return this
   }
-
   /** Ends this request by sending the given Uint8Array buffer on the response */
-  public async arrayBuffer(buffer: Uint8Array, contentType: string = 'text/plain'): Promise<void> {
-    await this.#internalWriteHead(this.#status, this.#statusText, {
+  public async arrayBuffer(buffer: Uint8Array, contentType: string = 'application/octet-stream'): Promise<void> {
+    this.#internalWriteHead(this.#status, this.#statusText, {
       ...this.#headers,
       'Content-Type': contentType,
       'Content-Length': buffer.length.toString(),
@@ -74,32 +68,28 @@ export class RestResponse {
     await this.#internalWrite(buffer)
     await this.#internalEnd()
   }
-
   /** Ends this request by sending a text response */
   public async text(content: string, contentType: string = 'text/plain'): Promise<void> {
     const buffer = Buffer.encode(content)
-    await this.arrayBuffer(buffer)
+    await this.arrayBuffer(buffer, contentType)
   }
-
   /** Ends this request by sending a json response */
   public async json<T = unknown>(data: T): Promise<void> {
     return await this.text(JSON.stringify(data), 'application/json')
   }
-
   /** Ends this request by sending a html response */
   public async html(html: string): Promise<void> {
     return await this.text(html, 'text/html')
   }
-
   // ------------------------------------------------------------------------------
-  // Privates
+  // Internals
   // ------------------------------------------------------------------------------
-
-  async #internalWriteHead(status: number, statusText: string = '', headers: Record<string, string> = {}): Promise<void> {
+  #internalWriteHead(status: number, statusText: string = '', headers: Record<string, string> = {}) {
+    if (this.response.headersSent || this.response.closed || this.response.destroyed) return
     this.response.writeHead(status, statusText, headers)
   }
-
   async #internalWrite(data: Uint8Array): Promise<void> {
+    if (this.response.closed || this.response.destroyed) return
     return new Promise((resolve, reject) => {
       this.response.write(data, (error) => {
         if (error) return reject(error)
@@ -107,8 +97,8 @@ export class RestResponse {
       })
     })
   }
-
   async #internalEnd(): Promise<void> {
+    if (this.response.closed) return
     return new Promise((resolve) => {
       this.response.end(() => resolve())
     })
