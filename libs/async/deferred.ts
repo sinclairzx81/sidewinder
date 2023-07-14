@@ -39,17 +39,14 @@ export class Deferred<T> {
       this.rejectFunction = reject
     })
   }
-
   /** Returns this deferreds promise */
   public promise(): Promise<T> {
     return this.awaiter
   }
-
   /** Resolves this deffered with the given value */
   public resolve(value: T) {
     this.resolveFunction(value)
   }
-
   /** Rejects this deffered with the given error */
   public reject(error: any) {
     this.rejectFunction(error)

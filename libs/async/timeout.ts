@@ -30,19 +30,10 @@ export namespace Timeout {
   function timeout<T>(error: Error, milliseconds: number): Promise<T> {
     return new Promise<T>((_, reject) => setTimeout(() => reject(error), milliseconds))
   }
-
-  /**
-   * Runs the given callback and throws if it does not complete within the given millisecond window
-   * @param callback The callback to run
-   * @param milliseconds The maximum timeout
-   * @param error User defined timeout error
-   * @returns
-   */
+  /** Runs the given callback and throws if it does not complete within the given millisecond window */
   export async function run<T>(callback: () => Promise<T> | T, milliseconds: number, error: Error = new Error('Timeout')): Promise<T> {
     const action = Promise.resolve(callback())
     const failed = timeout<T>(error, milliseconds)
     return (await Promise.race([action, failed])) as T
   }
 }
-
-Timeout.run(() => {}, 1)
