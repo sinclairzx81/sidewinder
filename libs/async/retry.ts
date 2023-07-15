@@ -33,31 +33,77 @@ export class RetryError extends Error {
     super(message)
   }
 }
-
-export type RetryCallback<T> = (attempt: number) => Promise<T>
+export type RetryCallback<T> = (attempt: number) => Promise<T> | T
 
 export interface RetryOptions {
-  /** The number of attempts before throwing last error (default is 4) */
+  /**
+   * The number of attempts before throwing last error
+   *
+   * (Default is Infinity)
+   */
   attempts?: number
-  /** The delay between subsequent retry attempts (default is 1000) */
+  /**
+   * The millisecond delay between subsequent retry attempts
+   *
+   * (Default is 1000)
+   */
   delay?: number
+  /**
+   * A multiplier used to increase (or decrease) the delay for subsequent retry attempts.
+   * This option can be used to implement exponential back-off strategies.
+   *
+   * (Default is 1.0)
+   */
+  multiplier?: number
+  /**
+   * This option specifies a upper threshold for multiplied delay values. This option should be
+   * set when attempt counts are high and where multipler values are greater than 1.0.
+   *
+   * (Default is Infinity)
+   */
+  maximumDelay?: number
+  /**
+   * This option specifies a lower threshold for multiplied delay values. This option should be
+   * set when attempt counts are high and where multipler values are less than 1.0.
+   *
+   * (Default is 0)
+   */
+  minimumDelay?: number
 }
 export namespace Retry {
-  /** Runs the given callback repeatedly until result `T` can be resolved. Will throw last error if attempts exceed threshold */
-  export async function run<T>(callback: RetryCallback<T>, options: RetryOptions = {}): Promise<T> {
-    options.attempts = options.attempts === undefined ? 4 : options.attempts
+  function defaults(options: RetryOptions): Required<RetryOptions> {
+    options.attempts = options.attempts === undefined ? Infinity : options.attempts
     options.delay = options.delay === undefined ? 1000 : options.delay
-    if (options.delay < 0) throw new RetryError('Minumum delay is 0')
+    options.multiplier = options.multiplier === undefined ? 1.0 : options.multiplier
+    options.maximumDelay = options.maximumDelay === undefined ? Infinity : options.maximumDelay
+    options.minimumDelay = options.minimumDelay === undefined ? 0 : options.minimumDelay
+    return options as Required<RetryOptions>
+  }
+  function assert(options: Required<RetryOptions>): Required<RetryOptions> {
+    if (options.delay < 0) throw new RetryError('Minimum delay is 0')
     if (options.attempts < 1) throw new RetryError(`Minimum retry attempts must be greater than 1`)
-    let lastError: unknown = null
-    for (let attempt = 0; attempt < options.attempts; attempt++) {
+    if (options.multiplier < 0) throw new RetryError('Multiplier must be a non-negative number')
+    if (options.maximumDelay < 0) throw new RetryError('MaximumDelay must be a non-negative number')
+    if (options.minimumDelay < 0) throw new RetryError('MinimumDelay must be a non-negative number')
+    if (options.maximumDelay < options.minimumDelay) throw new RetryError('MinimumDelay must be less than MaximumDelay')
+    return options
+  }
+
+  /** Will repeatedly run the given callback until a value is successfully returned. The function will throw the last callback error if attempts exceed the configured threshold */
+  export async function run<T>(callback: RetryCallback<T>, options: RetryOptions = {}): Promise<T> {
+    const resolved = assert(defaults(options))
+    let [delay, exception] = [options.delay, null] as [number, unknown]
+    for (let attempt = 0; attempt < resolved.attempts; attempt++) {
       try {
         return await callback(attempt)
       } catch (error) {
-        lastError = error
-        await Delay.wait(options.delay)
+        exception = error
+        await Delay.wait(delay)
+        delay = delay * resolved.multiplier
+        delay = delay > resolved.maximumDelay ? resolved.maximumDelay : delay
+        delay = delay < resolved.minimumDelay ? resolved.minimumDelay : delay
       }
     }
-    throw lastError
+    throw exception
   }
 }
