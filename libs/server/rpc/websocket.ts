@@ -179,11 +179,15 @@ export class WebSocketService<Contract extends TContract, Context extends TSchem
     method: Method,
     ...params: Parameters
   ): void {
-    if (!this.#sockets.has(clientId)) return
-    const socket = this.#sockets.get(clientId)!
-    const request = RpcProtocol.encodeRequest(undefined, method, params)
-    const message = this.#encoder.encode(request)
-    socket.send(message)
+    try {
+      if (!this.#sockets.has(clientId)) return
+      const socket = this.#sockets.get(clientId)!
+      const request = RpcProtocol.encodeRequest(undefined, method, params)
+      const message = this.#encoder.encode(request)
+      socket.send(message)
+    } catch (error) {
+      this.#dispatchError(clientId, error)
+    }
   }
 
   /** Closes a client */
@@ -223,7 +227,7 @@ export class WebSocketService<Contract extends TContract, Context extends TSchem
   // Request
   // -------------------------------------------------------------------------------------------
 
-  async #dispatchError(clientId: string, error: Error) {
+  async #dispatchError(clientId: string, error: unknown) {
     try {
       await this.#onErrorCallback(clientId, error)
     } catch {
@@ -232,31 +236,39 @@ export class WebSocketService<Contract extends TContract, Context extends TSchem
   }
 
   async #sendResponseWithResult(socket: WebSocket, rpcRequest: RpcRequest, result: unknown) {
-    if (rpcRequest.id === undefined || rpcRequest.id === null) return
-    const response = RpcProtocol.encodeResult(rpcRequest.id, result)
-    const buffer = this.#encoder.encode(response)
-    socket.send(buffer)
+    try {
+      if (rpcRequest.id === undefined || rpcRequest.id === null) return
+      const response = RpcProtocol.encodeResult(rpcRequest.id, result)
+      const buffer = this.#encoder.encode(response)
+      socket.send(buffer)
+    } catch (error) {
+      this.#dispatchError('', error)
+    }
   }
 
   async #sendResponseWithError(socket: WebSocket, rpcRequest: RpcRequest, error: Error) {
-    if (rpcRequest.id === undefined || rpcRequest.id === null) return
-    if (error instanceof Exception) {
-      const response = RpcProtocol.encodeError(rpcRequest.id, { code: error.code, message: error.message, data: error.data })
-      const buffer = this.#encoder.encode(response)
-      socket.send(buffer)
-    } else {
-      const code = RpcErrorCode.InternalServerError
-      const message = 'Internal Server Error'
-      const data = {}
-      const response = RpcProtocol.encodeError(rpcRequest.id, { code, message, data })
-      const buffer = this.#encoder.encode(response)
-      socket.send(buffer)
+    try {
+      if (rpcRequest.id === undefined || rpcRequest.id === null) return
+      if (error instanceof Exception) {
+        const response = RpcProtocol.encodeError(rpcRequest.id, { code: error.code, message: error.message, data: error.data })
+        const buffer = this.#encoder.encode(response)
+        socket.send(buffer)
+      } else {
+        const code = RpcErrorCode.InternalServerError
+        const message = 'Internal Server Error'
+        const data = {}
+        const response = RpcProtocol.encodeError(rpcRequest.id, { code, message, data })
+        const buffer = this.#encoder.encode(response)
+        socket.send(buffer)
+      }
+    } catch (error) {
+      this.#dispatchError('', error)
     }
   }
 
   async #executeRequest(clientId: string, socket: WebSocket, rpcRequest: RpcRequest) {
-    const context = this.#resolveContext(clientId)
     try {
+      const context = this.#resolveContext(clientId)
       const result = await this.#methods.execute(context, rpcRequest.method, rpcRequest.params)
       await this.#sendResponseWithResult(socket, rpcRequest, result)
     } catch (error) {
