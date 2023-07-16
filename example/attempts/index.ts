@@ -1,15 +1,17 @@
 import { Retry } from '@sidewinder/async'
 
-Retry.run(
-  async (attempt) => {
-    console.log('attempt', attempt)
-    if (attempt === 10) return 'ok'
-    throw Error('failed')
-  },
-  {
-    attempts: 32,
-    delay: 500,
-  },
-)
-  .then(console.log)
-  .catch(console.log)
+async function start() {
+  const result = await Retry.run(
+    (attempt) => {
+      console.log('attempt', attempt)
+      throw 10
+      return 10
+    },
+    {
+      multiplier: 1.9,
+    },
+  )
+  console.log(result)
+}
+
+start()
