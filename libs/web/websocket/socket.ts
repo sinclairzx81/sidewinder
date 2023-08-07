@@ -54,7 +54,15 @@ export class WebSocket {
       this.socket.addEventListener('error', (event) => this.onError(event))
       this.socket.addEventListener('close', () => this.onClose())
     } else {
-      const WebSocket = Platform.dynamicRequire('ws').WebSocket
+      // --------------------------------------------------------------------------------------------------------
+      // Sidewinder needs to operate on esbuild as well as legacy bundling systems. So we use dynamic imports
+      // to try and provide a uniform import strategy as bundlers typically omit dynamic imports. Additionally,
+      // the 'ws' package continues to be a problem when run in varying environments with inconsistent exports
+      // which may be a result of bundlers, caches and other unknowns, we try and factor for this below.
+      // --------------------------------------------------------------------------------------------------------
+      const Imported = Platform.dynamicRequire('ws')
+      const WebSocket = Imported.WebSocket === undefined ? Imported : Imported.WebSocket
+      // const WebSocket = Platform.dynamicRequire('ws').WebSocket
       this.socket = new WebSocket(this.endpoint) as WS.WebSocket
       this.socket.binaryType = this.options.binaryType as any
       this.socket.addEventListener('open', () => this.onOpen())
