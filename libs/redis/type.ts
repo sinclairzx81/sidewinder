@@ -42,6 +42,8 @@ export interface TDatabaseOptions {
   maps?: Record<string | number | symbol, TSchema>
   /** Set definitions */
   sets?: Record<string | number | symbol, TSchema>
+  /** Sorted Set definitions */
+  sortedsets?: Record<string | number | symbol, TSchema>
 }
 
 export interface TDatabase<DatabaseOptions extends TDatabaseOptions = TDatabaseOptions> extends TSchema {
@@ -51,6 +53,7 @@ export interface TDatabase<DatabaseOptions extends TDatabaseOptions = TDatabaseO
   arrays: DefinedOr<DatabaseOptions['arrays'], TObject>
   maps: DefinedOr<DatabaseOptions['maps'], TObject>
   sets: DefinedOr<DatabaseOptions['sets'], TObject>
+  sortedsets: DefinedOr<DatabaseOptions['sortedsets'], TObject>
 }
 
 // --------------------------------------------------------------------------
@@ -63,7 +66,8 @@ export class RedisTypeBuilder extends TypeBuilder {
     const arrays = options.arrays || {}
     const maps = options.maps || {}
     const sets = options.sets || {}
-    return this.Create({ type: 'object', [Kind]: 'RedisDatabase', arrays, maps, sets })
+    const sortedsets = options.sortedsets || {}
+    return this.Create({ type: 'object', [Kind]: 'RedisDatabase', arrays, maps, sets, sortedsets })
   }
 }
 

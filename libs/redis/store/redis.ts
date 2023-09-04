@@ -28,7 +28,8 @@ THE SOFTWARE.
 
 import IORedis, { RedisOptions, Redis as RedisInstance, Cluster as ClusterInstance } from 'ioredis'
 import { Timeout } from '@sidewinder/async'
-import { SetOptions, Store } from './store'
+import { SetOptions, SortedSetRangeOptions, Store } from './store'
+
 export { RedisOptions } from 'ioredis'
 
 export class RedisStoreConnectError extends Error {
@@ -91,10 +92,34 @@ export class RedisStore implements Store {
       return result === 'OK'
     }
   }
+  public async zadd(key: string, members: [score: number, member: string][]): Promise<number> {
+    return await this.redis.zadd(key, ...members.flat())
+  }
+  public async zincrby(key: string, increment: number, member: string): Promise<number> {
+    const response = await this.redis.zincrby(key, increment, member)
+    return parseFloat(response)
+  }
+  public async zrange(key: string, start: number, stop: number, options: SortedSetRangeOptions = {}): Promise<string[]> {
+    if (options.reverseOrder) {
+      if (options.includeScores) {
+        return await this.redis.zrange(key, start, stop, 'REV', 'WITHSCORES')
+      } else {
+        return await this.redis.zrange(key, start, stop, 'REV')
+      }
+    } else {
+      if (options.includeScores) {
+        return await this.redis.zrange(key, start, stop, 'WITHSCORES')
+      } else {
+        return await this.redis.zrange(key, start, stop)
+      }
+    }
+  }
+  public async zcard(key: string): Promise<number> {
+    return await this.redis.zcard(key)
+  }
   public disconnect(): void {
     this.redis.disconnect(false)
   }
-
   // --------------------------------------------------------
   // Factory
   // --------------------------------------------------------

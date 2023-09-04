@@ -31,17 +31,20 @@ import { TDatabase } from '../type'
 import { RedisArray } from './array'
 import { RedisMap } from './map'
 import { RedisSet } from './set'
+import { RedisSortedSet } from './sorted-set'
 
 /** Typed Redis Database */
 export class RedisDatabase<Database extends TDatabase> {
   readonly #arrays: Map<string, RedisArray<any>>
   readonly #maps: Map<string, RedisMap<any>>
   readonly #sets: Map<string, RedisSet<any>>
+  readonly #sortedsets: Map<string, RedisSortedSet<any>>
 
   constructor(private readonly schema: Database, private readonly store: Store) {
     this.#arrays = new Map<string, RedisArray<any>>()
     this.#maps = new Map<string, RedisMap<any>>()
     this.#sets = new Map<string, RedisSet<any>>()
+    this.#sortedsets = new Map<string, RedisSortedSet<any>>()
   }
 
   /** Returns a RedisArray type */
@@ -66,6 +69,13 @@ export class RedisDatabase<Database extends TDatabase> {
     if (schema === undefined) throw Error(`The set '${name as string}' not defined in redis schema`)
     if (!this.#sets.has(name as string)) this.#sets.set(name as string, new RedisSet<any>(schema, this.store, name as string))
     return this.#sets.get(name as string)!
+  }
+
+  public sortedset<Name extends keyof Database['sortedsets']>(name: Name): RedisSortedSet<Database['sortedsets'][Name]> {
+    const schema = (this.schema['sortedsets'] as any)[name as string]
+    if (schema === undefined) throw Error(`The sorted set '${name as string}' not defined in redis schema`)
+    if (!this.#sortedsets.has(name as string)) this.#sortedsets.set(name as string, new RedisSortedSet<any>(schema, this.store, name as string))
+    return this.#sortedsets.get(name as string)!
   }
 
   /** Disposes of this database */

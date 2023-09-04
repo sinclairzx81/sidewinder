@@ -30,6 +30,11 @@ export interface SetOptions {
   conditionalSet?: 'exists' | 'not-exists'
 }
 
+export interface SortedSetRangeOptions {
+  reverseOrder?: boolean
+  includeScores?: boolean
+}
+
 export interface Store {
   del(key: string): Promise<void>
   llen(key: string): Promise<number>
@@ -45,5 +50,9 @@ export interface Store {
   exists(key: string): Promise<number>
   expire(key: string, seconds: number): Promise<void>
   set(key: string, value: string, options?: SetOptions): Promise<boolean>
+  zadd(key: string, members: [score: number, member: string][]): Promise<number>
+  zincrby(key: string, increment: number, member: string): Promise<number>
+  zcard(key: string): Promise<number>
+  zrange(key: string, start: number, stop: number, options?: SortedSetRangeOptions): Promise<string[]>
   disconnect(): void
 }

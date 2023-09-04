@@ -1,4 +1,4 @@
-import { RedisStore, RedisDatabase, Type } from '@sidewinder/redis'
+import { RedisStore, RedisDatabase, MemoryStore, Type } from '@sidewinder/redis'
 
 export const Vector = Type.Object({
   x: Type.Number(),
@@ -6,20 +6,33 @@ export const Vector = Type.Object({
   z: Type.Number(),
 })
 
-async function start() {
-  const database = new RedisDatabase(
+async function instance() {
+  // const store = await RedisStore.Create(6379)
+  // const store = MemoryStore.Singleton()
+  const store = MemoryStore.Create()
+  return new RedisDatabase(
     Type.Database({
-      arrays: {
+      maps: {
         vectors: Vector,
       },
     }),
-    await RedisStore.Create(6379),
+    store,
   )
-  const array = database.array('vectors')
-  await array.push({ x: Math.random(), y: Math.random(), z: Math.random() })
-  await array.push({ x: Math.random(), y: Math.random(), z: Math.random() })
-  await array.push({ x: Math.random(), y: Math.random(), z: Math.random() })
-  console.log(await array.values())
+}
+
+async function start() {
+  // create instance 1
+  const instance1 = await instance()
+  const map1 = instance1.map('vectors')
+  map1.set('key', { x: 1, y: 1, z: 2 })
+
+  // create instance 2 (flushall() in constructor)
+  const instance2 = await instance()
+  const map2 = instance2.map('vectors')
+
+  // expect instance 1 to have key
+  const exists = await map1.has('key')
+  console.assert(exists, true)
 }
 
 start()

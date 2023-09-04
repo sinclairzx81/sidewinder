@@ -26,125 +26,146 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-import { SetOptions, Store } from './store'
+import { Redis } from 'ioredis'
+import { SetOptions, SortedSetRangeOptions, Store } from './store'
+import IORedis from 'ioredis-mock'
 
 export class MemoryStoreError extends Error {
   constructor(message: string) {
     super(`MemoryStore: ${message}`)
   }
 }
+// external: static construction on some javascript build tooling may fail
+let singleton: MemoryStore | null = null
+/** Incremented on constructor to ensure transient instances */
+let instanceOrdinal = 0
 
 /** A RedisStore that is backed JavaScript memory. */
 export class MemoryStore implements Store {
-  readonly #data: Map<string, string[]>
+  readonly #store: Redis // ioredis-mock doesn't provide it's own type, just implements the ioredis one
+  #closed: boolean
   constructor() {
-    this.#data = new Map<string, string[]>()
+    const [connectionName, port] = [`connection:${instanceOrdinal}`, instanceOrdinal]
+    this.#store = new IORedis({ connectionName, port })
+    this.#closed = false
+    instanceOrdinal++
   }
   public async del(key: string): Promise<void> {
-    this.#data.delete(key)
+    this.#assertConnected()
+    await this.#store.del(key)
   }
   public async llen(key: string): Promise<number> {
-    this.#ensureKey(key)
-    const array = this.#data.get(key)!
-    return array.length
+    this.#assertConnected()
+    return await this.#store.llen(key)
   }
   public async lset(key: string, index: number, value: string): Promise<void> {
-    this.#ensureKey(key)
-    const array = this.#data.get(key)!
-    if (index >= array.length) throw new MemoryStoreError('Index out of range')
-    array[index] = value
+    this.#assertConnected()
+    await this.#store.lset(key, index, value)
   }
   public async lindex(key: string, index: number): Promise<string | null> {
-    if (!this.#data.has(key)) return null
-    const array = this.#data.get(key)!
-    const value = array[index]
-    return value || null
+    this.#assertConnected()
+    return await this.#store.lindex(key, index)
   }
   public async rpush(key: string, value: string): Promise<void> {
-    this.#ensureKey(key)
-    const array = this.#data.get(key)!
-    array.push(value)
+    this.#assertConnected()
+    await this.#store.rpush(key, value)
   }
   public async lpush(key: string, value: string): Promise<void> {
-    this.#ensureKey(key)
-    const array = this.#data.get(key)!
-    array.unshift(value)
+    this.#assertConnected()
+    await this.#store.lpush(key, value)
   }
   public async rpop(key: string): Promise<string | null> {
-    this.#ensureKey(key)
-    const array = this.#data.get(key)!
-    const value = array.pop()
-    return value || null
+    this.#assertConnected()
+    return await this.#store.rpop(key)
   }
   public async lpop(key: string): Promise<string | null> {
-    this.#ensureKey(key)
-    const array = this.#data.get(key)!
-    const value = array.shift()
-    return value || null
+    this.#assertConnected()
+    return await this.#store.lpop(key)
   }
   public async lrange(key: string, start: number, end: number): Promise<string[]> {
-    this.#ensureKey(key)
-    const array = this.#data.get(key)!
-    return array.slice(start, end + 1)
+    this.#assertConnected()
+    return await this.#store.lrange(key, start, end)
   }
   public async get(key: string): Promise<string | null> {
-    if (!this.#data.has(key)) return null
-    const array = this.#data.get(key)!
-    return array[0]
+    this.#assertConnected()
+    return await this.#store.get(key)
   }
   public async keys(pattern: string): Promise<string[]> {
-    const regex = new RegExp(`^` + pattern.replace(/\*/g, '(.*)') + '$')
-    const buffer: string[] = []
-    for (const key of this.#data.keys()) {
-      if (key.match(regex)) {
-        buffer.push(key)
-      }
-    }
-    return buffer
+    this.#assertConnected()
+    return await this.#store.keys(pattern)
   }
   public async exists(key: string): Promise<number> {
-    return this.#data.has(key) ? 1 : 0
+    this.#assertConnected()
+    return await this.#store.exists(key)
   }
   public async expire(key: string, seconds: number): Promise<void> {
-    setTimeout(() => this.#data.delete(key), seconds * 1000)
+    this.#assertConnected()
+    await this.#store.expire(key, seconds)
   }
   public async set(key: string, value: string, options: SetOptions = {}): Promise<boolean> {
-    // Check for write conditions
-    if (options.conditionalSet === 'not-exists') {
-      if (this.#data.has(key)) return false
-    } else if (options.conditionalSet === 'exists') {
-      if (!this.#data.has(key)) return false
+    this.#assertConnected()
+    if (options.conditionalSet === 'exists') {
+      const result = await this.#store.set(key, value, 'XX')
+      return result === 'OK'
+    } else if (options.conditionalSet === 'not-exists') {
+      const result = await this.#store.set(key, value, 'NX')
+      return result === 'OK'
+    } else {
+      const result = await this.#store.set(key, value)
+      return result === 'OK'
     }
-
-    // Set Data
-    this.#data.set(key, [value])
-    return true
   }
-
-  #ensureKey(key: string) {
-    if (this.#data.has(key)) return
-    this.#data.set(key, [])
+  public async zadd(key: string, members: [score: number, member: string][]): Promise<number> {
+    this.#assertConnected()
+    return await this.#store.zadd(key, ...members.flat())
   }
-
-  public disconnect(): void {
-    this.#data.clear()
+  public async zincrby(key: string, increment: number, member: string): Promise<number> {
+    this.#assertConnected()
+    const response = await this.#store.zincrby(key, increment, member)
+    return parseFloat(response)
   }
-
+  public async zrange(key: string, start: number, stop: number, options: SortedSetRangeOptions = {}): Promise<string[]> {
+    this.#assertConnected()
+    if (options.reverseOrder) {
+      if (options.includeScores) {
+        return await this.#store.zrange(key, start, stop, 'REV', 'WITHSCORES')
+      } else {
+        return await this.#store.zrange(key, start, stop, 'REV')
+      }
+    } else {
+      if (options.includeScores) {
+        return await this.#store.zrange(key, start, stop, 'WITHSCORES')
+      } else {
+        return await this.#store.zrange(key, start, stop)
+      }
+    }
+  }
+  public async zcard(key: string): Promise<number> {
+    this.#assertConnected()
+    return await this.#store.zcard(key)
+  }
+  public disconnect() {
+    if (this.#closed) return
+    this.#closed = true
+    this.#store.flushall()
+  }
+  // --------------------------------------------------------
+  // Assertion
+  // --------------------------------------------------------
+  #assertConnected() {
+    if (!this.#closed) return
+    throw new MemoryStoreError('Store is closed')
+  }
   // --------------------------------------------------------
   // Factory
   // --------------------------------------------------------
-
   /** Creates a singleton instance of a memory store */
   public static Singleton(): Store {
-    if (singleton.length === 0) singleton.push(new MemoryStore())
-    return singleton[0]
+    if (singleton === null) singleton = new MemoryStore()
+    return singleton
   }
-
   /** Creates a new in memory redis store */
   public static Create(): Store {
     return new MemoryStore()
   }
 }
-
-// external: static construction on some javascript build tooling may fail
-const singleton: MemoryStore[] = []
