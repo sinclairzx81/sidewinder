@@ -26,12 +26,35 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-export * from './barrier'
-export * from './debounce'
-export * from './deferred'
-export * from './delay'
-export * from './lock'
-export * from './mutex'
-export * from './retry'
-export * from './semaphore'
-export * from './timeout'
+import { Lock, Lockable } from './lock'
+import { Deferred } from './deferred'
+
+/** In-memory mutex used to prevent concurrent access on asynchronous resources */
+export class Mutex implements Lockable {
+  #queue: Array<Deferred<Lock>>
+  #running: boolean
+  constructor() {
+    this.#running = false
+    this.#queue = []
+  }
+  /** Acquires a lock. */
+  public async lock(): Promise<Lock> {
+    const deferred = new Deferred<Lock>()
+    this.#queue.push(deferred)
+    this.#dispatch()
+    return deferred.promise()
+  }
+  #condition() {
+    return this.#running === false && this.#queue.length > 0
+  }
+  #dispatch() {
+    if (!this.#condition()) return
+    this.#running = true
+    const next = this.#queue.shift()!
+    const lock = new Lock(() => {
+      this.#running = false
+      this.#dispatch()
+    })
+    next.resolve(lock)
+  }
+}

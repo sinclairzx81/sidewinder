@@ -26,12 +26,23 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-export * from './barrier'
-export * from './debounce'
-export * from './deferred'
-export * from './delay'
-export * from './lock'
-export * from './mutex'
-export * from './retry'
-export * from './semaphore'
-export * from './timeout'
+// --------------------------------------------------------
+// Lockable
+// --------------------------------------------------------
+/** Interface given to instances that issue locks */
+export interface Lockable {
+  lock(): Promise<Lock>
+}
+// --------------------------------------------------------
+// Lock
+// --------------------------------------------------------
+export class Lock {
+  #disposeCallback: Function
+  constructor(disposeCallback: Function) {
+    this.#disposeCallback = disposeCallback
+  }
+  /** Disposes of this lock */
+  public dispose() {
+    this.#disposeCallback()
+  }
+}

@@ -1,6 +1,6 @@
 /*--------------------------------------------------------------------------
 
-@sidewinder/async
+@sidewinder/redis
 
 The MIT License (MIT)
 
@@ -26,12 +26,5 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-export * from './barrier'
-export * from './debounce'
-export * from './deferred'
-export * from './delay'
-export * from './lock'
-export * from './mutex'
-export * from './retry'
-export * from './semaphore'
-export * from './timeout'
+export * from './memory/index'
+export * from './redis/index'
