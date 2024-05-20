@@ -8,17 +8,14 @@ export async function resolveMockStore(): Promise<Store> {
   await redis.flushall()
   return new RedisStore(redis)
 }
-
 export async function resolveLocalRedis(): Promise<Store> {
   const redis = new Redis()
   await redis.flushall()
   return new RedisStore(redis)
 }
-
 export function resolveMemoryStore(): Store {
   return MemoryStore.Create()
 }
-
 export async function resolveDatabase() {
   const Vector = Type.Tuple([Type.Number(), Type.Number(), Type.Number()])
   const Schema = Type.Database({

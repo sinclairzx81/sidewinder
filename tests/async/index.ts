@@ -1,5 +1,6 @@
 export * from './barrier'
 export * from './debounce'
 export * from './delay'
+export * from './mutex'
 export * from './responder'
 export * from './timeout'

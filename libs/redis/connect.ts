@@ -38,12 +38,12 @@ export class RedisConnectError extends Error {
 /** Connects to Redis and provides functionality to Timeout */
 export namespace RedisConnect {
   /** Connects to Redis with the given parameters */
-  export function Connect(port?: number, host?: string, options?: RedisOptions): Promise<Redis>
+  export function connect(port?: number, host?: string, options?: RedisOptions): Promise<Redis>
   /** Connects to Redis with the given parameters */
-  export function Connect(host?: string, options?: RedisOptions): Promise<Redis>
+  export function connect(host?: string, options?: RedisOptions): Promise<Redis>
   /** Connects to Redis with the given parameters */
-  export function Connect(options: RedisOptions): Promise<Redis>
-  export async function Connect(...args: any[]): Promise<Redis> {
+  export function connect(options: RedisOptions): Promise<Redis>
+  export async function connect(...args: any[]): Promise<Redis> {
     // @ts-ignore (we assume the overloaded arguments have appropriately narrowed)
     const redis = new IORedis(...args)
     await Timeout.run(async () => await redis.echo('echo'), 8000, new RedisConnectError('Connection to Redis timed out'))

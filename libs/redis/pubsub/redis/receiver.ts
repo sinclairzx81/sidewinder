@@ -98,6 +98,6 @@ export class PubSubRedisReceiver<T extends TSchema> implements Receiver<Static<T
   public static Create<T extends TSchema>(schema: T, topic: string, options: RedisOptions): Promise<PubSubRedisReceiver<T>>
   public static async Create(...args: any[]): Promise<any> {
     const [schema, topic, params] = [args[0], args[1], args.slice(2)]
-    return new PubSubRedisReceiver(schema, topic, await RedisConnect.Connect(...params))
+    return new PubSubRedisReceiver(schema, topic, await RedisConnect.connect(...params))
   }
 }

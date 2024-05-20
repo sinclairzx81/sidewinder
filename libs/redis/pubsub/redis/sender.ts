@@ -83,6 +83,6 @@ export class PubSubRedisSender<T extends TSchema> implements SyncSender<Static<T
   public static Create<T extends TSchema>(schema: T, channel: string, options: RedisOptions): Promise<PubSubRedisSender<T>>
   public static async Create(...args: any[]): Promise<any> {
     const [schema, topic, params] = [args[0], args[1], args.slice(2)]
-    return new PubSubRedisSender(schema, topic, await RedisConnect.Connect(...params))
+    return new PubSubRedisSender(schema, topic, await RedisConnect.connect(...params))
   }
 }

@@ -91,6 +91,6 @@ export class RedisReceiver<T extends TSchema> implements Receiver<Static<T>> {
   public static Create<T extends TSchema = TSchema>(schema: T, channel: string, options: RedisOptions): Promise<RedisReceiver<T>>
   public static async Create(...args: any[]): Promise<any> {
     const [schema, channel, params] = [args[0], args[1], args.slice(2)]
-    return new RedisReceiver(schema, channel, await RedisConnect.Connect(...params))
+    return new RedisReceiver(schema, channel, await RedisConnect.connect(...params))
   }
 }

@@ -87,6 +87,6 @@ export class RedisSender<T extends TSchema> implements SyncSender<Static<T>> {
   public static Create<T extends TSchema = TSchema>(schema: T, channel: string, options: RedisOptions): Promise<RedisSender<T>>
   public static async Create(...args: any[]): Promise<any> {
     const [schema, channel, params] = [args[0], args[1], args.slice(2)]
-    return new RedisSender(schema, channel, await RedisConnect.Connect(...params))
+    return new RedisSender(schema, channel, await RedisConnect.connect(...params))
   }
 }

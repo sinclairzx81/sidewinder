@@ -50,8 +50,9 @@ export class MongoDatabase<Schema extends TDatabase = TDatabase> {
     if (!this.collections.has(collectionKey)) {
       if (this.schema['collections'][collectionKey] === undefined) throw new Error(`Collection name '${collectionKey}' not defined in schema`)
       const schema = this.schema['collections'][collectionKey]
-      const collection = this.db.collection(collectionKey)
-      this.collections.set(collectionKey, new MongoCollection<Schema['collections'][CollectionName]>(schema as any, collection))
+      const interiorCollection = this.db.collection(collectionKey)
+      const collection = new MongoCollection<Schema['collections'][CollectionName]>(schema as never, interiorCollection)
+      this.collections.set(collectionKey, collection as never)
     }
     return this.collections.get(collectionKey)! as MongoCollection<Schema['collections'][CollectionName]>
   }
