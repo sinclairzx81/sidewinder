@@ -26,7 +26,7 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-import { RetryWebSocket, WebSocket } from '@sidewinder/web'
+import { RetryWebSocket, WebSocket, WebSocketCloseEvent } from '@sidewinder/web'
 import { Exception, Static, TContract, ContractMethodParamters, ContractMethodReturnType, TFunction } from '@sidewinder/contract'
 import { ClientMethods, Responder, RpcErrorCode, RpcProtocol, RpcRequest, RpcResponse } from './methods/index'
 import { Encoder, MsgPackEncoder, JsonEncoder } from './encoder/index'
@@ -34,7 +34,7 @@ import { Barrier } from '@sidewinder/async'
 
 export type WebSocketClientConnectCallback = () => void
 export type WebSocketClientErrorCallback = (error: any) => void
-export type WebSocketClientCloseCallback = () => void
+export type WebSocketClientCloseCallback = (event: WebSocketCloseEvent) => void
 
 function defaultClientOptions(partial: Partial<WebSocketClientOptions>): WebSocketClientOptions {
   const options: WebSocketClientOptions = { autoReconnectEnabled: false, autoReconnectBuffer: false, autoReconnectTimeout: 4000 }
@@ -112,7 +112,7 @@ export class WebSocketClient<Contract extends TContract> {
     this.socket.on('open', () => this.onOpen())
     this.socket.on('message', (event) => this.onMessage(event))
     this.socket.on('error', (event) => this.onError(event))
-    this.socket.on('close', () => this.onClose())
+    this.socket.on('close', (event) => this.onClose(event))
     this.closed = false
     this.setupNotImplemented()
   }
@@ -192,8 +192,8 @@ export class WebSocketClient<Contract extends TContract> {
   }
 
   /** Closes this client. */
-  public close() {
-    this.socket.close()
+  public close(code?: number, reason?: string) {
+    this.socket.close(code, reason)
   }
   // -------------------------------------------------------------------------------------------
   // Request
@@ -286,10 +286,10 @@ export class WebSocketClient<Contract extends TContract> {
     this.onErrorCallback(event)
   }
 
-  private onClose() {
+  private onClose(event: WebSocketCloseEvent) {
     if (!this.options.autoReconnectEnabled) this.closed = true
     this.responder.rejectFor('client', new Error('Unable to communicate with server'))
-    this.onCloseCallback()
+    this.onCloseCallback(event)
     this.barrier.resume()
   }
 
