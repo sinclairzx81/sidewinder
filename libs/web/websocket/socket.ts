@@ -33,6 +33,9 @@ import { Events, EventHandler, EventListener } from '@sidewinder/events'
 export interface WebSocketOptions {
   binaryType: BinaryType
 }
+
+export type WebSocketCloseEvent = Omit<WS.CloseEvent, 'target'>
+
 /**
  * A unified client web socket that can run in both Node and Browser environments.
  */
@@ -52,7 +55,7 @@ export class WebSocket {
       this.socket.addEventListener('open', () => this.onOpen())
       this.socket.addEventListener('message', (event) => this.onMessage(event))
       this.socket.addEventListener('error', (event) => this.onError(event))
-      this.socket.addEventListener('close', () => this.onClose())
+      this.socket.addEventListener('close', (event) => this.onClose(event))
     } else {
       // --------------------------------------------------------------------------------------------------------
       // Sidewinder needs to operate on esbuild as well as legacy bundling systems. So we use dynamic imports
@@ -68,7 +71,7 @@ export class WebSocket {
       this.socket.addEventListener('open', () => this.onOpen())
       this.socket.addEventListener('message', (event) => this.onMessage(event as any))
       this.socket.addEventListener('error', (event) => this.onError(event as any))
-      this.socket.addEventListener('close', () => this.onClose())
+      this.socket.addEventListener('close', (event) => this.onClose(event))
       this.socket.on('ping', () => this.onPing())
       this.socket.on('pong', () => this.onPong())
     }
@@ -87,7 +90,7 @@ export class WebSocket {
   public on(event: 'pong', func: EventHandler<void>): EventListener
   public on(event: 'message', func: EventHandler<any>): EventListener
   public on(event: 'error', func: EventHandler<any>): EventListener
-  public on(event: 'close', func: EventHandler<void>): EventListener
+  public on(event: 'close', func: EventHandler<WebSocketCloseEvent>): EventListener
   public on(event: string, func: EventHandler<any>) {
     return this.events.on(event, func)
   }
@@ -96,7 +99,7 @@ export class WebSocket {
   public once(event: 'pong', func: EventHandler<void>): EventListener
   public once(event: 'message', func: EventHandler<any>): EventListener
   public once(event: 'error', func: EventHandler<any>): EventListener
-  public once(event: 'close', func: EventHandler<void>): EventListener
+  public once(event: 'close', func: EventHandler<WebSocketCloseEvent>): EventListener
   public once(event: string, func: EventHandler<any>) {
     return this.events.once(event, func)
   }
@@ -113,8 +116,8 @@ export class WebSocket {
   public send(data: any) {
     this.socket.send(data)
   }
-  public close(code?: number) {
-    this.socket.close(code)
+  public close(code?: number, reason?: string) {
+    this.socket.close(code, reason)
   }
   private onOpen() {
     this.events.send('open', void 0)
@@ -131,7 +134,7 @@ export class WebSocket {
   private onPong() {
     this.events.send('pong', void 0)
   }
-  private onClose() {
-    this.events.send('close', void 0)
+  private onClose(event: WebSocketCloseEvent) {
+    this.events.send('close', event)
   }
 }

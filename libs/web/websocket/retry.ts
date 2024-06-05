@@ -142,9 +142,9 @@ export class RetryWebSocket {
   }
 
   /** Closes this Web Socket.  */
-  public async close() {
+  public async close(code?: number, reason?: string) {
     this.explicitClosed = true
-    if (this.socket) this.socket.close()
+    if (this.socket) this.socket.close(code, reason)
     this.events.send('close', void 0)
   }
 
@@ -164,8 +164,8 @@ export class RetryWebSocket {
         this.socket.on('error', (event) => {
           this.events.send('error', event)
         })
-        this.socket.on('close', () => {
-          this.events.send('close', void 0)
+        this.socket.on('close', (event) => {
+          this.events.send('close', event)
           this.barrier.pause()
           this.socket = null
         })
