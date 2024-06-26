@@ -4,7 +4,7 @@
 
 The MIT License (MIT)
 
-Copyright (c) 2022 Haydn Paterson (sinclair) <haydn.developer@gmail.com>
+Copyright (c) 2022-2024 Haydn Paterson (sinclair) <haydn.developer@gmail.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the 'Software'), to deal
@@ -191,7 +191,7 @@ export class WebSocketService<Contract extends TContract, Context extends TSchem
   }
 
   /** Closes a client */
-  public close(clientId: string, options: { code?: number, reason?: string } = {}): void {
+  public close(clientId: string, options: { code?: number; reason?: string } = {}): void {
     if (!this.#sockets.has(clientId)) return
     const socket = this.#sockets.get(clientId)!
     socket.close(options.code ?? 1000, options.reason ?? 'normal')

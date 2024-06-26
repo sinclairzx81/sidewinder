@@ -4,7 +4,7 @@
 
 The MIT License (MIT)
 
-Copyright (c) 2022 Haydn Paterson (sinclair) <haydn.developer@gmail.com>
+Copyright (c) 2022-2024 Haydn Paterson (sinclair) <haydn.developer@gmail.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -26,11 +26,11 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-import { Is, ObjectType, ArrayType, TypedArrayType, ValueType } from './is'
+import { ValueGuard, ObjectType, ArrayType, TypedArrayType, ValueType } from './guard'
 
 export namespace ValueEqual {
   function Object(left: ObjectType, right: unknown): boolean {
-    if (!Is.Object(right)) return false
+    if (!ValueGuard.IsObject(right)) return false
     const leftKeys = [...globalThis.Object.keys(left), ...globalThis.Object.getOwnPropertySymbols(left)]
     const rightKeys = [...globalThis.Object.keys(right), ...globalThis.Object.getOwnPropertySymbols(right)]
     if (leftKeys.length !== rightKeys.length) return false
@@ -38,16 +38,16 @@ export namespace ValueEqual {
   }
 
   function Date(left: Date, right: unknown): any {
-    return Is.Date(right) && left.getTime() === right.getTime()
+    return ValueGuard.IsDate(right) && left.getTime() === right.getTime()
   }
 
   function Array(left: ArrayType, right: unknown): any {
-    if (!Is.Array(right) || left.length !== right.length) return false
+    if (!ValueGuard.IsArray(right) || left.length !== right.length) return false
     return left.every((value, index) => Equal(value, right[index]))
   }
 
   function TypedArray(left: TypedArrayType, right: unknown): any {
-    if (!Is.TypedArray(right) || left.length !== right.length || globalThis.Object.getPrototypeOf(left).constructor.name !== globalThis.Object.getPrototypeOf(right).constructor.name) return false
+    if (!ValueGuard.IsTypedArray(right) || left.length !== right.length || globalThis.Object.getPrototypeOf(left).constructor.name !== globalThis.Object.getPrototypeOf(right).constructor.name) return false
     return left.every((value, index) => Equal(value, right[index]))
   }
 
@@ -56,15 +56,15 @@ export namespace ValueEqual {
   }
 
   export function Equal<T>(left: T, right: unknown): right is T {
-    if (Is.Object(left)) {
+    if (ValueGuard.IsObject(left)) {
       return Object(left, right)
-    } else if (Is.Date(left)) {
+    } else if (ValueGuard.IsDate(left)) {
       return Date(left, right)
-    } else if (Is.TypedArray(left)) {
+    } else if (ValueGuard.IsTypedArray(left)) {
       return TypedArray(left, right)
-    } else if (Is.Array(left)) {
+    } else if (ValueGuard.IsArray(left)) {
       return Array(left, right)
-    } else if (Is.Value(left)) {
+    } else if (ValueGuard.IsValueType(left)) {
       return Value(left, right)
     } else {
       throw new Error('ValueEquals: Unable to compare value')
