@@ -48,7 +48,7 @@ export namespace ValueGuard {
     return ArrayBuffer.isView(value)
   }
   // ----------------------------------------------------------------
-  // Additional Guards (0.13.2)
+  // Additional Guards (0.14.0)
   // ----------------------------------------------------------------
 
   export function HasPropertyKey<K extends PropertyKey>(value: Record<any, unknown>, key: K): value is ObjectType & Record<K, unknown> {
