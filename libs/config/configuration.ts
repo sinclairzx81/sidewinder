@@ -26,104 +26,63 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-import { TypeCompiler, TypeCheck } from '@sidewinder/type/compiler'
 import { Static, TObject } from '@sidewinder/type'
-import { ArgumentsResolver, DocumentResolver, EnvironmentResolver } from './resolvers/index'
-import { Documentation } from './documentation/index'
-import { JsonPointer } from './pointer/index'
-import { Descriptors } from './descriptors/index'
+import { Value } from '@sidewinder/value'
 
+// ------------------------------------------------------------------
+// ConfigurationResolveParameter
+// ------------------------------------------------------------------
+export type ConfigurationResolveParameter = Record<any, unknown>
+// ------------------------------------------------------------------
+// ConfigurationResolver
+// ------------------------------------------------------------------
 export class ConfigurationResolver<T extends TObject> {
-  private readonly environmentResolver: EnvironmentResolver
-  private readonly argumentResolver: ArgumentsResolver
-  private readonly documentResolver: DocumentResolver
-  private readonly typecheck: TypeCheck<T>
+  constructor(private readonly schema: T) {}
 
-  constructor(private readonly schema: T, private readonly env: object, private readonly argv: string[]) {
-    this.environmentResolver = new EnvironmentResolver(this.env)
-    this.argumentResolver = new ArgumentsResolver(this.argv)
-    this.documentResolver = new DocumentResolver()
-    this.typecheck = TypeCompiler.Compile(this.schema)
+  /** Resolves the configuration from the given value. Will terminate the process on error with exit code 1 */
+  public resolve<Environment extends ConfigurationResolveParameter>(value: Environment): Static<T> {
+    const resolved = this.#pipeline(value)
+    return Value.Check(this.schema, resolved) ? resolved : this.#exit(resolved)
   }
-
-  private exitWithResult(typecheck: TypeCheck<T>, object: unknown) {
-    const red = '\x1b[91m'
-    const gray = '\x1b[90m'
-    const esc = `\x1b[0m`
-    const documentation = Documentation.resolve(this.schema)
-    console.log(documentation)
+  /** Resolves the configuration from the given value. Will throw if the value is invalid */
+  public parse<Environment extends ConfigurationResolveParameter>(value: Environment): Static<T> {
+    const resolved = this.#pipeline(value)
+    return Value.Check(this.schema, resolved) ? resolved : this.#throw(resolved)
+  }
+  // ----------------------------------------------------------------
+  // Internal
+  // ----------------------------------------------------------------
+  #pipeline<Environment extends ConfigurationResolveParameter>(value: Environment) {
+    const clone = Value.Clone(value)
+    const defaulted = Value.Default(this.schema, clone)
+    const converted = Value.Convert(this.schema, defaulted)
+    const cleaned = Value.Clean(this.schema, converted)
+    return cleaned
+  }
+  #throw(value: unknown): never {
+    throw new Error(`Invalid value ${JSON.stringify(value)}`)
+  }
+  #exit(value: unknown): never {
+    const [red, gray, esc] = ['\x1b[91m', '\x1b[90m', `\x1b[0m`]
     console.log()
-    console.log(`${red}Errors:${esc}`)
+    console.log(`${gray}Configuration:${esc}`)
     console.log()
-    for (const error of [...typecheck.Errors(object)]) {
-      const cliname = '--' + error.path.slice(1).replace(/\//g, '-').toLowerCase()
-      const envname = error.path.slice(1).replace(/\//g, '_').toUpperCase()
-      console.log(`  ${gray}${cliname}${esc} ${envname} ${red}${error.message}${esc}`)
+    const errormap = new Map<string, string[]>()
+    for (const error of [...Value.Errors(this.schema, value)]) {
+      const name = error.path.slice(1).replace(/\//g, '.')
+      if (!errormap.has(name)) errormap.set(name, [])
+      errormap.get(name)!.push(error.message)
+    }
+    for (const [name, errors] of errormap) {
+      const property = `  ${name}`.padEnd(32)
+      console.log(`${property} ${red}${errors.join(', ')}${esc}`)
     }
     console.log()
     process.exit(1)
   }
-
-  private shouldHelp() {
-    return this.argv.includes('--help')
-  }
-
-  private resolveInitial(configFileOrObject?: string | object) {
-    if (typeof configFileOrObject === 'string') {
-      return this.documentResolver.resolve(configFileOrObject)
-    }
-    if (typeof configFileOrObject === 'object') {
-      return configFileOrObject
-    }
-    return {}
-  }
-
-  /** Returns configuration help information as a string */
-  public help() {
-    return Documentation.resolve(this.schema)
-  }
-
-  /** Resolves the configuration object */
-  public resolve(configFileOrObject?: string | Partial<Static<T>>): Static<T> {
-    // Check for help
-    if (this.shouldHelp()) {
-      console.log(Documentation.resolve(this.schema))
-      return process.exit(0) as never
-    }
-
-    // Resolve Initial
-    const object = this.resolveInitial(configFileOrObject)
-
-    // Resolve Defaults
-    const defaultOptions = { format: (name: string) => name, prefix: '', seperator: '' }
-    for (const descriptor of Descriptors.resolve(this.schema, defaultOptions)) {
-      if (descriptor.default === undefined) continue
-      JsonPointer.set(object, descriptor.pointer, descriptor.default)
-    }
-
-    // Resolve Environment Variables
-    const environmentOptions = { format: (name: string) => name.toUpperCase(), prefix: '', seperator: '_' }
-    for (const descriptor of Descriptors.resolve(this.schema, environmentOptions)) {
-      const value = this.environmentResolver.resolve(descriptor)
-      if (value === undefined) continue
-      JsonPointer.set(object, descriptor.pointer, value)
-    }
-
-    // Resolve Command Line Arguments
-    const argumentOptions = { format: (name: string) => name.toLowerCase(), prefix: '--', seperator: '-' }
-    for (const descriptor of Descriptors.resolve(this.schema, argumentOptions)) {
-      const value = this.argumentResolver.resolve(descriptor)
-      if (value === undefined) continue
-      JsonPointer.set(object, descriptor.pointer, value)
-    }
-
-    // Check Object
-    if (this.typecheck.Check(object)) return object as Static<T>
-    return this.exitWithResult(this.typecheck, object) as never
-  }
 }
 
-/** Resolves Configuration from the Environment */
+/** Creates a configuration resolver */
 export function Configuration<Schema extends TObject>(schema: Schema): ConfigurationResolver<Schema> {
-  return new ConfigurationResolver<Schema>(schema, process.env, process.argv.slice(2))
+  return new ConfigurationResolver<Schema>(schema)
 }

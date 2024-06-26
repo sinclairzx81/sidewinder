@@ -27,7 +27,4 @@ THE SOFTWARE.
 ---------------------------------------------------------------------------*/
 
 export * from '@sidewinder/type'
-export * from './documentation/index'
-export * from './resolvers/index'
 export * from './configuration'
-export * from './pointer/pointer'

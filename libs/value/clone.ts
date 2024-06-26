@@ -26,7 +26,7 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-import { Is, ObjectType, ArrayType, TypedArrayType, ValueType } from './is'
+import { ValueGuard, ObjectType, ArrayType, TypedArrayType, ValueType } from './guard'
 
 export namespace ValueClone {
   function Array(value: ArrayType): any {
@@ -51,15 +51,15 @@ export namespace ValueClone {
   }
 
   export function Clone<T extends unknown>(value: T): T {
-    if (Is.Date(value)) {
+    if (ValueGuard.IsDate(value)) {
       return Date(value)
-    } else if (Is.Object(value)) {
+    } else if (ValueGuard.IsObject(value)) {
       return Object(value)
-    } else if (Is.Array(value)) {
+    } else if (ValueGuard.IsArray(value)) {
       return Array(value)
-    } else if (Is.TypedArray(value)) {
+    } else if (ValueGuard.IsTypedArray(value)) {
       return TypedArray(value)
-    } else if (Is.Value(value)) {
+    } else if (ValueGuard.IsValueType(value)) {
       return Value(value)
     } else {
       throw new Error('ValueClone: Unable to clone value')

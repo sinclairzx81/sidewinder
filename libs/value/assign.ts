@@ -26,7 +26,7 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-import { Is, TypedArrayType } from './is'
+import { ValueGuard, TypedArrayType } from './guard'
 import { ValuePointer } from './pointer'
 import { ValueClone } from './clone'
 
@@ -46,7 +46,7 @@ export type Assignable = { [key: string]: unknown } | unknown[]
 
 export namespace ValueAssign {
   function Object(root: Assignable, path: string, current: unknown, next: Record<string, unknown>) {
-    if (!Is.Object(current)) {
+    if (!ValueGuard.IsObject(current)) {
       ValuePointer.Set(root, path, ValueClone.Clone(next))
     } else {
       const currentKeys = globalThis.Object.keys(current)
@@ -68,7 +68,7 @@ export namespace ValueAssign {
   }
 
   function Array(root: Assignable, path: string, current: unknown, next: unknown[]) {
-    if (!Is.Array(current)) {
+    if (!ValueGuard.IsArray(current)) {
       ValuePointer.Set(root, path, ValueClone.Clone(next))
     } else {
       for (let index = 0; index < next.length; index++) {
@@ -79,7 +79,7 @@ export namespace ValueAssign {
   }
 
   function TypedArray(root: Assignable, path: string, current: unknown, next: TypedArrayType) {
-    if (Is.TypedArray(current) && current.length === next.length) {
+    if (ValueGuard.IsTypedArray(current) && current.length === next.length) {
       for (let i = 0; i < current.length; i++) {
         current[i] = next[i]
       }
@@ -94,23 +94,23 @@ export namespace ValueAssign {
   }
 
   function Visit(root: Assignable, path: string, current: unknown, next: unknown) {
-    if (Is.Array(next)) {
+    if (ValueGuard.IsArray(next)) {
       return Array(root, path, current, next)
-    } else if (Is.TypedArray(next)) {
+    } else if (ValueGuard.IsTypedArray(next)) {
       return TypedArray(root, path, current, next)
-    } else if (Is.Object(next)) {
+    } else if (ValueGuard.IsObject(next)) {
       return Object(root, path, current, next)
-    } else if (Is.Value(next)) {
+    } else if (ValueGuard.IsValueType(next)) {
       return Value(root, path, current, next)
     }
   }
 
   /** Performs a mutable transform of the current value into the next value by assigning values from next on current and preserves the current values internal object and array references. */
   export function Assign(current: Assignable, next: Assignable): void {
-    if (Is.TypedArray(current) || Is.Value(current) || Is.TypedArray(next) || Is.Value(next)) {
+    if (ValueGuard.IsTypedArray(current) || ValueGuard.IsValueType(current) || ValueGuard.IsTypedArray(next) || ValueGuard.IsValueType(next)) {
       throw new ValueAssignInvalidAssignmentType()
     }
-    if ((Is.Object(current) && Is.Array(next)) || (Is.Array(current) && Is.Object(next))) {
+    if ((ValueGuard.IsObject(current) && ValueGuard.IsArray(next)) || (ValueGuard.IsArray(current) && ValueGuard.IsObject(next))) {
       throw new ValueAssignMismatchError()
     }
     Visit(current, '', current, next)

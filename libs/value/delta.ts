@@ -27,7 +27,7 @@ THE SOFTWARE.
 ---------------------------------------------------------------------------*/
 
 import { Type, Static } from '@sidewinder/type'
-import { Is, ObjectType, ArrayType, TypedArrayType, ValueType } from './is'
+import { ValueGuard, ObjectType, ArrayType, TypedArrayType, ValueType } from './guard'
 import { ValueClone } from './clone'
 import { ValuePointer } from './pointer'
 
@@ -99,7 +99,7 @@ export namespace ValueDelta {
   // ---------------------------------------------------------------------
 
   function* Object(path: string, current: ObjectType, next: unknown): IterableIterator<Edit> {
-    if (!Is.Object(next)) return yield Update(path, next)
+    if (!ValueGuard.IsObject(next)) return yield Update(path, next)
     const currentKeys = [...globalThis.Object.keys(current), ...globalThis.Object.getOwnPropertySymbols(current)]
     const nextKeys = [...globalThis.Object.keys(next), ...globalThis.Object.getOwnPropertySymbols(next)]
     for (const key of currentKeys) {
@@ -122,7 +122,7 @@ export namespace ValueDelta {
   }
 
   function* Array(path: string, current: ArrayType, next: unknown): IterableIterator<Edit> {
-    if (!Is.Array(next)) return yield Update(path, next)
+    if (!ValueGuard.IsArray(next)) return yield Update(path, next)
     for (let i = 0; i < Math.min(current.length, next.length); i++) {
       yield* Visit(`${path}/${i}`, current[i], next[i])
     }
@@ -137,7 +137,7 @@ export namespace ValueDelta {
   }
 
   function* TypedArray(path: string, current: TypedArrayType, next: unknown): IterableIterator<Edit> {
-    if (!Is.TypedArray(next) || current.length !== next.length || globalThis.Object.getPrototypeOf(current).constructor.name !== globalThis.Object.getPrototypeOf(next).constructor.name) return yield Update(path, next)
+    if (!ValueGuard.IsTypedArray(next) || current.length !== next.length || globalThis.Object.getPrototypeOf(current).constructor.name !== globalThis.Object.getPrototypeOf(next).constructor.name) return yield Update(path, next)
     for (let i = 0; i < Math.min(current.length, next.length); i++) {
       yield* Visit(`${path}/${i}`, current[i], next[i])
     }
@@ -149,13 +149,13 @@ export namespace ValueDelta {
   }
 
   function* Visit(path: string, current: unknown, next: unknown): IterableIterator<Edit> {
-    if (Is.Object(current)) {
+    if (ValueGuard.IsObject(current)) {
       return yield* Object(path, current, next)
-    } else if (Is.Array(current)) {
+    } else if (ValueGuard.IsArray(current)) {
       return yield* Array(path, current, next)
-    } else if (Is.TypedArray(current)) {
+    } else if (ValueGuard.IsTypedArray(current)) {
       return yield* TypedArray(path, current, next)
-    } else if (Is.Value(current)) {
+    } else if (ValueGuard.IsValueType(current)) {
       return yield* Value(path, current, next)
     } else {
       throw new ValueDeltaUnableToDiffUnknownValue(current)

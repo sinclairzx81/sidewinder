@@ -18,15 +18,12 @@ export namespace Assert {
   export function randomUUID(): string {
     return uuid.v4()
   }
-
   export function equal(actual: unknown, expect: unknown) {
     return assert.equal(actual, expect)
   }
-
   export function notEqual(actual: unknown, expect: unknown) {
     return assert.notEqual(actual, expect)
   }
-
   export function deepEqual(actual: unknown, expect: unknown) {
     if (actual instanceof Uint8Array && expect instanceof Uint8Array) {
       assert.equal(actual.length, expect.length)
@@ -34,11 +31,9 @@ export namespace Assert {
     }
     return assert.deepEqual(actual, expect)
   }
-
   export function intoAsync(callback: Function, timeout: number = 1) {
     setTimeout(() => callback(), timeout)
   }
-
   export function timeout(callback: Function, timeout: number = 200) {
     return new Promise<void>(async (resolve, reject) => {
       setTimeout(() => resolve(), timeout)
@@ -46,7 +41,6 @@ export namespace Assert {
       reject()
     })
   }
-
   export function throws(callback: Function) {
     try {
       callback()
@@ -55,7 +49,6 @@ export namespace Assert {
     }
     throw Error('Expected throw')
   }
-
   export async function throwsAsync(callback: Function) {
     try {
       await callback()
@@ -64,12 +57,10 @@ export namespace Assert {
     }
     throw Error('Expected throw')
   }
-
   export function isTypeOf(value: any, type: any) {
     if (typeof value === type) return
     throw Error(`Value is not typeof ${type}`)
   }
-
   export function isInstanceOf(value: any, constructor: any) {
     if (value instanceof constructor) return
     throw Error(`Value is not instance of ${constructor}`)

@@ -191,7 +191,7 @@ export class WebSocketService<Contract extends TContract, Context extends TSchem
   }
 
   /** Closes a client */
-  public close(clientId: string, options: { code?: number, reason?: string } = {}): void {
+  public close(clientId: string, options: { code?: number; reason?: string } = {}): void {
     if (!this.#sockets.has(clientId)) return
     const socket = this.#sockets.get(clientId)!
     socket.close(options.code ?? 1000, options.reason ?? 'normal')
